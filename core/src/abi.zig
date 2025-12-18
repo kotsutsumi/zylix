@@ -1,7 +1,7 @@
 //! C ABI Exports Module
 //!
 //! Provides the public C ABI interface for platform shells.
-//! All functions here are `extern "C"` and use only C-compatible types.
+//! All functions here use C calling convention and C-compatible types.
 
 const std = @import("std");
 const state = @import("state.zig");
@@ -34,28 +34,28 @@ var abi_state_cache: state.ABIState = undefined;
 // === Lifecycle Functions ===
 
 /// Initialize Zylix Core
-pub export fn zylix_init() i32 {
+pub fn zylix_init() callconv(.c) i32 {
     state.init();
     last_error = .ok;
     return @intFromEnum(Result.ok);
 }
 
 /// Shutdown Zylix Core
-pub export fn zylix_deinit() i32 {
+pub fn zylix_deinit() callconv(.c) i32 {
     state.deinit();
     last_error = .ok;
     return @intFromEnum(Result.ok);
 }
 
 /// Get ABI version
-pub export fn zylix_get_abi_version() u32 {
+pub fn zylix_get_abi_version() callconv(.c) u32 {
     return ABI_VERSION;
 }
 
 // === State Access Functions ===
 
 /// Get current state snapshot
-pub export fn zylix_get_state() ?*const state.ABIState {
+pub fn zylix_get_state() callconv(.c) ?*const state.ABIState {
     if (!state.isInitialized()) {
         last_error = .err_not_initialized;
         return null;
@@ -65,7 +65,7 @@ pub export fn zylix_get_state() ?*const state.ABIState {
 }
 
 /// Get state version
-pub export fn zylix_get_state_version() u64 {
+pub fn zylix_get_state_version() callconv(.c) u64 {
     if (!state.isInitialized()) {
         return 0;
     }
@@ -75,11 +75,11 @@ pub export fn zylix_get_state_version() u64 {
 // === Event Dispatch ===
 
 /// Dispatch an event to Zylix Core
-pub export fn zylix_dispatch(
+pub fn zylix_dispatch(
     event_type: u32,
     payload: ?*const anyopaque,
     payload_len: usize,
-) i32 {
+) callconv(.c) i32 {
     const result = events.dispatch(event_type, payload, payload_len);
 
     switch (result) {
@@ -105,7 +105,7 @@ pub export fn zylix_dispatch(
 // === Error Handling ===
 
 /// Get last error message
-pub export fn zylix_get_last_error() [*:0]const u8 {
+pub fn zylix_get_last_error() callconv(.c) [*:0]const u8 {
     const idx: usize = @intCast(@intFromEnum(last_error));
     if (idx < error_messages.len) {
         return error_messages[idx];
@@ -116,12 +116,12 @@ pub export fn zylix_get_last_error() [*:0]const u8 {
 // === Utility Functions ===
 
 /// Copy string from Zylix memory to shell buffer
-pub export fn zylix_copy_string(
+pub fn zylix_copy_string(
     src: ?[*]const u8,
     src_len: usize,
     dst: ?[*]u8,
     dst_len: usize,
-) usize {
+) callconv(.c) usize {
     if (src == null or dst == null) {
         return 0;
     }
@@ -137,6 +137,18 @@ pub export fn zylix_copy_string(
     }
 
     return copy_len;
+}
+
+// === Export symbols for C ABI ===
+comptime {
+    @export(&zylix_init, .{ .name = "zylix_init" });
+    @export(&zylix_deinit, .{ .name = "zylix_deinit" });
+    @export(&zylix_get_abi_version, .{ .name = "zylix_get_abi_version" });
+    @export(&zylix_get_state, .{ .name = "zylix_get_state" });
+    @export(&zylix_get_state_version, .{ .name = "zylix_get_state_version" });
+    @export(&zylix_dispatch, .{ .name = "zylix_dispatch" });
+    @export(&zylix_get_last_error, .{ .name = "zylix_get_last_error" });
+    @export(&zylix_copy_string, .{ .name = "zylix_copy_string" });
 }
 
 // === Tests ===

@@ -1,0 +1,86 @@
+name: Zylix
+options:
+  bundleIdPrefix: com.zylix
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ONLY_ACTIVE_ARCH: YES
+    ARCHS: arm64
+    EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+
+targets:
+  Zylix:
+    type: application
+    platform: iOS
+    sources:
+      - path: Zylix/Sources
+        type: group
+    resources:
+      - path: Zylix/Resources
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zylix.app
+        INFOPLIST_FILE: Zylix/Resources/Info.plist
+        SWIFT_OBJC_BRIDGING_HEADER: Zylix/Sources/Zylix-Bridging-Header.h
+        LIBRARY_SEARCH_PATHS:
+          - $(inherited)
+          - $(PROJECT_DIR)/Zylix/Libraries
+        OTHER_LDFLAGS:
+          - -lzylix
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: -Onone
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: -O
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    preBuildScripts:
+      - name: Build Zylix Core
+        script: |
+          set -e
+          cd "${PROJECT_DIR}/../../core"
+
+          # Determine target
+          if [ "${PLATFORM_NAME}" = "iphonesimulator" ]; then
+            ZIG_TARGET="ios-sim"
+            LIB_DIR="ios-simulator"
+          else
+            ZIG_TARGET="ios"
+            LIB_DIR="ios"
+          fi
+
+          # Build Zylix Core
+          echo "Building Zylix Core for ${ZIG_TARGET}..."
+          zig build ${ZIG_TARGET} -Doptimize=ReleaseFast
+
+          # Copy library
+          mkdir -p "${PROJECT_DIR}/Zylix/Libraries"
+          cp "zig-out/${LIB_DIR}/libzylix.a" "${PROJECT_DIR}/Zylix/Libraries/"
+          echo "Copied libzylix.a to Libraries/"
+        basedOnDependencyAnalysis: false
+
+schemes:
+  Zylix:
+    build:
+      targets:
+        Zylix: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
