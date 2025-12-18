@@ -1,0 +1,40 @@
+# Zig
+zig-out/
+zig-cache/
+.zig-cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Build outputs
+*.a
+*.so
+*.dylib
+*.dll
+*.o
+*.obj
+
+# iOS
+platforms/ios/build/
+platforms/ios/*.xcodeproj/xcuserdata/
+platforms/ios/*.xcworkspace/xcuserdata/
+platforms/ios/DerivedData/
+
+# Android
+platforms/android/.gradle/
+platforms/android/build/
+platforms/android/app/build/
+platforms/android/local.properties
+platforms/android/*.iml
+
+# Test
+coverage/
+*.profraw
+*.profdata
