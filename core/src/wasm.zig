@@ -16,6 +16,7 @@ const llm = @import("llm.zig");
 const css = @import("css.zig");
 const layout = @import("layout.zig");
 const component = @import("component.zig");
+const dsl = @import("dsl.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -1202,6 +1203,287 @@ export fn zigdom_component_clear_render_flag(id: u32) void {
     if (component.getTree().get(id)) |c| {
         c.needs_render = false;
     }
+}
+
+// === ZigDom Declarative UI DSL ===
+
+/// Initialize DSL builder
+export fn zigdom_dsl_init() void {
+    dsl.initBuilder();
+}
+
+/// Reset DSL builder (clears component tree)
+export fn zigdom_dsl_reset() void {
+    dsl.resetBuilder();
+}
+
+// Runtime element storage for JS-driven DSL
+const MAX_RUNTIME_ELEMENTS = 256;
+var runtime_elements: [MAX_RUNTIME_ELEMENTS]dsl.Element = undefined;
+var runtime_element_count: u32 = 0;
+var runtime_element_children: [MAX_RUNTIME_ELEMENTS][16]dsl.Element = undefined;
+var runtime_children_counts: [MAX_RUNTIME_ELEMENTS]u8 = [_]u8{0} ** MAX_RUNTIME_ELEMENTS;
+
+/// Create a container element (div, span, etc.)
+export fn zigdom_dsl_create_container(element_type: u8) u32 {
+    if (runtime_element_count >= MAX_RUNTIME_ELEMENTS) return 0;
+    const id = runtime_element_count;
+    runtime_elements[id] = dsl.Element{
+        .element_type = @enumFromInt(element_type),
+        .attrs = .{},
+        .text = null,
+        .children = &[_]dsl.Element{},
+    };
+    runtime_children_counts[id] = 0;
+    runtime_element_count += 1;
+    return id + 1; // 1-based IDs
+}
+
+/// Create a text element (h1-h6, p, button, etc.)
+export fn zigdom_dsl_create_text_element(element_type: u8, text_ptr: [*]const u8, text_len: usize) u32 {
+    if (runtime_element_count >= MAX_RUNTIME_ELEMENTS) return 0;
+    const id = runtime_element_count;
+    runtime_elements[id] = dsl.Element{
+        .element_type = @enumFromInt(element_type),
+        .attrs = .{},
+        .text = text_ptr[0..text_len],
+        .children = &[_]dsl.Element{},
+    };
+    runtime_children_counts[id] = 0;
+    runtime_element_count += 1;
+    return id + 1;
+}
+
+/// Set element attribute: class
+export fn zigdom_dsl_set_class(id: u32, class_ptr: [*]const u8, class_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.class = class_ptr[0..class_len];
+}
+
+/// Set element attribute: id
+export fn zigdom_dsl_set_id(id: u32, id_ptr: [*]const u8, id_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.id = id_ptr[0..id_len];
+}
+
+/// Set element attribute: style ID
+export fn zigdom_dsl_set_style(id: u32, style_id: u32) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.style = style_id;
+}
+
+/// Set element attribute: onClick callback ID
+export fn zigdom_dsl_set_onclick(id: u32, callback_id: u32) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.onClick = callback_id;
+}
+
+/// Set element attribute: onInput callback ID
+export fn zigdom_dsl_set_oninput(id: u32, callback_id: u32) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.onInput = callback_id;
+}
+
+/// Set element attribute: onChange callback ID
+export fn zigdom_dsl_set_onchange(id: u32, callback_id: u32) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.onChange = callback_id;
+}
+
+/// Set element attribute: placeholder
+export fn zigdom_dsl_set_placeholder(id: u32, text_ptr: [*]const u8, text_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.placeholder = text_ptr[0..text_len];
+}
+
+/// Set element attribute: href
+export fn zigdom_dsl_set_href(id: u32, href_ptr: [*]const u8, href_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.href = href_ptr[0..href_len];
+}
+
+/// Set element attribute: src
+export fn zigdom_dsl_set_src(id: u32, src_ptr: [*]const u8, src_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.src = src_ptr[0..src_len];
+}
+
+/// Set element attribute: alt
+export fn zigdom_dsl_set_alt(id: u32, alt_ptr: [*]const u8, alt_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.alt = alt_ptr[0..alt_len];
+}
+
+/// Set element attribute: input type
+export fn zigdom_dsl_set_input_type(id: u32, input_type: u8) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.input_type = @enumFromInt(input_type);
+}
+
+/// Set element attribute: disabled
+export fn zigdom_dsl_set_disabled(id: u32, is_disabled: bool) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.disabled = is_disabled;
+}
+
+/// Set element attribute: aria-label
+export fn zigdom_dsl_set_aria_label(id: u32, label_ptr: [*]const u8, label_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.aria_label = label_ptr[0..label_len];
+}
+
+/// Set element attribute: role
+export fn zigdom_dsl_set_role(id: u32, role_ptr: [*]const u8, role_len: usize) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.role = role_ptr[0..role_len];
+}
+
+/// Set element attribute: tab index
+export fn zigdom_dsl_set_tab_index(id: u32, index: i8) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.tab_index = index;
+}
+
+/// Set element attribute: data value
+export fn zigdom_dsl_set_data(id: u32, value: i64) void {
+    if (id == 0 or id > runtime_element_count) return;
+    runtime_elements[id - 1].attrs.data = value;
+}
+
+/// Add child element to parent
+export fn zigdom_dsl_add_child(parent_id: u32, child_id: u32) bool {
+    if (parent_id == 0 or parent_id > runtime_element_count) return false;
+    if (child_id == 0 or child_id > runtime_element_count) return false;
+
+    const parent_idx = parent_id - 1;
+    const child_count = runtime_children_counts[parent_idx];
+    if (child_count >= 16) return false;
+
+    runtime_element_children[parent_idx][child_count] = runtime_elements[child_id - 1];
+    runtime_children_counts[parent_idx] = child_count + 1;
+    runtime_elements[parent_idx].children = runtime_element_children[parent_idx][0 .. child_count + 1];
+
+    return true;
+}
+
+/// Build element into component tree (returns component ID)
+export fn zigdom_dsl_build(element_id: u32) u32 {
+    if (element_id == 0 or element_id > runtime_element_count) return 0;
+    return dsl.buildElement(&runtime_elements[element_id - 1]);
+}
+
+/// Get element count
+export fn zigdom_dsl_get_element_count() u32 {
+    return runtime_element_count;
+}
+
+/// Clear all runtime elements
+export fn zigdom_dsl_clear_elements() void {
+    runtime_element_count = 0;
+    for (&runtime_children_counts) |*count| {
+        count.* = 0;
+    }
+}
+
+/// Get element type constants
+export fn zigdom_dsl_element_type_div() u8 {
+    return @intFromEnum(dsl.ElementType.div);
+}
+
+export fn zigdom_dsl_element_type_span() u8 {
+    return @intFromEnum(dsl.ElementType.span);
+}
+
+export fn zigdom_dsl_element_type_section() u8 {
+    return @intFromEnum(dsl.ElementType.section);
+}
+
+export fn zigdom_dsl_element_type_article() u8 {
+    return @intFromEnum(dsl.ElementType.article);
+}
+
+export fn zigdom_dsl_element_type_header() u8 {
+    return @intFromEnum(dsl.ElementType.header);
+}
+
+export fn zigdom_dsl_element_type_footer() u8 {
+    return @intFromEnum(dsl.ElementType.footer);
+}
+
+export fn zigdom_dsl_element_type_nav() u8 {
+    return @intFromEnum(dsl.ElementType.nav);
+}
+
+export fn zigdom_dsl_element_type_main() u8 {
+    return @intFromEnum(dsl.ElementType.main);
+}
+
+export fn zigdom_dsl_element_type_h1() u8 {
+    return @intFromEnum(dsl.ElementType.h1);
+}
+
+export fn zigdom_dsl_element_type_h2() u8 {
+    return @intFromEnum(dsl.ElementType.h2);
+}
+
+export fn zigdom_dsl_element_type_h3() u8 {
+    return @intFromEnum(dsl.ElementType.h3);
+}
+
+export fn zigdom_dsl_element_type_h4() u8 {
+    return @intFromEnum(dsl.ElementType.h4);
+}
+
+export fn zigdom_dsl_element_type_h5() u8 {
+    return @intFromEnum(dsl.ElementType.h5);
+}
+
+export fn zigdom_dsl_element_type_h6() u8 {
+    return @intFromEnum(dsl.ElementType.h6);
+}
+
+export fn zigdom_dsl_element_type_p() u8 {
+    return @intFromEnum(dsl.ElementType.p);
+}
+
+export fn zigdom_dsl_element_type_text() u8 {
+    return @intFromEnum(dsl.ElementType.text);
+}
+
+export fn zigdom_dsl_element_type_button() u8 {
+    return @intFromEnum(dsl.ElementType.button);
+}
+
+export fn zigdom_dsl_element_type_a() u8 {
+    return @intFromEnum(dsl.ElementType.a);
+}
+
+export fn zigdom_dsl_element_type_input() u8 {
+    return @intFromEnum(dsl.ElementType.input);
+}
+
+export fn zigdom_dsl_element_type_img() u8 {
+    return @intFromEnum(dsl.ElementType.img);
+}
+
+export fn zigdom_dsl_element_type_ul() u8 {
+    return @intFromEnum(dsl.ElementType.ul);
+}
+
+export fn zigdom_dsl_element_type_ol() u8 {
+    return @intFromEnum(dsl.ElementType.ol);
+}
+
+export fn zigdom_dsl_element_type_li() u8 {
+    return @intFromEnum(dsl.ElementType.li);
+}
+
+export fn zigdom_dsl_element_type_form() u8 {
+    return @intFromEnum(dsl.ElementType.form);
+}
+
+export fn zigdom_dsl_element_type_label() u8 {
+    return @intFromEnum(dsl.ElementType.label);
 }
 
 // === Panic handler for WASM ===

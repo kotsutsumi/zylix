@@ -51,13 +51,13 @@ ZigDomは、ZigをWebアプリケーションの中央実行レイヤーとし�
 | CSSユーティリティ | ✅ | ZigでTailwindCSS風システム |
 | レイアウトエンジン | ✅ | ZigでFlexboxアルゴリズム |
 | コンポーネントシステム | ✅ | React風コンポーネント |
+| 宣言的UI DSL | ✅ | Zig comptimeでUI宣言 |
 | WebGPU Compute | ✅ | 5万パーティクル @ 60fps |
 
 ### 今後
 
 | 機能 | 状態 | 説明 |
 |------|------|------|
-| 宣言的UI DSL | 予定 | Zig comptimeでUI |
 | 仮想DOM | 予定 | Zigで差分計算 |
 
 ## CSSユーティリティシステム
@@ -115,6 +115,59 @@ tree.addChild(card, title);
 tree.addChild(card, button);
 ```
 
+## 宣言的UI DSL
+
+Zig comptimeを使用したJSX風の宣言的構文：
+
+```zig
+const dsl = @import("dsl.zig");
+
+// シンプルな要素ビルダー
+const ui = dsl.div(.{ .class = "container" }, .{
+    dsl.h1(.{}, "ZigDomへようこそ"),
+    dsl.p(.{}, "Zigのcomptimeで型安全なUI構築！"),
+    dsl.button(.{ .onClick = 1 }, "クリック"),
+});
+
+// shadcn風プリビルトコンポーネント
+const card = dsl.ui.card(.{}, .{
+    dsl.ui.cardHeader(.{}, .{
+        dsl.ui.cardTitle(.{}, "カードタイトル"),
+    }),
+    dsl.ui.cardContent(.{}, .{
+        dsl.p(.{}, "カードの内容はここに。"),
+    }),
+    dsl.ui.cardFooter(.{}, .{
+        dsl.ui.primaryButton(.{ .onClick = 2 }, "送信"),
+    }),
+});
+```
+
+### 利用可能な要素
+
+| カテゴリ | 要素 |
+|----------|------|
+| コンテナ | `div`, `span`, `section`, `article`, `header`, `footer`, `nav`, `main`, `aside` |
+| テキスト | `h1`-`h6`, `p`, `text` |
+| インタラクティブ | `button`, `a`, `input` |
+| リスト | `ul`, `ol`, `li` |
+| フォーム | `form`, `label` |
+| メディア | `img` |
+
+### プリビルトUIコンポーネント
+
+| コンポーネント | 説明 |
+|----------------|------|
+| `ui.card` | ヘッダー/コンテンツ/フッター付きカード |
+| `ui.primaryButton` | プライマリアクションボタン |
+| `ui.secondaryButton` | セカンダリアクションボタン |
+| `ui.textInput` | テキスト入力フィールド |
+| `ui.alert` | アラート/通知ボックス |
+| `ui.badge` | バッジ/タグコンポーネント |
+| `ui.flex` | Flexboxコンテナ |
+| `ui.grid` | Gridコンテナ |
+| `ui.stack` | 縦方向スタックレイアウト |
+
 ## WebGPU統合
 
 ゼロコピーデータ転送：
@@ -169,11 +222,22 @@ export fn zigdom_gpu_get_vertex_buffer() ?*const anyopaque
 export fn zigdom_gpu_get_vertex_buffer_size() usize
 ```
 
+### DSL
+```zig
+export fn zigdom_dsl_init() void
+export fn zigdom_dsl_create_container(element_type: u8) u32
+export fn zigdom_dsl_create_text_element(element_type: u8, ptr: [*]const u8, len: usize) u32
+export fn zigdom_dsl_set_class(id: u32, ptr: [*]const u8, len: usize) void
+export fn zigdom_dsl_add_child(parent_id: u32, child_id: u32) bool
+export fn zigdom_dsl_build(element_id: u32) u32
+```
+
 ## ライブデモ
 
 - [カウンターデモ](/demos/counter.html)
 - [CSSデモ](/demos/css-demo.html)
 - [レイアウトデモ](/demos/layout-demo.html)
 - [コンポーネントデモ](/demos/component-demo.html)
+- [DSLデモ](/demos/dsl-demo.html)
 - [WebGPUキューブ](/demos/webgpu.html)
 - [パーティクル](/demos/particles.html)

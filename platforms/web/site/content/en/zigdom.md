@@ -51,13 +51,13 @@ ZigDom positions Zig as the central execution layer for web applications.
 | CSS Utilities | ✅ | TailwindCSS-like system in Zig |
 | Layout Engine | ✅ | Flexbox algorithm in Zig |
 | Component System | ✅ | React-like components |
+| Declarative UI DSL | ✅ | Zig comptime for UI declarations |
 | WebGPU Compute | ✅ | 50K particles @ 60fps |
 
 ### Upcoming
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Declarative UI DSL | Pending | Zig comptime for UI |
 | Virtual DOM | Pending | Reconciliation in Zig |
 
 ## CSS Utility System
@@ -115,6 +115,59 @@ tree.addChild(card, title);
 tree.addChild(card, button);
 ```
 
+## Declarative UI DSL
+
+JSX-like declarative syntax using Zig comptime:
+
+```zig
+const dsl = @import("dsl.zig");
+
+// Simple element builders
+const ui = dsl.div(.{ .class = "container" }, .{
+    dsl.h1(.{}, "Welcome to ZigDom"),
+    dsl.p(.{}, "Build UI with Zig's comptime!"),
+    dsl.button(.{ .onClick = 1 }, "Click Me"),
+});
+
+// shadcn-like pre-built components
+const card = dsl.ui.card(.{}, .{
+    dsl.ui.cardHeader(.{}, .{
+        dsl.ui.cardTitle(.{}, "Card Title"),
+    }),
+    dsl.ui.cardContent(.{}, .{
+        dsl.p(.{}, "Card content goes here."),
+    }),
+    dsl.ui.cardFooter(.{}, .{
+        dsl.ui.primaryButton(.{ .onClick = 2 }, "Submit"),
+    }),
+});
+```
+
+### Available Elements
+
+| Category | Elements |
+|----------|----------|
+| Container | `div`, `span`, `section`, `article`, `header`, `footer`, `nav`, `main`, `aside` |
+| Text | `h1`-`h6`, `p`, `text` |
+| Interactive | `button`, `a`, `input` |
+| List | `ul`, `ol`, `li` |
+| Form | `form`, `label` |
+| Media | `img` |
+
+### Pre-built UI Components
+
+| Component | Description |
+|-----------|-------------|
+| `ui.card` | Card container with header/content/footer |
+| `ui.primaryButton` | Primary action button |
+| `ui.secondaryButton` | Secondary action button |
+| `ui.textInput` | Text input field |
+| `ui.alert` | Alert/notification box |
+| `ui.badge` | Badge/tag component |
+| `ui.flex` | Flexbox container |
+| `ui.grid` | Grid container |
+| `ui.stack` | Vertical stack layout |
+
 ## WebGPU Integration
 
 Zero-copy data transfer:
@@ -169,11 +222,22 @@ export fn zigdom_gpu_get_vertex_buffer() ?*const anyopaque
 export fn zigdom_gpu_get_vertex_buffer_size() usize
 ```
 
+### DSL
+```zig
+export fn zigdom_dsl_init() void
+export fn zigdom_dsl_create_container(element_type: u8) u32
+export fn zigdom_dsl_create_text_element(element_type: u8, ptr: [*]const u8, len: usize) u32
+export fn zigdom_dsl_set_class(id: u32, ptr: [*]const u8, len: usize) void
+export fn zigdom_dsl_add_child(parent_id: u32, child_id: u32) bool
+export fn zigdom_dsl_build(element_id: u32) u32
+```
+
 ## Live Demos
 
 - [Counter Demo](/demos/counter.html)
 - [CSS Demo](/demos/css-demo.html)
 - [Layout Demo](/demos/layout-demo.html)
 - [Component Demo](/demos/component-demo.html)
+- [DSL Demo](/demos/dsl-demo.html)
 - [WebGPU Cube](/demos/webgpu.html)
 - [Particles](/demos/particles.html)

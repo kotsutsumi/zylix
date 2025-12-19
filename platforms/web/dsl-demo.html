@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom DSL Demo - Phase 5.4</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #f7931e;
+            --accent-hover: #ff9f2e;
+            --success: #4caf50;
+            --error: #f44336;
+            --border: #333;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: var(--accent); margin-bottom: 10px; }
+        h2 { color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        h3 { color: var(--accent); margin-top: 20px; }
+        .subtitle { color: var(--text-secondary); margin-bottom: 30px; font-size: 1.1em; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+        }
+        .status.success { border-left-color: var(--success); }
+        .status.error { border-left-color: var(--error); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .code-block {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre;
+            color: #e0e0e0;
+        }
+        .code-block .keyword { color: #c678dd; }
+        .code-block .string { color: #98c379; }
+        .code-block .number { color: #d19a66; }
+        .code-block .comment { color: #5c6370; }
+        .code-block .function { color: #61afef; }
+        .code-block .type { color: #e5c07b; }
+
+        /* Rendered Component Styles */
+        #render-target {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        /* Component classes from Zig DSL */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title {
+            margin: 0;
+            color: var(--accent);
+            font-size: 1.2em;
+        }
+        .card-content {
+            padding: 20px;
+        }
+        .card-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-tertiary);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: var(--bg-secondary); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { background: rgba(247, 147, 30, 0.1); }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { background: #d32f2f; }
+
+        .input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        .input:focus { outline: none; border-color: var(--accent); }
+
+        .flex { display: flex; }
+        .flex-row { display: flex; flex-direction: row; gap: 10px; }
+        .flex-col { display: flex; flex-direction: column; gap: 10px; }
+        .stack { display: flex; flex-direction: column; gap: 15px; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            background: var(--bg-tertiary);
+        }
+        .alert-title { font-weight: 600; margin: 0 0 5px 0; }
+        .alert-description { margin: 0; color: var(--text-secondary); }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .separator {
+            height: 1px;
+            background: var(--border);
+            margin: 15px 0;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover { border-color: var(--accent); }
+        .preset-btn.active { border-color: var(--accent); background: rgba(247, 147, 30, 0.1); }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZigDom Declarative UI DSL</h1>
+        <p class="subtitle">Phase 5.4: Comptime UI Declarations in Zig</p>
+
+        <div id="status" class="status">Loading WASM...</div>
+
+        <h2>Zig DSL Syntax</h2>
+        <div class="grid">
+            <div class="panel">
+                <h3>Element Builders</h3>
+                <div class="code-block"><span class="comment">// Container elements</span>
+<span class="keyword">const</span> ui = dsl.<span class="function">div</span>(.{ .<span class="type">class</span> = <span class="string">"container"</span> }, .{
+    dsl.<span class="function">h1</span>(.{}, <span class="string">"Welcome"</span>),
+    dsl.<span class="function">p</span>(.{}, <span class="string">"Hello, ZigDom!"</span>),
+    dsl.<span class="function">button</span>(.{ .<span class="type">onClick</span> = <span class="number">1</span> }, <span class="string">"Click Me"</span>),
+});</div>
+            </div>
+            <div class="panel">
+                <h3>shadcn-like UI Components</h3>
+                <div class="code-block"><span class="comment">// Pre-built components</span>
+<span class="keyword">const</span> ui = dsl.ui.<span class="function">card</span>(.{}, .{
+    dsl.ui.<span class="function">cardHeader</span>(.{}, .{
+        dsl.ui.<span class="function">cardTitle</span>(.{}, <span class="string">"Title"</span>),
+    }),
+    dsl.ui.<span class="function">cardContent</span>(.{}, .{
+        dsl.<span class="function">p</span>(.{}, <span class="string">"Content here"</span>),
+    }),
+    dsl.ui.<span class="function">cardFooter</span>(.{}, .{
+        dsl.ui.<span class="function">primaryButton</span>(.{}, <span class="string">"Submit"</span>),
+    }),
+});</div>
+            </div>
+        </div>
+
+        <h2>Live Demo</h2>
+        <div class="preset-buttons">
+            <button class="preset-btn active" onclick="renderPreset('card')">Card</button>
+            <button class="preset-btn" onclick="renderPreset('form')">Login Form</button>
+            <button class="preset-btn" onclick="renderPreset('nav')">Navigation</button>
+            <button class="preset-btn" onclick="renderPreset('alert')">Alert</button>
+            <button class="preset-btn" onclick="renderPreset('buttons')">Button Variants</button>
+            <button class="preset-btn" onclick="renderPreset('dashboard')">Dashboard</button>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <h3>DSL Definition (Zig)</h3>
+                <div class="code-block" id="dsl-code"></div>
+            </div>
+            <div class="panel">
+                <h3>Rendered Output</h3>
+                <div id="render-target"></div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-elements">0</div>
+                <div class="stat-label">DSL Elements</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-components">0</div>
+                <div class="stat-label">Components</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-commands">0</div>
+                <div class="stat-label">Render Commands</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-time">0</div>
+                <div class="stat-label">Build Time (ms)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let wasm;
+        let wasmMemory;
+
+        // Element type constants (will be loaded from WASM)
+        const ElementType = {};
+
+        // Preset definitions
+        const presets = {
+            card: {
+                code: `dsl.ui.card(.{}, .{
+    dsl.ui.cardHeader(.{}, .{
+        dsl.ui.cardTitle(.{}, "Welcome to ZigDom"),
+    }),
+    dsl.ui.cardContent(.{}, .{
+        dsl.p(.{}, "Build UI with Zig's comptime!"),
+        dsl.p(.{}, "Type-safe, zero-cost abstractions."),
+    }),
+    dsl.ui.cardFooter(.{}, .{
+        dsl.ui.primaryButton(.{ .onClick = 1 }, "Get Started"),
+        dsl.ui.secondaryButton(.{}, "Learn More"),
+    }),
+})`,
+                build: () => {
+                    const card = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(card, 'card');
+
+                    const header = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(header, 'card-header');
+
+                    const title = createTextElement(ElementType.h2, 'Welcome to ZigDom');
+                    setClass(title, 'card-title');
+                    wasm.zigdom_dsl_add_child(header, title);
+
+                    const content = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(content, 'card-content');
+
+                    const p1 = createTextElement(ElementType.p, "Build UI with Zig's comptime!");
+                    const p2 = createTextElement(ElementType.p, 'Type-safe, zero-cost abstractions.');
+                    wasm.zigdom_dsl_add_child(content, p1);
+                    wasm.zigdom_dsl_add_child(content, p2);
+
+                    const footer = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(footer, 'card-footer flex-row');
+
+                    const btn1 = createTextElement(ElementType.button, 'Get Started');
+                    setClass(btn1, 'btn-primary');
+                    setOnClick(btn1, 1);
+
+                    const btn2 = createTextElement(ElementType.button, 'Learn More');
+                    setClass(btn2, 'btn-secondary');
+
+                    wasm.zigdom_dsl_add_child(footer, btn1);
+                    wasm.zigdom_dsl_add_child(footer, btn2);
+
+                    wasm.zigdom_dsl_add_child(card, header);
+                    wasm.zigdom_dsl_add_child(card, content);
+                    wasm.zigdom_dsl_add_child(card, footer);
+
+                    return card;
+                }
+            },
+
+            form: {
+                code: `dsl.ui.card(.{}, .{
+    dsl.ui.cardHeader(.{}, .{
+        dsl.ui.cardTitle(.{}, "Login"),
+    }),
+    dsl.ui.cardContent(.{}, .{
+        dsl.ui.stack(.{}, .{
+            dsl.label(.{}, "Email"),
+            dsl.ui.emailInput(.{ .placeholder = "you@example.com" }),
+            dsl.label(.{}, "Password"),
+            dsl.ui.passwordInput(.{ .placeholder = "********" }),
+        }),
+    }),
+    dsl.ui.cardFooter(.{}, .{
+        dsl.ui.primaryButton(.{ .onClick = 2 }, "Sign In"),
+    }),
+})`,
+                build: () => {
+                    const card = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(card, 'card');
+
+                    const header = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(header, 'card-header');
+                    const title = createTextElement(ElementType.h2, 'Login');
+                    setClass(title, 'card-title');
+                    wasm.zigdom_dsl_add_child(header, title);
+
+                    const content = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(content, 'card-content stack');
+
+                    const label1 = createTextElement(ElementType.label, 'Email');
+                    const input1 = wasm.zigdom_dsl_create_container(ElementType.input);
+                    setClass(input1, 'input');
+                    setPlaceholder(input1, 'you@example.com');
+                    wasm.zigdom_dsl_set_input_type(input1, 4); // email
+
+                    const label2 = createTextElement(ElementType.label, 'Password');
+                    const input2 = wasm.zigdom_dsl_create_container(ElementType.input);
+                    setClass(input2, 'input');
+                    setPlaceholder(input2, '********');
+                    wasm.zigdom_dsl_set_input_type(input2, 1); // password
+
+                    wasm.zigdom_dsl_add_child(content, label1);
+                    wasm.zigdom_dsl_add_child(content, input1);
+                    wasm.zigdom_dsl_add_child(content, label2);
+                    wasm.zigdom_dsl_add_child(content, input2);
+
+                    const footer = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(footer, 'card-footer');
+                    const btn = createTextElement(ElementType.button, 'Sign In');
+                    setClass(btn, 'btn-primary');
+                    setOnClick(btn, 2);
+                    wasm.zigdom_dsl_add_child(footer, btn);
+
+                    wasm.zigdom_dsl_add_child(card, header);
+                    wasm.zigdom_dsl_add_child(card, content);
+                    wasm.zigdom_dsl_add_child(card, footer);
+
+                    return card;
+                }
+            },
+
+            nav: {
+                code: `dsl.nav(.{ .class = "navbar" }, .{
+    dsl.ui.flex(.{}, .{
+        dsl.h1(.{}, "ZigDom"),
+        dsl.ui.flexRow(.{}, .{
+            dsl.a(.{ .href = "#" }, "Home"),
+            dsl.a(.{ .href = "#" }, "Docs"),
+            dsl.a(.{ .href = "#" }, "Examples"),
+            dsl.ui.primaryButton(.{}, "GitHub"),
+        }),
+    }),
+})`,
+                build: () => {
+                    const nav = wasm.zigdom_dsl_create_container(ElementType.nav);
+                    setClass(nav, 'card flex-row');
+                    setStyle(nav, 'justify-content: space-between; align-items: center; padding: 15px 20px;');
+
+                    const brand = createTextElement(ElementType.h3, 'ZigDom');
+
+                    const links = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(links, 'flex-row');
+
+                    const link1 = createTextElement(ElementType.a, 'Home');
+                    const link2 = createTextElement(ElementType.a, 'Docs');
+                    const link3 = createTextElement(ElementType.a, 'Examples');
+                    const btn = createTextElement(ElementType.button, 'GitHub');
+                    setClass(btn, 'btn-primary');
+
+                    wasm.zigdom_dsl_add_child(links, link1);
+                    wasm.zigdom_dsl_add_child(links, link2);
+                    wasm.zigdom_dsl_add_child(links, link3);
+                    wasm.zigdom_dsl_add_child(links, btn);
+
+                    wasm.zigdom_dsl_add_child(nav, brand);
+                    wasm.zigdom_dsl_add_child(nav, links);
+
+                    return nav;
+                }
+            },
+
+            alert: {
+                code: `dsl.ui.stack(.{}, .{
+    dsl.ui.alert(.{}, .{
+        dsl.ui.alertTitle(.{}, "Success!"),
+        dsl.ui.alertDescription(.{}, "Your changes have been saved."),
+    }),
+    dsl.ui.alert(.{ .class = "alert-warning" }, .{
+        dsl.ui.alertTitle(.{}, "Warning"),
+        dsl.ui.alertDescription(.{}, "Please review your input."),
+    }),
+})`,
+                build: () => {
+                    const stack = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(stack, 'stack');
+
+                    const alert1 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(alert1, 'alert');
+                    setRole(alert1, 'alert');
+                    const title1 = createTextElement(ElementType.h4, 'Success!');
+                    setClass(title1, 'alert-title');
+                    const desc1 = createTextElement(ElementType.p, 'Your changes have been saved.');
+                    setClass(desc1, 'alert-description');
+                    wasm.zigdom_dsl_add_child(alert1, title1);
+                    wasm.zigdom_dsl_add_child(alert1, desc1);
+
+                    const alert2 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(alert2, 'alert');
+                    const title2 = createTextElement(ElementType.h4, 'Warning');
+                    setClass(title2, 'alert-title');
+                    const desc2 = createTextElement(ElementType.p, 'Please review your input.');
+                    setClass(desc2, 'alert-description');
+                    wasm.zigdom_dsl_add_child(alert2, title2);
+                    wasm.zigdom_dsl_add_child(alert2, desc2);
+
+                    wasm.zigdom_dsl_add_child(stack, alert1);
+                    wasm.zigdom_dsl_add_child(stack, alert2);
+
+                    return stack;
+                }
+            },
+
+            buttons: {
+                code: `dsl.ui.stack(.{}, .{
+    dsl.h3(.{}, "Button Variants"),
+    dsl.ui.flexRow(.{}, .{
+        dsl.ui.primaryButton(.{}, "Primary"),
+        dsl.ui.secondaryButton(.{}, "Secondary"),
+        dsl.ui.outlineButton(.{}, "Outline"),
+        dsl.ui.dangerButton(.{}, "Danger"),
+    }),
+    dsl.ui.separator(.{}),
+    dsl.h3(.{}, "Badges"),
+    dsl.ui.flexRow(.{}, .{
+        dsl.ui.badge(.{}, "New"),
+        dsl.ui.badge(.{}, "Hot"),
+        dsl.ui.badge(.{}, "Beta"),
+    }),
+})`,
+                build: () => {
+                    const stack = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(stack, 'stack');
+
+                    const h1 = createTextElement(ElementType.h3, 'Button Variants');
+                    const row1 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(row1, 'flex-row');
+
+                    const btn1 = createTextElement(ElementType.button, 'Primary');
+                    setClass(btn1, 'btn-primary');
+                    const btn2 = createTextElement(ElementType.button, 'Secondary');
+                    setClass(btn2, 'btn-secondary');
+                    const btn3 = createTextElement(ElementType.button, 'Outline');
+                    setClass(btn3, 'btn-outline');
+                    const btn4 = createTextElement(ElementType.button, 'Danger');
+                    setClass(btn4, 'btn-danger');
+
+                    wasm.zigdom_dsl_add_child(row1, btn1);
+                    wasm.zigdom_dsl_add_child(row1, btn2);
+                    wasm.zigdom_dsl_add_child(row1, btn3);
+                    wasm.zigdom_dsl_add_child(row1, btn4);
+
+                    const sep = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(sep, 'separator');
+
+                    const h2 = createTextElement(ElementType.h3, 'Badges');
+                    const row2 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(row2, 'flex-row');
+
+                    const badge1 = wasm.zigdom_dsl_create_container(ElementType.span);
+                    setClass(badge1, 'badge');
+                    const badgeText1 = createTextElement(ElementType.text, 'New');
+                    wasm.zigdom_dsl_add_child(badge1, badgeText1);
+
+                    const badge2 = wasm.zigdom_dsl_create_container(ElementType.span);
+                    setClass(badge2, 'badge');
+                    const badgeText2 = createTextElement(ElementType.text, 'Hot');
+                    wasm.zigdom_dsl_add_child(badge2, badgeText2);
+
+                    const badge3 = wasm.zigdom_dsl_create_container(ElementType.span);
+                    setClass(badge3, 'badge');
+                    const badgeText3 = createTextElement(ElementType.text, 'Beta');
+                    wasm.zigdom_dsl_add_child(badge3, badgeText3);
+
+                    wasm.zigdom_dsl_add_child(row2, badge1);
+                    wasm.zigdom_dsl_add_child(row2, badge2);
+                    wasm.zigdom_dsl_add_child(row2, badge3);
+
+                    wasm.zigdom_dsl_add_child(stack, h1);
+                    wasm.zigdom_dsl_add_child(stack, row1);
+                    wasm.zigdom_dsl_add_child(stack, sep);
+                    wasm.zigdom_dsl_add_child(stack, h2);
+                    wasm.zigdom_dsl_add_child(stack, row2);
+
+                    return stack;
+                }
+            },
+
+            dashboard: {
+                code: `dsl.ui.stack(.{}, .{
+    dsl.h2(.{}, "Dashboard"),
+    dsl.ui.grid(.{}, .{
+        dsl.ui.card(.{}, .{
+            dsl.ui.cardContent(.{}, .{
+                dsl.h3(.{}, "1,234"),
+                dsl.p(.{}, "Total Users"),
+            }),
+        }),
+        dsl.ui.card(.{}, .{
+            dsl.ui.cardContent(.{}, .{
+                dsl.h3(.{}, "$45,678"),
+                dsl.p(.{}, "Revenue"),
+            }),
+        }),
+        dsl.ui.card(.{}, .{
+            dsl.ui.cardContent(.{}, .{
+                dsl.h3(.{}, "89%"),
+                dsl.p(.{}, "Satisfaction"),
+            }),
+        }),
+    }),
+})`,
+                build: () => {
+                    const stack = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(stack, 'stack');
+
+                    const title = createTextElement(ElementType.h2, 'Dashboard');
+
+                    const grid = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(grid, 'grid-layout');
+
+                    // Card 1
+                    const card1 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(card1, 'card');
+                    const content1 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(content1, 'card-content');
+                    const val1 = createTextElement(ElementType.h3, '1,234');
+                    const label1 = createTextElement(ElementType.p, 'Total Users');
+                    wasm.zigdom_dsl_add_child(content1, val1);
+                    wasm.zigdom_dsl_add_child(content1, label1);
+                    wasm.zigdom_dsl_add_child(card1, content1);
+
+                    // Card 2
+                    const card2 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(card2, 'card');
+                    const content2 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(content2, 'card-content');
+                    const val2 = createTextElement(ElementType.h3, '$45,678');
+                    const label2 = createTextElement(ElementType.p, 'Revenue');
+                    wasm.zigdom_dsl_add_child(content2, val2);
+                    wasm.zigdom_dsl_add_child(content2, label2);
+                    wasm.zigdom_dsl_add_child(card2, content2);
+
+                    // Card 3
+                    const card3 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(card3, 'card');
+                    const content3 = wasm.zigdom_dsl_create_container(ElementType.div);
+                    setClass(content3, 'card-content');
+                    const val3 = createTextElement(ElementType.h3, '89%');
+                    const label3 = createTextElement(ElementType.p, 'Satisfaction');
+                    wasm.zigdom_dsl_add_child(content3, val3);
+                    wasm.zigdom_dsl_add_child(content3, label3);
+                    wasm.zigdom_dsl_add_child(card3, content3);
+
+                    wasm.zigdom_dsl_add_child(grid, card1);
+                    wasm.zigdom_dsl_add_child(grid, card2);
+                    wasm.zigdom_dsl_add_child(grid, card3);
+
+                    wasm.zigdom_dsl_add_child(stack, title);
+                    wasm.zigdom_dsl_add_child(stack, grid);
+
+                    return stack;
+                }
+            }
+        };
+
+        // Helper functions
+        function writeString(str) {
+            const ptr = wasm.zylix_wasm_alloc(str.length);
+            const bytes = new TextEncoder().encode(str);
+            new Uint8Array(wasmMemory.buffer, ptr, str.length).set(bytes);
+            return { ptr, len: str.length };
+        }
+
+        function createTextElement(type, text) {
+            const { ptr, len } = writeString(text);
+            return wasm.zigdom_dsl_create_text_element(type, ptr, len);
+        }
+
+        function setClass(id, className) {
+            const { ptr, len } = writeString(className);
+            wasm.zigdom_dsl_set_class(id, ptr, len);
+        }
+
+        function setPlaceholder(id, text) {
+            const { ptr, len } = writeString(text);
+            wasm.zigdom_dsl_set_placeholder(id, ptr, len);
+        }
+
+        function setRole(id, role) {
+            const { ptr, len } = writeString(role);
+            wasm.zigdom_dsl_set_role(id, ptr, len);
+        }
+
+        function setOnClick(id, callbackId) {
+            wasm.zigdom_dsl_set_onclick(id, callbackId);
+        }
+
+        function setStyle(id, style) {
+            // For now, use class-based styling
+        }
+
+        // Render DSL element to DOM
+        function renderElement(elementId, parent) {
+            // Build to component tree
+            const componentId = wasm.zigdom_dsl_build(elementId);
+            if (componentId === 0) return;
+
+            // Render the component tree
+            wasm.zigdom_component_render(componentId);
+
+            // Process render commands
+            const cmdCount = wasm.zigdom_component_get_render_command_count();
+            const elements = new Map();
+
+            for (let i = 0; i < cmdCount; i++) {
+                const cmdType = wasm.zigdom_component_get_render_command_type(i);
+                const compId = wasm.zigdom_component_get_render_command_component_id(i);
+                const parentId = wasm.zigdom_component_get_render_command_parent_id(i);
+                const compType = wasm.zigdom_component_get_render_command_component_type(i);
+
+                if (cmdType === 1) { // Create
+                    const el = createDomElement(compId, compType);
+                    elements.set(compId, el);
+
+                    if (parentId === 0) {
+                        parent.appendChild(el);
+                    } else if (elements.has(parentId)) {
+                        elements.get(parentId).appendChild(el);
+                    }
+                }
+            }
+
+            return cmdCount;
+        }
+
+        function createDomElement(compId, compType) {
+            const tagMap = {
+                0: 'div',      // container
+                1: 'span',     // text
+                2: 'button',   // button
+                3: 'input',    // input
+                4: 'h1',       // heading (h1)
+                5: 'p',        // paragraph
+                6: 'a',        // link
+                7: 'img'       // image
+            };
+
+            const tag = tagMap[compType] || 'div';
+            const el = document.createElement(tag);
+
+            // Get text content
+            const textPtr = wasm.zigdom_component_get_text(compId);
+            const textLen = wasm.zigdom_component_get_text_len(compId);
+            if (textPtr && textLen > 0) {
+                const text = new TextDecoder().decode(
+                    new Uint8Array(wasmMemory.buffer, textPtr, textLen)
+                );
+                el.textContent = text;
+            }
+
+            return el;
+        }
+
+        // Render preset directly to DOM (simplified approach)
+        function renderPresetToDom(presetName) {
+            const target = document.getElementById('render-target');
+            target.innerHTML = '';
+
+            wasm.zigdom_dsl_clear_elements();
+            wasm.zigdom_dsl_reset();
+            wasm.zigdom_component_reset();
+
+            const start = performance.now();
+            const preset = presets[presetName];
+            const rootId = preset.build();
+            const elementCount = wasm.zigdom_dsl_get_element_count();
+
+            // Build to component tree
+            const componentId = wasm.zigdom_dsl_build(rootId);
+            const componentCount = wasm.zigdom_component_get_count();
+
+            // Render
+            wasm.zigdom_component_render(componentId);
+            const cmdCount = wasm.zigdom_component_get_render_command_count();
+
+            const buildTime = performance.now() - start;
+
+            // Process render commands and build DOM
+            const elements = new Map();
+            for (let i = 0; i < cmdCount; i++) {
+                const cmdType = wasm.zigdom_component_get_render_command_type(i);
+                if (cmdType !== 1) continue; // Only process create commands
+
+                const compId = wasm.zigdom_component_get_render_command_component_id(i);
+                const parentId = wasm.zigdom_component_get_render_command_parent_id(i);
+                const compType = wasm.zigdom_component_get_render_command_component_type(i);
+
+                // Get class name from component
+                const comp = getComponentFromId(compId);
+                const el = createElementWithClass(compType, comp);
+                elements.set(compId, el);
+
+                if (parentId === 0) {
+                    target.appendChild(el);
+                } else if (elements.has(parentId)) {
+                    elements.get(parentId).appendChild(el);
+                }
+            }
+
+            // Update stats
+            document.getElementById('stat-elements').textContent = elementCount;
+            document.getElementById('stat-components').textContent = componentCount;
+            document.getElementById('stat-commands').textContent = cmdCount;
+            document.getElementById('stat-time').textContent = buildTime.toFixed(2);
+        }
+
+        function getComponentFromId(id) {
+            return {
+                type: wasm.zigdom_component_get_type(id),
+                textPtr: wasm.zigdom_component_get_text(id),
+                textLen: wasm.zigdom_component_get_text_len(id)
+            };
+        }
+
+        function createElementWithClass(compType, comp) {
+            const tagMap = {
+                0: 'div',
+                1: 'span',
+                2: 'button',
+                3: 'input',
+                4: 'h1',
+                5: 'p',
+                6: 'a',
+                7: 'img'
+            };
+            const headingMap = {
+                0: 'h1', 1: 'h2', 2: 'h3', 3: 'h4', 4: 'h5', 5: 'h6'
+            };
+
+            let tag = tagMap[compType] || 'div';
+            // Handle heading levels
+            if (compType === 4 && comp.level !== undefined) {
+                tag = headingMap[comp.level] || 'h1';
+            }
+
+            const el = document.createElement(tag);
+
+            if (comp.textPtr && comp.textLen > 0) {
+                const text = new TextDecoder().decode(
+                    new Uint8Array(wasmMemory.buffer, comp.textPtr, comp.textLen)
+                );
+                el.textContent = text;
+            }
+
+            return el;
+        }
+
+        function renderPreset(name) {
+            // Update button states
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update code display
+            document.getElementById('dsl-code').textContent = presets[name].code;
+
+            // Render the preset
+            renderPresetToDom(name);
+        }
+
+        // Initialize
+        async function init() {
+            try {
+                const response = await fetch('zylix.wasm');
+                const bytes = await response.arrayBuffer();
+                const result = await WebAssembly.instantiate(bytes, {
+                    env: {
+                        memory: new WebAssembly.Memory({ initial: 256, maximum: 512 })
+                    }
+                });
+
+                wasm = result.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize systems
+                wasm.zylix_init();
+                wasm.zigdom_component_init();
+                wasm.zigdom_dsl_init();
+
+                // Load element type constants
+                ElementType.div = wasm.zigdom_dsl_element_type_div();
+                ElementType.span = wasm.zigdom_dsl_element_type_span();
+                ElementType.section = wasm.zigdom_dsl_element_type_section();
+                ElementType.article = wasm.zigdom_dsl_element_type_article();
+                ElementType.header = wasm.zigdom_dsl_element_type_header();
+                ElementType.footer = wasm.zigdom_dsl_element_type_footer();
+                ElementType.nav = wasm.zigdom_dsl_element_type_nav();
+                ElementType.main = wasm.zigdom_dsl_element_type_main();
+                ElementType.h1 = wasm.zigdom_dsl_element_type_h1();
+                ElementType.h2 = wasm.zigdom_dsl_element_type_h2();
+                ElementType.h3 = wasm.zigdom_dsl_element_type_h3();
+                ElementType.h4 = wasm.zigdom_dsl_element_type_h4();
+                ElementType.h5 = wasm.zigdom_dsl_element_type_h5();
+                ElementType.h6 = wasm.zigdom_dsl_element_type_h6();
+                ElementType.p = wasm.zigdom_dsl_element_type_p();
+                ElementType.text = wasm.zigdom_dsl_element_type_text();
+                ElementType.button = wasm.zigdom_dsl_element_type_button();
+                ElementType.a = wasm.zigdom_dsl_element_type_a();
+                ElementType.input = wasm.zigdom_dsl_element_type_input();
+                ElementType.img = wasm.zigdom_dsl_element_type_img();
+                ElementType.ul = wasm.zigdom_dsl_element_type_ul();
+                ElementType.ol = wasm.zigdom_dsl_element_type_ol();
+                ElementType.li = wasm.zigdom_dsl_element_type_li();
+                ElementType.form = wasm.zigdom_dsl_element_type_form();
+                ElementType.label = wasm.zigdom_dsl_element_type_label();
+
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').textContent =
+                    `WASM loaded. DSL ready with ${Object.keys(ElementType).length} element types.`;
+
+                // Render default preset
+                renderPreset('card');
+
+            } catch (err) {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = `Error: ${err.message}`;
+                console.error(err);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
