@@ -39,3 +39,8 @@ platforms/android/*.iml
 coverage/
 *.profraw
 *.profdata
+
+# macOS
+platforms/macos/build/
+platforms/macos/*.xcodeproj/xcuserdata/
+platforms/macos/DerivedData/

@@ -1,0 +1,57 @@
+name: Zylix
+options:
+  bundleIdPrefix: com.zylix
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  Zylix:
+    type: application
+    platform: macOS
+    sources:
+      - path: Zylix/Sources
+        type: group
+    resources:
+      - path: Zylix/Resources
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zylix.macos
+        INFOPLIST_FILE: Zylix/Resources/Info.plist
+        PRODUCT_NAME: Zylix
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        LIBRARY_SEARCH_PATHS:
+          - "$(PROJECT_DIR)/../../core/zig-out/macos/lib"
+        SWIFT_OBJC_BRIDGING_HEADER: "$(PROJECT_DIR)/Zylix/Sources/Zylix-Bridging-Header.h"
+        OTHER_LDFLAGS:
+          - "-lzylix"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ENABLE_HARDENED_RUNTIME: YES
+
+    preBuildScripts:
+      - name: Build Zylix Core
+        script: |
+          cd "${PROJECT_DIR}/../../core"
+          zig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast --prefix zig-out/macos
+        basedOnDependencyAnalysis: false
+
+schemes:
+  Zylix:
+    build:
+      targets:
+        Zylix: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
