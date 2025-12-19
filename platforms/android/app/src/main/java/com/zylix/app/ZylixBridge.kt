@@ -12,12 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object ZylixBridge {
 
-    // Event types matching core/src/events.zig
+    // Event types matching core/include/zylix.h
     object EventType {
-        const val INCREMENT = 1
-        const val DECREMENT = 2
-        const val RESET = 3
-        const val SET_VALUE = 4
+        const val INCREMENT = 0x1000   // ZYLIX_EVENT_COUNTER_INCREMENT
+        const val DECREMENT = 0x1001   // ZYLIX_EVENT_COUNTER_DECREMENT
+        const val RESET = 0x1002       // ZYLIX_EVENT_COUNTER_RESET
     }
 
     // Result codes matching core/src/abi.zig
@@ -37,10 +36,10 @@ object ZylixBridge {
 
     init {
         try {
-            System.loadLibrary("zylix")
+            System.loadLibrary("zylix_jni")
             isInitialized = true
         } catch (e: UnsatisfiedLinkError) {
-            android.util.Log.e("ZylixBridge", "Failed to load libzylix.so: ${e.message}")
+            android.util.Log.e("ZylixBridge", "Failed to load libzylix_jni.so: ${e.message}")
             isInitialized = false
         }
     }
@@ -52,7 +51,7 @@ object ZylixBridge {
     private external fun nativeGetState(): String?
     private external fun nativeGetStateVersion(): Long
     private external fun nativeDispatch(eventType: Int, payload: Int): Int
-    private external fun nativeGetLastError(): Int
+    private external fun nativeGetLastError(): String?
 
     /**
      * Initialize Zylix Core
@@ -110,13 +109,6 @@ object ZylixBridge {
     }
 
     /**
-     * Set the counter to a specific value
-     */
-    fun setValue(value: Int): Boolean {
-        return dispatch(EventType.SET_VALUE, value)
-    }
-
-    /**
      * Dispatch an event to Zylix Core
      */
     private fun dispatch(eventType: Int, payload: Int): Boolean {
@@ -127,7 +119,8 @@ object ZylixBridge {
             syncState()
             return true
         }
-        android.util.Log.e("ZylixBridge", "Dispatch failed: $result, error: ${nativeGetLastError()}")
+        val errorMsg = nativeGetLastError() ?: "Unknown error"
+        android.util.Log.e("ZylixBridge", "Dispatch failed: $result, error: $errorMsg")
         return false
     }
 
