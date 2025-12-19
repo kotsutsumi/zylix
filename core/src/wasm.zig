@@ -15,6 +15,7 @@ const scheduler = @import("scheduler.zig");
 const llm = @import("llm.zig");
 const css = @import("css.zig");
 const layout = @import("layout.zig");
+const component = @import("component.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -787,6 +788,420 @@ export fn zigdom_layout_get_results_ptr() ?*const anyopaque {
 /// Get result struct size
 export fn zigdom_layout_get_result_size() usize {
     return layout.getResultSize();
+}
+
+// === ZigDom Component System ===
+
+/// Initialize component system
+export fn zigdom_component_init() void {
+    component.initGlobal();
+}
+
+/// Reset component tree
+export fn zigdom_component_reset() void {
+    component.getTree().reset();
+}
+
+/// Create a container component
+export fn zigdom_component_create_container() u32 {
+    return component.getTree().create(component.Component.container());
+}
+
+/// Create a text component
+export fn zigdom_component_create_text(text_ptr: [*]const u8, text_len: usize) u32 {
+    return component.getTree().create(component.Component.text(text_ptr[0..text_len]));
+}
+
+/// Create a button component
+export fn zigdom_component_create_button(label_ptr: [*]const u8, label_len: usize) u32 {
+    return component.getTree().create(component.Component.button(label_ptr[0..label_len]));
+}
+
+/// Create an input component
+export fn zigdom_component_create_input(input_type: u8) u32 {
+    return component.getTree().create(component.Component.input(@enumFromInt(input_type)));
+}
+
+/// Create a heading component
+export fn zigdom_component_create_heading(level: u8, text_ptr: [*]const u8, text_len: usize) u32 {
+    return component.getTree().create(component.Component.heading(@enumFromInt(level), text_ptr[0..text_len]));
+}
+
+/// Create a paragraph component
+export fn zigdom_component_create_paragraph(text_ptr: [*]const u8, text_len: usize) u32 {
+    return component.getTree().create(component.Component.paragraph(text_ptr[0..text_len]));
+}
+
+/// Create a link component
+export fn zigdom_component_create_link(href_ptr: [*]const u8, href_len: usize, label_ptr: [*]const u8, label_len: usize) u32 {
+    return component.getTree().create(component.Component.link(href_ptr[0..href_len], label_ptr[0..label_len]));
+}
+
+/// Create an image component
+export fn zigdom_component_create_image(src_ptr: [*]const u8, src_len: usize, alt_ptr: [*]const u8, alt_len: usize) u32 {
+    return component.getTree().create(component.Component.image(src_ptr[0..src_len], alt_ptr[0..alt_len]));
+}
+
+/// Add child to parent component
+export fn zigdom_component_add_child(parent_id: u32, child_id: u32) bool {
+    return component.getTree().addChild(parent_id, child_id);
+}
+
+/// Remove component
+export fn zigdom_component_remove(id: u32, recursive: bool) void {
+    component.getTree().remove(id, recursive);
+}
+
+/// Set component style
+export fn zigdom_component_set_style(id: u32, style_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.style_id = style_id;
+        c.needs_render = true;
+    }
+}
+
+/// Set component hover style
+export fn zigdom_component_set_hover_style(id: u32, style_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.hover_style_id = style_id;
+    }
+}
+
+/// Set component focus style
+export fn zigdom_component_set_focus_style(id: u32, style_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.focus_style_id = style_id;
+    }
+}
+
+/// Set component active style
+export fn zigdom_component_set_active_style(id: u32, style_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.active_style_id = style_id;
+    }
+}
+
+/// Set component disabled style
+export fn zigdom_component_set_disabled_style(id: u32, style_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.disabled_style_id = style_id;
+    }
+}
+
+/// Set component layout
+export fn zigdom_component_set_layout(id: u32, layout_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.layout_id = layout_id;
+        c.needs_render = true;
+    }
+}
+
+/// Set component text content
+export fn zigdom_component_set_text(id: u32, text_ptr: [*]const u8, text_len: usize) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.setText(text_ptr[0..text_len]);
+        c.needs_render = true;
+    }
+}
+
+/// Set component class name
+export fn zigdom_component_set_class(id: u32, class_ptr: [*]const u8, class_len: usize) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.setClassName(class_ptr[0..class_len]);
+        c.needs_render = true;
+    }
+}
+
+/// Set input placeholder
+export fn zigdom_component_set_placeholder(id: u32, text_ptr: [*]const u8, text_len: usize) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.setPlaceholder(text_ptr[0..text_len]);
+        c.needs_render = true;
+    }
+}
+
+/// Set input value
+export fn zigdom_component_set_value(id: u32, text_ptr: [*]const u8, text_len: usize) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.setValue(text_ptr[0..text_len]);
+        c.needs_render = true;
+    }
+}
+
+/// Set aria label
+export fn zigdom_component_set_aria_label(id: u32, label_ptr: [*]const u8, label_len: usize) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.setAriaLabel(label_ptr[0..label_len]);
+    }
+}
+
+/// Set tab index
+export fn zigdom_component_set_tab_index(id: u32, index: i8) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.tab_index = index;
+    }
+}
+
+/// Set data value
+export fn zigdom_component_set_data(id: u32, value: i64) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.data_value = value;
+    }
+}
+
+/// Add click event handler
+export fn zigdom_component_on_click(id: u32, callback_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        if (c.handler_count < component.MAX_EVENT_HANDLERS) {
+            c.handlers[c.handler_count] = .{
+                .event_type = .click,
+                .callback_id = callback_id,
+            };
+            c.handler_count += 1;
+        }
+    }
+}
+
+/// Add input event handler
+export fn zigdom_component_on_input(id: u32, callback_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        if (c.handler_count < component.MAX_EVENT_HANDLERS) {
+            c.handlers[c.handler_count] = .{
+                .event_type = .input,
+                .callback_id = callback_id,
+            };
+            c.handler_count += 1;
+        }
+    }
+}
+
+/// Add change event handler
+export fn zigdom_component_on_change(id: u32, callback_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        if (c.handler_count < component.MAX_EVENT_HANDLERS) {
+            c.handlers[c.handler_count] = .{
+                .event_type = .change,
+                .callback_id = callback_id,
+            };
+            c.handler_count += 1;
+        }
+    }
+}
+
+/// Add focus event handler
+export fn zigdom_component_on_focus(id: u32, callback_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        if (c.handler_count < component.MAX_EVENT_HANDLERS) {
+            c.handlers[c.handler_count] = .{
+                .event_type = .focus,
+                .callback_id = callback_id,
+            };
+            c.handler_count += 1;
+        }
+    }
+}
+
+/// Add blur event handler
+export fn zigdom_component_on_blur(id: u32, callback_id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        if (c.handler_count < component.MAX_EVENT_HANDLERS) {
+            c.handlers[c.handler_count] = .{
+                .event_type = .blur,
+                .callback_id = callback_id,
+            };
+            c.handler_count += 1;
+        }
+    }
+}
+
+/// Set component hover state
+export fn zigdom_component_set_hover(id: u32, is_hover: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.setHover(is_hover);
+    }
+}
+
+/// Set component focus state
+export fn zigdom_component_set_focus(id: u32, is_focus: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.setFocus(is_focus);
+    }
+}
+
+/// Set component active state
+export fn zigdom_component_set_active(id: u32, is_active: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.setActive(is_active);
+    }
+}
+
+/// Set component disabled state
+export fn zigdom_component_set_disabled(id: u32, is_disabled: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.state.disabled = is_disabled;
+        c.needs_render = true;
+    }
+}
+
+/// Set component visible state
+export fn zigdom_component_set_visible(id: u32, visible: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.visible = visible;
+        c.needs_render = true;
+    }
+}
+
+/// Dispatch event to component (returns callback ID or 0)
+export fn zigdom_component_dispatch_event(id: u32, event_type: u8) u32 {
+    return component.getTree().dispatchEvent(id, @enumFromInt(event_type)) orelse 0;
+}
+
+/// Mark component as dirty (needs re-render)
+export fn zigdom_component_mark_dirty(id: u32) void {
+    component.getTree().markDirty(id);
+}
+
+/// Get component count
+export fn zigdom_component_get_count() u32 {
+    return component.getTree().count();
+}
+
+/// Get root component ID
+export fn zigdom_component_get_root() u32 {
+    return component.getTree().root_id;
+}
+
+/// Render component tree (generates render commands)
+export fn zigdom_component_render(root_id: u32) void {
+    component.getRenderer().render(root_id);
+}
+
+/// Get render command count
+export fn zigdom_component_get_render_command_count() u32 {
+    return component.getRenderer().getCommandCount();
+}
+
+/// Get render command type at index
+export fn zigdom_component_get_render_command_type(index: u32) u8 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return @intFromEnum(cmd.command_type);
+    }
+    return 0;
+}
+
+/// Get render command component ID at index
+export fn zigdom_component_get_render_command_component_id(index: u32) u32 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return cmd.component_id;
+    }
+    return 0;
+}
+
+/// Get render command parent ID at index
+export fn zigdom_component_get_render_command_parent_id(index: u32) u32 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return cmd.parent_id;
+    }
+    return 0;
+}
+
+/// Get render command component type at index
+export fn zigdom_component_get_render_command_component_type(index: u32) u8 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return @intFromEnum(cmd.component_type);
+    }
+    return 0;
+}
+
+/// Get render command style ID at index
+export fn zigdom_component_get_render_command_style_id(index: u32) u32 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return cmd.style_id;
+    }
+    return 0;
+}
+
+/// Get render command event type at index
+export fn zigdom_component_get_render_command_event_type(index: u32) u8 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return @intFromEnum(cmd.event_type);
+    }
+    return 0;
+}
+
+/// Get render command callback ID at index
+export fn zigdom_component_get_render_command_callback_id(index: u32) u32 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return cmd.callback_id;
+    }
+    return 0;
+}
+
+/// Get render command data pointer at index
+export fn zigdom_component_get_render_command_data(index: u32) ?[*]const u8 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        if (cmd.data_len > 0) {
+            return &cmd.data;
+        }
+    }
+    return null;
+}
+
+/// Get render command data length at index
+export fn zigdom_component_get_render_command_data_len(index: u32) u16 {
+    if (component.getRenderer().getCommand(index)) |cmd| {
+        return cmd.data_len;
+    }
+    return 0;
+}
+
+/// Get component text content
+export fn zigdom_component_get_text(id: u32) ?[*]const u8 {
+    if (component.getTree().get(id)) |c| {
+        if (c.props.text_len > 0) {
+            return &c.props.text;
+        }
+    }
+    return null;
+}
+
+/// Get component text length
+export fn zigdom_component_get_text_len(id: u32) u16 {
+    if (component.getTree().get(id)) |c| {
+        return c.props.text_len;
+    }
+    return 0;
+}
+
+/// Get component type
+export fn zigdom_component_get_type(id: u32) u8 {
+    if (component.getTree().get(id)) |c| {
+        return @intFromEnum(c.component_type);
+    }
+    return 0;
+}
+
+/// Get effective style ID (based on current state)
+export fn zigdom_component_get_effective_style(id: u32) u32 {
+    if (component.getTree().get(id)) |c| {
+        return c.getEffectiveStyleId();
+    }
+    return 0;
+}
+
+/// Check if component needs render
+export fn zigdom_component_needs_render(id: u32) bool {
+    if (component.getTree().get(id)) |c| {
+        return c.needs_render;
+    }
+    return false;
+}
+
+/// Clear needs render flag
+export fn zigdom_component_clear_render_flag(id: u32) void {
+    if (component.getTree().get(id)) |c| {
+        c.needs_render = false;
+    }
 }
 
 // === Panic handler for WASM ===

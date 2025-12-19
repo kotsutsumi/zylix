@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Component System Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e8e8e8;
+        }
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .panel h2 {
+            margin-top: 0;
+            color: #00d9ff;
+            font-size: 1.2em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-group label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        button.primary {
+            background: #00d9ff;
+            color: #1a1a2e;
+        }
+        button.primary:hover {
+            background: #00b8d9;
+            transform: translateY(-1px);
+        }
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e8e8e8;
+        }
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        button.danger {
+            background: #ff4757;
+            color: white;
+        }
+        button.danger:hover {
+            background: #ff3344;
+        }
+        input[type="text"], select {
+            padding: 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            font-size: 14px;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #render-output {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+        }
+        #render-output:empty::before {
+            content: 'Components will render here...';
+            color: #555;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00d9ff;
+        }
+        .stat-label {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+        #tree-view {
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre;
+        }
+        .tree-node {
+            padding: 2px 0;
+        }
+        .tree-type {
+            color: #ff79c6;
+        }
+        .tree-id {
+            color: #8be9fd;
+        }
+        .tree-text {
+            color: #50fa7b;
+        }
+        #commands-log {
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .cmd {
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .cmd-type {
+            color: #bd93f9;
+            font-weight: bold;
+        }
+        /* Rendered component styles */
+        .zig-container {
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .zig-button {
+            padding: 8px 16px;
+            background: #00d9ff;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .zig-button:hover {
+            background: #00b8d9;
+        }
+        .zig-text {
+            margin: 5px;
+        }
+        .zig-heading {
+            margin: 10px 0;
+        }
+        .zig-input {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            margin: 5px;
+        }
+        .zig-link {
+            color: #00d9ff;
+            text-decoration: none;
+        }
+        .zig-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom Component System</h1>
+    <p class="subtitle">Phase 5.3: UI Component System - React-like components in Zig</p>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="component-count">0</div>
+            <div class="stat-label">Components</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="render-commands">0</div>
+            <div class="stat-label">Render Commands</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="wasm-size">0</div>
+            <div class="stat-label">WASM Size (KB)</div>
+        </div>
+    </div>
+
+    <div class="demo-container">
+        <div class="panel">
+            <h2>Create Components</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Component Type</label>
+                    <select id="component-type">
+                        <option value="container">Container</option>
+                        <option value="text">Text</option>
+                        <option value="button">Button</option>
+                        <option value="heading">Heading</option>
+                        <option value="paragraph">Paragraph</option>
+                        <option value="input">Input</option>
+                        <option value="link">Link</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Text Content</label>
+                    <input type="text" id="component-text" placeholder="Enter text...">
+                </div>
+                <div class="control-group">
+                    <label>Parent ID (0 = root)</label>
+                    <input type="text" id="parent-id" value="0">
+                </div>
+                <div class="button-row">
+                    <button class="primary" onclick="createComponent()">Create Component</button>
+                    <button class="secondary" onclick="renderTree()">Render Tree</button>
+                    <button class="danger" onclick="resetComponents()">Reset All</button>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 20px;">Quick Presets</h2>
+            <div class="button-row">
+                <button class="secondary" onclick="presetSimpleCard()">Simple Card</button>
+                <button class="secondary" onclick="presetLoginForm()">Login Form</button>
+                <button class="secondary" onclick="presetNavBar()">Nav Bar</button>
+                <button class="secondary" onclick="presetArticle()">Article</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Rendered Output</h2>
+            <div id="render-output"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Component Tree</h2>
+            <div id="tree-view"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Render Commands</h2>
+            <div id="commands-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let wasm = null;
+        let memory = null;
+        let componentIds = [];
+        let callbacks = {};
+
+        const ComponentType = {
+            container: 0,
+            text: 1,
+            button: 2,
+            input: 3,
+            image: 4,
+            link: 5,
+            list: 6,
+            list_item: 7,
+            heading: 8,
+            paragraph: 9
+        };
+
+        const RenderCommandType = {
+            0: 'create_element',
+            1: 'set_text',
+            2: 'set_attribute',
+            3: 'set_style',
+            4: 'append_child',
+            5: 'remove_child',
+            6: 'add_event_listener',
+            7: 'remove_element',
+            8: 'update_element'
+        };
+
+        const EventType = {
+            none: 0,
+            click: 1,
+            double_click: 2,
+            mouse_enter: 3,
+            mouse_leave: 4,
+            mouse_down: 5,
+            mouse_up: 6,
+            focus: 7,
+            blur: 8,
+            input: 9,
+            change: 10,
+            submit: 11
+        };
+
+        async function loadWasm() {
+            try {
+                const response = await fetch('zylix.wasm');
+                const bytes = await response.arrayBuffer();
+                document.getElementById('wasm-size').textContent = Math.round(bytes.byteLength / 1024);
+
+                const imports = {
+                    env: {
+                        memory: new WebAssembly.Memory({ initial: 256 })
+                    }
+                };
+
+                const result = await WebAssembly.instantiate(bytes, imports);
+                wasm = result.instance.exports;
+                memory = wasm.memory || imports.env.memory;
+
+                // Initialize component system
+                wasm.zigdom_component_init();
+
+                updateStats();
+                console.log('Component system initialized');
+            } catch (e) {
+                console.error('Failed to load WASM:', e);
+            }
+        }
+
+        function encodeString(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+        function decodeString(ptr, len) {
+            if (!ptr || len === 0) return '';
+            const bytes = new Uint8Array(memory.buffer, ptr, len);
+            return new TextDecoder().decode(bytes);
+        }
+
+        function writeString(str) {
+            const encoded = encodeString(str);
+            const ptr = wasm.zylix_wasm_alloc(encoded.length);
+            if (!ptr) return { ptr: 0, len: 0 };
+            new Uint8Array(memory.buffer, ptr, encoded.length).set(encoded);
+            return { ptr, len: encoded.length };
+        }
+
+        function createComponent() {
+            const type = document.getElementById('component-type').value;
+            const text = document.getElementById('component-text').value;
+            const parentId = parseInt(document.getElementById('parent-id').value) || 0;
+
+            let componentId = 0;
+            const { ptr, len } = writeString(text || `${type}-${componentIds.length + 1}`);
+
+            switch (type) {
+                case 'container':
+                    componentId = wasm.zigdom_component_create_container();
+                    break;
+                case 'text':
+                    componentId = wasm.zigdom_component_create_text(ptr, len);
+                    break;
+                case 'button':
+                    componentId = wasm.zigdom_component_create_button(ptr, len);
+                    // Add click handler
+                    wasm.zigdom_component_on_click(componentId, componentId);
+                    break;
+                case 'heading':
+                    componentId = wasm.zigdom_component_create_heading(1, ptr, len);
+                    break;
+                case 'paragraph':
+                    componentId = wasm.zigdom_component_create_paragraph(ptr, len);
+                    break;
+                case 'input':
+                    componentId = wasm.zigdom_component_create_input(0); // text input
+                    if (text) {
+                        const { ptr: pPtr, len: pLen } = writeString(text);
+                        wasm.zigdom_component_set_placeholder(componentId, pPtr, pLen);
+                    }
+                    break;
+                case 'link':
+                    const { ptr: hPtr, len: hLen } = writeString('#');
+                    componentId = wasm.zigdom_component_create_link(hPtr, hLen, ptr, len);
+                    break;
+            }
+
+            if (componentId > 0) {
+                componentIds.push(componentId);
+
+                // Add to parent if specified
+                if (parentId > 0) {
+                    wasm.zigdom_component_add_child(parentId, componentId);
+                }
+
+                updateStats();
+                updateTreeView();
+                console.log(`Created ${type} component with ID: ${componentId}`);
+            }
+
+            wasm.zylix_wasm_free_scratch();
+        }
+
+        function renderTree() {
+            const rootId = wasm.zigdom_component_get_root();
+            if (rootId === 0) {
+                document.getElementById('render-output').innerHTML = '<em>No components to render</em>';
+                return;
+            }
+
+            // Generate render commands
+            wasm.zigdom_component_render(rootId);
+            const commandCount = wasm.zigdom_component_get_render_command_count();
+
+            document.getElementById('render-commands').textContent = commandCount;
+
+            // Process render commands
+            const output = document.getElementById('render-output');
+            output.innerHTML = '';
+
+            const elements = {};
+            const commandsLog = [];
+
+            for (let i = 0; i < commandCount; i++) {
+                const cmdType = wasm.zigdom_component_get_render_command_type(i);
+                const componentId = wasm.zigdom_component_get_render_command_component_id(i);
+                const parentId = wasm.zigdom_component_get_render_command_parent_id(i);
+                const componentType = wasm.zigdom_component_get_render_command_component_type(i);
+                const styleId = wasm.zigdom_component_get_render_command_style_id(i);
+                const dataPtr = wasm.zigdom_component_get_render_command_data(i);
+                const dataLen = wasm.zigdom_component_get_render_command_data_len(i);
+                const data = decodeString(dataPtr, dataLen);
+
+                const cmdName = RenderCommandType[cmdType] || 'unknown';
+                commandsLog.push(`<div class="cmd"><span class="cmd-type">${cmdName}</span> id=${componentId} parent=${parentId} type=${componentType} data="${data}"</div>`);
+
+                switch (cmdType) {
+                    case 0: // create_element
+                        const el = createDOMElement(componentType, componentId);
+                        elements[componentId] = el;
+
+                        if (parentId === 0) {
+                            output.appendChild(el);
+                        } else if (elements[parentId]) {
+                            elements[parentId].appendChild(el);
+                        }
+                        break;
+                    case 1: // set_text
+                        if (elements[componentId]) {
+                            const textNode = document.createTextNode(data);
+                            elements[componentId].appendChild(textNode);
+                        }
+                        break;
+                    case 3: // set_style
+                        // Style would be applied here if we had CSS system integrated
+                        break;
+                    case 6: // add_event_listener
+                        const eventType = wasm.zigdom_component_get_render_command_event_type(i);
+                        const callbackId = wasm.zigdom_component_get_render_command_callback_id(i);
+                        if (elements[componentId] && eventType === 1) { // click
+                            elements[componentId].addEventListener('click', () => {
+                                handleComponentClick(componentId, callbackId);
+                            });
+                        }
+                        break;
+                }
+            }
+
+            document.getElementById('commands-log').innerHTML = commandsLog.join('');
+        }
+
+        function createDOMElement(componentType, componentId) {
+            let el;
+            switch (componentType) {
+                case ComponentType.container:
+                    el = document.createElement('div');
+                    el.className = 'zig-container';
+                    break;
+                case ComponentType.text:
+                    el = document.createElement('span');
+                    el.className = 'zig-text';
+                    break;
+                case ComponentType.button:
+                    el = document.createElement('button');
+                    el.className = 'zig-button';
+                    break;
+                case ComponentType.input:
+                    el = document.createElement('input');
+                    el.className = 'zig-input';
+                    el.type = 'text';
+                    // Get placeholder from component
+                    break;
+                case ComponentType.heading:
+                    el = document.createElement('h2');
+                    el.className = 'zig-heading';
+                    break;
+                case ComponentType.paragraph:
+                    el = document.createElement('p');
+                    el.className = 'zig-text';
+                    break;
+                case ComponentType.link:
+                    el = document.createElement('a');
+                    el.className = 'zig-link';
+                    el.href = '#';
+                    break;
+                default:
+                    el = document.createElement('div');
+            }
+            el.dataset.componentId = componentId;
+            return el;
+        }
+
+        function handleComponentClick(componentId, callbackId) {
+            console.log(`Click event: component=${componentId}, callback=${callbackId}`);
+
+            // Dispatch event through Zig
+            const result = wasm.zigdom_component_dispatch_event(componentId, EventType.click);
+            console.log(`Event dispatch result: ${result}`);
+
+            // Visual feedback
+            const el = document.querySelector(`[data-component-id="${componentId}"]`);
+            if (el) {
+                el.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    el.style.transform = '';
+                }, 100);
+            }
+        }
+
+        function resetComponents() {
+            wasm.zigdom_component_reset();
+            componentIds = [];
+            document.getElementById('render-output').innerHTML = '';
+            document.getElementById('commands-log').innerHTML = '';
+            updateStats();
+            updateTreeView();
+        }
+
+        function updateStats() {
+            const count = wasm.zigdom_component_get_count();
+            document.getElementById('component-count').textContent = count;
+        }
+
+        function updateTreeView() {
+            const rootId = wasm.zigdom_component_get_root();
+            if (rootId === 0) {
+                document.getElementById('tree-view').innerHTML = '<em>No components</em>';
+                return;
+            }
+
+            const tree = buildTreeString(rootId, 0);
+            document.getElementById('tree-view').innerHTML = tree;
+        }
+
+        function buildTreeString(id, depth) {
+            if (id === 0) return '';
+
+            const type = wasm.zigdom_component_get_type(id);
+            const textPtr = wasm.zigdom_component_get_text(id);
+            const textLen = wasm.zigdom_component_get_text_len(id);
+            const text = decodeString(textPtr, textLen);
+
+            const typeName = Object.keys(ComponentType).find(k => ComponentType[k] === type) || 'unknown';
+            const indent = '  '.repeat(depth);
+            const textDisplay = text ? ` "${text}"` : '';
+
+            let result = `<div class="tree-node">${indent}<span class="tree-type">${typeName}</span> <span class="tree-id">#${id}</span><span class="tree-text">${textDisplay}</span></div>`;
+
+            // Note: We don't have direct access to children from WASM in this simplified version
+            // A full implementation would iterate children
+
+            return result;
+        }
+
+        // Presets
+        function presetSimpleCard() {
+            resetComponents();
+
+            // Create card container
+            const card = wasm.zigdom_component_create_container();
+
+            // Create heading
+            const { ptr: hPtr, len: hLen } = writeString('Welcome to ZigDom');
+            const heading = wasm.zigdom_component_create_heading(2, hPtr, hLen);
+            wasm.zigdom_component_add_child(card, heading);
+
+            // Create paragraph
+            const { ptr: pPtr, len: pLen } = writeString('This is a component built entirely in Zig!');
+            const para = wasm.zigdom_component_create_paragraph(pPtr, pLen);
+            wasm.zigdom_component_add_child(card, para);
+
+            // Create button
+            const { ptr: bPtr, len: bLen } = writeString('Click Me');
+            const btn = wasm.zigdom_component_create_button(bPtr, bLen);
+            wasm.zigdom_component_on_click(btn, btn);
+            wasm.zigdom_component_add_child(card, btn);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetLoginForm() {
+            resetComponents();
+
+            // Create form container
+            const form = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Login');
+            const title = wasm.zigdom_component_create_heading(2, tPtr, tLen);
+            wasm.zigdom_component_add_child(form, title);
+
+            // Email input
+            const emailInput = wasm.zigdom_component_create_input(0);
+            const { ptr: ePtr, len: eLen } = writeString('Email address');
+            wasm.zigdom_component_set_placeholder(emailInput, ePtr, eLen);
+            wasm.zigdom_component_add_child(form, emailInput);
+
+            // Password input
+            const passInput = wasm.zigdom_component_create_input(1); // password type
+            const { ptr: pPtr, len: pLen } = writeString('Password');
+            wasm.zigdom_component_set_placeholder(passInput, pPtr, pLen);
+            wasm.zigdom_component_add_child(form, passInput);
+
+            // Submit button
+            const { ptr: sPtr, len: sLen } = writeString('Sign In');
+            const submit = wasm.zigdom_component_create_button(sPtr, sLen);
+            wasm.zigdom_component_on_click(submit, submit);
+            wasm.zigdom_component_add_child(form, submit);
+
+            // Link
+            const { ptr: lhPtr, len: lhLen } = writeString('#forgot');
+            const { ptr: ltPtr, len: ltLen } = writeString('Forgot password?');
+            const link = wasm.zigdom_component_create_link(lhPtr, lhLen, ltPtr, ltLen);
+            wasm.zigdom_component_add_child(form, link);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetNavBar() {
+            resetComponents();
+
+            // Nav container
+            const nav = wasm.zigdom_component_create_container();
+
+            // Brand
+            const { ptr: bPtr, len: bLen } = writeString('ZigDom');
+            const brand = wasm.zigdom_component_create_heading(1, bPtr, bLen);
+            wasm.zigdom_component_add_child(nav, brand);
+
+            // Links
+            const links = ['Home', 'About', 'Contact'];
+            for (const label of links) {
+                const { ptr: lhPtr, len: lhLen } = writeString('#' + label.toLowerCase());
+                const { ptr: ltPtr, len: ltLen } = writeString(label);
+                const link = wasm.zigdom_component_create_link(lhPtr, lhLen, ltPtr, ltLen);
+                wasm.zigdom_component_add_child(nav, link);
+            }
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetArticle() {
+            resetComponents();
+
+            // Article container
+            const article = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Understanding ZigDom');
+            const title = wasm.zigdom_component_create_heading(1, tPtr, tLen);
+            wasm.zigdom_component_add_child(article, title);
+
+            // Paragraphs
+            const paragraphs = [
+                'ZigDom is a Zig-native UI component system designed for WebAssembly.',
+                'It provides React-like component primitives while maintaining the performance benefits of Zig.',
+                'Components are managed in Zig memory with JavaScript serving only as the I/O layer.'
+            ];
+
+            for (const text of paragraphs) {
+                const { ptr, len } = writeString(text);
+                const para = wasm.zigdom_component_create_paragraph(ptr, len);
+                wasm.zigdom_component_add_child(article, para);
+            }
+
+            // Read more button
+            const { ptr: bPtr, len: bLen } = writeString('Read More');
+            const btn = wasm.zigdom_component_create_button(bPtr, bLen);
+            wasm.zigdom_component_on_click(btn, btn);
+            wasm.zigdom_component_add_child(article, btn);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        // Initialize
+        loadWasm();
+    </script>
+</body>
+</html>
