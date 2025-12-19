@@ -97,10 +97,10 @@ zylix/
 ### Phase 2: Core Enhancement
 | Task | Description | Status |
 |------|-------------|--------|
-| 2.1  | Generic state container | Pending |
-| 2.2  | Diff calculation engine | Pending |
-| 2.3  | Event queue system | Pending |
-| 2.4  | Memory management patterns | Pending |
+| 2.1  | Generic state container | ✅ Done |
+| 2.2  | Diff calculation engine | ✅ Done |
+| 2.3  | Event queue system | ✅ Done |
+| 2.4  | Memory management patterns | ✅ Done |
 
 ### Phase 3: Platform Expansion
 | Task | Description | Status |
@@ -172,7 +172,7 @@ pub export fn zylix_deinit() void;
 - [x] Counter state is managed entirely in Zig
 - [x] UI updates reflect Zig state changes
 - [x] No crashes, no memory leaks
-- [x] Binary size < 500KB (core only) - ~5KB with ReleaseSmall optimization
+- [x] Binary size < 500KB (core only) - ~8.5KB with ReleaseSmall (Phase 2)
 
 ---
 

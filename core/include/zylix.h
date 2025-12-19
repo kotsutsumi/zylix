@@ -18,7 +18,7 @@ extern "C" {
 
 /* === Version === */
 
-#define ZYLIX_ABI_VERSION 1
+#define ZYLIX_ABI_VERSION 2
 
 /* === Result Codes === */
 
@@ -176,6 +176,87 @@ size_t zylix_copy_string(
     char* dst,
     size_t dst_len
 );
+
+/* === Phase 2: Event Queue Functions === */
+
+/* Event priority levels */
+#define ZYLIX_PRIORITY_LOW       0
+#define ZYLIX_PRIORITY_NORMAL    1
+#define ZYLIX_PRIORITY_HIGH      2
+#define ZYLIX_PRIORITY_IMMEDIATE 3
+
+/**
+ * Queue an event for later processing.
+ * Use zylix_process_events to process queued events.
+ *
+ * @param event_type Event type identifier
+ * @param payload    Event payload (can be NULL)
+ * @param payload_len Payload length in bytes (max 64)
+ * @param priority   Event priority (0=low, 1=normal, 2=high, 3=immediate)
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_queue_event(
+    uint32_t event_type,
+    const void* payload,
+    size_t payload_len,
+    uint8_t priority
+);
+
+/**
+ * Process queued events.
+ * Call this from your main loop or event handler.
+ *
+ * @param max_events Maximum number of events to process
+ * @return Number of events processed
+ */
+uint32_t zylix_process_events(uint32_t max_events);
+
+/**
+ * Get number of events waiting in queue.
+ *
+ * @return Queue depth
+ */
+uint32_t zylix_queue_depth(void);
+
+/**
+ * Clear all queued events.
+ */
+void zylix_queue_clear(void);
+
+/* === Phase 2: Diff Functions === */
+
+/**
+ * Diff information structure.
+ * Tracks which fields changed since last state update.
+ */
+typedef struct {
+    uint64_t changed_mask;   /* Bitmask of changed fields */
+    uint8_t  change_count;   /* Number of changed fields */
+    uint64_t version;        /* State version when diff was calculated */
+} zylix_diff_t;
+
+/**
+ * Get diff since last state change.
+ * Use changed_mask to check which fields changed.
+ *
+ * @return Pointer to diff info, NULL if not initialized
+ */
+const zylix_diff_t* zylix_get_diff(void);
+
+/**
+ * Check if a specific field changed.
+ * Field IDs are the index of fields in the state struct.
+ *
+ * @param field_id Field index (0-based)
+ * @return true if field changed
+ */
+bool zylix_field_changed(uint16_t field_id);
+
+/* === Field IDs for AppState === */
+/* These correspond to the field order in AppState struct */
+#define ZYLIX_FIELD_COUNTER    0
+#define ZYLIX_FIELD_INPUT_TEXT 1
+#define ZYLIX_FIELD_INPUT_LEN  2
 
 #ifdef __cplusplus
 }
