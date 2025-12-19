@@ -58,7 +58,7 @@ ZigDom positions Zig as the central execution layer for web applications.
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| Virtual DOM | Pending | Reconciliation in Zig |
+| Virtual DOM | ✅ | Reconciliation & diffing in Zig |
 
 ## CSS Utility System
 
@@ -168,6 +168,56 @@ const card = dsl.ui.card(.{}, .{
 | `ui.grid` | Grid container |
 | `ui.stack` | Vertical stack layout |
 
+## Virtual DOM & Reconciliation
+
+Efficient UI updates through diffing:
+
+```zig
+const vdom = @import("vdom.zig");
+
+// Build new UI state
+const div = vdom.createElement(.div);
+const text = vdom.createText("Hello, World!");
+vdom.addChild(div, text);
+vdom.setRoot(div);
+
+// Commit and get patches
+const patch_count = vdom.commit();
+
+// Apply patches (minimal DOM operations)
+for (0..patch_count) |i| {
+    const patch_type = vdom.getPatchType(i);
+    switch (patch_type) {
+        .create => // Create new DOM element
+        .update_text => // Update text content
+        .update_props => // Update properties
+        .remove => // Remove element
+    }
+}
+```
+
+### Patch Types
+
+| Type | Description |
+|------|-------------|
+| `create` | Create new DOM node |
+| `remove` | Remove DOM node |
+| `replace` | Replace with different element type |
+| `update_props` | Update properties (class, style, events) |
+| `update_text` | Update text content |
+| `reorder` | Reorder children |
+| `insert_child` | Insert child at index |
+| `remove_child` | Remove child at index |
+
+### Key-based Reconciliation
+
+Use keys for efficient list updates:
+
+```zig
+const li = vdom.createElement(.li);
+vdom.setKey(li, "item-123"); // Stable key for reconciliation
+```
+
 ## WebGPU Integration
 
 Zero-copy data transfer:
@@ -232,6 +282,18 @@ export fn zigdom_dsl_add_child(parent_id: u32, child_id: u32) bool
 export fn zigdom_dsl_build(element_id: u32) u32
 ```
 
+### Virtual DOM
+```zig
+export fn zigdom_vdom_init() void
+export fn zigdom_vdom_create_element(tag: u8) u32
+export fn zigdom_vdom_create_text(ptr: [*]const u8, len: usize) u32
+export fn zigdom_vdom_set_key(id: u32, ptr: [*]const u8, len: usize) void
+export fn zigdom_vdom_add_child(parent_id: u32, child_id: u32) bool
+export fn zigdom_vdom_commit() u32
+export fn zigdom_vdom_get_patch_type(index: u32) u8
+export fn zigdom_vdom_get_patch_text(index: u32) ?[*]const u8
+```
+
 ## Live Demos
 
 - [Counter Demo](/demos/counter.html)
@@ -239,5 +301,6 @@ export fn zigdom_dsl_build(element_id: u32) u32
 - [Layout Demo](/demos/layout-demo.html)
 - [Component Demo](/demos/component-demo.html)
 - [DSL Demo](/demos/dsl-demo.html)
+- [VDOM Demo](/demos/vdom-demo.html)
 - [WebGPU Cube](/demos/webgpu.html)
 - [Particles](/demos/particles.html)

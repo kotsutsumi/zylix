@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Virtual DOM Demo - Phase 5.5</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #f7931e;
+            --accent-hover: #ff9f2e;
+            --success: #4caf50;
+            --error: #f44336;
+            --warning: #ff9800;
+            --border: #333;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: var(--accent); margin-bottom: 10px; }
+        h2 { color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        h3 { color: var(--accent); margin-top: 20px; }
+        .subtitle { color: var(--text-secondary); margin-bottom: 30px; font-size: 1.1em; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+        }
+        .status.success { border-left-color: var(--success); }
+        .status.error { border-left-color: var(--error); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--bg-secondary); }
+
+        #vdom-target {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .counter-display {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .patches-log {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .patch-entry {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid var(--border);
+        }
+        .patch-create { border-left-color: var(--success); background: rgba(76, 175, 80, 0.1); }
+        .patch-update { border-left-color: var(--warning); background: rgba(255, 152, 0, 0.1); }
+        .patch-remove { border-left-color: var(--error); background: rgba(244, 67, 54, 0.1); }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Todo List Styles */
+        .todo-list { list-style: none; padding: 0; margin: 0; }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        .todo-item.completed { opacity: 0.5; text-decoration: line-through; }
+        .todo-item:hover { transform: translateX(5px); }
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .todo-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+        .todo-checkbox.checked::after { content: '\u2713'; color: #000; font-weight: bold; }
+        .todo-text { flex: 1; }
+        .todo-delete {
+            color: var(--error);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .todo-item:hover .todo-delete { opacity: 1; }
+        .input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 6px;
+            flex: 1;
+        }
+        .input:focus { outline: none; border-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZigDom Virtual DOM & Reconciliation</h1>
+        <p class="subtitle">Phase 5.5: Efficient UI Updates Through Diffing</p>
+
+        <div id="status" class="status">Loading WASM...</div>
+
+        <h2>How It Works</h2>
+        <div class="grid">
+            <div class="panel">
+                <h3>1. Build Virtual Tree</h3>
+                <p>Create a new VNode tree representing desired UI state:</p>
+                <pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px; font-size: 12px;">
+// In Zig
+const div_id = vdom.createElement(.div);
+const text_id = vdom.createText("Hello");
+vdom.addChild(div_id, text_id);
+vdom.setRoot(div_id);
+                </pre>
+            </div>
+            <div class="panel">
+                <h3>2. Commit & Diff</h3>
+                <p>Commit changes to generate minimal patches:</p>
+                <pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 6px; font-size: 12px;">
+// Generate patches
+const patch_count = vdom.commit();
+
+// Apply patches to real DOM
+for (0..patch_count) |i| {
+    const type = vdom.getPatchType(i);
+    // Apply: create, update, remove...
+}
+                </pre>
+            </div>
+        </div>
+
+        <h2>Interactive Demo: Counter</h2>
+        <div class="controls">
+            <button class="btn" onclick="increment()">+ Increment</button>
+            <button class="btn btn-secondary" onclick="decrement()">- Decrement</button>
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+        </div>
+        <div id="vdom-target">
+            <div class="counter-display" id="counter-display">0</div>
+        </div>
+
+        <h2>Interactive Demo: Todo List</h2>
+        <div class="controls">
+            <input type="text" id="todo-input" class="input" placeholder="Add a new todo..." onkeypress="handleTodoKeypress(event)">
+            <button class="btn" onclick="addTodo()">Add</button>
+        </div>
+        <div id="todo-target"></div>
+
+        <h2>Patch Log</h2>
+        <div class="patches-log" id="patches-log">
+            <em style="color: var(--text-secondary);">Patches will appear here as you interact...</em>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-nodes">0</div>
+                <div class="stat-label">VNodes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-patches">0</div>
+                <div class="stat-label">Total Patches</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-commits">0</div>
+                <div class="stat-label">Commits</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-time">0</div>
+                <div class="stat-label">Last Diff (ms)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let wasm;
+        let wasmMemory;
+        let Tag = {};
+        let PatchType = {};
+
+        // App state
+        let counter = 0;
+        let todos = [];
+        let todoIdCounter = 0;
+        let totalPatches = 0;
+        let totalCommits = 0;
+
+        // DOM element map (simulating real DOM)
+        let domElements = new Map();
+        let nextDomId = 1;
+
+        function writeString(str) {
+            const ptr = wasm.zylix_wasm_alloc(str.length);
+            const bytes = new TextEncoder().encode(str);
+            new Uint8Array(wasmMemory.buffer, ptr, str.length).set(bytes);
+            return { ptr, len: str.length };
+        }
+
+        function readString(ptr, len) {
+            if (!ptr || len === 0) return '';
+            return new TextDecoder().decode(new Uint8Array(wasmMemory.buffer, ptr, len));
+        }
+
+        // Build counter UI using VDOM
+        function buildCounterUI() {
+            wasm.zigdom_vdom_reset();
+
+            // Create: div > h2 (counter value)
+            const div = wasm.zigdom_vdom_create_element(Tag.div);
+            const { ptr, len } = writeString(counter.toString());
+            const text = wasm.zigdom_vdom_create_text(ptr, len);
+
+            wasm.zigdom_vdom_add_child(div, text);
+            wasm.zigdom_vdom_set_root(div);
+        }
+
+        // Build todo list UI using VDOM
+        function buildTodoUI() {
+            // Create: ul > (li * n)
+            const ul = wasm.zigdom_vdom_create_element(Tag.ul);
+
+            for (const todo of todos) {
+                const li = wasm.zigdom_vdom_create_element(Tag.li);
+                const { ptr: keyPtr, len: keyLen } = writeString(`todo-${todo.id}`);
+                wasm.zigdom_vdom_set_key(li, keyPtr, keyLen);
+
+                const { ptr: textPtr, len: textLen } = writeString(todo.text);
+                const text = wasm.zigdom_vdom_create_text(textPtr, textLen);
+
+                const { ptr: classPtr, len: classLen } = writeString(todo.completed ? 'todo-item completed' : 'todo-item');
+                wasm.zigdom_vdom_set_class(li, classPtr, classLen);
+
+                wasm.zigdom_vdom_add_child(li, text);
+                wasm.zigdom_vdom_add_child(ul, li);
+            }
+
+            wasm.zigdom_vdom_set_root(ul);
+        }
+
+        function applyPatches(patchCount) {
+            const log = document.getElementById('patches-log');
+
+            for (let i = 0; i < patchCount; i++) {
+                const type = wasm.zigdom_vdom_get_patch_type(i);
+                const nodeId = wasm.zigdom_vdom_get_patch_node_id(i);
+                const domId = wasm.zigdom_vdom_get_patch_dom_id(i);
+                const parentId = wasm.zigdom_vdom_get_patch_parent_id(i);
+                const tag = wasm.zigdom_vdom_get_patch_tag(i);
+
+                let entry = document.createElement('div');
+                entry.className = 'patch-entry';
+
+                switch (type) {
+                    case PatchType.create:
+                        const textPtr = wasm.zigdom_vdom_get_patch_text(i);
+                        const textLen = wasm.zigdom_vdom_get_patch_text_len(i);
+                        const text = readString(textPtr, textLen);
+                        const nodeType = wasm.zigdom_vdom_get_patch_node_type(i);
+
+                        if (nodeType === 1) { // text node
+                            entry.className += ' patch-create';
+                            entry.textContent = `CREATE text node (dom=${domId}): "${text}"`;
+                        } else {
+                            const tagName = getTagName(tag);
+                            entry.className += ' patch-create';
+                            entry.textContent = `CREATE <${tagName}> (dom=${domId}, parent=${parentId})`;
+                        }
+                        break;
+
+                    case PatchType.remove:
+                        entry.className += ' patch-remove';
+                        entry.textContent = `REMOVE (dom=${domId})`;
+                        break;
+
+                    case PatchType.update_text:
+                        const updatePtr = wasm.zigdom_vdom_get_patch_text(i);
+                        const updateLen = wasm.zigdom_vdom_get_patch_text_len(i);
+                        const updateText = readString(updatePtr, updateLen);
+                        entry.className += ' patch-update';
+                        entry.textContent = `UPDATE text (dom=${domId}): "${updateText}"`;
+                        break;
+
+                    case PatchType.update_props:
+                        const classPtr = wasm.zigdom_vdom_get_patch_class(i);
+                        const classLen = wasm.zigdom_vdom_get_patch_class_len(i);
+                        const className = readString(classPtr, classLen);
+                        entry.className += ' patch-update';
+                        entry.textContent = `UPDATE props (dom=${domId}): class="${className}"`;
+                        break;
+
+                    default:
+                        entry.textContent = `PATCH type=${type} (dom=${domId})`;
+                }
+
+                log.insertBefore(entry, log.firstChild);
+
+                // Keep log at reasonable size
+                while (log.children.length > 50) {
+                    log.removeChild(log.lastChild);
+                }
+            }
+        }
+
+        function getTagName(tag) {
+            const names = ['div', 'span', 'section', 'article', 'header', 'footer', 'nav', 'main', 'aside',
+                          'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'button', 'a', 'input', 'img', 'ul', 'ol', 'li', 'form', 'label'];
+            return names[tag] || 'unknown';
+        }
+
+        function updateStats(diffTime) {
+            document.getElementById('stat-nodes').textContent = wasm.zigdom_vdom_get_node_count();
+            document.getElementById('stat-patches').textContent = totalPatches;
+            document.getElementById('stat-commits').textContent = totalCommits;
+            document.getElementById('stat-time').textContent = diffTime.toFixed(2);
+        }
+
+        function renderCounter() {
+            const start = performance.now();
+
+            buildCounterUI();
+            const patchCount = wasm.zigdom_vdom_commit();
+
+            const diffTime = performance.now() - start;
+            totalPatches += patchCount;
+            totalCommits++;
+
+            applyPatches(patchCount);
+            updateStats(diffTime);
+
+            // Update actual DOM
+            document.getElementById('counter-display').textContent = counter;
+        }
+
+        function renderTodos() {
+            const start = performance.now();
+
+            buildTodoUI();
+            const patchCount = wasm.zigdom_vdom_commit();
+
+            const diffTime = performance.now() - start;
+            totalPatches += patchCount;
+            totalCommits++;
+
+            applyPatches(patchCount);
+            updateStats(diffTime);
+
+            // Update actual DOM
+            const target = document.getElementById('todo-target');
+            target.innerHTML = '';
+
+            const ul = document.createElement('ul');
+            ul.className = 'todo-list';
+
+            for (const todo of todos) {
+                const li = document.createElement('li');
+                li.className = 'todo-item' + (todo.completed ? ' completed' : '');
+
+                const checkbox = document.createElement('div');
+                checkbox.className = 'todo-checkbox' + (todo.completed ? ' checked' : '');
+                checkbox.onclick = () => toggleTodo(todo.id);
+
+                const text = document.createElement('span');
+                text.className = 'todo-text';
+                text.textContent = todo.text;
+
+                const del = document.createElement('span');
+                del.className = 'todo-delete';
+                del.textContent = '\u2715';
+                del.onclick = () => deleteTodo(todo.id);
+
+                li.appendChild(checkbox);
+                li.appendChild(text);
+                li.appendChild(del);
+                ul.appendChild(li);
+            }
+
+            target.appendChild(ul);
+        }
+
+        // Counter functions
+        function increment() {
+            counter++;
+            renderCounter();
+        }
+
+        function decrement() {
+            counter--;
+            renderCounter();
+        }
+
+        function reset() {
+            counter = 0;
+            renderCounter();
+        }
+
+        // Todo functions
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            todos.push({
+                id: ++todoIdCounter,
+                text: text,
+                completed: false
+            });
+
+            input.value = '';
+            renderTodos();
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                renderTodos();
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            renderTodos();
+        }
+
+        function handleTodoKeypress(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+
+        async function init() {
+            try {
+                const response = await fetch('zylix.wasm');
+                const bytes = await response.arrayBuffer();
+                const result = await WebAssembly.instantiate(bytes, {
+                    env: {
+                        memory: new WebAssembly.Memory({ initial: 256, maximum: 512 })
+                    }
+                });
+
+                wasm = result.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize systems
+                wasm.zylix_init();
+                wasm.zigdom_vdom_init();
+
+                // Load constants
+                Tag.div = wasm.zigdom_vdom_tag_div();
+                Tag.span = wasm.zigdom_vdom_tag_span();
+                Tag.h1 = wasm.zigdom_vdom_tag_h1();
+                Tag.h2 = wasm.zigdom_vdom_tag_h2();
+                Tag.p = wasm.zigdom_vdom_tag_p();
+                Tag.button = wasm.zigdom_vdom_tag_button();
+                Tag.ul = wasm.zigdom_vdom_tag_ul();
+                Tag.li = wasm.zigdom_vdom_tag_li();
+                Tag.input = wasm.zigdom_vdom_tag_input();
+
+                PatchType.none = wasm.zigdom_vdom_patch_none();
+                PatchType.create = wasm.zigdom_vdom_patch_create();
+                PatchType.remove = wasm.zigdom_vdom_patch_remove();
+                PatchType.replace = wasm.zigdom_vdom_patch_replace();
+                PatchType.update_props = wasm.zigdom_vdom_patch_update_props();
+                PatchType.update_text = wasm.zigdom_vdom_patch_update_text();
+
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').textContent =
+                    'VDOM ready. Try the counter and todo list demos!';
+
+                // Initial render
+                renderCounter();
+                renderTodos();
+
+            } catch (err) {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = `Error: ${err.message}`;
+                console.error(err);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

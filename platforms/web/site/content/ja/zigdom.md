@@ -58,7 +58,7 @@ ZigDomは、ZigをWebアプリケーションの中央実行レイヤーとし�
 
 | 機能 | 状態 | 説明 |
 |------|------|------|
-| 仮想DOM | 予定 | Zigで差分計算 |
+| 仮想DOM | ✅ | Zigで差分計算・再調整 |
 
 ## CSSユーティリティシステム
 
@@ -168,6 +168,56 @@ const card = dsl.ui.card(.{}, .{
 | `ui.grid` | Gridコンテナ |
 | `ui.stack` | 縦方向スタックレイアウト |
 
+## 仮想DOM & 再調整
+
+差分計算による効率的なUI更新：
+
+```zig
+const vdom = @import("vdom.zig");
+
+// 新しいUI状態を構築
+const div = vdom.createElement(.div);
+const text = vdom.createText("Hello, World!");
+vdom.addChild(div, text);
+vdom.setRoot(div);
+
+// コミットしてパッチを取得
+const patch_count = vdom.commit();
+
+// パッチを適用（最小限のDOM操作）
+for (0..patch_count) |i| {
+    const patch_type = vdom.getPatchType(i);
+    switch (patch_type) {
+        .create => // 新しいDOM要素を作成
+        .update_text => // テキスト内容を更新
+        .update_props => // プロパティを更新
+        .remove => // 要素を削除
+    }
+}
+```
+
+### パッチタイプ
+
+| タイプ | 説明 |
+|--------|------|
+| `create` | 新しいDOMノードを作成 |
+| `remove` | DOMノードを削除 |
+| `replace` | 異なる要素タイプに置換 |
+| `update_props` | プロパティを更新（class, style, events） |
+| `update_text` | テキスト内容を更新 |
+| `reorder` | 子要素を並べ替え |
+| `insert_child` | 指定位置に子要素を挿入 |
+| `remove_child` | 指定位置の子要素を削除 |
+
+### キーベース再調整
+
+効率的なリスト更新のためのキー：
+
+```zig
+const li = vdom.createElement(.li);
+vdom.setKey(li, "item-123"); // 再調整用の安定キー
+```
+
 ## WebGPU統合
 
 ゼロコピーデータ転送：
@@ -232,6 +282,18 @@ export fn zigdom_dsl_add_child(parent_id: u32, child_id: u32) bool
 export fn zigdom_dsl_build(element_id: u32) u32
 ```
 
+### 仮想DOM
+```zig
+export fn zigdom_vdom_init() void
+export fn zigdom_vdom_create_element(tag: u8) u32
+export fn zigdom_vdom_create_text(ptr: [*]const u8, len: usize) u32
+export fn zigdom_vdom_set_key(id: u32, ptr: [*]const u8, len: usize) void
+export fn zigdom_vdom_add_child(parent_id: u32, child_id: u32) bool
+export fn zigdom_vdom_commit() u32
+export fn zigdom_vdom_get_patch_type(index: u32) u8
+export fn zigdom_vdom_get_patch_text(index: u32) ?[*]const u8
+```
+
 ## ライブデモ
 
 - [カウンターデモ](/demos/counter.html)
@@ -239,5 +301,6 @@ export fn zigdom_dsl_build(element_id: u32) u32
 - [レイアウトデモ](/demos/layout-demo.html)
 - [コンポーネントデモ](/demos/component-demo.html)
 - [DSLデモ](/demos/dsl-demo.html)
+- [VDOMデモ](/demos/vdom-demo.html)
 - [WebGPUキューブ](/demos/webgpu.html)
 - [パーティクル](/demos/particles.html)

@@ -17,6 +17,7 @@ const css = @import("css.zig");
 const layout = @import("layout.zig");
 const component = @import("component.zig");
 const dsl = @import("dsl.zig");
+const vdom = @import("vdom.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -1484,6 +1485,316 @@ export fn zigdom_dsl_element_type_form() u8 {
 
 export fn zigdom_dsl_element_type_label() u8 {
     return @intFromEnum(dsl.ElementType.label);
+}
+
+// === ZigDom Virtual DOM & Reconciliation ===
+
+/// Initialize VDOM reconciler
+export fn zigdom_vdom_init() void {
+    vdom.initGlobal();
+}
+
+/// Reset reconciler state
+export fn zigdom_vdom_reset() void {
+    vdom.resetGlobal();
+}
+
+/// Create element node in next tree
+export fn zigdom_vdom_create_element(tag: u8) u32 {
+    return vdom.createElement(@enumFromInt(tag));
+}
+
+/// Create text node in next tree
+export fn zigdom_vdom_create_text(text_ptr: [*]const u8, text_len: usize) u32 {
+    return vdom.createText(text_ptr[0..text_len]);
+}
+
+/// Set node class
+export fn zigdom_vdom_set_class(node_id: u32, class_ptr: [*]const u8, class_len: usize) void {
+    vdom.setClass(node_id, class_ptr[0..class_len]);
+}
+
+/// Set node onClick handler
+export fn zigdom_vdom_set_onclick(node_id: u32, callback_id: u32) void {
+    vdom.setOnClick(node_id, callback_id);
+}
+
+/// Set node text content
+export fn zigdom_vdom_set_text(node_id: u32, text_ptr: [*]const u8, text_len: usize) void {
+    vdom.setText(node_id, text_ptr[0..text_len]);
+}
+
+/// Set node key (for list reconciliation)
+export fn zigdom_vdom_set_key(node_id: u32, key_ptr: [*]const u8, key_len: usize) void {
+    vdom.setKey(node_id, key_ptr[0..key_len]);
+}
+
+/// Add child to parent
+export fn zigdom_vdom_add_child(parent_id: u32, child_id: u32) bool {
+    return vdom.addChild(parent_id, child_id);
+}
+
+/// Set root node
+export fn zigdom_vdom_set_root(node_id: u32) void {
+    vdom.setRoot(node_id);
+}
+
+/// Commit changes and generate patches
+export fn zigdom_vdom_commit() u32 {
+    const result = vdom.commit();
+    return result.count;
+}
+
+/// Get patch count
+export fn zigdom_vdom_get_patch_count() u32 {
+    return vdom.getPatchCount();
+}
+
+/// Get patch type at index
+export fn zigdom_vdom_get_patch_type(index: u32) u8 {
+    if (vdom.getPatch(index)) |patch| {
+        return @intFromEnum(patch.patch_type);
+    }
+    return 0;
+}
+
+/// Get patch node ID at index
+export fn zigdom_vdom_get_patch_node_id(index: u32) u32 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.node_id;
+    }
+    return 0;
+}
+
+/// Get patch DOM ID at index
+export fn zigdom_vdom_get_patch_dom_id(index: u32) u32 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.dom_id;
+    }
+    return 0;
+}
+
+/// Get patch parent ID at index
+export fn zigdom_vdom_get_patch_parent_id(index: u32) u32 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.parent_id;
+    }
+    return 0;
+}
+
+/// Get patch tag at index
+export fn zigdom_vdom_get_patch_tag(index: u32) u8 {
+    if (vdom.getPatch(index)) |patch| {
+        return @intFromEnum(patch.new_tag);
+    }
+    return 0;
+}
+
+/// Get patch node type at index
+export fn zigdom_vdom_get_patch_node_type(index: u32) u8 {
+    if (vdom.getPatch(index)) |patch| {
+        return @intFromEnum(patch.new_node_type);
+    }
+    return 0;
+}
+
+/// Get patch index (for insert/remove child)
+export fn zigdom_vdom_get_patch_index(index: u32) u16 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.index;
+    }
+    return 0;
+}
+
+/// Get patch text at index
+export fn zigdom_vdom_get_patch_text(index: u32) ?[*]const u8 {
+    if (vdom.getPatch(index)) |patch| {
+        if (patch.text_len > 0) {
+            return &patch.text;
+        }
+    }
+    return null;
+}
+
+/// Get patch text length at index
+export fn zigdom_vdom_get_patch_text_len(index: u32) u16 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.text_len;
+    }
+    return 0;
+}
+
+/// Get patch class at index
+export fn zigdom_vdom_get_patch_class(index: u32) ?[*]const u8 {
+    if (vdom.getPatch(index)) |patch| {
+        if (patch.props.class_len > 0) {
+            return &patch.props.class;
+        }
+    }
+    return null;
+}
+
+/// Get patch class length at index
+export fn zigdom_vdom_get_patch_class_len(index: u32) u8 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.props.class_len;
+    }
+    return 0;
+}
+
+/// Get patch style ID at index
+export fn zigdom_vdom_get_patch_style_id(index: u32) u32 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.props.style_id;
+    }
+    return 0;
+}
+
+/// Get patch onClick callback at index
+export fn zigdom_vdom_get_patch_onclick(index: u32) u32 {
+    if (vdom.getPatch(index)) |patch| {
+        return patch.props.on_click;
+    }
+    return 0;
+}
+
+/// Get current tree node count
+export fn zigdom_vdom_get_node_count() u32 {
+    return vdom.getReconciler().getCurrentTree().getNodeCount();
+}
+
+/// Element tag constants
+export fn zigdom_vdom_tag_div() u8 {
+    return @intFromEnum(vdom.ElementTag.div);
+}
+
+export fn zigdom_vdom_tag_span() u8 {
+    return @intFromEnum(vdom.ElementTag.span);
+}
+
+export fn zigdom_vdom_tag_section() u8 {
+    return @intFromEnum(vdom.ElementTag.section);
+}
+
+export fn zigdom_vdom_tag_article() u8 {
+    return @intFromEnum(vdom.ElementTag.article);
+}
+
+export fn zigdom_vdom_tag_header() u8 {
+    return @intFromEnum(vdom.ElementTag.header);
+}
+
+export fn zigdom_vdom_tag_footer() u8 {
+    return @intFromEnum(vdom.ElementTag.footer);
+}
+
+export fn zigdom_vdom_tag_nav() u8 {
+    return @intFromEnum(vdom.ElementTag.nav);
+}
+
+export fn zigdom_vdom_tag_main() u8 {
+    return @intFromEnum(vdom.ElementTag.main);
+}
+
+export fn zigdom_vdom_tag_h1() u8 {
+    return @intFromEnum(vdom.ElementTag.h1);
+}
+
+export fn zigdom_vdom_tag_h2() u8 {
+    return @intFromEnum(vdom.ElementTag.h2);
+}
+
+export fn zigdom_vdom_tag_h3() u8 {
+    return @intFromEnum(vdom.ElementTag.h3);
+}
+
+export fn zigdom_vdom_tag_h4() u8 {
+    return @intFromEnum(vdom.ElementTag.h4);
+}
+
+export fn zigdom_vdom_tag_h5() u8 {
+    return @intFromEnum(vdom.ElementTag.h5);
+}
+
+export fn zigdom_vdom_tag_h6() u8 {
+    return @intFromEnum(vdom.ElementTag.h6);
+}
+
+export fn zigdom_vdom_tag_p() u8 {
+    return @intFromEnum(vdom.ElementTag.p);
+}
+
+export fn zigdom_vdom_tag_button() u8 {
+    return @intFromEnum(vdom.ElementTag.button);
+}
+
+export fn zigdom_vdom_tag_a() u8 {
+    return @intFromEnum(vdom.ElementTag.a);
+}
+
+export fn zigdom_vdom_tag_input() u8 {
+    return @intFromEnum(vdom.ElementTag.input);
+}
+
+export fn zigdom_vdom_tag_img() u8 {
+    return @intFromEnum(vdom.ElementTag.img);
+}
+
+export fn zigdom_vdom_tag_ul() u8 {
+    return @intFromEnum(vdom.ElementTag.ul);
+}
+
+export fn zigdom_vdom_tag_ol() u8 {
+    return @intFromEnum(vdom.ElementTag.ol);
+}
+
+export fn zigdom_vdom_tag_li() u8 {
+    return @intFromEnum(vdom.ElementTag.li);
+}
+
+export fn zigdom_vdom_tag_form() u8 {
+    return @intFromEnum(vdom.ElementTag.form);
+}
+
+export fn zigdom_vdom_tag_label() u8 {
+    return @intFromEnum(vdom.ElementTag.label);
+}
+
+/// Patch type constants
+export fn zigdom_vdom_patch_none() u8 {
+    return @intFromEnum(vdom.PatchType.none);
+}
+
+export fn zigdom_vdom_patch_create() u8 {
+    return @intFromEnum(vdom.PatchType.create);
+}
+
+export fn zigdom_vdom_patch_remove() u8 {
+    return @intFromEnum(vdom.PatchType.remove);
+}
+
+export fn zigdom_vdom_patch_replace() u8 {
+    return @intFromEnum(vdom.PatchType.replace);
+}
+
+export fn zigdom_vdom_patch_update_props() u8 {
+    return @intFromEnum(vdom.PatchType.update_props);
+}
+
+export fn zigdom_vdom_patch_update_text() u8 {
+    return @intFromEnum(vdom.PatchType.update_text);
+}
+
+export fn zigdom_vdom_patch_reorder() u8 {
+    return @intFromEnum(vdom.PatchType.reorder);
+}
+
+export fn zigdom_vdom_patch_insert_child() u8 {
+    return @intFromEnum(vdom.PatchType.insert_child);
+}
+
+export fn zigdom_vdom_patch_remove_child() u8 {
+    return @intFromEnum(vdom.PatchType.remove_child);
 }
 
 // === Panic handler for WASM ===
