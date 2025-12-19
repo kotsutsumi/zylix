@@ -127,6 +127,15 @@ zylix/
 | 4.2  | AI / LLM integration hooks | ✅ Done |
 | 4.3  | NeuronGraph support | 🔗 External (neuron-graph repo) |
 
+### Phase 5: ZigDom Full-Stack (Web)
+| Task | Description | Status |
+|------|-------------|--------|
+| 5.1  | CSS utility system (TailwindCSS-like) | ✅ Done |
+| 5.2  | Layout engine (Flexbox/Grid) | Pending |
+| 5.3  | UI component system | Pending |
+| 5.4  | Declarative UI DSL (comptime) | Pending |
+| 5.5  | Virtual DOM / Reconciliation | Pending |
+
 ---
 
 ## 6. C ABI Design Principles
@@ -191,6 +200,7 @@ pub export fn zylix_deinit() void;
 - [x] Linux (GTK4) support (Phase 3) - C shell with direct ABI linking
 - [x] Scheduler / Time management (Phase 4) - Event-based timers, time scale, pause/resume
 - [x] AI / LLM integration hooks (Phase 4) - Provider-agnostic, streaming, tools, token estimation
+- [x] CSS utility system (Phase 5) - TailwindCSS-like, type-safe, CSS generation from Zig
 
 ---
 

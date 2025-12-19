@@ -13,6 +13,7 @@ const gpu = @import("gpu.zig");
 const particles = @import("particles.zig");
 const scheduler = @import("scheduler.zig");
 const llm = @import("llm.zig");
+const css = @import("css.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -478,6 +479,143 @@ export fn zigdom_llm_register_tool(name_ptr: [*]const u8, name_len: usize, desc_
 /// Get tool count
 export fn zigdom_llm_get_tool_count() u32 {
     return llm.getToolCount();
+}
+
+// === ZigDom CSS Utility System ===
+
+/// Initialize CSS module
+export fn zigdom_css_init() void {
+    css.init();
+}
+
+/// Create a new style (returns style ID)
+export fn zigdom_css_create_style() u32 {
+    return css.createStyle();
+}
+
+/// Get style pointer for direct manipulation
+export fn zigdom_css_get_style_ptr(id: u32) ?*anyopaque {
+    return @ptrCast(css.getStylePtr(id));
+}
+
+/// Set style display property
+export fn zigdom_css_set_display(id: u32, display: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.display = @enumFromInt(display);
+    }
+}
+
+/// Set flex direction
+export fn zigdom_css_set_flex_direction(id: u32, direction: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.flex_direction = @enumFromInt(direction);
+    }
+}
+
+/// Set justify content
+export fn zigdom_css_set_justify_content(id: u32, justify: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.justify_content = @enumFromInt(justify);
+    }
+}
+
+/// Set align items
+export fn zigdom_css_set_align_items(id: u32, align_val: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.align_items = @enumFromInt(align_val);
+    }
+}
+
+/// Set gap
+export fn zigdom_css_set_gap(id: u32, gap: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.gap = @enumFromInt(gap);
+    }
+}
+
+/// Set padding (all sides)
+export fn zigdom_css_set_padding(id: u32, top: u8, right: u8, bottom: u8, left: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.padding_top = @enumFromInt(top);
+        style.padding_right = @enumFromInt(right);
+        style.padding_bottom = @enumFromInt(bottom);
+        style.padding_left = @enumFromInt(left);
+    }
+}
+
+/// Set margin (all sides)
+export fn zigdom_css_set_margin(id: u32, top: u8, right: u8, bottom: u8, left: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.margin_top = @enumFromInt(top);
+        style.margin_right = @enumFromInt(right);
+        style.margin_bottom = @enumFromInt(bottom);
+        style.margin_left = @enumFromInt(left);
+    }
+}
+
+/// Set background color
+export fn zigdom_css_set_bg_color(id: u32, r: u8, g: u8, b: u8, a: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.background_color = .{ .r = r, .g = g, .b = b, .a = a };
+    }
+}
+
+/// Set text color
+export fn zigdom_css_set_text_color(id: u32, r: u8, g: u8, b: u8, a: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.color = .{ .r = r, .g = g, .b = b, .a = a };
+    }
+}
+
+/// Set font size
+export fn zigdom_css_set_font_size(id: u32, size: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.font_size = @enumFromInt(size);
+    }
+}
+
+/// Set font weight
+export fn zigdom_css_set_font_weight(id: u32, weight: u16) void {
+    if (css.getStylePtr(id)) |style| {
+        style.font_weight = @enumFromInt(weight);
+    }
+}
+
+/// Set border radius
+export fn zigdom_css_set_border_radius(id: u32, radius: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.border_radius = @enumFromInt(radius);
+    }
+}
+
+/// Set shadow
+export fn zigdom_css_set_shadow(id: u32, shadow: u8) void {
+    if (css.getStylePtr(id)) |style| {
+        style.shadow = @enumFromInt(shadow);
+    }
+}
+
+/// Set width/height in pixels
+export fn zigdom_css_set_size(id: u32, width: u16, height: u16) void {
+    if (css.getStylePtr(id)) |style| {
+        style.width_px = width;
+        style.height_px = height;
+    }
+}
+
+/// Generate CSS string for a style
+export fn zigdom_css_generate(id: u32) ?[*]const u8 {
+    return css.generateCss(id);
+}
+
+/// Get generated CSS length
+export fn zigdom_css_get_len() usize {
+    return css.getCssLen();
+}
+
+/// Get style count
+export fn zigdom_css_get_style_count() u32 {
+    return css.getStyleCount();
 }
 
 // === Panic handler for WASM ===

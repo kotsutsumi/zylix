@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom CSS Utility System Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #4f46e5;
+        }
+
+        .preview-area {
+            background: white;
+            border-radius: 8px;
+            min-height: 200px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button.active {
+            background: #4f46e5;
+        }
+
+        button.primary {
+            background: #4f46e5;
+        }
+
+        button.primary:hover {
+            background: #4338ca;
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .config-row label {
+            font-size: 12px;
+            color: #888;
+            min-width: 80px;
+        }
+
+        .config-row select,
+        .config-row input {
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 12px;
+        }
+
+        .css-output {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            color: #10b981;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.selected {
+            border-color: white;
+        }
+
+        .example-components {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom CSS Utility System</h1>
+    <p class="subtitle">TailwindCSS-like utilities computed in Zig | Type-safe | Zero runtime</p>
+
+    <div class="container">
+        <!-- Style Builder -->
+        <div class="card">
+            <h2>Style Builder</h2>
+
+            <div class="config-row">
+                <label>Display</label>
+                <select id="display">
+                    <option value="0">block</option>
+                    <option value="1">inline-block</option>
+                    <option value="2">inline</option>
+                    <option value="3" selected>flex</option>
+                    <option value="4">inline-flex</option>
+                    <option value="5">grid</option>
+                    <option value="7">hidden</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Flex Direction</label>
+                <select id="flex-direction">
+                    <option value="0" selected>row</option>
+                    <option value="1">row-reverse</option>
+                    <option value="2">column</option>
+                    <option value="3">column-reverse</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Justify</label>
+                <select id="justify">
+                    <option value="0">start</option>
+                    <option value="1">end</option>
+                    <option value="2" selected>center</option>
+                    <option value="3">space-between</option>
+                    <option value="4">space-around</option>
+                    <option value="5">space-evenly</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Align Items</label>
+                <select id="align-items">
+                    <option value="0">start</option>
+                    <option value="1">end</option>
+                    <option value="2" selected>center</option>
+                    <option value="3">baseline</option>
+                    <option value="4">stretch</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Gap</label>
+                <select id="gap">
+                    <option value="0">0</option>
+                    <option value="2">4px</option>
+                    <option value="4" selected>8px</option>
+                    <option value="6">12px</option>
+                    <option value="8">16px</option>
+                    <option value="10">24px</option>
+                    <option value="12">32px</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Padding</label>
+                <select id="padding">
+                    <option value="0">0</option>
+                    <option value="2">4px</option>
+                    <option value="4">8px</option>
+                    <option value="6">12px</option>
+                    <option value="8" selected>16px</option>
+                    <option value="10">24px</option>
+                    <option value="12">32px</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Border Radius</label>
+                <select id="border-radius">
+                    <option value="0">none</option>
+                    <option value="1">sm (2px)</option>
+                    <option value="2">base (4px)</option>
+                    <option value="3" selected>md (6px)</option>
+                    <option value="4">lg (8px)</option>
+                    <option value="5">xl (12px)</option>
+                    <option value="8">full</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Shadow</label>
+                <select id="shadow">
+                    <option value="0">none</option>
+                    <option value="1">sm</option>
+                    <option value="2">base</option>
+                    <option value="3" selected>md</option>
+                    <option value="4">lg</option>
+                    <option value="5">xl</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Font Size</label>
+                <select id="font-size">
+                    <option value="0">xs (12px)</option>
+                    <option value="1">sm (14px)</option>
+                    <option value="2" selected>base (16px)</option>
+                    <option value="3">lg (18px)</option>
+                    <option value="4">xl (20px)</option>
+                    <option value="5">2xl (24px)</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label>Background</label>
+                <div class="color-picker" id="bg-colors">
+                    <!-- Colors populated by JS -->
+                </div>
+            </div>
+
+            <div class="config-row">
+                <label>Text Color</label>
+                <div class="color-picker" id="text-colors">
+                    <!-- Colors populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card">
+            <h2>Preview</h2>
+            <div class="preview-area" id="preview">
+                <div id="styled-element">
+                    <span>Item 1</span>
+                    <span>Item 2</span>
+                    <span>Item 3</span>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 16px">Generated CSS (from Zig)</h2>
+            <div class="css-output" id="css-output">
+                /* CSS will appear here */
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Style ID</div>
+                    <div class="stat-value" id="stat-id">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">CSS Length</div>
+                    <div class="stat-value" id="stat-len">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Styles Created</div>
+                    <div class="stat-value" id="stat-count">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Components -->
+        <div class="card" style="grid-column: span 2;">
+            <h2>Example Components (Zig-styled)</h2>
+            <div class="example-components" id="examples">
+                <!-- Examples populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // === WASM ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === TailwindCSS-like colors ===
+        const COLORS = {
+            white: { r: 255, g: 255, b: 255, a: 255 },
+            black: { r: 0, g: 0, b: 0, a: 255 },
+            slate_100: { r: 241, g: 245, b: 249, a: 255 },
+            slate_800: { r: 30, g: 41, b: 59, a: 255 },
+            red_500: { r: 239, g: 68, b: 68, a: 255 },
+            green_500: { r: 34, g: 197, b: 94, a: 255 },
+            blue_500: { r: 59, g: 130, b: 246, a: 255 },
+            indigo_500: { r: 99, g: 102, b: 241, a: 255 },
+            indigo_600: { r: 79, g: 70, b: 229, a: 255 },
+            purple_500: { r: 168, g: 85, b: 247, a: 255 },
+            transparent: { r: 0, g: 0, b: 0, a: 0 },
+        };
+
+        let currentStyleId = 0;
+        let selectedBgColor = 'indigo_600';
+        let selectedTextColor = 'white';
+
+        // === Initialize ===
+        async function init() {
+            try {
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix and CSS module
+                wasm.zylix_init();
+                wasm.zigdom_css_init();
+
+                // Create initial style
+                currentStyleId = wasm.zigdom_css_create_style();
+
+                // Setup UI
+                setupColorPickers();
+                setupEventListeners();
+                createExampleComponents();
+
+                // Initial update
+                updateStyle();
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.body.innerHTML = `<p style="color: #ff6b6b; padding: 20px;">${error.message}</p>`;
+            }
+        }
+
+        function setupColorPickers() {
+            const bgContainer = document.getElementById('bg-colors');
+            const textContainer = document.getElementById('text-colors');
+
+            for (const [name, color] of Object.entries(COLORS)) {
+                if (name === 'transparent') continue;
+
+                // Background color swatch
+                const bgSwatch = document.createElement('div');
+                bgSwatch.className = 'color-swatch' + (name === selectedBgColor ? ' selected' : '');
+                bgSwatch.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                bgSwatch.dataset.color = name;
+                bgSwatch.onclick = () => selectBgColor(name);
+                bgContainer.appendChild(bgSwatch);
+
+                // Text color swatch
+                const textSwatch = document.createElement('div');
+                textSwatch.className = 'color-swatch' + (name === selectedTextColor ? ' selected' : '');
+                textSwatch.style.background = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                textSwatch.dataset.color = name;
+                textSwatch.onclick = () => selectTextColor(name);
+                textContainer.appendChild(textSwatch);
+            }
+        }
+
+        function selectBgColor(name) {
+            selectedBgColor = name;
+            document.querySelectorAll('#bg-colors .color-swatch').forEach(s => {
+                s.classList.toggle('selected', s.dataset.color === name);
+            });
+            updateStyle();
+        }
+
+        function selectTextColor(name) {
+            selectedTextColor = name;
+            document.querySelectorAll('#text-colors .color-swatch').forEach(s => {
+                s.classList.toggle('selected', s.dataset.color === name);
+            });
+            updateStyle();
+        }
+
+        function setupEventListeners() {
+            const selects = ['display', 'flex-direction', 'justify', 'align-items', 'gap',
+                           'padding', 'border-radius', 'shadow', 'font-size'];
+
+            selects.forEach(id => {
+                document.getElementById(id).addEventListener('change', updateStyle);
+            });
+        }
+
+        function updateStyle() {
+            // Set display
+            wasm.zigdom_css_set_display(currentStyleId, parseInt(document.getElementById('display').value));
+
+            // Set flexbox properties
+            wasm.zigdom_css_set_flex_direction(currentStyleId, parseInt(document.getElementById('flex-direction').value));
+            wasm.zigdom_css_set_justify_content(currentStyleId, parseInt(document.getElementById('justify').value));
+            wasm.zigdom_css_set_align_items(currentStyleId, parseInt(document.getElementById('align-items').value));
+            wasm.zigdom_css_set_gap(currentStyleId, parseInt(document.getElementById('gap').value));
+
+            // Set padding (same on all sides)
+            const padding = parseInt(document.getElementById('padding').value);
+            wasm.zigdom_css_set_padding(currentStyleId, padding, padding, padding, padding);
+
+            // Set border radius
+            wasm.zigdom_css_set_border_radius(currentStyleId, parseInt(document.getElementById('border-radius').value));
+
+            // Set shadow
+            wasm.zigdom_css_set_shadow(currentStyleId, parseInt(document.getElementById('shadow').value));
+
+            // Set font size
+            wasm.zigdom_css_set_font_size(currentStyleId, parseInt(document.getElementById('font-size').value));
+
+            // Set colors
+            const bgColor = COLORS[selectedBgColor];
+            wasm.zigdom_css_set_bg_color(currentStyleId, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+
+            const textColor = COLORS[selectedTextColor];
+            wasm.zigdom_css_set_text_color(currentStyleId, textColor.r, textColor.g, textColor.b, textColor.a);
+
+            // Generate CSS from Zig
+            const cssPtr = wasm.zigdom_css_generate(currentStyleId);
+            const cssLen = wasm.zigdom_css_get_len();
+
+            if (cssPtr && cssLen > 0) {
+                const cssBytes = new Uint8Array(wasmMemory.buffer, cssPtr, cssLen);
+                const cssString = new TextDecoder().decode(cssBytes);
+
+                // Apply to preview element
+                document.getElementById('styled-element').style.cssText = cssString;
+
+                // Show generated CSS
+                document.getElementById('css-output').textContent = formatCss(cssString);
+            }
+
+            // Update stats
+            document.getElementById('stat-id').textContent = currentStyleId;
+            document.getElementById('stat-len').textContent = cssLen;
+            document.getElementById('stat-count').textContent = wasm.zigdom_css_get_style_count();
+        }
+
+        function formatCss(css) {
+            // Format CSS for readability
+            return css.replace(/;/g, ';\n').replace(/:/g, ': ');
+        }
+
+        function createExampleComponents() {
+            const container = document.getElementById('examples');
+
+            // Create multiple styled components using Zig
+            const examples = [
+                { name: 'Button', bg: 'indigo_600', text: 'white', rounded: 3, shadow: 2, padding: 6 },
+                { name: 'Card', bg: 'white', text: 'slate_800', rounded: 4, shadow: 4, padding: 8 },
+                { name: 'Badge', bg: 'green_500', text: 'white', rounded: 8, shadow: 0, padding: 2 },
+                { name: 'Alert', bg: 'red_500', text: 'white', rounded: 3, shadow: 2, padding: 6 },
+            ];
+
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; gap: 16px; flex-wrap: wrap;';
+
+            examples.forEach(ex => {
+                // Create style in Zig
+                const styleId = wasm.zigdom_css_create_style();
+
+                wasm.zigdom_css_set_display(styleId, 3); // flex
+                wasm.zigdom_css_set_justify_content(styleId, 2); // center
+                wasm.zigdom_css_set_align_items(styleId, 2); // center
+
+                const padding = ex.padding;
+                wasm.zigdom_css_set_padding(styleId, padding, padding * 2, padding, padding * 2);
+                wasm.zigdom_css_set_border_radius(styleId, ex.rounded);
+                wasm.zigdom_css_set_shadow(styleId, ex.shadow);
+
+                const bgColor = COLORS[ex.bg];
+                wasm.zigdom_css_set_bg_color(styleId, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+
+                const textColor = COLORS[ex.text];
+                wasm.zigdom_css_set_text_color(styleId, textColor.r, textColor.g, textColor.b, textColor.a);
+
+                wasm.zigdom_css_set_font_size(styleId, 1); // sm
+
+                // Generate CSS
+                const cssPtr = wasm.zigdom_css_generate(styleId);
+                const cssLen = wasm.zigdom_css_get_len();
+                const cssBytes = new Uint8Array(wasmMemory.buffer, cssPtr, cssLen);
+                const cssString = new TextDecoder().decode(cssBytes);
+
+                // Create element
+                const el = document.createElement('div');
+                el.style.cssText = cssString;
+                el.textContent = ex.name;
+                el.style.cursor = 'pointer';
+                el.style.transition = 'transform 0.2s';
+                el.onmouseenter = () => el.style.transform = 'scale(1.05)';
+                el.onmouseleave = () => el.style.transform = 'scale(1)';
+
+                row.appendChild(el);
+            });
+
+            container.appendChild(row);
+
+            // Add info text
+            const info = document.createElement('p');
+            info.style.cssText = 'color: #888; font-size: 12px; margin-top: 8px;';
+            info.textContent = `Created ${wasm.zigdom_css_get_style_count()} styles using Zig CSS utilities`;
+            container.appendChild(info);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

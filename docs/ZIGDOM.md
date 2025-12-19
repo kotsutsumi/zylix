@@ -132,10 +132,11 @@ export fn zigdom_gpu_get_vertex_count() u32
 4. **Hot Reload**: Swap WASM modules without page refresh
 
 ### Long-term: ZigDom Full-Stack Framework
-5. **CSS Utilities**: TailwindCSS v4-like utility system in Zig
-   - Compile-time CSS generation
-   - Type-safe class names
-   - Tree-shaking for minimal output
+5. **CSS Utilities**: ✅ Done - TailwindCSS v4-like utility system in Zig
+   - Type-safe Style struct with builder pattern
+   - Color system (TailwindCSS palette)
+   - Spacing, typography, flexbox, shadows
+   - CSS string generation from Zig
 6. **UI Component System**: shadcn/ui-like components
    - Zig-native reactive primitives (React-like but simpler)
    - Virtual DOM or incremental DOM in Zig
