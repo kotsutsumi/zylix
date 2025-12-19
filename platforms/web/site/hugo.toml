@@ -1,0 +1,51 @@
+baseURL = "https://zylix.dev/"
+languageCode = "en-us"
+title = "Zylix"
+theme = "book"
+
+# Multilingual configuration
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    weight = 1
+    contentDir = "content/en"
+    [languages.en.params]
+      description = "Zig-powered cross-platform runtime"
+
+  [languages.ja]
+    languageName = "Japanese"
+    weight = 2
+    contentDir = "content/ja"
+    [languages.ja.params]
+      description = "Zigを中核としたクロスプラットフォーム実行基盤"
+
+[params]
+  # Book theme parameters
+  BookTheme = "auto"
+  BookToC = true
+  BookSection = "docs"
+  BookRepo = "https://github.com/kotsutsumi/zylix"
+  BookEditPath = "edit/main/platforms/web/site/content"
+  BookDateFormat = "January 2, 2006"
+  BookSearch = true
+  BookComments = false
+  BookPortableLinks = true
+  BookServiceWorker = true
+
+[menu]
+  [[menu.after]]
+    name = "GitHub"
+    url = "https://github.com/kotsutsumi/zylix"
+    weight = 10
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = true
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

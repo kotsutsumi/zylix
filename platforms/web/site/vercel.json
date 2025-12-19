@@ -1,0 +1,11 @@
+{
+  "build": {
+    "env": {
+      "HUGO_VERSION": "0.140.1"
+    }
+  },
+  "buildCommand": "hugo --minify",
+  "outputDirectory": "public",
+  "framework": "hugo",
+  "installCommand": "git submodule update --init --recursive"
+}
