@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zylix Counter Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            min-width: 320px;
+        }
+
+        h1 {
+            color: #1a1a2e;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .counter-display {
+            font-size: 72px;
+            font-weight: 700;
+            color: #4f46e5;
+            margin: 24px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        button {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            border: none;
+            font-size: 28px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-decrement {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .btn-decrement:hover {
+            background: #fee2e2;
+        }
+
+        .btn-increment {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .btn-increment:hover {
+            background: #dcfce7;
+        }
+
+        .btn-reset {
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .btn-reset:hover {
+            background: #e5e7eb;
+        }
+
+        .stats {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .stats span {
+            margin: 0 8px;
+        }
+
+        .loading {
+            color: #9ca3af;
+            font-size: 18px;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zylix Counter</h1>
+        <p class="subtitle">Zig Core + WASM + Web Shell</p>
+
+        <div id="app">
+            <p class="loading">Loading WASM...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Event types
+        const ZYLIX_EVENT = {
+            COUNTER_INCREMENT: 0x1000,
+            COUNTER_DECREMENT: 0x1001,
+            COUNTER_RESET: 0x1002,
+        };
+
+        // State
+        let wasm = null;
+        let memory = null;
+
+        // Load and initialize WASM
+        async function init() {
+            const appEl = document.getElementById('app');
+
+            try {
+                // Fetch WASM binary
+                const response = await fetch('zylix.wasm');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch WASM: ${response.status}`);
+                }
+                const bytes = await response.arrayBuffer();
+
+                // Instantiate WASM
+                const result = await WebAssembly.instantiate(bytes, {});
+                wasm = result.instance.exports;
+                memory = wasm.memory;
+
+                // Initialize Zylix core
+                const initResult = wasm.zylix_init();
+                if (initResult !== 0) {
+                    throw new Error(`zylix_init failed: ${initResult}`);
+                }
+
+                console.log('Zylix initialized');
+                console.log('ABI version:', wasm.zylix_get_abi_version());
+
+                // Render UI
+                render();
+
+            } catch (error) {
+                console.error('Init error:', error);
+                appEl.innerHTML = `
+                    <p class="loading">Failed to load</p>
+                    <p class="error">${error.message}</p>
+                `;
+            }
+        }
+
+        // Render the counter UI
+        function render() {
+            const counter = wasm.zylix_wasm_get_counter();
+            const version = wasm.zylix_get_state_version();
+            const memUsed = wasm.zylix_wasm_memory_used();
+            const memPeak = wasm.zylix_wasm_memory_peak();
+
+            const appEl = document.getElementById('app');
+            appEl.innerHTML = `
+                <div class="counter-display">${counter}</div>
+                <div class="button-row">
+                    <button class="btn-decrement" onclick="decrement()">−</button>
+                    <button class="btn-reset" onclick="reset()">Reset</button>
+                    <button class="btn-increment" onclick="increment()">+</button>
+                </div>
+                <div class="stats">
+                    <span>Version: ${version}</span>
+                    <span>Memory: ${memUsed}/${memPeak} bytes</span>
+                </div>
+            `;
+        }
+
+        // Event handlers
+        window.increment = function() {
+            wasm.zylix_dispatch(ZYLIX_EVENT.COUNTER_INCREMENT, 0, 0);
+            render();
+        };
+
+        window.decrement = function() {
+            wasm.zylix_dispatch(ZYLIX_EVENT.COUNTER_DECREMENT, 0, 0);
+            render();
+        };
+
+        window.reset = function() {
+            wasm.zylix_dispatch(ZYLIX_EVENT.COUNTER_RESET, 0, 0);
+            render();
+        };
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

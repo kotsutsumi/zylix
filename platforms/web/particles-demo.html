@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Particle System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        canvas {
+            border-radius: 8px;
+            cursor: crosshair;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button.active {
+            background: #4f46e5;
+        }
+
+        .stats {
+            margin-top: 12px;
+            color: #666;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .error {
+            color: #ff6b6b;
+            max-width: 600px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom Particle System</h1>
+    <p class="subtitle">50,000 particles @ 60fps | WebGPU Compute + Zig</p>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div class="controls">
+        <button id="btn-fountain" class="active">Fountain</button>
+        <button id="btn-explosion">Explosion</button>
+        <button id="btn-rain">Rain</button>
+        <button id="btn-reset">Reset</button>
+    </div>
+    <div id="stats" class="stats"></div>
+
+    <script type="module">
+        // === Configuration ===
+        const PARTICLE_COUNT = 50000;
+        const WORKGROUP_SIZE = 256;
+
+        // === WASM ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === WebGPU ===
+        let device = null;
+        let context = null;
+        let computePipeline = null;
+        let renderPipeline = null;
+        let particleBuffers = [null, null]; // Double buffer for compute
+        let simParamsBuffer = null;
+        let computeBindGroups = [null, null];
+        let currentBuffer = 0;
+
+        // === Stats ===
+        let lastTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+
+        // === Mouse ===
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseDown = false;
+
+        // === Compute Shader ===
+        const computeShader = `
+            struct Particle {
+                pos_x: f32,
+                pos_y: f32,
+                vel_x: f32,
+                vel_y: f32,
+                color_r: f32,
+                color_g: f32,
+                color_b: f32,
+                color_a: f32,
+            }
+
+            struct SimParams {
+                delta_time: f32,
+                total_time: f32,
+                gravity_x: f32,
+                gravity_y: f32,
+                bounds_min_x: f32,
+                bounds_min_y: f32,
+                bounds_max_x: f32,
+                bounds_max_y: f32,
+                damping: f32,
+                bounce: f32,
+                particle_count: u32,
+                _pad1: u32,
+                mouse_x: f32,
+                mouse_y: f32,
+                mouse_strength: f32,
+                mouse_radius: f32,
+            }
+
+            @group(0) @binding(0) var<storage, read> particlesIn: array<Particle>;
+            @group(0) @binding(1) var<storage, read_write> particlesOut: array<Particle>;
+            @group(0) @binding(2) var<uniform> params: SimParams;
+
+            @compute @workgroup_size(${WORKGROUP_SIZE})
+            fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
+                let idx = global_id.x;
+                if (idx >= params.particle_count) {
+                    return;
+                }
+
+                var p = particlesIn[idx];
+
+                // Apply gravity
+                p.vel_x += params.gravity_x * params.delta_time;
+                p.vel_y += params.gravity_y * params.delta_time;
+
+                // Mouse interaction
+                if (params.mouse_strength != 0.0) {
+                    let dx = params.mouse_x - p.pos_x;
+                    let dy = params.mouse_y - p.pos_y;
+                    let dist = sqrt(dx * dx + dy * dy);
+
+                    if (dist < params.mouse_radius && dist > 0.001) {
+                        let force = params.mouse_strength / (dist * 10.0);
+                        p.vel_x += dx * force * params.delta_time;
+                        p.vel_y += dy * force * params.delta_time;
+                    }
+                }
+
+                // Apply damping
+                p.vel_x *= params.damping;
+                p.vel_y *= params.damping;
+
+                // Update position
+                p.pos_x += p.vel_x * params.delta_time;
+                p.pos_y += p.vel_y * params.delta_time;
+
+                // Bounce off bounds
+                if (p.pos_x < params.bounds_min_x) {
+                    p.pos_x = params.bounds_min_x;
+                    p.vel_x *= -params.bounce;
+                }
+                if (p.pos_x > params.bounds_max_x) {
+                    p.pos_x = params.bounds_max_x;
+                    p.vel_x *= -params.bounce;
+                }
+                if (p.pos_y < params.bounds_min_y) {
+                    p.pos_y = params.bounds_min_y;
+                    p.vel_y *= -params.bounce;
+                }
+                if (p.pos_y > params.bounds_max_y) {
+                    p.pos_y = params.bounds_max_y;
+                    p.vel_y *= -params.bounce;
+                }
+
+                // Fade alpha based on velocity
+                let speed = sqrt(p.vel_x * p.vel_x + p.vel_y * p.vel_y);
+                p.color_a = clamp(speed * 2.0, 0.2, 1.0);
+
+                particlesOut[idx] = p;
+            }
+        `;
+
+        // === Render Shader ===
+        const renderShader = `
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) color: vec4<f32>,
+            }
+
+            struct Particle {
+                pos_x: f32,
+                pos_y: f32,
+                vel_x: f32,
+                vel_y: f32,
+                color_r: f32,
+                color_g: f32,
+                color_b: f32,
+                color_a: f32,
+            }
+
+            @group(0) @binding(0) var<storage, read> particles: array<Particle>;
+
+            @vertex
+            fn vertexMain(@builtin(vertex_index) idx: u32) -> VertexOutput {
+                let p = particles[idx];
+
+                var output: VertexOutput;
+                output.position = vec4<f32>(p.pos_x, p.pos_y, 0.0, 1.0);
+                output.color = vec4<f32>(p.color_r, p.color_g, p.color_b, p.color_a);
+                return output;
+            }
+
+            @fragment
+            fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
+                return input.color;
+            }
+        `;
+
+        // === Initialize ===
+        async function init() {
+            try {
+                // Check WebGPU
+                if (!navigator.gpu) {
+                    throw new Error('WebGPU not supported');
+                }
+
+                // Load WASM
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix
+                wasm.zylix_init();
+                wasm.zigdom_particles_init(PARTICLE_COUNT);
+                wasm.zigdom_particles_preset_fountain();
+                console.log('Particles initialized:', wasm.zigdom_particles_get_count());
+
+                // Initialize WebGPU
+                const adapter = await navigator.gpu.requestAdapter();
+                device = await adapter.requestDevice();
+
+                const canvas = document.getElementById('canvas');
+                context = canvas.getContext('webgpu');
+                const format = navigator.gpu.getPreferredCanvasFormat();
+                context.configure({ device, format, alphaMode: 'premultiplied' });
+
+                // Create particle buffers (double buffer for compute)
+                const particleBufferSize = wasm.zigdom_particles_get_buffer_size();
+                console.log('Particle buffer size:', particleBufferSize, 'bytes');
+
+                for (let i = 0; i < 2; i++) {
+                    particleBuffers[i] = device.createBuffer({
+                        size: particleBufferSize,
+                        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.VERTEX,
+                    });
+                }
+
+                // Upload initial particle data
+                const particlePtr = wasm.zigdom_particles_get_buffer();
+                const particleData = new Uint8Array(wasmMemory.buffer, particlePtr, particleBufferSize);
+                device.queue.writeBuffer(particleBuffers[0], 0, particleData);
+                device.queue.writeBuffer(particleBuffers[1], 0, particleData);
+
+                // Create simulation params buffer
+                const paramsSize = wasm.zigdom_particles_get_params_size();
+                simParamsBuffer = device.createBuffer({
+                    size: paramsSize,
+                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                });
+
+                // Create compute pipeline
+                const computeModule = device.createShaderModule({ code: computeShader });
+                computePipeline = device.createComputePipeline({
+                    layout: 'auto',
+                    compute: {
+                        module: computeModule,
+                        entryPoint: 'main',
+                    },
+                });
+
+                // Create compute bind groups (ping-pong)
+                for (let i = 0; i < 2; i++) {
+                    computeBindGroups[i] = device.createBindGroup({
+                        layout: computePipeline.getBindGroupLayout(0),
+                        entries: [
+                            { binding: 0, resource: { buffer: particleBuffers[i] } },
+                            { binding: 1, resource: { buffer: particleBuffers[1 - i] } },
+                            { binding: 2, resource: { buffer: simParamsBuffer } },
+                        ],
+                    });
+                }
+
+                // Create render pipeline
+                const renderModule = device.createShaderModule({ code: renderShader });
+                renderPipeline = device.createRenderPipeline({
+                    layout: 'auto',
+                    vertex: {
+                        module: renderModule,
+                        entryPoint: 'vertexMain',
+                    },
+                    fragment: {
+                        module: renderModule,
+                        entryPoint: 'fragmentMain',
+                        targets: [{
+                            format,
+                            blend: {
+                                color: {
+                                    srcFactor: 'src-alpha',
+                                    dstFactor: 'one',
+                                    operation: 'add',
+                                },
+                                alpha: {
+                                    srcFactor: 'one',
+                                    dstFactor: 'one',
+                                    operation: 'add',
+                                },
+                            },
+                        }],
+                    },
+                    primitive: {
+                        topology: 'point-list',
+                    },
+                });
+
+                // Setup event listeners
+                setupEvents(canvas);
+
+                // Start render loop
+                lastTime = performance.now();
+                requestAnimationFrame(render);
+
+                console.log('WebGPU initialized');
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.getElementById('canvas').outerHTML =
+                    `<p class="error">${error.message}</p>`;
+            }
+        }
+
+        function setupEvents(canvas) {
+            // Mouse events
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouseY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+            });
+
+            canvas.addEventListener('mousedown', () => { mouseDown = true; });
+            canvas.addEventListener('mouseup', () => { mouseDown = false; });
+            canvas.addEventListener('mouseleave', () => { mouseDown = false; });
+
+            // Button events
+            document.getElementById('btn-fountain').addEventListener('click', () => {
+                setActiveButton('btn-fountain');
+                resetParticles();
+                wasm.zigdom_particles_preset_fountain();
+                uploadParticles();
+            });
+
+            document.getElementById('btn-explosion').addEventListener('click', () => {
+                setActiveButton('btn-explosion');
+                resetParticles();
+                wasm.zigdom_particles_preset_explosion();
+                uploadParticles();
+            });
+
+            document.getElementById('btn-rain').addEventListener('click', () => {
+                setActiveButton('btn-rain');
+                resetParticles();
+                wasm.zigdom_particles_preset_rain();
+                uploadParticles();
+            });
+
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                wasm.zigdom_particles_reset();
+                uploadParticles();
+            });
+        }
+
+        function setActiveButton(id) {
+            document.querySelectorAll('.controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(id).classList.add('active');
+        }
+
+        function resetParticles() {
+            wasm.zigdom_particles_reset();
+        }
+
+        function uploadParticles() {
+            const particlePtr = wasm.zigdom_particles_get_buffer();
+            const particleBufferSize = wasm.zigdom_particles_get_buffer_size();
+            const particleData = new Uint8Array(wasmMemory.buffer, particlePtr, particleBufferSize);
+            device.queue.writeBuffer(particleBuffers[0], 0, particleData);
+            device.queue.writeBuffer(particleBuffers[1], 0, particleData);
+        }
+
+        // === Render Loop ===
+        function render(currentTime) {
+            const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+            lastTime = currentTime;
+
+            // Update FPS
+            frameCount++;
+            if (frameCount % 30 === 0) {
+                fps = Math.round(1 / deltaTime);
+            }
+
+            // Update Zig state
+            wasm.zigdom_particles_update_time(deltaTime);
+            wasm.zigdom_particles_set_mouse(mouseX, mouseY, mouseDown ? 50.0 : 0.0);
+
+            // Upload simulation params
+            const paramsPtr = wasm.zigdom_particles_get_params();
+            const paramsSize = wasm.zigdom_particles_get_params_size();
+            const paramsData = new Uint8Array(wasmMemory.buffer, paramsPtr, paramsSize);
+            device.queue.writeBuffer(simParamsBuffer, 0, paramsData);
+
+            // Create command encoder
+            const commandEncoder = device.createCommandEncoder();
+
+            // Compute pass
+            const computePass = commandEncoder.beginComputePass();
+            computePass.setPipeline(computePipeline);
+            computePass.setBindGroup(0, computeBindGroups[currentBuffer]);
+            computePass.dispatchWorkgroups(Math.ceil(PARTICLE_COUNT / WORKGROUP_SIZE));
+            computePass.end();
+
+            // Swap buffers
+            currentBuffer = 1 - currentBuffer;
+
+            // Render pass
+            const textureView = context.getCurrentTexture().createView();
+            const renderPass = commandEncoder.beginRenderPass({
+                colorAttachments: [{
+                    view: textureView,
+                    clearValue: { r: 0.02, g: 0.02, b: 0.05, a: 1.0 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+            });
+
+            // Create render bind group for current output buffer
+            const renderBindGroup = device.createBindGroup({
+                layout: renderPipeline.getBindGroupLayout(0),
+                entries: [
+                    { binding: 0, resource: { buffer: particleBuffers[1 - currentBuffer] } },
+                ],
+            });
+
+            renderPass.setPipeline(renderPipeline);
+            renderPass.setBindGroup(0, renderBindGroup);
+            renderPass.draw(PARTICLE_COUNT);
+            renderPass.end();
+
+            // Submit
+            device.queue.submit([commandEncoder.finish()]);
+
+            // Update stats
+            document.getElementById('stats').textContent =
+                `FPS: ${fps} | Particles: ${PARTICLE_COUNT.toLocaleString()} | ` +
+                `Compute: ${Math.ceil(PARTICLE_COUNT / WORKGROUP_SIZE)} workgroups`;
+
+            requestAnimationFrame(render);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

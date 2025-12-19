@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Zylix.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Zylix"
+    Title="Zylix Counter">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+          Padding="40"
+          RowSpacing="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="Zylix Counter"
+                   FontSize="32"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"/>
+
+        <!-- Subtitle -->
+        <TextBlock Grid.Row="1"
+                   Text="Zig Core + WinUI Shell"
+                   FontSize="14"
+                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                   HorizontalAlignment="Center"/>
+
+        <!-- Counter Display -->
+        <Border Grid.Row="2"
+                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="12"
+                Padding="40,20"
+                HorizontalAlignment="Center">
+            <TextBlock x:Name="CounterText"
+                       Text="0"
+                       FontSize="72"
+                       FontWeight="Bold"
+                       FontFamily="Segoe UI Variable"
+                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="16">
+            <Button x:Name="DecrementButton"
+                    Content="-"
+                    Click="OnDecrement"
+                    Width="60"
+                    Height="60"
+                    FontSize="24"
+                    CornerRadius="30"/>
+
+            <Button x:Name="ResetButton"
+                    Content="Reset"
+                    Click="OnReset"
+                    Height="60"
+                    Padding="20,0"/>
+
+            <Button x:Name="IncrementButton"
+                    Content="+"
+                    Click="OnIncrement"
+                    Width="60"
+                    Height="60"
+                    FontSize="24"
+                    CornerRadius="30"
+                    Style="{ThemeResource AccentButtonStyle}"/>
+        </StackPanel>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="4"
+                   x:Name="StatusText"
+                   Text="Initializing..."
+                   FontSize="12"
+                   Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"/>
+    </Grid>
+</Window>

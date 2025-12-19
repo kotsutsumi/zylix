@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom LLM Integration Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #4f46e5;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: #4f46e5;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            font-size: 12px;
+            text-align: center;
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        .message-role {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message-tokens {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .streaming-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-area textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 14px;
+            resize: none;
+            height: 60px;
+            font-family: inherit;
+        }
+
+        .input-area textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+            transform: translateY(-1px);
+        }
+
+        button.primary {
+            background: #4f46e5;
+        }
+
+        button.primary:hover {
+            background: #4338ca;
+        }
+
+        button.danger {
+            background: #dc2626;
+        }
+
+        button.danger:hover {
+            background: #b91c1c;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Config Panel */
+        .config-item {
+            margin-bottom: 12px;
+        }
+
+        .config-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .config-item input,
+        .config-item select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 13px;
+        }
+
+        .config-item input:focus,
+        .config-item select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .stat-value.small {
+            font-size: 14px;
+        }
+
+        /* Tools */
+        .tools-list {
+            font-size: 12px;
+        }
+
+        .tool-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .tool-name {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .tool-desc {
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.idle {
+            background: rgba(107, 114, 128, 0.3);
+            color: #9ca3af;
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.3);
+            color: #f59e0b;
+        }
+
+        .status-badge.streaming {
+            background: rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .status-badge.completed {
+            background: rgba(79, 70, 229, 0.3);
+            color: #818cf8;
+        }
+
+        .status-badge.error {
+            background: rgba(220, 38, 38, 0.3);
+            color: #f87171;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-badge.streaming .status-dot {
+            animation: pulse 1s infinite;
+        }
+
+        .error-text {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom LLM Integration Demo</h1>
+    <p class="subtitle">Zig-powered LLM state management | Provider-agnostic | WASM + JavaScript</p>
+
+    <div class="container">
+        <!-- Main Chat Area -->
+        <div class="card chat-container">
+            <h2>
+                Conversation
+                <span id="status-badge" class="status-badge idle">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Idle</span>
+                </span>
+            </h2>
+            <div id="messages" class="messages"></div>
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Type a message... (Zig manages state, JS simulates API)"></textarea>
+                <button id="send-btn" class="primary">Send</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Config -->
+            <div class="card">
+                <h2>Configuration</h2>
+                <div class="config-item">
+                    <label class="config-label">Model</label>
+                    <select id="model-select">
+                        <option value="gpt-4">gpt-4</option>
+                        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                        <option value="claude-3-opus">claude-3-opus</option>
+                        <option value="claude-3-sonnet">claude-3-sonnet</option>
+                        <option value="llama-3-70b">llama-3-70b</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label class="config-label">Temperature</label>
+                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    <span id="temp-value" style="font-size: 12px; color: #888;">0.7</span>
+                </div>
+                <div class="config-item">
+                    <label class="config-label">Max Tokens</label>
+                    <input type="number" id="max-tokens" value="1024" min="1" max="4096">
+                </div>
+                <div class="config-item">
+                    <label class="config-label">
+                        <input type="checkbox" id="streaming" checked> Enable Streaming
+                    </label>
+                </div>
+                <div class="controls" style="margin-top: 12px">
+                    <button id="clear-btn" class="danger">Clear Chat</button>
+                    <button id="reset-btn">Reset All</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="card">
+                <h2>Statistics</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Messages</div>
+                        <div id="stat-messages" class="stat-value">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Context Tokens</div>
+                        <div id="stat-tokens" class="stat-value">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Requests</div>
+                        <div id="stat-requests" class="stat-value">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Streaming</div>
+                        <div id="stat-streaming" class="stat-value small">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools -->
+            <div class="card">
+                <h2>Registered Tools</h2>
+                <div id="tools-list" class="tools-list">
+                    <div style="color: #888; font-size: 12px;">No tools registered</div>
+                </div>
+                <div class="controls" style="margin-top: 12px">
+                    <button id="register-tools-btn">Register Demo Tools</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // === WASM ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === State ===
+        let isStreaming = false;
+        let streamingMessageEl = null;
+        let streamContent = '';
+
+        // === Helper: Write string to WASM memory ===
+        function writeString(str) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(str);
+            const ptr = wasm.zylix_wasm_alloc(bytes.length);
+            if (!ptr) return { ptr: 0, len: 0 };
+            const mem = new Uint8Array(wasmMemory.buffer, ptr, bytes.length);
+            mem.set(bytes);
+            return { ptr, len: bytes.length };
+        }
+
+        // === Initialize ===
+        async function init() {
+            try {
+                // Load WASM
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix and LLM
+                wasm.zylix_init();
+                wasm.zigdom_llm_init();
+
+                // Set default system prompt
+                const systemPrompt = "You are a helpful AI assistant. You demonstrate Zig-powered LLM state management.";
+                const { ptr, len } = writeString(systemPrompt);
+                wasm.zigdom_llm_set_system_prompt(ptr, len);
+                wasm.zylix_wasm_free_scratch();
+
+                // Setup event listeners
+                setupEventListeners();
+
+                // Update UI
+                updateStats();
+                addSystemMessage('ZigDom LLM module initialized. Zig manages all state, JS handles I/O.');
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.body.innerHTML = `<p class="error-text">${error.message}</p>`;
+            }
+        }
+
+        function setupEventListeners() {
+            // Send message
+            document.getElementById('send-btn').addEventListener('click', sendMessage);
+            document.getElementById('user-input').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Config changes
+            document.getElementById('model-select').addEventListener('change', (e) => {
+                const { ptr, len } = writeString(e.target.value);
+                wasm.zigdom_llm_set_model(ptr, len);
+                wasm.zylix_wasm_free_scratch();
+            });
+
+            document.getElementById('temperature').addEventListener('input', (e) => {
+                const temp = parseFloat(e.target.value);
+                document.getElementById('temp-value').textContent = temp.toFixed(1);
+                wasm.zigdom_llm_set_temperature(temp);
+            });
+
+            document.getElementById('max-tokens').addEventListener('change', (e) => {
+                wasm.zigdom_llm_set_max_tokens(parseInt(e.target.value));
+            });
+
+            document.getElementById('streaming').addEventListener('change', (e) => {
+                wasm.zigdom_llm_set_streaming(e.target.checked);
+            });
+
+            // Clear and Reset
+            document.getElementById('clear-btn').addEventListener('click', () => {
+                wasm.zigdom_llm_clear_conversation();
+                document.getElementById('messages').innerHTML = '';
+                addSystemMessage('Conversation cleared. System prompt retained.');
+                updateStats();
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                wasm.zigdom_llm_reset();
+                document.getElementById('messages').innerHTML = '';
+                addSystemMessage('LLM module reset. All state cleared.');
+                updateStats();
+                updateToolsList();
+            });
+
+            // Register tools
+            document.getElementById('register-tools-btn').addEventListener('click', registerDemoTools);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            // Add user message via Zig
+            const { ptr, len } = writeString(content);
+            const success = wasm.zigdom_llm_add_user_message(ptr, len);
+            wasm.zylix_wasm_free_scratch();
+
+            if (!success) {
+                addSystemMessage('Failed to add message (max messages reached?)');
+                return;
+            }
+
+            // Display user message
+            addMessage('user', content);
+            input.value = '';
+
+            // Estimate tokens
+            const tokens = wasm.zigdom_llm_estimate_tokens(ptr, len);
+
+            // Simulate API call
+            simulateAPICall(content);
+            updateStats();
+        }
+
+        async function simulateAPICall(userMessage) {
+            const useStreaming = document.getElementById('streaming').checked;
+
+            // Begin request in Zig
+            wasm.zigdom_llm_begin_request();
+            updateStatus('pending');
+
+            // Simulate network delay
+            await sleep(500);
+
+            // Generate response based on user message
+            const response = generateResponse(userMessage);
+
+            if (useStreaming) {
+                // Streaming mode
+                wasm.zigdom_llm_begin_streaming();
+                updateStatus('streaming');
+
+                // Create streaming message element
+                streamingMessageEl = addMessage('assistant', '', true);
+                streamContent = '';
+
+                // Simulate streaming chunks
+                const words = response.split(' ');
+                let chunkIndex = 0;
+
+                for (let i = 0; i < words.length; i++) {
+                    await sleep(50 + Math.random() * 50);
+
+                    const chunk = words[i] + ' ';
+                    streamContent += chunk;
+
+                    // Push chunk to Zig
+                    const { ptr, len } = writeString(chunk);
+                    const isFinal = i === words.length - 1;
+                    wasm.zigdom_llm_push_stream_chunk(ptr, len, chunkIndex++, isFinal, isFinal ? 1 : 0);
+                    wasm.zylix_wasm_free_scratch();
+
+                    // Update UI
+                    updateStreamingMessage(streamContent);
+                    updateStats();
+                }
+
+                // Complete streaming
+                finalizeStreamingMessage();
+            } else {
+                // Non-streaming mode
+                await sleep(500);
+
+                // Complete request in Zig
+                const { ptr, len } = writeString(response);
+                const promptTokens = wasm.zigdom_llm_get_context_tokens();
+                const completionTokens = wasm.zigdom_llm_estimate_tokens(ptr, len);
+                wasm.zigdom_llm_complete_request(ptr, len, promptTokens, completionTokens, 1);
+                wasm.zylix_wasm_free_scratch();
+
+                // Display response
+                addMessage('assistant', response);
+            }
+
+            // Add assistant message to Zig conversation
+            const { ptr: rPtr, len: rLen } = writeString(response);
+            wasm.zigdom_llm_add_assistant_message(rPtr, rLen);
+            wasm.zylix_wasm_free_scratch();
+
+            updateStatus('idle');
+            updateStats();
+        }
+
+        function generateResponse(userMessage) {
+            // Simple response generation for demo
+            const lowerMsg = userMessage.toLowerCase();
+
+            if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
+                return "Hello! I'm running with Zig-powered state management. The conversation history, token counts, and configuration are all managed in WebAssembly, while JavaScript handles the API communication.";
+            }
+            if (lowerMsg.includes('how') && lowerMsg.includes('work')) {
+                return "ZigDom LLM integration follows the principle: 'Zig is Execution, JavaScript is I/O'. Zig handles: message storage, token estimation, streaming chunks, tool definitions, and request state. JavaScript handles: HTTP requests, DOM updates, and user interaction.";
+            }
+            if (lowerMsg.includes('token')) {
+                const tokens = wasm.zigdom_llm_get_context_tokens();
+                return `Currently, the conversation has approximately ${tokens} tokens in context. Token estimation uses ~4 characters per token as a rough approximation. The actual count depends on the specific tokenizer used by the model.`;
+            }
+            if (lowerMsg.includes('tool') || lowerMsg.includes('function')) {
+                const toolCount = wasm.zigdom_llm_get_tool_count();
+                return `There are ${toolCount} tools registered. Tools enable the LLM to call functions in your application. Register tools using zigdom_llm_register_tool with name, description, and JSON schema.`;
+            }
+            if (lowerMsg.includes('streaming')) {
+                return "Streaming is managed through an event queue pattern. Each chunk is pushed to Zig with zigdom_llm_push_stream_chunk(). The chunk includes content, index, is_final flag, and finish reason. This allows Zig to track streaming state while JS renders updates.";
+            }
+            if (lowerMsg.includes('zig') || lowerMsg.includes('wasm')) {
+                return "This demo runs entirely in your browser using WebAssembly compiled from Zig. The LLM module provides: conversation management, token estimation (~4 chars/token), streaming support, tool/function calling, and provider-agnostic configuration.";
+            }
+
+            return "I'm a demo response generated locally. In a real application, this would be an actual API call to OpenAI, Anthropic, or another LLM provider. Zig manages the request state, message history, and streaming chunks, while JavaScript handles the HTTP communication.";
+        }
+
+        function addMessage(role, content, isStreaming = false) {
+            const messages = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${role}`;
+
+            const roleLabel = role === 'user' ? 'You' : 'Assistant';
+            const tokens = content ? wasm.zigdom_llm_estimate_tokens(
+                ...(() => {
+                    const { ptr, len } = writeString(content);
+                    const result = [ptr, len];
+                    wasm.zylix_wasm_free_scratch();
+                    return result;
+                })()
+            ) : 0;
+
+            messageEl.innerHTML = `
+                <div class="message-role">${roleLabel}${isStreaming ? '<span class="streaming-indicator"></span>' : ''}</div>
+                <div class="message-content">${content || ''}</div>
+                ${!isStreaming ? `<div class="message-tokens">~${tokens} tokens</div>` : ''}
+            `;
+
+            messages.appendChild(messageEl);
+            messages.scrollTop = messages.scrollHeight;
+
+            return messageEl;
+        }
+
+        function addSystemMessage(text) {
+            const messages = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message system';
+            messageEl.innerHTML = `<div class="message-content">${text}</div>`;
+            messages.appendChild(messageEl);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function updateStreamingMessage(content) {
+            if (streamingMessageEl) {
+                const contentEl = streamingMessageEl.querySelector('.message-content');
+                if (contentEl) {
+                    contentEl.textContent = content;
+                }
+                const messages = document.getElementById('messages');
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
+        function finalizeStreamingMessage() {
+            if (streamingMessageEl) {
+                const indicator = streamingMessageEl.querySelector('.streaming-indicator');
+                if (indicator) indicator.remove();
+
+                // Add token count
+                const { ptr, len } = writeString(streamContent);
+                const tokens = wasm.zigdom_llm_estimate_tokens(ptr, len);
+                wasm.zylix_wasm_free_scratch();
+
+                const tokensEl = document.createElement('div');
+                tokensEl.className = 'message-tokens';
+                tokensEl.textContent = `~${tokens} tokens`;
+                streamingMessageEl.appendChild(tokensEl);
+
+                streamingMessageEl = null;
+                streamContent = '';
+            }
+        }
+
+        function updateStatus(status) {
+            const badge = document.getElementById('status-badge');
+            const text = document.getElementById('status-text');
+
+            badge.className = `status-badge ${status}`;
+
+            const statusTexts = {
+                idle: 'Idle',
+                pending: 'Pending',
+                streaming: 'Streaming',
+                completed: 'Completed',
+                error: 'Error'
+            };
+            text.textContent = statusTexts[status] || status;
+        }
+
+        function updateStats() {
+            document.getElementById('stat-messages').textContent = wasm.zigdom_llm_get_message_count();
+            document.getElementById('stat-tokens').textContent = wasm.zigdom_llm_get_context_tokens();
+
+            // Get stats from Zig
+            const statsPtr = wasm.zigdom_llm_get_stats();
+            if (statsPtr) {
+                // Read stats structure (total_requests at offset 0, streaming_responses at offset 8)
+                const statsView = new DataView(wasmMemory.buffer, statsPtr);
+                document.getElementById('stat-requests').textContent = statsView.getUint32(0, true);
+                document.getElementById('stat-streaming').textContent = statsView.getUint32(8, true);
+            }
+        }
+
+        function registerDemoTools() {
+            const tools = [
+                {
+                    name: 'get_weather',
+                    desc: 'Get current weather for a location',
+                    schema: '{"type":"object","properties":{"location":{"type":"string"}},"required":["location"]}'
+                },
+                {
+                    name: 'search_web',
+                    desc: 'Search the web for information',
+                    schema: '{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}'
+                },
+                {
+                    name: 'calculate',
+                    desc: 'Perform mathematical calculations',
+                    schema: '{"type":"object","properties":{"expression":{"type":"string"}},"required":["expression"]}'
+                }
+            ];
+
+            for (const tool of tools) {
+                const name = writeString(tool.name);
+                const desc = writeString(tool.desc);
+                const schema = writeString(tool.schema);
+
+                wasm.zigdom_llm_register_tool(
+                    name.ptr, name.len,
+                    desc.ptr, desc.len,
+                    schema.ptr, schema.len
+                );
+                wasm.zylix_wasm_free_scratch();
+            }
+
+            updateToolsList();
+            addSystemMessage(`Registered ${tools.length} demo tools`);
+        }
+
+        function updateToolsList() {
+            const toolCount = wasm.zigdom_llm_get_tool_count();
+            const list = document.getElementById('tools-list');
+
+            if (toolCount === 0) {
+                list.innerHTML = '<div style="color: #888; font-size: 12px;">No tools registered</div>';
+                return;
+            }
+
+            // For demo, show the tools we registered
+            const tools = [
+                { name: 'get_weather', desc: 'Get current weather for a location' },
+                { name: 'search_web', desc: 'Search the web for information' },
+                { name: 'calculate', desc: 'Perform mathematical calculations' }
+            ];
+
+            list.innerHTML = tools.slice(0, toolCount).map(t => `
+                <div class="tool-item">
+                    <div class="tool-name">${t.name}</div>
+                    <div class="tool-desc">${t.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom WebGPU Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        canvas {
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .stats {
+            margin-top: 16px;
+            color: #666;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .error {
+            color: #ff6b6b;
+            max-width: 500px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom WebGPU Demo</h1>
+    <p class="subtitle">Zig Core + WASM + WebGPU</p>
+    <div id="container">
+        <canvas id="canvas" width="600" height="600"></canvas>
+    </div>
+    <div id="stats" class="stats"></div>
+
+    <script type="module">
+        // === WASM Module ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === WebGPU Resources ===
+        let device = null;
+        let context = null;
+        let pipeline = null;
+        let vertexBuffer = null;
+        let uniformBuffer = null;
+        let uniformBindGroup = null;
+
+        // === Stats ===
+        let lastTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+
+        // === Shaders (WGSL) ===
+        const shaderCode = `
+            struct Uniforms {
+                model: mat4x4<f32>,
+                view: mat4x4<f32>,
+                projection: mat4x4<f32>,
+            }
+
+            @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
+            struct VertexInput {
+                @location(0) position: vec3<f32>,
+                @location(1) color: vec4<f32>,
+            }
+
+            struct VertexOutput {
+                @builtin(position) position: vec4<f32>,
+                @location(0) color: vec4<f32>,
+            }
+
+            @vertex
+            fn vertexMain(input: VertexInput) -> VertexOutput {
+                var output: VertexOutput;
+                let mvp = uniforms.projection * uniforms.view * uniforms.model;
+                output.position = mvp * vec4<f32>(input.position, 1.0);
+                output.color = input.color;
+                return output;
+            }
+
+            @fragment
+            fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
+                return input.color;
+            }
+        `;
+
+        // === Initialize ===
+        async function init() {
+            const container = document.getElementById('container');
+            const statsEl = document.getElementById('stats');
+
+            try {
+                // Check WebGPU support
+                if (!navigator.gpu) {
+                    throw new Error('WebGPU is not supported in this browser.');
+                }
+
+                // Load WASM
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix and GPU
+                wasm.zylix_init();
+                wasm.zigdom_gpu_init();
+                console.log('Zylix initialized, ABI version:', wasm.zylix_get_abi_version());
+
+                // Initialize WebGPU
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) {
+                    throw new Error('Failed to get GPU adapter.');
+                }
+
+                device = await adapter.requestDevice();
+
+                const canvas = document.getElementById('canvas');
+                context = canvas.getContext('webgpu');
+
+                const format = navigator.gpu.getPreferredCanvasFormat();
+                context.configure({
+                    device,
+                    format,
+                    alphaMode: 'premultiplied',
+                });
+
+                // Set aspect ratio
+                wasm.zigdom_gpu_set_aspect(canvas.width / canvas.height);
+
+                // Create shader module
+                const shaderModule = device.createShaderModule({
+                    code: shaderCode,
+                });
+
+                // Create vertex buffer
+                const vertexBufferSize = wasm.zigdom_gpu_get_vertex_buffer_size();
+                vertexBuffer = device.createBuffer({
+                    size: vertexBufferSize,
+                    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                });
+
+                // Upload vertex data from WASM memory
+                const vertexPtr = wasm.zigdom_gpu_get_vertex_buffer();
+                const vertexData = new Uint8Array(wasmMemory.buffer, vertexPtr, vertexBufferSize);
+                device.queue.writeBuffer(vertexBuffer, 0, vertexData);
+
+                // Create uniform buffer (256-byte aligned)
+                const uniformBufferSize = 256;
+                uniformBuffer = device.createBuffer({
+                    size: uniformBufferSize,
+                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+                });
+
+                // Create bind group layout
+                const bindGroupLayout = device.createBindGroupLayout({
+                    entries: [{
+                        binding: 0,
+                        visibility: GPUShaderStage.VERTEX,
+                        buffer: { type: 'uniform' },
+                    }],
+                });
+
+                // Create bind group
+                uniformBindGroup = device.createBindGroup({
+                    layout: bindGroupLayout,
+                    entries: [{
+                        binding: 0,
+                        resource: { buffer: uniformBuffer },
+                    }],
+                });
+
+                // Create pipeline layout
+                const pipelineLayout = device.createPipelineLayout({
+                    bindGroupLayouts: [bindGroupLayout],
+                });
+
+                // Create render pipeline
+                pipeline = device.createRenderPipeline({
+                    layout: pipelineLayout,
+                    vertex: {
+                        module: shaderModule,
+                        entryPoint: 'vertexMain',
+                        buffers: [{
+                            arrayStride: 32, // Vertex size: Vec3(16) + Vec4(16)
+                            attributes: [
+                                {
+                                    // position: vec3 (padded to 16 bytes)
+                                    shaderLocation: 0,
+                                    offset: 0,
+                                    format: 'float32x3',
+                                },
+                                {
+                                    // color: vec4
+                                    shaderLocation: 1,
+                                    offset: 16,
+                                    format: 'float32x4',
+                                },
+                            ],
+                        }],
+                    },
+                    fragment: {
+                        module: shaderModule,
+                        entryPoint: 'fragmentMain',
+                        targets: [{ format }],
+                    },
+                    primitive: {
+                        topology: 'triangle-list',
+                        cullMode: 'back',
+                    },
+                    depthStencil: {
+                        format: 'depth24plus',
+                        depthWriteEnabled: true,
+                        depthCompare: 'less',
+                    },
+                });
+
+                // Create depth texture
+                const depthTexture = device.createTexture({
+                    size: [canvas.width, canvas.height],
+                    format: 'depth24plus',
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+                });
+
+                // Store depth view for render loop
+                window.depthView = depthTexture.createView();
+
+                console.log('WebGPU initialized');
+
+                // Start render loop
+                lastTime = performance.now();
+                requestAnimationFrame(render);
+
+            } catch (error) {
+                console.error('Init error:', error);
+                container.innerHTML = `<p class="error">${error.message}</p>`;
+            }
+        }
+
+        // === Render Loop ===
+        function render(currentTime) {
+            // Calculate delta time
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            // Update FPS
+            frameCount++;
+            if (frameCount % 60 === 0) {
+                fps = Math.round(1 / deltaTime);
+            }
+
+            // Update Zig state (all math happens in Zig!)
+            wasm.zigdom_gpu_update(deltaTime);
+
+            // Upload updated uniforms from WASM memory to GPU
+            const uniformPtr = wasm.zigdom_gpu_get_uniform_buffer();
+            const uniformSize = wasm.zigdom_gpu_get_uniform_buffer_size();
+            const uniformData = new Uint8Array(wasmMemory.buffer, uniformPtr, uniformSize);
+            device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+            // Create command encoder
+            const commandEncoder = device.createCommandEncoder();
+
+            // Begin render pass
+            const textureView = context.getCurrentTexture().createView();
+            const renderPass = commandEncoder.beginRenderPass({
+                colorAttachments: [{
+                    view: textureView,
+                    clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1.0 },
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }],
+                depthStencilAttachment: {
+                    view: window.depthView,
+                    depthClearValue: 1.0,
+                    depthLoadOp: 'clear',
+                    depthStoreOp: 'store',
+                },
+            });
+
+            // Draw cube
+            renderPass.setPipeline(pipeline);
+            renderPass.setBindGroup(0, uniformBindGroup);
+            renderPass.setVertexBuffer(0, vertexBuffer);
+            renderPass.draw(wasm.zigdom_gpu_get_vertex_count());
+
+            renderPass.end();
+
+            // Submit commands
+            device.queue.submit([commandEncoder.finish()]);
+
+            // Update stats
+            document.getElementById('stats').textContent =
+                `FPS: ${fps} | Vertices: ${wasm.zigdom_gpu_get_vertex_count()} | Uniforms: ${uniformSize} bytes`;
+
+            // Continue loop
+            requestAnimationFrame(render);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

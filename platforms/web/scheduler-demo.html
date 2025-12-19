@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Scheduler Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #4f46e5;
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Menlo', 'Monaco', monospace;
+        }
+
+        .timer-display.countdown {
+            color: #f59e0b;
+        }
+
+        .timer-display.stopwatch {
+            color: #10b981;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+            transform: translateY(-1px);
+        }
+
+        button.primary {
+            background: #4f46e5;
+        }
+
+        button.primary:hover {
+            background: #4338ca;
+        }
+
+        button.danger {
+            background: #dc2626;
+        }
+
+        button.danger:hover {
+            background: #b91c1c;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .event-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .event-item {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .event-item.timer {
+            color: #f59e0b;
+        }
+
+        .event-item.interval {
+            color: #10b981;
+        }
+
+        .event-item.system {
+            color: #888;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .time-scale {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .time-scale input {
+            flex: 1;
+        }
+
+        .time-scale-value {
+            font-weight: bold;
+            min-width: 50px;
+        }
+
+        .animation-box {
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            position: relative;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .animation-ball {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            transition: left 0.05s linear;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transition: width 0.1s linear;
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom Scheduler Demo</h1>
+    <p class="subtitle">Zig-powered timer system with event queue | WASM + JavaScript</p>
+
+    <div class="container">
+        <!-- Countdown Timer -->
+        <div class="card">
+            <h2>Countdown Timer</h2>
+            <div id="countdown" class="timer-display countdown">5.00</div>
+            <div class="progress-bar">
+                <div id="countdown-progress" class="progress-fill" style="width: 100%"></div>
+            </div>
+            <div class="controls" style="margin-top: 16px">
+                <button id="countdown-start" class="primary">Start 5s</button>
+                <button id="countdown-10" >10s</button>
+                <button id="countdown-cancel" class="danger" disabled>Cancel</button>
+            </div>
+        </div>
+
+        <!-- Stopwatch -->
+        <div class="card">
+            <h2>Interval Timer (Stopwatch)</h2>
+            <div id="stopwatch" class="timer-display stopwatch">0.00</div>
+            <div class="controls">
+                <button id="stopwatch-start" class="primary">Start</button>
+                <button id="stopwatch-stop" class="danger" disabled>Stop</button>
+                <button id="stopwatch-reset">Reset</button>
+            </div>
+        </div>
+
+        <!-- Animation -->
+        <div class="card">
+            <h2>Frame Animation (Every Frame)</h2>
+            <div class="animation-box">
+                <div id="ball" class="animation-ball"></div>
+            </div>
+            <div class="time-scale">
+                <span>Time Scale:</span>
+                <input type="range" id="time-scale" min="0" max="3" step="0.1" value="1">
+                <span id="time-scale-value" class="time-scale-value">1.0x</span>
+            </div>
+            <div class="controls" style="margin-top: 12px">
+                <button id="pause-btn">Pause</button>
+                <button id="resume-btn" disabled>Resume</button>
+            </div>
+        </div>
+
+        <!-- Event Log -->
+        <div class="card">
+            <h2>Event Log</h2>
+            <div id="event-log" class="event-log"></div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Active Timers</div>
+                    <div id="stat-active" class="stat-value">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Events Fired</div>
+                    <div id="stat-events" class="stat-value">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Total Time</div>
+                    <div id="stat-time" class="stat-value">0.0s</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Frame #</div>
+                    <div id="stat-frame" class="stat-value">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // === WASM ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === Timer Tags (callback identifiers) ===
+        const TAGS = {
+            COUNTDOWN: 1,
+            COUNTDOWN_TICK: 2,
+            STOPWATCH: 3,
+            ANIMATION: 4,
+        };
+
+        // === State ===
+        let countdownId = 0;
+        let countdownTickId = 0;
+        let countdownStartTime = 5;
+        let countdownRemaining = 5;
+        let stopwatchId = 0;
+        let stopwatchTime = 0;
+        let animationId = 0;
+        let ballPosition = 0;
+        let ballDirection = 1;
+        let eventCount = 0;
+        let lastTime = 0;
+
+        // === Callbacks Map ===
+        const callbacks = {
+            [TAGS.COUNTDOWN]: () => {
+                logEvent('Countdown finished!', 'timer');
+                countdownId = 0;
+                countdownTickId = 0;
+                countdownRemaining = countdownStartTime;
+                updateCountdownUI();
+                document.getElementById('countdown-cancel').disabled = true;
+                document.getElementById('countdown-start').disabled = false;
+            },
+            [TAGS.COUNTDOWN_TICK]: () => {
+                countdownRemaining -= 0.1;
+                if (countdownRemaining < 0) countdownRemaining = 0;
+                updateCountdownUI();
+            },
+            [TAGS.STOPWATCH]: () => {
+                stopwatchTime += 0.01;
+                document.getElementById('stopwatch').textContent = stopwatchTime.toFixed(2);
+            },
+            [TAGS.ANIMATION]: () => {
+                // Animation handled in render loop
+            },
+        };
+
+        // === Initialize ===
+        async function init() {
+            try {
+                // Load WASM
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix and scheduler
+                wasm.zylix_init();
+                wasm.zigdom_scheduler_init();
+                wasm.zigdom_timer_init();
+
+                logEvent('Scheduler initialized', 'system');
+
+                // Setup event listeners
+                setupEventListeners();
+
+                // Start render loop
+                lastTime = performance.now();
+                requestAnimationFrame(render);
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.body.innerHTML = `<p class="error">${error.message}</p>`;
+            }
+        }
+
+        function setupEventListeners() {
+            // Countdown
+            document.getElementById('countdown-start').addEventListener('click', () => {
+                startCountdown(5);
+            });
+            document.getElementById('countdown-10').addEventListener('click', () => {
+                startCountdown(10);
+            });
+            document.getElementById('countdown-cancel').addEventListener('click', () => {
+                if (countdownId) wasm.zigdom_timer_cancel(countdownId);
+                if (countdownTickId) wasm.zigdom_timer_cancel(countdownTickId);
+                countdownId = 0;
+                countdownTickId = 0;
+                countdownRemaining = countdownStartTime;
+                updateCountdownUI();
+                document.getElementById('countdown-cancel').disabled = true;
+                document.getElementById('countdown-start').disabled = false;
+                logEvent('Countdown cancelled', 'timer');
+            });
+
+            // Stopwatch
+            document.getElementById('stopwatch-start').addEventListener('click', () => {
+                stopwatchId = wasm.zigdom_timer_create_interval(0.01, TAGS.STOPWATCH);
+                document.getElementById('stopwatch-start').disabled = true;
+                document.getElementById('stopwatch-stop').disabled = false;
+                logEvent('Stopwatch started', 'interval');
+            });
+            document.getElementById('stopwatch-stop').addEventListener('click', () => {
+                if (stopwatchId) wasm.zigdom_timer_cancel(stopwatchId);
+                stopwatchId = 0;
+                document.getElementById('stopwatch-start').disabled = false;
+                document.getElementById('stopwatch-stop').disabled = true;
+                logEvent('Stopwatch stopped at ' + stopwatchTime.toFixed(2) + 's', 'interval');
+            });
+            document.getElementById('stopwatch-reset').addEventListener('click', () => {
+                stopwatchTime = 0;
+                document.getElementById('stopwatch').textContent = '0.00';
+            });
+
+            // Time scale
+            document.getElementById('time-scale').addEventListener('input', (e) => {
+                const scale = parseFloat(e.target.value);
+                wasm.zigdom_scheduler_set_time_scale(scale);
+                document.getElementById('time-scale-value').textContent = scale.toFixed(1) + 'x';
+            });
+
+            // Pause/Resume
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                wasm.zigdom_scheduler_pause();
+                document.getElementById('pause-btn').disabled = true;
+                document.getElementById('resume-btn').disabled = false;
+                logEvent('Scheduler paused', 'system');
+            });
+            document.getElementById('resume-btn').addEventListener('click', () => {
+                wasm.zigdom_scheduler_resume();
+                document.getElementById('pause-btn').disabled = false;
+                document.getElementById('resume-btn').disabled = true;
+                logEvent('Scheduler resumed', 'system');
+            });
+        }
+
+        function startCountdown(seconds) {
+            // Cancel existing
+            if (countdownId) wasm.zigdom_timer_cancel(countdownId);
+            if (countdownTickId) wasm.zigdom_timer_cancel(countdownTickId);
+
+            countdownStartTime = seconds;
+            countdownRemaining = seconds;
+
+            // Create main countdown timer
+            countdownId = wasm.zigdom_timer_create(seconds, TAGS.COUNTDOWN);
+            // Create tick timer for UI updates
+            countdownTickId = wasm.zigdom_timer_create_interval(0.1, TAGS.COUNTDOWN_TICK);
+
+            document.getElementById('countdown-start').disabled = true;
+            document.getElementById('countdown-cancel').disabled = false;
+
+            logEvent(`Countdown started: ${seconds}s`, 'timer');
+            updateCountdownUI();
+        }
+
+        function updateCountdownUI() {
+            document.getElementById('countdown').textContent = countdownRemaining.toFixed(2);
+            const progress = (countdownRemaining / countdownStartTime) * 100;
+            document.getElementById('countdown-progress').style.width = progress + '%';
+        }
+
+        function logEvent(message, type = 'system') {
+            const log = document.getElementById('event-log');
+            const item = document.createElement('div');
+            item.className = `event-item ${type}`;
+            const time = (wasm.zigdom_scheduler_get_total_time() || 0).toFixed(2);
+            item.textContent = `[${time}s] ${message}`;
+            log.insertBefore(item, log.firstChild);
+
+            // Limit log entries
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // === Render Loop ===
+        function render(currentTime) {
+            const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+            lastTime = currentTime;
+
+            // Update scheduler
+            wasm.zigdom_scheduler_update(deltaTime);
+            wasm.zigdom_timer_update(deltaTime);
+
+            // Process timer events
+            let eventTag;
+            while ((eventTag = wasm.zigdom_timer_pop_event_tag()) !== 0) {
+                eventCount++;
+                if (callbacks[eventTag]) {
+                    callbacks[eventTag]();
+                }
+            }
+
+            // Update animation (manual frame animation)
+            if (!wasm.zigdom_scheduler_is_paused()) {
+                const speed = 200 * wasm.zigdom_scheduler_get_time_scale();
+                ballPosition += ballDirection * speed * deltaTime;
+                if (ballPosition > 250) {
+                    ballPosition = 250;
+                    ballDirection = -1;
+                } else if (ballPosition < 0) {
+                    ballPosition = 0;
+                    ballDirection = 1;
+                }
+                document.getElementById('ball').style.left = (10 + ballPosition) + 'px';
+            }
+
+            // Update stats
+            document.getElementById('stat-active').textContent = wasm.zigdom_scheduler_get_active_count();
+            document.getElementById('stat-events').textContent = eventCount;
+            document.getElementById('stat-time').textContent = wasm.zigdom_scheduler_get_total_time().toFixed(1) + 's';
+
+            // Frame number is u64, read as two u32s
+            const frameNum = wasm.zigdom_scheduler_get_frame_number();
+            document.getElementById('stat-frame').textContent = frameNum;
+
+            requestAnimationFrame(render);
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

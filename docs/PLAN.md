@@ -25,12 +25,12 @@
                                   │
                               C ABI
                                   │
-        ┌─────────────┬───────────┼───────────┬─────────────┐
-        ▼             ▼           ▼           ▼             ▼
-   ┌─────────┐  ┌──────────┐  ┌────────┐  ┌────────┐  ┌─────────┐
-   │   iOS   │  │ Android  │  │ macOS  │  │Windows │  │   Web   │
-   │ SwiftUI │  │ Compose  │  │SwiftUI │  │ WinUI  │  │  WASM   │
-   └─────────┘  └──────────┘  └────────┘  └────────┘  └─────────┘
+        ┌─────────┬─────────┬─────────┼─────────┬─────────┬─────────┐
+        ▼         ▼         ▼         ▼         ▼         ▼         ▼
+   ┌─────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+   │   iOS   │ │Android │ │ macOS  │ │Windows │ │ Linux  │ │  Web   │
+   │ SwiftUI │ │Compose │ │SwiftUI │ │ WinUI  │ │  GTK4  │ │  WASM  │
+   └─────────┘ └────────┘ └────────┘ └────────┘ └────────┘ └────────┘
 ```
 
 ---
@@ -66,16 +66,27 @@ zylix/
 │   │   ├── main.zig
 │   │   ├── state.zig           # State management
 │   │   ├── events.zig          # Event handling
-│   │   └── abi.zig             # C ABI exports
+│   │   ├── abi.zig             # C ABI exports
+│   │   ├── scheduler.zig       # Time/timer management
+│   │   ├── llm.zig             # LLM integration hooks
+│   │   ├── gpu.zig             # GPU/WebGPU support
+│   │   ├── particles.zig       # Particle system
+│   │   └── wasm.zig            # WASM entry point
 │   └── tests/
 ├── platforms/
-│   ├── ios/                    # iOS/macOS (SwiftUI)
+│   ├── ios/                    # iOS (SwiftUI)
 │   │   ├── Zylix/
 │   │   └── ZylixCore.xcframework
 │   ├── android/                # Android (Compose)
 │   │   ├── app/
 │   │   └── zylix-core/
-│   └── web/                    # Future: WASM
+│   ├── macos/                  # macOS (SwiftUI)
+│   │   └── Zylix/
+│   ├── windows/                # Windows (WinUI 3)
+│   │   └── Zylix/
+│   ├── linux/                  # Linux (GTK4)
+│   │   └── zylix-gtk/
+│   └── web/                    # Web (WASM + WebGPU)
 └── examples/
     └── counter/                # PoC Counter app
 ```
@@ -105,16 +116,16 @@ zylix/
 ### Phase 3: Platform Expansion
 | Task | Description | Status |
 |------|-------------|--------|
-| 3.1  | Windows (WinUI) support | Pending |
-| 3.2  | Linux (GTK) support | Pending |
-| 3.3  | Web (WASM) support | Pending |
+| 3.1  | Windows (WinUI) support | ✅ Done |
+| 3.2  | Linux (GTK) support | ✅ Done |
+| 3.3  | Web (WASM) support | ✅ Done |
 
 ### Phase 4: Advanced Features
 | Task | Description | Status |
 |------|-------------|--------|
-| 4.1  | Scheduler / Time management | Pending |
-| 4.2  | AI / LLM integration hooks | Pending |
-| 4.3  | NeuronGraph support | Pending |
+| 4.1  | Scheduler / Time management | ✅ Done |
+| 4.2  | AI / LLM integration hooks | ✅ Done |
+| 4.3  | NeuronGraph support | 🔗 External (neuron-graph repo) |
 
 ---
 
@@ -173,6 +184,13 @@ pub export fn zylix_deinit() void;
 - [x] UI updates reflect Zig state changes
 - [x] No crashes, no memory leaks
 - [x] Binary size < 500KB (core only) - ~8.5KB with ReleaseSmall (Phase 2)
+- [x] WASM builds and runs in browser (Phase 3) - ~544KB debug, ~398B ReleaseSmall
+- [x] WebGPU integration via ZigDom (Phase 3) - 63fps rotating cube demo
+- [x] WebGPU Compute particles (Phase 3) - 50K particles @ 60fps
+- [x] Windows (WinUI 3) support (Phase 3) - C# shell with P/Invoke
+- [x] Linux (GTK4) support (Phase 3) - C shell with direct ABI linking
+- [x] Scheduler / Time management (Phase 4) - Event-based timers, time scale, pause/resume
+- [x] AI / LLM integration hooks (Phase 4) - Provider-agnostic, streaming, tools, token estimation
 
 ---
 
@@ -194,6 +212,19 @@ pub export fn zylix_deinit() void;
 4. Create iOS Xcode project with SwiftUI
 5. Create Android project with Jetpack Compose
 6. Build and test Counter PoC
+
+---
+
+## Related Projects
+
+| Project | Relationship | Description |
+|---------|--------------|-------------|
+| [NeuronGraph](https://github.com/kotsutsumi/neuron-graph) | External (Brain) | WebGPU-based SNN library implementing "Information Organism" |
+
+**Zylix + NeuronGraph Architecture**:
+- **Zylix** = Body (状態管理、プラットフォームシェル、イベントシステム)
+- **NeuronGraph** = Brain (SNN物理、臓器システム、7D意識ベクトル)
+- Integration via C ABI / WASM when needed
 
 ---
 

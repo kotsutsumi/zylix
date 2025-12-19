@@ -96,6 +96,61 @@ pub fn build(b: *std.Build) void {
         .dest_dir = .{ .override = .{ .custom = "macos-x64" } },
     }).step);
 
+    // === Windows ===
+
+    // Windows x86_64
+    const windows_x64_step = b.step("windows-x64", "Build for Windows (x86_64)");
+    const windows_x64_lib = buildForTarget(b, .{
+        .cpu_arch = .x86_64,
+        .os_tag = .windows,
+        .abi = .msvc,
+    }, optimize);
+    windows_x64_step.dependOn(&b.addInstallArtifact(windows_x64_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "windows-x64" } },
+    }).step);
+
+    // Windows ARM64
+    const windows_arm64_step = b.step("windows-arm64", "Build for Windows (arm64)");
+    const windows_arm64_lib = buildForTarget(b, .{
+        .cpu_arch = .aarch64,
+        .os_tag = .windows,
+        .abi = .msvc,
+    }, optimize);
+    windows_arm64_step.dependOn(&b.addInstallArtifact(windows_arm64_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "windows-arm64" } },
+    }).step);
+
+    // === Linux ===
+
+    // Linux x86_64
+    const linux_x64_step = b.step("linux-x64", "Build for Linux (x86_64)");
+    const linux_x64_lib = buildForTarget(b, .{
+        .cpu_arch = .x86_64,
+        .os_tag = .linux,
+        .abi = .gnu,
+    }, optimize);
+    linux_x64_step.dependOn(&b.addInstallArtifact(linux_x64_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "linux-x64" } },
+    }).step);
+
+    // Linux ARM64
+    const linux_arm64_step = b.step("linux-arm64", "Build for Linux (arm64)");
+    const linux_arm64_lib = buildForTarget(b, .{
+        .cpu_arch = .aarch64,
+        .os_tag = .linux,
+        .abi = .gnu,
+    }, optimize);
+    linux_arm64_step.dependOn(&b.addInstallArtifact(linux_arm64_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "linux-arm64" } },
+    }).step);
+
+    // === WebAssembly ===
+    const wasm_step = b.step("wasm", "Build for WebAssembly");
+    const wasm_lib = buildWasm(b, optimize);
+    wasm_step.dependOn(&b.addInstallArtifact(wasm_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "wasm" } },
+    }).step);
+
     // === Build All ===
     const all_step = b.step("all", "Build for all platforms");
     all_step.dependOn(ios_step);
@@ -104,6 +159,11 @@ pub fn build(b: *std.Build) void {
     all_step.dependOn(android_x64_step);
     all_step.dependOn(macos_arm64_step);
     all_step.dependOn(macos_x64_step);
+    all_step.dependOn(windows_x64_step);
+    all_step.dependOn(windows_arm64_step);
+    all_step.dependOn(linux_x64_step);
+    all_step.dependOn(linux_arm64_step);
+    all_step.dependOn(wasm_step);
 }
 
 fn buildForTarget(
@@ -124,4 +184,32 @@ fn buildForTarget(
     });
 
     return lib;
+}
+
+fn buildWasm(
+    b: *std.Build,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const resolved_target = b.resolveTargetQuery(.{
+        .cpu_arch = .wasm32,
+        .os_tag = .freestanding,
+    });
+
+    // Use addExecutable for WASM to get proper exports
+    const wasm = b.addExecutable(.{
+        .name = "zylix",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/wasm.zig"),
+            .target = resolved_target,
+            .optimize = optimize,
+        }),
+    });
+
+    // Export all C ABI functions
+    wasm.rdynamic = true;
+
+    // No entry point for library usage
+    wasm.entry = .disabled;
+
+    return wasm;
 }
