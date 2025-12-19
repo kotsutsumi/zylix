@@ -131,7 +131,7 @@ zylix/
 | Task | Description | Status |
 |------|-------------|--------|
 | 5.1  | CSS utility system (TailwindCSS-like) | ✅ Done |
-| 5.2  | Layout engine (Flexbox/Grid) | Pending |
+| 5.2  | Layout engine (Flexbox/Grid) | ✅ Done |
 | 5.3  | UI component system | Pending |
 | 5.4  | Declarative UI DSL (comptime) | Pending |
 | 5.5  | Virtual DOM / Reconciliation | Pending |
@@ -201,6 +201,7 @@ pub export fn zylix_deinit() void;
 - [x] Scheduler / Time management (Phase 4) - Event-based timers, time scale, pause/resume
 - [x] AI / LLM integration hooks (Phase 4) - Provider-agnostic, streaming, tools, token estimation
 - [x] CSS utility system (Phase 5) - TailwindCSS-like, type-safe, CSS generation from Zig
+- [x] Layout engine (Phase 5) - Flexbox algorithm in Zig, tree-based layout computation
 
 ---
 

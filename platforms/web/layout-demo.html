@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Layout Engine Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #4f46e5;
+        }
+
+        .preview-area {
+            background: #1a1a2e;
+            border-radius: 8px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .layout-box {
+            position: absolute;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .layout-box.container-box {
+            background: rgba(79, 70, 229, 0.3);
+            border: 2px solid #4f46e5;
+        }
+
+        .layout-box.child-box {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .layout-box.child-box:nth-child(2) {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .layout-box.child-box:nth-child(3) {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .layout-box.child-box:nth-child(4) {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .layout-box.child-box:nth-child(5) {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+        }
+
+        .config-section {
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .config-row label {
+            font-size: 12px;
+            color: #ccc;
+            min-width: 100px;
+        }
+
+        .config-row select,
+        .config-row input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 12px;
+        }
+
+        .config-row input[type="range"] {
+            padding: 0;
+        }
+
+        .config-row .value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 12px;
+            color: #4f46e5;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button.primary {
+            background: #4f46e5;
+        }
+
+        button.primary:hover {
+            background: #4338ca;
+        }
+
+        button.danger {
+            background: #dc2626;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .output-section {
+            margin-top: 16px;
+        }
+
+        .output-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        .output-table th,
+        .output-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .output-table th {
+            color: #888;
+            font-weight: normal;
+        }
+
+        .output-table td {
+            color: #10b981;
+            font-family: monospace;
+        }
+
+        .presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .presets button {
+            padding: 4px 8px;
+            font-size: 11px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZigDom Layout Engine</h1>
+    <p class="subtitle">Flexbox layout algorithm computed in Zig | Zero CSS dependency</p>
+
+    <div class="container">
+        <!-- Controls -->
+        <div class="card">
+            <h2>Container Settings</h2>
+
+            <div class="presets">
+                <button onclick="applyPreset('row-center')">Row Center</button>
+                <button onclick="applyPreset('row-between')">Row Between</button>
+                <button onclick="applyPreset('col-stretch')">Column</button>
+                <button onclick="applyPreset('grid-like')">Grid-like</button>
+            </div>
+
+            <div class="config-section">
+                <h3>Flex Container</h3>
+                <div class="config-row">
+                    <label>Direction</label>
+                    <select id="flex-direction">
+                        <option value="0" selected>row</option>
+                        <option value="1">row-reverse</option>
+                        <option value="2">column</option>
+                        <option value="3">column-reverse</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label>Justify</label>
+                    <select id="justify-content">
+                        <option value="0">flex-start</option>
+                        <option value="1">flex-end</option>
+                        <option value="2" selected>center</option>
+                        <option value="3">space-between</option>
+                        <option value="4">space-around</option>
+                        <option value="5">space-evenly</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label>Align Items</label>
+                    <select id="align-items">
+                        <option value="0">flex-start</option>
+                        <option value="1">flex-end</option>
+                        <option value="2" selected>center</option>
+                        <option value="3">baseline</option>
+                        <option value="4">stretch</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label>Gap</label>
+                    <input type="range" id="gap" min="0" max="40" value="16">
+                    <span class="value" id="gap-value">16px</span>
+                </div>
+                <div class="config-row">
+                    <label>Padding</label>
+                    <input type="range" id="padding" min="0" max="40" value="20">
+                    <span class="value" id="padding-value">20px</span>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Children</h3>
+                <div class="config-row">
+                    <label>Count</label>
+                    <input type="range" id="child-count" min="1" max="5" value="3">
+                    <span class="value" id="child-count-value">3</span>
+                </div>
+                <div class="config-row">
+                    <label>Width</label>
+                    <input type="range" id="child-width" min="40" max="150" value="80">
+                    <span class="value" id="child-width-value">80px</span>
+                </div>
+                <div class="config-row">
+                    <label>Height</label>
+                    <input type="range" id="child-height" min="40" max="150" value="80">
+                    <span class="value" id="child-height-value">80px</span>
+                </div>
+                <div class="config-row">
+                    <label>Flex Grow</label>
+                    <input type="range" id="flex-grow" min="0" max="2" step="0.5" value="0">
+                    <span class="value" id="flex-grow-value">0</span>
+                </div>
+            </div>
+
+            <button class="primary" onclick="computeLayout()">Compute Layout</button>
+            <button onclick="resetLayout()">Reset</button>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Nodes</div>
+                    <div class="stat-value" id="stat-nodes">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Compute Time</div>
+                    <div class="stat-value" id="stat-time">0ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="card">
+            <h2>Layout Preview (Zig-computed positions)</h2>
+            <div class="preview-area" id="preview">
+                <!-- Layout boxes will be rendered here -->
+            </div>
+
+            <div class="output-section">
+                <h2 style="margin-top: 16px;">Computed Results</h2>
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>Node</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Width</th>
+                            <th>Height</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table">
+                        <!-- Results populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // === WASM ===
+        let wasm = null;
+        let wasmMemory = null;
+
+        // === State ===
+        let containerNode = null;
+        let childNodes = [];
+
+        // === Initialize ===
+        async function init() {
+            try {
+                const wasmResponse = await fetch('zylix.wasm');
+                const wasmBytes = await wasmResponse.arrayBuffer();
+                const wasmResult = await WebAssembly.instantiate(wasmBytes, {});
+                wasm = wasmResult.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize Zylix and layout engine
+                wasm.zylix_init();
+                wasm.zigdom_layout_init();
+
+                // Setup event listeners
+                setupEventListeners();
+
+                // Initial layout
+                buildLayout();
+                computeLayout();
+
+            } catch (error) {
+                console.error('Init error:', error);
+                document.body.innerHTML = `<p style="color: #ff6b6b; padding: 20px;">${error.message}</p>`;
+            }
+        }
+
+        function setupEventListeners() {
+            // All config inputs trigger rebuild
+            const inputs = [
+                'flex-direction', 'justify-content', 'align-items',
+                'gap', 'padding', 'child-count', 'child-width', 'child-height', 'flex-grow'
+            ];
+
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.addEventListener('input', () => {
+                    updateValueDisplay(id);
+                    buildLayout();
+                    computeLayout();
+                });
+            });
+        }
+
+        function updateValueDisplay(id) {
+            const el = document.getElementById(id);
+            const valueEl = document.getElementById(id + '-value');
+            if (valueEl) {
+                let value = el.value;
+                if (['gap', 'padding', 'child-width', 'child-height'].includes(id)) {
+                    value += 'px';
+                }
+                valueEl.textContent = value;
+            }
+        }
+
+        function buildLayout() {
+            // Reset layout engine
+            wasm.zigdom_layout_init();
+
+            // Get container dimensions from preview area
+            const preview = document.getElementById('preview');
+            const containerWidth = preview.clientWidth;
+            const containerHeight = preview.clientHeight;
+
+            // Create container node
+            containerNode = wasm.zigdom_layout_create_node();
+            wasm.zigdom_layout_set_root(containerNode);
+            wasm.zigdom_layout_set_display(containerNode, 3); // flex
+            wasm.zigdom_layout_set_size(containerNode, containerWidth, containerHeight);
+
+            // Set container flex properties
+            wasm.zigdom_layout_set_flex_direction(containerNode,
+                parseInt(document.getElementById('flex-direction').value));
+            wasm.zigdom_layout_set_justify_content(containerNode,
+                parseInt(document.getElementById('justify-content').value));
+            wasm.zigdom_layout_set_align_items(containerNode,
+                parseInt(document.getElementById('align-items').value));
+
+            const gap = parseFloat(document.getElementById('gap').value);
+            const padding = parseFloat(document.getElementById('padding').value);
+            wasm.zigdom_layout_set_gap(containerNode, gap);
+            wasm.zigdom_layout_set_padding(containerNode, padding, padding, padding, padding);
+
+            // Create child nodes
+            const childCount = parseInt(document.getElementById('child-count').value);
+            const childWidth = parseFloat(document.getElementById('child-width').value);
+            const childHeight = parseFloat(document.getElementById('child-height').value);
+            const flexGrow = parseFloat(document.getElementById('flex-grow').value);
+
+            childNodes = [];
+            for (let i = 0; i < childCount; i++) {
+                const childId = wasm.zigdom_layout_create_node();
+                wasm.zigdom_layout_add_child(containerNode, childId);
+                wasm.zigdom_layout_set_size(childId, childWidth, childHeight);
+                wasm.zigdom_layout_set_flex(childId, flexGrow, 1, 0);
+                wasm.zigdom_layout_set_intrinsic_size(childId, childWidth, childHeight);
+                childNodes.push(childId);
+            }
+        }
+
+        window.computeLayout = function() {
+            const preview = document.getElementById('preview');
+            const containerWidth = preview.clientWidth;
+            const containerHeight = preview.clientHeight;
+
+            // Time the computation
+            const startTime = performance.now();
+            wasm.zigdom_layout_compute(containerWidth, containerHeight);
+            const endTime = performance.now();
+
+            // Update stats
+            document.getElementById('stat-nodes').textContent = wasm.zigdom_layout_get_node_count();
+            document.getElementById('stat-time').textContent = (endTime - startTime).toFixed(2) + 'ms';
+
+            // Render results
+            renderLayout();
+            updateResultsTable();
+        };
+
+        function renderLayout() {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+
+            // Render container (as background reference)
+            const containerBox = document.createElement('div');
+            containerBox.className = 'layout-box container-box';
+            containerBox.style.left = '0px';
+            containerBox.style.top = '0px';
+            containerBox.style.width = wasm.zigdom_layout_get_width(containerNode) + 'px';
+            containerBox.style.height = wasm.zigdom_layout_get_height(containerNode) + 'px';
+            containerBox.textContent = 'Container';
+            preview.appendChild(containerBox);
+
+            // Render children
+            childNodes.forEach((nodeId, index) => {
+                const x = wasm.zigdom_layout_get_x(nodeId);
+                const y = wasm.zigdom_layout_get_y(nodeId);
+                const width = wasm.zigdom_layout_get_width(nodeId);
+                const height = wasm.zigdom_layout_get_height(nodeId);
+
+                const box = document.createElement('div');
+                box.className = 'layout-box child-box';
+                box.style.left = x + 'px';
+                box.style.top = y + 'px';
+                box.style.width = width + 'px';
+                box.style.height = height + 'px';
+                box.textContent = `Child ${index + 1}`;
+                preview.appendChild(box);
+            });
+        }
+
+        function updateResultsTable() {
+            const tbody = document.getElementById('results-table');
+            tbody.innerHTML = '';
+
+            // Container row
+            addResultRow(tbody, 'Container', containerNode);
+
+            // Child rows
+            childNodes.forEach((nodeId, index) => {
+                addResultRow(tbody, `Child ${index + 1}`, nodeId);
+            });
+        }
+
+        function addResultRow(tbody, name, nodeId) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td>${wasm.zigdom_layout_get_x(nodeId).toFixed(1)}</td>
+                <td>${wasm.zigdom_layout_get_y(nodeId).toFixed(1)}</td>
+                <td>${wasm.zigdom_layout_get_width(nodeId).toFixed(1)}</td>
+                <td>${wasm.zigdom_layout_get_height(nodeId).toFixed(1)}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        window.resetLayout = function() {
+            document.getElementById('flex-direction').value = '0';
+            document.getElementById('justify-content').value = '2';
+            document.getElementById('align-items').value = '2';
+            document.getElementById('gap').value = '16';
+            document.getElementById('padding').value = '20';
+            document.getElementById('child-count').value = '3';
+            document.getElementById('child-width').value = '80';
+            document.getElementById('child-height').value = '80';
+            document.getElementById('flex-grow').value = '0';
+
+            // Update displays
+            ['gap', 'padding', 'child-count', 'child-width', 'child-height', 'flex-grow'].forEach(updateValueDisplay);
+
+            buildLayout();
+            computeLayout();
+        };
+
+        window.applyPreset = function(preset) {
+            switch (preset) {
+                case 'row-center':
+                    document.getElementById('flex-direction').value = '0';
+                    document.getElementById('justify-content').value = '2';
+                    document.getElementById('align-items').value = '2';
+                    document.getElementById('gap').value = '16';
+                    document.getElementById('flex-grow').value = '0';
+                    break;
+                case 'row-between':
+                    document.getElementById('flex-direction').value = '0';
+                    document.getElementById('justify-content').value = '3';
+                    document.getElementById('align-items').value = '2';
+                    document.getElementById('gap').value = '0';
+                    document.getElementById('flex-grow').value = '0';
+                    break;
+                case 'col-stretch':
+                    document.getElementById('flex-direction').value = '2';
+                    document.getElementById('justify-content').value = '0';
+                    document.getElementById('align-items').value = '4';
+                    document.getElementById('gap').value = '12';
+                    document.getElementById('flex-grow').value = '0';
+                    break;
+                case 'grid-like':
+                    document.getElementById('flex-direction').value = '0';
+                    document.getElementById('justify-content').value = '0';
+                    document.getElementById('align-items').value = '0';
+                    document.getElementById('gap').value = '8';
+                    document.getElementById('flex-grow').value = '1';
+                    document.getElementById('child-count').value = '4';
+                    break;
+            }
+
+            // Update displays
+            ['gap', 'padding', 'child-count', 'child-width', 'child-height', 'flex-grow'].forEach(updateValueDisplay);
+
+            buildLayout();
+            computeLayout();
+        };
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            buildLayout();
+            computeLayout();
+        });
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

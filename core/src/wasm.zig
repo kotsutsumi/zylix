@@ -14,6 +14,7 @@ const particles = @import("particles.zig");
 const scheduler = @import("scheduler.zig");
 const llm = @import("llm.zig");
 const css = @import("css.zig");
+const layout = @import("layout.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -616,6 +617,176 @@ export fn zigdom_css_get_len() usize {
 /// Get style count
 export fn zigdom_css_get_style_count() u32 {
     return css.getStyleCount();
+}
+
+// === ZigDom Layout Engine ===
+
+/// Initialize layout engine
+export fn zigdom_layout_init() void {
+    layout.init();
+}
+
+/// Create a layout node (returns node ID)
+export fn zigdom_layout_create_node() u32 {
+    return layout.createNode();
+}
+
+/// Set root node
+export fn zigdom_layout_set_root(id: u32) void {
+    layout.setRoot(id);
+}
+
+/// Add child to parent node
+export fn zigdom_layout_add_child(parent_id: u32, child_id: u32) bool {
+    return layout.addChild(parent_id, child_id);
+}
+
+/// Set node display type
+export fn zigdom_layout_set_display(id: u32, display: u8) void {
+    if (layout.getNode(id)) |node| {
+        node.display = @enumFromInt(display);
+    }
+}
+
+/// Set flex direction
+export fn zigdom_layout_set_flex_direction(id: u32, direction: u8) void {
+    if (layout.getNode(id)) |node| {
+        node.flex_direction = @enumFromInt(direction);
+    }
+}
+
+/// Set justify content
+export fn zigdom_layout_set_justify_content(id: u32, justify: u8) void {
+    if (layout.getNode(id)) |node| {
+        node.justify_content = @enumFromInt(justify);
+    }
+}
+
+/// Set align items
+export fn zigdom_layout_set_align_items(id: u32, align_val: u8) void {
+    if (layout.getNode(id)) |node| {
+        node.align_items = @enumFromInt(align_val);
+    }
+}
+
+/// Set flex properties
+export fn zigdom_layout_set_flex(id: u32, grow: f32, shrink: f32, basis: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.flex_grow = grow;
+        node.flex_shrink = shrink;
+        node.flex_basis = basis;
+    }
+}
+
+/// Set node dimensions
+export fn zigdom_layout_set_size(id: u32, width: f32, height: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.width = width;
+        node.height = height;
+    }
+}
+
+/// Set min dimensions
+export fn zigdom_layout_set_min_size(id: u32, min_width: f32, min_height: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.min_width = min_width;
+        node.min_height = min_height;
+    }
+}
+
+/// Set max dimensions
+export fn zigdom_layout_set_max_size(id: u32, max_width: f32, max_height: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.max_width = max_width;
+        node.max_height = max_height;
+    }
+}
+
+/// Set gap
+export fn zigdom_layout_set_gap(id: u32, gap: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.gap = gap;
+    }
+}
+
+/// Set padding
+export fn zigdom_layout_set_padding(id: u32, top: f32, right: f32, bottom: f32, left: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.padding_top = top;
+        node.padding_right = right;
+        node.padding_bottom = bottom;
+        node.padding_left = left;
+    }
+}
+
+/// Set margin
+export fn zigdom_layout_set_margin(id: u32, top: f32, right: f32, bottom: f32, left: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.margin_top = top;
+        node.margin_right = right;
+        node.margin_bottom = bottom;
+        node.margin_left = left;
+    }
+}
+
+/// Set intrinsic content size
+export fn zigdom_layout_set_intrinsic_size(id: u32, width: f32, height: f32) void {
+    if (layout.getNode(id)) |node| {
+        node.intrinsic_width = width;
+        node.intrinsic_height = height;
+    }
+}
+
+/// Compute layout
+export fn zigdom_layout_compute(container_width: f32, container_height: f32) void {
+    layout.compute(container_width, container_height);
+}
+
+/// Get computed X position
+export fn zigdom_layout_get_x(id: u32) f32 {
+    if (layout.getNode(id)) |node| {
+        return node.result.x;
+    }
+    return 0;
+}
+
+/// Get computed Y position
+export fn zigdom_layout_get_y(id: u32) f32 {
+    if (layout.getNode(id)) |node| {
+        return node.result.y;
+    }
+    return 0;
+}
+
+/// Get computed width
+export fn zigdom_layout_get_width(id: u32) f32 {
+    if (layout.getNode(id)) |node| {
+        return node.result.width;
+    }
+    return 0;
+}
+
+/// Get computed height
+export fn zigdom_layout_get_height(id: u32) f32 {
+    if (layout.getNode(id)) |node| {
+        return node.result.height;
+    }
+    return 0;
+}
+
+/// Get node count
+export fn zigdom_layout_get_node_count() u32 {
+    return layout.getNodeCount();
+}
+
+/// Get results buffer pointer (for batch reading)
+export fn zigdom_layout_get_results_ptr() ?*const anyopaque {
+    return @ptrCast(layout.getResultsPtr());
+}
+
+/// Get result struct size
+export fn zigdom_layout_get_result_size() usize {
+    return layout.getResultSize();
 }
 
 // === Panic handler for WASM ===

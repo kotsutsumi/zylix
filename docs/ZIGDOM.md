@@ -116,6 +116,31 @@ export fn zigdom_gpu_get_uniform_buffer_size() usize
 export fn zigdom_gpu_get_vertex_count() u32
 ```
 
+### CSS Utility System
+```zig
+export fn zigdom_css_init() void
+export fn zigdom_css_create_style() u32
+export fn zigdom_css_set_display(id: u32, display: u8) void
+export fn zigdom_css_set_bg_color(id: u32, r: u8, g: u8, b: u8, a: u8) void
+export fn zigdom_css_generate(id: u32) ?[*]const u8
+export fn zigdom_css_generate_len() usize
+// ... and more style property setters
+```
+
+### Layout Engine
+```zig
+export fn zigdom_layout_init() void
+export fn zigdom_layout_create_node() u32
+export fn zigdom_layout_set_size(id: u32, w: f32, h: f32) void
+export fn zigdom_layout_set_flex_direction(id: u32, dir: u8) void
+export fn zigdom_layout_add_child(parent: u32, child: u32) void
+export fn zigdom_layout_compute(w: f32, h: f32) void
+export fn zigdom_layout_get_x(id: u32) f32
+export fn zigdom_layout_get_y(id: u32) f32
+export fn zigdom_layout_get_width(id: u32) f32
+export fn zigdom_layout_get_height(id: u32) f32
+```
+
 ## Use Cases
 
 1. **3D Visualization**: Zig handles all matrix math, JavaScript renders
@@ -137,11 +162,16 @@ export fn zigdom_gpu_get_vertex_count() u32
    - Color system (TailwindCSS palette)
    - Spacing, typography, flexbox, shadows
    - CSS string generation from Zig
-6. **UI Component System**: shadcn/ui-like components
+6. **Layout Engine**: ✅ Done - Flexbox layout computation in Zig
+   - Tree-based LayoutNode structure
+   - Flexbox algorithm (row/column, justify, align, gap)
+   - LayoutResult with computed x, y, width, height
+   - Up to 256 nodes, 16 children per node
+7. **UI Component System**: shadcn/ui-like components
    - Zig-native reactive primitives (React-like but simpler)
    - Virtual DOM or incremental DOM in Zig
    - Component composition patterns
-7. **Declarative UI DSL**: Zig comptime for UI declarations
+8. **Declarative UI DSL**: Zig comptime for UI declarations
    ```zig
    // Future vision
    const ui = zdom.div(.{ .class = "flex gap-4" }, .{
