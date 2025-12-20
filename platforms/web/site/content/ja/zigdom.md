@@ -294,8 +294,37 @@ export fn zigdom_vdom_get_patch_type(index: u32) u8
 export fn zigdom_vdom_get_patch_text(index: u32) ?[*]const u8
 ```
 
+## 実践例：Todoアプリ
+
+ZigDomの全機能を統合したTodoMVCスタイルのアプリケーション：
+
+```zig
+// Zig側の状態管理
+const todo = @import("todo.zig");
+
+// Todoを追加
+const id = todo.getState().add("Zigを学ぶ");
+
+// 完了状態を切り替え
+_ = todo.getState().toggle(id);
+
+// VDOMにレンダリング
+todo.renderTodoApp(todo.getState());
+
+// コミットしてパッチを取得
+const patches = vdom.commit();
+```
+
+**デモで確認できる機能**：
+- Zigでの状態管理
+- VDOMレンダリングと差分計算
+- イベント処理（toggle, remove, filter）
+- キーベースのリスト再調整
+- リアルタイム統計
+
 ## ライブデモ
 
+- [**Todoアプリ**](/demos/todo-app.html) - 完全なTodoMVC実装
 - [カウンターデモ](/demos/counter.html)
 - [CSSデモ](/demos/css-demo.html)
 - [レイアウトデモ](/demos/layout-demo.html)

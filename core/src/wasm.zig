@@ -18,6 +18,7 @@ const layout = @import("layout.zig");
 const component = @import("component.zig");
 const dsl = @import("dsl.zig");
 const vdom = @import("vdom.zig");
+const todo = @import("todo.zig");
 
 // Import abi module to trigger its comptime exports
 const abi = @import("abi.zig");
@@ -1795,6 +1796,186 @@ export fn zigdom_vdom_patch_insert_child() u8 {
 
 export fn zigdom_vdom_patch_remove_child() u8 {
     return @intFromEnum(vdom.PatchType.remove_child);
+}
+
+// === ZigDom Todo Application ===
+
+/// Initialize todo state
+export fn zigdom_todo_init() void {
+    todo.getState().reset();
+}
+
+/// Add a todo item (returns item ID or 0 on failure)
+export fn zigdom_todo_add(text_ptr: [*]const u8, text_len: usize) u32 {
+    return todo.getState().add(text_ptr[0..text_len]) orelse 0;
+}
+
+/// Remove a todo item by ID
+export fn zigdom_todo_remove(id: u32) bool {
+    return todo.getState().remove(id);
+}
+
+/// Toggle todo completion status
+export fn zigdom_todo_toggle(id: u32) bool {
+    return todo.getState().toggle(id);
+}
+
+/// Toggle all todos
+export fn zigdom_todo_toggle_all() void {
+    todo.getState().toggleAll();
+}
+
+/// Clear completed todos (returns count removed)
+export fn zigdom_todo_clear_completed() u32 {
+    return todo.getState().clearCompleted();
+}
+
+/// Set filter mode (0=all, 1=active, 2=completed)
+export fn zigdom_todo_set_filter(filter: u8) void {
+    todo.getState().setFilter(@enumFromInt(filter));
+}
+
+/// Get current filter mode
+export fn zigdom_todo_get_filter() u8 {
+    return @intFromEnum(todo.getState().filter);
+}
+
+/// Get total todo count
+export fn zigdom_todo_get_count() u32 {
+    return todo.getState().item_count;
+}
+
+/// Get active (not completed) count
+export fn zigdom_todo_get_active_count() u32 {
+    return todo.getState().getActiveCount();
+}
+
+/// Get completed count
+export fn zigdom_todo_get_completed_count() u32 {
+    return todo.getState().getCompletedCount();
+}
+
+/// Get visible count (based on current filter)
+export fn zigdom_todo_get_visible_count() u32 {
+    return todo.getState().getVisibleCount();
+}
+
+/// Get item text by ID
+export fn zigdom_todo_get_item_text(id: u32) ?[*]const u8 {
+    if (todo.getState().getItem(id)) |item| {
+        if (item.text_len > 0) {
+            return &item.text;
+        }
+    }
+    return null;
+}
+
+/// Get item text length by ID
+export fn zigdom_todo_get_item_text_len(id: u32) u16 {
+    if (todo.getState().getItem(id)) |item| {
+        return item.text_len;
+    }
+    return 0;
+}
+
+/// Get item completed status by ID
+export fn zigdom_todo_get_item_completed(id: u32) bool {
+    if (todo.getState().getItem(id)) |item| {
+        return item.completed;
+    }
+    return false;
+}
+
+/// Update item text
+export fn zigdom_todo_update_text(id: u32, text_ptr: [*]const u8, text_len: usize) bool {
+    return todo.getState().updateText(id, text_ptr[0..text_len]);
+}
+
+/// Render todo app to VDOM (generates VNode tree)
+export fn zigdom_todo_render() void {
+    todo.renderTodoApp(todo.getState());
+}
+
+/// Render and commit (returns patch count)
+export fn zigdom_todo_render_and_commit() u32 {
+    todo.renderTodoApp(todo.getState());
+    const result = vdom.commit();
+    return result.count;
+}
+
+/// Get event ID constants
+export fn zigdom_todo_event_add() u32 {
+    return todo.EventId.ADD_TODO;
+}
+
+export fn zigdom_todo_event_toggle_base() u32 {
+    return todo.EventId.TOGGLE_TODO;
+}
+
+export fn zigdom_todo_event_remove_base() u32 {
+    return todo.EventId.REMOVE_TODO;
+}
+
+export fn zigdom_todo_event_toggle_all() u32 {
+    return todo.EventId.TOGGLE_ALL;
+}
+
+export fn zigdom_todo_event_clear_completed() u32 {
+    return todo.EventId.CLEAR_COMPLETED;
+}
+
+export fn zigdom_todo_event_filter_all() u32 {
+    return todo.EventId.FILTER_ALL;
+}
+
+export fn zigdom_todo_event_filter_active() u32 {
+    return todo.EventId.FILTER_ACTIVE;
+}
+
+export fn zigdom_todo_event_filter_completed() u32 {
+    return todo.EventId.FILTER_COMPLETED;
+}
+
+/// Dispatch event by callback ID (returns true if handled)
+export fn zigdom_todo_dispatch(callback_id: u32) bool {
+    const todo_state = todo.getState();
+
+    // Check base event IDs
+    if (callback_id == todo.EventId.TOGGLE_ALL) {
+        todo_state.toggleAll();
+        return true;
+    }
+    if (callback_id == todo.EventId.CLEAR_COMPLETED) {
+        _ = todo_state.clearCompleted();
+        return true;
+    }
+    if (callback_id == todo.EventId.FILTER_ALL) {
+        todo_state.setFilter(.all);
+        return true;
+    }
+    if (callback_id == todo.EventId.FILTER_ACTIVE) {
+        todo_state.setFilter(.active);
+        return true;
+    }
+    if (callback_id == todo.EventId.FILTER_COMPLETED) {
+        todo_state.setFilter(.completed);
+        return true;
+    }
+
+    // Check toggle/remove events (callback_id = base + item_id * 1000)
+    if (callback_id >= 1000) {
+        const item_id = callback_id / 1000;
+        const base_event = callback_id % 1000;
+
+        if (base_event == todo.EventId.TOGGLE_TODO) {
+            return todo_state.toggle(item_id);
+        }
+        if (base_event == todo.EventId.REMOVE_TODO) {
+            return todo_state.remove(item_id);
+        }
+    }
+
+    return false;
 }
 
 // === Panic handler for WASM ===

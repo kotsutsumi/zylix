@@ -294,8 +294,37 @@ export fn zigdom_vdom_get_patch_type(index: u32) u8
 export fn zigdom_vdom_get_patch_text(index: u32) ?[*]const u8
 ```
 
+## Real-World Example: Todo App
+
+A complete TodoMVC-style application demonstrating all ZigDom features:
+
+```zig
+// Zig-side state management
+const todo = @import("todo.zig");
+
+// Add a todo
+const id = todo.getState().add("Learn Zig");
+
+// Toggle completion
+_ = todo.getState().toggle(id);
+
+// Render to VDOM
+todo.renderTodoApp(todo.getState());
+
+// Commit and get patches
+const patches = vdom.commit();
+```
+
+**Features Demonstrated**:
+- State management in Zig
+- VDOM rendering and diffing
+- Event handling (toggle, remove, filter)
+- Key-based list reconciliation
+- Real-time statistics
+
 ## Live Demos
 
+- [**Todo App**](/demos/todo-app.html) - Full TodoMVC implementation
 - [Counter Demo](/demos/counter.html)
 - [CSS Demo](/demos/css-demo.html)
 - [Layout Demo](/demos/layout-demo.html)

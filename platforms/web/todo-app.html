@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZigDom Todo App</title>
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #4d4d4d;
+            --text-secondary: #777;
+            --border-color: #e6e6e6;
+            --accent-color: #b83f45;
+            --success-color: #5dc2af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 300;
+            line-height: 1.4em;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-width: 230px;
+            max-width: 550px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            width: 100%;
+            font-size: 80px;
+            font-weight: 200;
+            text-align: center;
+            color: var(--accent-color);
+            opacity: 0.3;
+            text-rendering: optimizeLegibility;
+            margin: 20px 0;
+        }
+
+        .todoapp {
+            background: var(--bg-secondary);
+            margin: 20px 0 40px 0;
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2),
+                        0 25px 50px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            padding: 0;
+        }
+
+        .new-todo {
+            width: 100%;
+            padding: 16px 16px 16px 60px;
+            font-size: 24px;
+            font-family: inherit;
+            font-weight: inherit;
+            line-height: 1.4em;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.003);
+            box-shadow: inset 0 -2px 1px rgba(0,0,0,0.03);
+        }
+
+        .new-todo:focus {
+            outline: none;
+        }
+
+        .new-todo::placeholder {
+            font-style: italic;
+            color: #ccc;
+        }
+
+        .main {
+            position: relative;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .toggle-all-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-all {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            opacity: 0.3;
+            font-size: 22px;
+            border: none;
+            background: transparent;
+        }
+
+        .toggle-all:hover {
+            opacity: 0.5;
+        }
+
+        .toggle-all.all-completed {
+            opacity: 1;
+            color: var(--success-color);
+        }
+
+        .todo-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .todo-list li {
+            position: relative;
+            font-size: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .todo-list li:last-child {
+            border-bottom: none;
+        }
+
+        .todo-list li .toggle {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            background: transparent;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .todo-list li .toggle:hover {
+            border-color: var(--success-color);
+        }
+
+        .todo-list li.completed .toggle {
+            border-color: var(--success-color);
+            background: var(--success-color);
+            color: white;
+        }
+
+        .todo-list li label {
+            flex-grow: 1;
+            padding: 15px 0;
+            word-break: break-all;
+            transition: color 0.4s;
+        }
+
+        .todo-list li.completed label {
+            color: #cdcdcd;
+            text-decoration: line-through;
+        }
+
+        .todo-list li .destroy {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            font-size: 24px;
+            color: #cc9a9a;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .todo-list li:hover .destroy {
+            opacity: 1;
+        }
+
+        .todo-list li .destroy:hover {
+            color: var(--accent-color);
+        }
+
+        .footer {
+            padding: 10px 15px;
+            height: 50px;
+            text-align: center;
+            font-size: 15px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .todo-count {
+            text-align: left;
+        }
+
+        .todo-count strong {
+            font-weight: 400;
+        }
+
+        .filters {
+            list-style: none;
+            display: flex;
+            gap: 5px;
+        }
+
+        .filters li a {
+            color: inherit;
+            padding: 3px 7px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .filters li a:hover {
+            border-color: rgba(175, 47, 47, 0.1);
+        }
+
+        .filters li a.selected {
+            border-color: rgba(175, 47, 47, 0.2);
+        }
+
+        .clear-completed {
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            padding: 3px 7px;
+        }
+
+        .clear-completed:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            margin-top: 30px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-panel h3 {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-item {
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Patch Log */
+        .patch-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a2e;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .patch-log h3 {
+            margin-bottom: 10px;
+            color: #8888aa;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .patch-entry {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            color: #a0ffa0;
+            padding: 2px 0;
+        }
+
+        .patch-entry.create { color: #50fa7b; }
+        .patch-entry.remove { color: #ff5555; }
+        .patch-entry.update { color: #8be9fd; }
+
+        .info {
+            margin-top: 30px;
+            text-align: center;
+            color: #bbb;
+            font-size: 11px;
+        }
+
+        .info a {
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <h1>todos</h1>
+
+    <section class="todoapp">
+        <header class="header">
+            <input class="new-todo" placeholder="What needs to be done?" autofocus id="new-todo">
+        </header>
+
+        <section class="main hidden" id="main">
+            <div class="toggle-all-container">
+                <button class="toggle-all" id="toggle-all">&#x25BC;</button>
+            </div>
+            <ul class="todo-list" id="todo-list"></ul>
+        </section>
+
+        <footer class="footer hidden" id="footer">
+            <span class="todo-count" id="todo-count"></span>
+            <ul class="filters">
+                <li><a class="selected" id="filter-all">All</a></li>
+                <li><a id="filter-active">Active</a></li>
+                <li><a id="filter-completed">Completed</a></li>
+            </ul>
+            <button class="clear-completed hidden" id="clear-completed">Clear completed</button>
+        </footer>
+    </section>
+
+    <!-- Stats Panel -->
+    <div class="stats-panel">
+        <h3>ZigDom Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-todos">0</div>
+                <div class="stat-label">Total Todos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-patches">0</div>
+                <div class="stat-label">Patches Applied</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-renders">0</div>
+                <div class="stat-label">Renders</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-time">0</div>
+                <div class="stat-label">Avg Render (ms)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patch Log -->
+    <div class="patch-log">
+        <h3>Patch Log (VDOM Updates)</h3>
+        <div id="patch-log-content"></div>
+    </div>
+
+    <footer class="info">
+        <p>Double-click to edit a todo</p>
+        <p>Built with <strong>ZigDom</strong> - Zig-powered Virtual DOM</p>
+        <p><a href="/">Back to Zylix</a></p>
+    </footer>
+
+    <script>
+        // Global state
+        let wasm = null;
+        let wasmMemory = null;
+        let todos = []; // Local mirror of todo state for DOM rendering
+        let currentFilter = 'all';
+        let totalPatches = 0;
+        let totalRenders = 0;
+        let totalRenderTime = 0;
+
+        // DOM elements
+        const newTodoInput = document.getElementById('new-todo');
+        const mainSection = document.getElementById('main');
+        const footerSection = document.getElementById('footer');
+        const todoList = document.getElementById('todo-list');
+        const todoCount = document.getElementById('todo-count');
+        const toggleAllBtn = document.getElementById('toggle-all');
+        const clearCompletedBtn = document.getElementById('clear-completed');
+        const filterAll = document.getElementById('filter-all');
+        const filterActive = document.getElementById('filter-active');
+        const filterCompleted = document.getElementById('filter-completed');
+        const patchLogContent = document.getElementById('patch-log-content');
+
+        // Text encoder/decoder
+        const textEncoder = new TextEncoder();
+        const textDecoder = new TextDecoder();
+
+        // Helper to read string from WASM memory
+        function readString(ptr, len) {
+            if (!ptr || len === 0) return '';
+            const bytes = new Uint8Array(wasmMemory.buffer, ptr, len);
+            return textDecoder.decode(bytes);
+        }
+
+        // Helper to write string to WASM memory
+        function writeString(str) {
+            const bytes = textEncoder.encode(str);
+            const ptr = wasm.zylix_wasm_alloc(bytes.length);
+            if (!ptr) return { ptr: 0, len: 0 };
+            const view = new Uint8Array(wasmMemory.buffer, ptr, bytes.length);
+            view.set(bytes);
+            return { ptr, len: bytes.length };
+        }
+
+        // Initialize WASM
+        async function initWasm() {
+            try {
+                const response = await fetch('zylix.wasm');
+                const bytes = await response.arrayBuffer();
+                const module = await WebAssembly.instantiate(bytes, {
+                    env: {
+                        // Add any needed imports here
+                    }
+                });
+
+                wasm = module.instance.exports;
+                wasmMemory = wasm.memory;
+
+                // Initialize modules
+                wasm.zylix_init();
+                wasm.zigdom_vdom_init();
+                wasm.zigdom_todo_init();
+
+                console.log('ZigDom Todo App initialized!');
+                updateStats();
+
+            } catch (error) {
+                console.error('Failed to initialize WASM:', error);
+            }
+        }
+
+        // Add a new todo
+        function addTodo(text) {
+            if (!text.trim()) return;
+
+            const { ptr, len } = writeString(text.trim());
+            if (ptr === 0) return;
+
+            const startTime = performance.now();
+            const id = wasm.zigdom_todo_add(ptr, len);
+            wasm.zylix_wasm_free_scratch();
+
+            if (id > 0) {
+                todos.push({ id, text: text.trim(), completed: false });
+                renderAndCommit();
+                const endTime = performance.now();
+                updateRenderStats(endTime - startTime);
+            }
+        }
+
+        // Toggle a todo
+        function toggleTodo(id) {
+            const startTime = performance.now();
+            if (wasm.zigdom_todo_toggle(id)) {
+                const todo = todos.find(t => t.id === id);
+                if (todo) todo.completed = !todo.completed;
+                renderAndCommit();
+                const endTime = performance.now();
+                updateRenderStats(endTime - startTime);
+            }
+        }
+
+        // Remove a todo
+        function removeTodo(id) {
+            const startTime = performance.now();
+            if (wasm.zigdom_todo_remove(id)) {
+                todos = todos.filter(t => t.id !== id);
+                renderAndCommit();
+                const endTime = performance.now();
+                updateRenderStats(endTime - startTime);
+            }
+        }
+
+        // Toggle all todos
+        function toggleAll() {
+            const startTime = performance.now();
+            wasm.zigdom_todo_toggle_all();
+
+            // Sync local state
+            const allCompleted = todos.every(t => t.completed);
+            todos.forEach(t => t.completed = !allCompleted);
+
+            renderAndCommit();
+            const endTime = performance.now();
+            updateRenderStats(endTime - startTime);
+        }
+
+        // Clear completed todos
+        function clearCompleted() {
+            const startTime = performance.now();
+            wasm.zigdom_todo_clear_completed();
+            todos = todos.filter(t => !t.completed);
+            renderAndCommit();
+            const endTime = performance.now();
+            updateRenderStats(endTime - startTime);
+        }
+
+        // Set filter
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            // Update filter UI
+            [filterAll, filterActive, filterCompleted].forEach(el => el.classList.remove('selected'));
+            if (filter === 'all') filterAll.classList.add('selected');
+            else if (filter === 'active') filterActive.classList.add('selected');
+            else filterCompleted.classList.add('selected');
+
+            // Set filter in Zig
+            const filterValue = filter === 'all' ? 0 : (filter === 'active' ? 1 : 2);
+            wasm.zigdom_todo_set_filter(filterValue);
+
+            renderDOM();
+        }
+
+        // Render using VDOM and apply patches
+        function renderAndCommit() {
+            // Call Zig to render and get patches
+            const patchCount = wasm.zigdom_todo_render_and_commit();
+
+            // Log patches
+            logPatches(patchCount);
+
+            // Update DOM
+            renderDOM();
+            updateStats();
+        }
+
+        // Log patches from VDOM
+        function logPatches(count) {
+            totalPatches += count;
+
+            const patchTypes = ['none', 'create', 'remove', 'replace', 'update_props', 'update_text', 'reorder', 'insert_child', 'remove_child'];
+
+            for (let i = 0; i < count && i < 10; i++) {
+                const patchType = wasm.zigdom_vdom_get_patch_type(i);
+                const typeName = patchTypes[patchType] || 'unknown';
+
+                const entry = document.createElement('div');
+                entry.className = `patch-entry ${typeName.includes('create') ? 'create' : typeName.includes('remove') ? 'remove' : 'update'}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${typeName.toUpperCase()}`;
+
+                patchLogContent.insertBefore(entry, patchLogContent.firstChild);
+            }
+
+            // Limit log entries
+            while (patchLogContent.children.length > 50) {
+                patchLogContent.removeChild(patchLogContent.lastChild);
+            }
+        }
+
+        // Render DOM from local state
+        function renderDOM() {
+            // Show/hide main and footer
+            const hasTodos = todos.length > 0;
+            mainSection.classList.toggle('hidden', !hasTodos);
+            footerSection.classList.toggle('hidden', !hasTodos);
+
+            if (!hasTodos) return;
+
+            // Render todo list
+            todoList.innerHTML = '';
+            const visibleTodos = todos.filter(todo => {
+                if (currentFilter === 'active') return !todo.completed;
+                if (currentFilter === 'completed') return todo.completed;
+                return true;
+            });
+
+            visibleTodos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = todo.completed ? 'completed' : '';
+                li.dataset.id = todo.id;
+
+                const toggle = document.createElement('button');
+                toggle.className = 'toggle';
+                toggle.innerHTML = todo.completed ? '&#x2713;' : '';
+                toggle.onclick = () => toggleTodo(todo.id);
+
+                const label = document.createElement('label');
+                label.textContent = todo.text;
+
+                const destroy = document.createElement('button');
+                destroy.className = 'destroy';
+                destroy.innerHTML = '&times;';
+                destroy.onclick = () => removeTodo(todo.id);
+
+                li.appendChild(toggle);
+                li.appendChild(label);
+                li.appendChild(destroy);
+                todoList.appendChild(li);
+            });
+
+            // Update count
+            const activeCount = todos.filter(t => !t.completed).length;
+            todoCount.innerHTML = `<strong>${activeCount}</strong> item${activeCount !== 1 ? 's' : ''} left`;
+
+            // Update toggle all button
+            const allCompleted = todos.length > 0 && todos.every(t => t.completed);
+            toggleAllBtn.classList.toggle('all-completed', allCompleted);
+
+            // Show/hide clear completed button
+            const hasCompleted = todos.some(t => t.completed);
+            clearCompletedBtn.classList.toggle('hidden', !hasCompleted);
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('stat-todos').textContent = todos.length;
+            document.getElementById('stat-patches').textContent = totalPatches;
+            document.getElementById('stat-renders').textContent = totalRenders;
+        }
+
+        // Update render statistics
+        function updateRenderStats(time) {
+            totalRenders++;
+            totalRenderTime += time;
+            const avgTime = (totalRenderTime / totalRenders).toFixed(2);
+            document.getElementById('stat-time').textContent = avgTime;
+            updateStats();
+        }
+
+        // Event listeners
+        newTodoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo(newTodoInput.value);
+                newTodoInput.value = '';
+            }
+        });
+
+        toggleAllBtn.addEventListener('click', toggleAll);
+        clearCompletedBtn.addEventListener('click', clearCompleted);
+        filterAll.addEventListener('click', () => setFilter('all'));
+        filterActive.addEventListener('click', () => setFilter('active'));
+        filterCompleted.addEventListener('click', () => setFilter('completed'));
+
+        // Initialize
+        initWasm();
+    </script>
+</body>
+</html>
