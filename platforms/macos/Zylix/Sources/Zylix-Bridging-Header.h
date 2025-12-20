@@ -24,6 +24,14 @@
 #define ZYLIX_EVENT_COUNTER_DECREMENT 0x1001
 #define ZYLIX_EVENT_COUNTER_RESET     0x1002
 
+// === Todo Event Types ===
+#define ZYLIX_EVENT_TODO_ADD          0x3000
+#define ZYLIX_EVENT_TODO_REMOVE       0x3001
+#define ZYLIX_EVENT_TODO_TOGGLE       0x3002
+#define ZYLIX_EVENT_TODO_TOGGLE_ALL   0x3003
+#define ZYLIX_EVENT_TODO_CLEAR_DONE   0x3004
+#define ZYLIX_EVENT_TODO_SET_FILTER   0x3005
+
 // === State Structure ===
 typedef struct {
     uint64_t version;

@@ -7,17 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1E318BF58825F9A67D483247 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DFAA0407D4DF41AD2F392F /* ContentView.swift */; };
+		209F871AEB44F4B6A78445FC /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B18396F0053898300295AE9 /* TodoView.swift */; };
 		5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEE39EB5949C7C7C404455F /* ZylixApp.swift */; };
-		9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */; };
+		78BFB7340DCF20E1D66459A3 /* TodoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F137C72B7319A21D86F0B7C8 /* TodoViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixBridge.swift; sourceTree = "<group>"; };
-		37DFAA0407D4DF41AD2F392F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4CEE39EB5949C7C7C404455F /* ZylixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixApp.swift; sourceTree = "<group>"; };
 		68D5815EF6AC3E7752F3CE5C /* Zylix-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Zylix-Bridging-Header.h"; sourceTree = "<group>"; };
+		7B18396F0053898300295AE9 /* TodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoView.swift; sourceTree = "<group>"; };
 		C2DBDAFD8620743799661F03 /* Zylix.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zylix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F137C72B7319A21D86F0B7C8 /* TodoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -32,10 +32,10 @@
 		B89610221D5EB786816313F0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				37DFAA0407D4DF41AD2F392F /* ContentView.swift */,
+				7B18396F0053898300295AE9 /* TodoView.swift */,
+				F137C72B7319A21D86F0B7C8 /* TodoViewModel.swift */,
 				68D5815EF6AC3E7752F3CE5C /* Zylix-Bridging-Header.h */,
 				4CEE39EB5949C7C7C404455F /* ZylixApp.swift */,
-				11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */,
 			);
 			name = Sources;
 			path = Zylix/Sources;
@@ -56,7 +56,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 12368B7580EC645659053D91 /* Build configuration list for PBXNativeTarget "Zylix" */;
 			buildPhases = (
-				881C657868BC44823B7A6F9B /* Build Zylix Core */,
 				61B513AD5BEF7B9F523A09A9 /* Sources */,
 			);
 			buildRules = (
@@ -103,36 +102,14 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		881C657868BC44823B7A6F9B /* Build Zylix Core */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Build Zylix Core";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cd \"${PROJECT_DIR}/../../core\"\nzig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast --prefix zig-out/macos\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		61B513AD5BEF7B9F523A09A9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1E318BF58825F9A67D483247 /* ContentView.swift in Sources */,
+				209F871AEB44F4B6A78445FC /* TodoView.swift in Sources */,
+				78BFB7340DCF20E1D66459A3 /* TodoViewModel.swift in Sources */,
 				5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */,
-				9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -153,17 +130,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../core/zig-out/macos/lib",
-				);
 				MARKETING_VERSION = 1.0.0;
-				OTHER_LDFLAGS = (
-					"-lzylix",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.zylix.macos;
-				PRODUCT_NAME = Zylix;
+				PRODUCT_NAME = "Zylix Todo";
 				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Zylix/Sources/Zylix-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -302,17 +272,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/../../core/zig-out/macos/lib",
-				);
 				MARKETING_VERSION = 1.0.0;
-				OTHER_LDFLAGS = (
-					"-lzylix",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.zylix.macos;
-				PRODUCT_NAME = Zylix;
+				PRODUCT_NAME = "Zylix Todo";
 				SDKROOT = macosx;
-				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Zylix/Sources/Zylix-Bridging-Header.h";
 			};
 			name = Debug;
 		};

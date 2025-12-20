@@ -1,20 +1,23 @@
+//
+//  ZylixApp.swift
+//  Zylix macOS
+//
+//  Main app entry point for macOS Todo demo.
+//
+
 import SwiftUI
 
 @main
 struct ZylixApp: App {
-    @StateObject private var bridge = ZylixBridge.shared
-
-    init() {
-        // Initialize Zylix Core
-        ZylixBridge.shared.initialize()
-    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(bridge)
+            TodoView()
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 400, height: 500)
+        .defaultSize(width: 450, height: 550)
+        .commands {
+            CommandGroup(replacing: .newItem) { }
+        }
     }
 }
