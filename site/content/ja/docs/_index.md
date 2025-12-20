@@ -3,6 +3,8 @@ title: ドキュメント
 next: getting-started
 sidebar:
   open: true
+cascade:
+  type: docs
 ---
 
 Zylix 公式ドキュメントへようこそ。Zig で構築された高性能クロスプラットフォーム UI フレームワークの完全なリファレンスです。

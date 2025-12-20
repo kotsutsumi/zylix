@@ -61,8 +61,8 @@ params:
     logo:
       path: images/logo.svg
       dark: images/logo-dark.svg
-      width: 40
-      height: 40
+      width: 32
+      height: 32
 
   page:
     width: normal

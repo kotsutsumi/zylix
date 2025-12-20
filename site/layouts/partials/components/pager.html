@@ -9,7 +9,11 @@
   {{- if $reversePagination }}{{ $next = false }}{{ else }}{{ $prev = false }}{{ end -}}
 {{ else }}
   {{- with .Params.prev -}}
-    {{- with $.Site.GetPage . -}}
+    {{- $prevPath := . -}}
+    {{- if not (hasPrefix . "/") -}}
+      {{- $prevPath = printf "%s%s" $.Page.FirstSection.RelPermalink . -}}
+    {{- end -}}
+    {{- with $.Site.GetPage $prevPath -}}
       {{- if $reversePagination }}{{ $next = . }}{{ else }}{{ $prev = . }}{{ end -}}
     {{- end -}}
   {{- end -}}
@@ -19,7 +23,11 @@
   {{- if $reversePagination }}{{ $prev = false }}{{ else }}{{ $next = false }}{{ end -}}
 {{ else }}
   {{- with .Params.next -}}
-    {{- with $.Site.GetPage . -}}
+    {{- $nextPath := . -}}
+    {{- if not (hasPrefix . "/") -}}
+      {{- $nextPath = printf "%s%s" $.Page.FirstSection.RelPermalink . -}}
+    {{- end -}}
+    {{- with $.Site.GetPage $nextPath -}}
       {{- if $reversePagination }}{{ $prev = . }}{{ else }}{{ $next = . }}{{ end -}}
     {{- end -}}
   {{- end -}}

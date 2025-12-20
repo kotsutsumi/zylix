@@ -3,6 +3,8 @@ title: Documentation
 next: getting-started
 sidebar:
   open: true
+cascade:
+  type: docs
 ---
 
 Welcome to the official Zylix documentation. Zylix is a high-performance, cross-platform UI framework powered by [Zig](https://ziglang.org/), designed to build native applications that run on Web, iOS, Android, macOS, Linux, and Windows from a single codebase.
