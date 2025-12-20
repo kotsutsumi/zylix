@@ -3,10 +3,9 @@ title: Zylix
 layout: hextra-home
 ---
 
-{{< hextra/hero-badge >}}
-  <div class="hx-w-2 hx-h-2 hx-rounded-full hx-bg-primary-400"></div>
+{{< hextra/hero-badge link="https://github.com/kotsutsumi/zylix" >}}
   <span>Free, open source</span>
-  {{< icon name="arrow-circle-right" attributes="height=14" >}}
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16l4-4-4-4M8 12h8"/></svg>
 {{< /hextra/hero-badge >}}
 
 <div class="hx-mt-6 hx-mb-6">

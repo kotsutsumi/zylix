@@ -3,7 +3,7 @@ title: Zylix
 languageCode: en-us
 defaultContentLanguage: en
 enableRobotsTXT: true
-enableGitInfo: true
+enableGitInfo: false
 
 # Hugo modules
 module:

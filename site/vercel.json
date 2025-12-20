@@ -2,16 +2,18 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "hugo --gc --minify",
   "devCommand": "hugo server -D",
-  "installCommand": "curl -L https://github.com/gohugoio/hugo/releases/download/v0.139.4/hugo_extended_0.139.4_linux-amd64.tar.gz | tar -xz hugo && mv hugo /usr/local/bin/ && hugo mod tidy",
+  "installCommand": "curl -L https://github.com/gohugoio/hugo/releases/download/v0.147.0/hugo_extended_0.147.0_linux-amd64.tar.gz | tar -xz hugo && mv hugo /usr/local/bin/ && hugo mod tidy",
   "outputDirectory": "public",
   "framework": null,
-  "routes": [
+  "headers": [
     {
-      "src": "/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ],
   "redirects": [

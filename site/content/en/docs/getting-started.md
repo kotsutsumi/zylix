@@ -2,132 +2,438 @@
 title: Getting Started
 weight: 1
 prev: /docs
-next: architecture
+next: core-concepts
 ---
 
-Get up and running with Zylix in minutes.
+This guide walks you through setting up Zylix and building your first cross-platform application. By the end, you'll have a working Todo app running on your chosen platform.
 
 ## Prerequisites
 
-- [Zig](https://ziglang.org/) 0.13 or later
-- Platform-specific tools (see below)
+Before you begin, ensure you have the following installed:
+
+### Required
+
+- **[Zig](https://ziglang.org/download/)** 0.13.0 or later
+  ```bash
+  # Verify installation
+  zig version
+  # Expected: 0.13.0 or higher
+  ```
+
+- **Git** for cloning the repository
+  ```bash
+  git --version
+  ```
+
+### Platform-Specific Requirements
+
+{{< tabs items="Web/WASM,iOS,Android,macOS,Linux,Windows" >}}
+
+{{< tab >}}
+**Web/WASM** requires:
+- A modern web browser (Chrome, Firefox, Safari, Edge)
+- A local HTTP server (Python, Node.js, or any static file server)
+
+```bash
+# Quick server options
+python3 -m http.server 8080
+# or
+npx serve .
+```
+{{< /tab >}}
+
+{{< tab >}}
+**iOS** requires:
+- macOS 12 (Monterey) or later
+- Xcode 14 or later
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) for project generation
+
+```bash
+# Install XcodeGen via Homebrew
+brew install xcodegen
+```
+{{< /tab >}}
+
+{{< tab >}}
+**Android** requires:
+- [Android Studio](https://developer.android.com/studio) Arctic Fox or later
+- Android SDK with API level 26+
+- Android NDK 25 or later (for native compilation)
+
+```bash
+# Set environment variables
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653
+```
+{{< /tab >}}
+
+{{< tab >}}
+**macOS** requires:
+- macOS 12 (Monterey) or later
+- Xcode 14 or later
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) for project generation
+
+```bash
+# Install XcodeGen via Homebrew
+brew install xcodegen
+```
+{{< /tab >}}
+
+{{< tab >}}
+**Linux** requires:
+- GTK4 development libraries
+- pkg-config
+
+```bash
+# Ubuntu/Debian
+sudo apt install libgtk-4-dev pkg-config
+
+# Fedora
+sudo dnf install gtk4-devel pkg-config
+
+# Arch Linux
+sudo pacman -S gtk4 pkgconf
+```
+{{< /tab >}}
+
+{{< tab >}}
+**Windows** requires:
+- Windows 10 version 1809 or later
+- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- Windows App SDK 1.4 or later
+
+```powershell
+# Verify .NET installation
+dotnet --version
+```
+{{< /tab >}}
+
+{{< /tabs >}}
 
 ## Installation
 
-### 1. Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/kotsutsumi/zylix.git
 cd zylix
 ```
 
-### 2. Build the Core Library
+### Step 2: Build the Core Library
+
+The core library contains all shared logic: Virtual DOM, state management, diffing algorithm, and component system.
 
 ```bash
 cd core
 zig build
 ```
 
-This builds `libzylix.a` for your current platform.
+This produces `libzylix.a` (static library) for your current platform.
 
-### 3. Build for Specific Platforms
+### Step 3: Verify the Build
 
-{{< tabs items="Web/WASM,iOS,Android,macOS,Linux,Windows" >}}
+Run the test suite to ensure everything is working:
 
-{{< tab >}}
 ```bash
-# Build WASM
-zig build wasm -Doptimize=ReleaseSmall
-
-# Output: zig-out/lib/zylix.wasm
+zig build test
 ```
-{{< /tab >}}
 
-{{< tab >}}
-```bash
-# Build for iOS
-zig build ios -Doptimize=ReleaseFast
-
-# Open Xcode project
-cd platforms/ios
-xcodegen generate
-open Zylix.xcodeproj
-```
-{{< /tab >}}
-
-{{< tab >}}
-```bash
-# Build for Android
-zig build android -Doptimize=ReleaseFast
-
-# Open in Android Studio
-cd platforms/android/zylix-android
-./gradlew assembleDebug
-```
-{{< /tab >}}
-
-{{< tab >}}
-```bash
-# Build for macOS
-zig build -Doptimize=ReleaseFast
-
-# Open Xcode project
-cd platforms/macos
-xcodegen generate
-open Zylix.xcodeproj
-```
-{{< /tab >}}
-
-{{< tab >}}
-```bash
-# Build for Linux
-zig build linux -Doptimize=ReleaseFast
-
-# Build GTK app
-cd platforms/linux/zylix-gtk
-make
-./build/zylix-todo
-```
-{{< /tab >}}
-
-{{< tab >}}
-```bash
-# Build for Windows
-zig build windows-x64 -Doptimize=ReleaseFast
-
-# Build with .NET
-cd platforms/windows/Zylix
-dotnet build -c Release
-dotnet run
-```
-{{< /tab >}}
-
-{{< /tabs >}}
+You should see all tests passing.
 
 ## Project Structure
 
+Understanding the project layout helps navigate the codebase:
+
 ```
 zylix/
-├── core/                 # Zig core library
-│   └── src/
-│       ├── vdom.zig      # Virtual DOM engine
-│       ├── diff.zig      # Diff algorithm
-│       ├── component.zig # Component system
-│       ├── state.zig     # State management
-│       ├── todo.zig      # Todo app logic
-│       └── wasm.zig      # WASM bindings
+├── core/                      # Zig core library (shared across all platforms)
+│   ├── src/
+│   │   ├── vdom.zig          # Virtual DOM engine
+│   │   ├── diff.zig          # Diffing algorithm
+│   │   ├── component.zig     # Component system
+│   │   ├── state.zig         # State management
+│   │   ├── store.zig         # Generic state store
+│   │   ├── events.zig        # Event system
+│   │   ├── arena.zig         # Memory arena allocator
+│   │   ├── layout.zig        # Layout engine
+│   │   ├── css.zig           # CSS-in-Zig styling
+│   │   ├── scheduler.zig     # Task scheduler
+│   │   ├── abi.zig           # C ABI exports
+│   │   ├── wasm.zig          # WASM bindings
+│   │   ├── dsl.zig           # Declarative UI DSL
+│   │   └── todo.zig          # Todo app implementation
+│   └── build.zig             # Build configuration
+│
 ├── platforms/
-│   ├── web/              # Web/WASM demos
-│   ├── ios/              # iOS/SwiftUI
-│   ├── android/          # Android/Kotlin
-│   ├── macos/            # macOS/SwiftUI
-│   ├── linux/            # Linux/GTK4
-│   └── windows/          # Windows/WinUI 3
-└── site/                 # This documentation
+│   ├── web/                  # Web/WASM platform
+│   │   ├── index.html        # HTML shell
+│   │   ├── zylix.js          # JavaScript bindings
+│   │   └── styles.css        # Platform styles
+│   │
+│   ├── ios/                  # iOS platform
+│   │   ├── Zylix/            # Swift/SwiftUI app
+│   │   ├── project.yml       # XcodeGen configuration
+│   │   └── ZylixBridge.swift # C ABI bridge
+│   │
+│   ├── android/              # Android platform
+│   │   └── zylix-android/    # Kotlin/Compose app
+│   │       ├── app/          # Application module
+│   │       └── zylix/        # Native library module
+│   │
+│   ├── macos/                # macOS platform
+│   │   ├── Zylix/            # Swift/SwiftUI app
+│   │   └── project.yml       # XcodeGen configuration
+│   │
+│   ├── linux/                # Linux platform
+│   │   └── zylix-gtk/        # GTK4/C app
+│   │       ├── src/          # C source files
+│   │       └── Makefile      # Build configuration
+│   │
+│   └── windows/              # Windows platform
+│       └── Zylix/            # C#/WinUI 3 app
+│           ├── Zylix/        # Application project
+│           └── Zylix.sln     # Solution file
+│
+└── site/                     # This documentation website
+```
+
+## Building for Platforms
+
+### Web/WASM
+
+Build the WASM module and serve locally:
+
+```bash
+# Build WASM (from core directory)
+cd core
+zig build wasm -Doptimize=ReleaseSmall
+
+# The output is at: zig-out/lib/zylix.wasm
+
+# Copy to web platform
+cp zig-out/lib/zylix.wasm ../platforms/web/
+
+# Serve the web app
+cd ../platforms/web
+python3 -m http.server 8080
+```
+
+Open http://localhost:8080 in your browser.
+
+### iOS
+
+```bash
+# Build for iOS (from core directory)
+cd core
+zig build ios -Doptimize=ReleaseFast
+
+# Generate Xcode project
+cd ../platforms/ios
+xcodegen generate
+
+# Open in Xcode
+open Zylix.xcodeproj
+```
+
+Select a simulator or device and press Run (⌘R).
+
+### Android
+
+```bash
+# Build for Android (from core directory)
+cd core
+zig build android -Doptimize=ReleaseFast
+
+# Build with Gradle
+cd ../platforms/android/zylix-android
+./gradlew assembleDebug
+
+# Install on device/emulator
+./gradlew installDebug
+```
+
+### macOS
+
+```bash
+# Build for macOS (from core directory)
+cd core
+zig build -Doptimize=ReleaseFast
+
+# Generate Xcode project
+cd ../platforms/macos
+xcodegen generate
+
+# Open in Xcode
+open Zylix.xcodeproj
+```
+
+### Linux
+
+```bash
+# Build for Linux (from core directory)
+cd core
+zig build linux -Doptimize=ReleaseFast
+
+# Build GTK app
+cd ../platforms/linux/zylix-gtk
+make
+
+# Run the app
+./build/zylix-todo
+```
+
+### Windows
+
+```bash
+# Build for Windows (from core directory)
+cd core
+zig build windows-x64 -Doptimize=ReleaseFast
+
+# Build with .NET
+cd ../platforms/windows/Zylix
+dotnet build -c Release
+
+# Run the app
+dotnet run
+```
+
+## Your First App: Hello Zylix
+
+Let's create a simple counter app to understand the basics.
+
+### Understanding the Data Flow
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    Platform Shell (Swift/Kotlin/etc.)         │
+│  1. Receives user tap/click                                   │
+│  2. Calls zylix_dispatch(event)                              │
+└─────────────────────────────┬────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                        Zylix Core (Zig)                       │
+│  3. Event handler updates state                               │
+│  4. State change triggers re-render                           │
+│  5. Virtual DOM diff produces patches                         │
+└─────────────────────────────┬────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Platform Shell (Swift/Kotlin/etc.)         │
+│  6. Applies patches to native UI                              │
+│  7. UI updates on screen                                      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Core Logic (Zig)
+
+Here's how a counter works in Zylix:
+
+```zig
+// state.zig - Define your state
+pub const AppState = struct {
+    counter: i64 = 0,
+};
+
+// events.zig - Define events
+pub const Event = union(enum) {
+    counter_increment,
+    counter_decrement,
+    counter_reset,
+};
+
+// Handle events
+pub fn dispatch(event: Event) void {
+    switch (event) {
+        .counter_increment => state.counter += 1,
+        .counter_decrement => state.counter -= 1,
+        .counter_reset => state.counter = 0,
+    }
+    // Trigger re-render
+    reconciler.scheduleRender();
+}
+```
+
+### Platform Shell (Swift Example)
+
+```swift
+import SwiftUI
+
+struct CounterView: View {
+    @State private var counter: Int64 = 0
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Count: \(counter)")
+                .font(.largeTitle)
+
+            HStack(spacing: 16) {
+                Button("-") {
+                    ZylixBridge.dispatch(.counterDecrement)
+                    updateState()
+                }
+
+                Button("Reset") {
+                    ZylixBridge.dispatch(.counterReset)
+                    updateState()
+                }
+
+                Button("+") {
+                    ZylixBridge.dispatch(.counterIncrement)
+                    updateState()
+                }
+            }
+        }
+    }
+
+    func updateState() {
+        counter = ZylixBridge.getState().counter
+    }
+}
 ```
 
 ## Next Steps
 
-- [Architecture](architecture) - Learn how Zylix works
-- [Platforms](platforms) - Platform-specific guides
-- [API Reference](api) - Detailed API documentation
+Now that you have Zylix running, explore these topics:
+
+{{< cards >}}
+  {{< card link="../core-concepts" title="Core Concepts" subtitle="Deep dive into Virtual DOM, State, and Components" >}}
+  {{< card link="../architecture" title="Architecture" subtitle="Understand how Zylix works internally" >}}
+  {{< card link="../platforms" title="Platform Guides" subtitle="Platform-specific best practices" >}}
+  {{< card link="../api" title="API Reference" subtitle="Complete API documentation" >}}
+{{< /cards >}}
+
+## Troubleshooting
+
+### Common Issues
+
+**Zig version mismatch**
+```bash
+# Check your version
+zig version
+
+# Zylix requires 0.13.0+
+# Download from https://ziglang.org/download/
+```
+
+**WASM not loading in browser**
+- Ensure you're serving via HTTP (not file://)
+- Check browser console for CORS errors
+- Verify the WASM file path is correct
+
+**iOS build fails**
+- Run `xcodegen generate` after any changes to project.yml
+- Ensure XcodeGen is up to date: `brew upgrade xcodegen`
+
+**Android NDK not found**
+- Set `ANDROID_NDK_HOME` environment variable
+- Verify NDK is installed via Android Studio SDK Manager
+
+**GTK4 not found on Linux**
+- Install development packages: `libgtk-4-dev` (Ubuntu) or `gtk4-devel` (Fedora)
+- Run `pkg-config --cflags gtk4` to verify
+
+**Windows build fails**
+- Ensure .NET 8 SDK is installed
+- Install Windows App SDK via NuGet or Visual Studio

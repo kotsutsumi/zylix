@@ -1,65 +1,444 @@
 ---
-title: Platforms
-weight: 3
+title: Platform Guides
+weight: 4
 prev: architecture
 sidebar:
   open: true
 ---
 
-Zylix supports 6 platforms with native performance on each.
+Zylix runs on six platforms, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.
+
+## Supported Platforms
 
 {{< cards >}}
   {{< card link="web" title="Web/WASM" subtitle="HTML, JavaScript, WebAssembly" >}}
-  {{< card link="ios" title="iOS" subtitle="SwiftUI, UIKit" >}}
-  {{< card link="android" title="Android" subtitle="Jetpack Compose, Kotlin" >}}
-  {{< card link="macos" title="macOS" subtitle="SwiftUI, AppKit" >}}
-  {{< card link="linux" title="Linux" subtitle="GTK4, C" >}}
-  {{< card link="windows" title="Windows" subtitle="WinUI 3, C#" >}}
+  {{< card link="ios" title="iOS" subtitle="SwiftUI, UIKit, C ABI" >}}
+  {{< card link="android" title="Android" subtitle="Jetpack Compose, Kotlin, JNI" >}}
+  {{< card link="macos" title="macOS" subtitle="SwiftUI, AppKit, C ABI" >}}
+  {{< card link="linux" title="Linux" subtitle="GTK4, C, C ABI" >}}
+  {{< card link="windows" title="Windows" subtitle="WinUI 3, C#, P/Invoke" >}}
 {{< /cards >}}
 
 ## Platform Comparison
 
 | Feature | Web | iOS | Android | macOS | Linux | Windows |
 |---------|-----|-----|---------|-------|-------|---------|
-| Framework | HTML/JS | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
-| Language | JS | Swift | Kotlin | Swift | C | C# |
-| Binding | WASM | C ABI | JNI | C ABI | C ABI | P/Invoke |
-| Bundle Size | ~50KB | ~100KB | ~150KB | ~100KB | ~80KB | ~120KB |
-| Hot Reload | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **UI Framework** | HTML/JS | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
+| **Language** | JavaScript | Swift | Kotlin | Swift | C | C# |
+| **Binding** | WASM | C ABI | JNI | C ABI | C ABI | P/Invoke |
+| **Min Version** | Modern browsers | iOS 15+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
+| **Bundle Size** | ~50 KB | ~100 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
+| **Hot Reload** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+## Architecture Per Platform
+
+### Web/WASM
+
+```
+┌─────────────────────────────────────┐
+│           Browser                    │
+│  ┌─────────────────────────────────┐│
+│  │     JavaScript (zylix.js)       ││
+│  │  • Load WASM module             ││
+│  │  • DOM manipulation             ││
+│  │  • Event forwarding             ││
+│  └──────────────┬──────────────────┘│
+│                 │                    │
+│  ┌──────────────▼──────────────────┐│
+│  │       WebAssembly               ││
+│  │      (zylix.wasm)               ││
+│  │  • Virtual DOM                  ││
+│  │  • State management             ││
+│  │  • Diff algorithm               ││
+│  └─────────────────────────────────┘│
+└─────────────────────────────────────┘
+```
+
+### Native Platforms (iOS, macOS, Android, Linux, Windows)
+
+```
+┌─────────────────────────────────────┐
+│         Native App                   │
+│  ┌─────────────────────────────────┐│
+│  │     Platform UI Framework       ││
+│  │  (SwiftUI/Compose/GTK4/WinUI)  ││
+│  │  • Native rendering             ││
+│  │  • Platform events              ││
+│  │  • Accessibility                ││
+│  └──────────────┬──────────────────┘│
+│                 │                    │
+│  ┌──────────────▼──────────────────┐│
+│  │       Binding Layer             ││
+│  │  (C ABI / JNI / P/Invoke)      ││
+│  │  • Function calls               ││
+│  │  • Data marshaling              ││
+│  └──────────────┬──────────────────┘│
+│                 │                    │
+│  ┌──────────────▼──────────────────┐│
+│  │       Zylix Core                ││
+│  │      (libzylix.a)               ││
+│  │  • Virtual DOM                  ││
+│  │  • State management             ││
+│  │  • Diff algorithm               ││
+│  └─────────────────────────────────┘│
+└─────────────────────────────────────┘
+```
 
 ## Binding Strategies
 
-### WASM (Web)
+### WebAssembly (Web)
 
-Direct WebAssembly compilation with JavaScript glue code.
+Direct compilation to WASM with JavaScript glue code:
 
 ```javascript
-const zylix = await WebAssembly.instantiate(wasmBuffer, imports);
-zylix.exports.zylix_init();
+// Load WASM module
+const wasmModule = await WebAssembly.instantiate(wasmBuffer, {
+    env: {
+        js_log: (ptr, len) => console.log(readString(ptr, len)),
+        js_create_element: (tag, parent) => createElement(tag, parent),
+        js_set_text: (el, ptr, len) => setTextContent(el, ptr, len),
+    }
+});
+
+// Initialize
+wasmModule.exports.zylix_init();
+
+// Dispatch events
+function onClick(callbackId) {
+    wasmModule.exports.zylix_dispatch(callbackId, 0, 0);
+    render();
+}
 ```
 
 ### C ABI (iOS, macOS, Linux)
 
-Static library linking with C function imports.
+Static library linking with direct function calls:
 
 ```swift
+// Swift binding
 @_silgen_name("zylix_init")
 func zylix_init() -> Int32
+
+@_silgen_name("zylix_dispatch")
+func zylix_dispatch(_ eventType: UInt32, _ payload: UnsafeRawPointer?, _ len: Int) -> Int32
+
+@_silgen_name("zylix_get_state")
+func zylix_get_state() -> UnsafePointer<ZylixState>?
+
+// Usage
+zylix_init()
+zylix_dispatch(EVENT_INCREMENT, nil, 0)
+let state = zylix_get_state()?.pointee
 ```
 
 ### JNI (Android)
 
-Java Native Interface for Kotlin/Java interop.
+Java Native Interface for Kotlin/Java interop:
 
 ```kotlin
-external fun init(): Int
+// Kotlin binding
+object ZylixLib {
+    init {
+        System.loadLibrary("zylix")
+    }
+
+    external fun init(): Int
+    external fun deinit(): Int
+    external fun dispatch(eventType: Int, payload: ByteArray?, len: Int): Int
+    external fun getState(): ZylixState
+}
+
+// Usage
+ZylixLib.init()
+ZylixLib.dispatch(EVENT_INCREMENT, null, 0)
+val state = ZylixLib.getState()
 ```
 
 ### P/Invoke (Windows)
 
-.NET source-generated interop.
+.NET source-generated interop:
 
 ```csharp
-[LibraryImport("zylix", EntryPoint = "zylix_init")]
-public static partial int Init();
+// C# binding
+public static partial class ZylixInterop
+{
+    [LibraryImport("zylix", EntryPoint = "zylix_init")]
+    public static partial int Init();
+
+    [LibraryImport("zylix", EntryPoint = "zylix_dispatch")]
+    public static partial int Dispatch(uint eventType, IntPtr payload, nuint len);
+
+    [LibraryImport("zylix", EntryPoint = "zylix_get_state")]
+    public static partial IntPtr GetState();
+}
+
+// Usage
+ZylixInterop.Init();
+ZylixInterop.Dispatch(EVENT_INCREMENT, IntPtr.Zero, 0);
+var statePtr = ZylixInterop.GetState();
 ```
+
+## Common Patterns
+
+### State Observation
+
+Each platform implements state observation differently:
+
+{{< tabs items="Swift,Kotlin,JavaScript,C#" >}}
+
+{{< tab >}}
+```swift
+// SwiftUI with ObservableObject
+class ZylixStore: ObservableObject {
+    @Published var state: ZylixState
+
+    init() {
+        zylix_init()
+        state = zylix_get_state()!.pointee
+    }
+
+    func dispatch(_ event: UInt32) {
+        zylix_dispatch(event, nil, 0)
+        state = zylix_get_state()!.pointee
+    }
+}
+```
+{{< /tab >}}
+
+{{< tab >}}
+```kotlin
+// Compose with MutableState
+class ZylixStore {
+    var state by mutableStateOf(ZylixLib.getState())
+        private set
+
+    fun dispatch(event: Int) {
+        ZylixLib.dispatch(event, null, 0)
+        state = ZylixLib.getState()
+    }
+}
+```
+{{< /tab >}}
+
+{{< tab >}}
+```javascript
+// Reactive state wrapper
+class ZylixStore {
+    constructor() {
+        this.listeners = [];
+        this.state = zylix.getState();
+    }
+
+    dispatch(event) {
+        zylix.dispatch(event, null, 0);
+        this.state = zylix.getState();
+        this.listeners.forEach(fn => fn(this.state));
+    }
+
+    subscribe(listener) {
+        this.listeners.push(listener);
+        return () => this.listeners = this.listeners.filter(l => l !== listener);
+    }
+}
+```
+{{< /tab >}}
+
+{{< tab >}}
+```csharp
+// MVVM with INotifyPropertyChanged
+public class ZylixStore : INotifyPropertyChanged
+{
+    private ZylixState _state;
+
+    public ZylixState State
+    {
+        get => _state;
+        private set { _state = value; OnPropertyChanged(); }
+    }
+
+    public void Dispatch(uint eventType)
+    {
+        ZylixInterop.Dispatch(eventType, IntPtr.Zero, 0);
+        State = Marshal.PtrToStructure<ZylixState>(ZylixInterop.GetState());
+    }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+### Event Handling
+
+Converting native events to Zylix events:
+
+{{< tabs items="Swift,Kotlin,JavaScript,C#" >}}
+
+{{< tab >}}
+```swift
+Button("Increment") {
+    store.dispatch(EVENT_INCREMENT)
+}
+.buttonStyle(.borderedProminent)
+
+TextField("Enter text", text: $inputText)
+    .onChange(of: inputText) { newValue in
+        newValue.withCString { ptr in
+            zylix_dispatch(EVENT_TEXT_INPUT, ptr, newValue.count)
+        }
+    }
+```
+{{< /tab >}}
+
+{{< tab >}}
+```kotlin
+Button(onClick = { store.dispatch(EVENT_INCREMENT) }) {
+    Text("Increment")
+}
+
+TextField(
+    value = inputText,
+    onValueChange = { text ->
+        ZylixLib.dispatch(EVENT_TEXT_INPUT, text.toByteArray(), text.length)
+        inputText = text
+    }
+)
+```
+{{< /tab >}}
+
+{{< tab >}}
+```javascript
+button.addEventListener('click', () => {
+    store.dispatch(EVENT_INCREMENT);
+});
+
+input.addEventListener('input', (e) => {
+    const text = e.target.value;
+    const bytes = new TextEncoder().encode(text);
+    const ptr = zylix.alloc(bytes.length);
+    zylix.memory.set(bytes, ptr);
+    zylix.dispatch(EVENT_TEXT_INPUT, ptr, bytes.length);
+    zylix.free(ptr, bytes.length);
+});
+```
+{{< /tab >}}
+
+{{< tab >}}
+```csharp
+private void OnIncrementClick(object sender, RoutedEventArgs e)
+{
+    Store.Dispatch(EVENT_INCREMENT);
+}
+
+private void OnTextChanged(object sender, TextChangedEventArgs e)
+{
+    var text = ((TextBox)sender).Text;
+    var bytes = Encoding.UTF8.GetBytes(text);
+    fixed (byte* ptr = bytes)
+    {
+        ZylixInterop.Dispatch(EVENT_TEXT_INPUT, (IntPtr)ptr, (nuint)bytes.Length);
+    }
+}
+```
+{{< /tab >}}
+
+{{< /tabs >}}
+
+## Build Configuration
+
+### Cross-Platform Build Script
+
+```bash
+#!/bin/bash
+# build-all.sh
+
+# Build core for all platforms
+cd core
+
+# Web/WASM
+zig build wasm -Doptimize=ReleaseSmall
+cp zig-out/lib/zylix.wasm ../platforms/web/
+
+# iOS (arm64)
+zig build -Dtarget=aarch64-ios -Doptimize=ReleaseFast
+cp zig-out/lib/libzylix.a ../platforms/ios/
+
+# Android (multiple ABIs)
+for abi in aarch64-linux-android armv7a-linux-androideabi x86_64-linux-android; do
+    zig build -Dtarget=$abi -Doptimize=ReleaseFast
+    cp zig-out/lib/libzylix.a ../platforms/android/app/src/main/jniLibs/${abi}/
+done
+
+# macOS (universal binary)
+zig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast
+zig build -Dtarget=x86_64-macos -Doptimize=ReleaseFast
+lipo -create zig-out/lib/libzylix-arm64.a zig-out/lib/libzylix-x64.a -output ../platforms/macos/libzylix.a
+
+# Linux (x64)
+zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseFast
+cp zig-out/lib/libzylix.a ../platforms/linux/
+
+# Windows (x64)
+zig build -Dtarget=x86_64-windows -Doptimize=ReleaseFast
+cp zig-out/lib/zylix.dll ../platforms/windows/
+```
+
+## Performance Tips
+
+### All Platforms
+
+1. **Minimize state changes**: Batch related updates
+2. **Use keys for lists**: Enable efficient reconciliation
+3. **Lazy loading**: Load data on demand
+4. **Memoization**: Cache expensive computations
+
+### Platform-Specific
+
+| Platform | Tip |
+|----------|-----|
+| **Web** | Enable WASM streaming compilation |
+| **iOS** | Use `@State` over `@ObservedObject` for local state |
+| **Android** | Use `remember` for expensive calculations |
+| **macOS** | Prefer native controls over custom drawing |
+| **Linux** | Use CSS classes over inline styles |
+| **Windows** | Enable compiled bindings for performance |
+
+## Debugging
+
+### All Platforms
+
+```zig
+// Enable debug logging in Zig
+pub const log_level: std.log.Level = .debug;
+
+// Log state changes
+pub fn logStateChange(event: Event) void {
+    std.log.debug("Event: {s}, Version: {d}", .{
+        @tagName(event),
+        state.getVersion()
+    });
+}
+```
+
+### Platform-Specific Tools
+
+| Platform | Tools |
+|----------|-------|
+| **Web** | Browser DevTools, WASM debugging |
+| **iOS** | Xcode Instruments, View Debugger |
+| **Android** | Android Studio Profiler, Layout Inspector |
+| **macOS** | Xcode Instruments |
+| **Linux** | GTK Inspector, Valgrind |
+| **Windows** | Visual Studio Profiler, WinDbg |
+
+## Next Steps
+
+Choose your platform for detailed setup instructions:
+
+{{< cards >}}
+  {{< card link="web" title="Web/WASM Guide" >}}
+  {{< card link="ios" title="iOS Guide" >}}
+  {{< card link="android" title="Android Guide" >}}
+  {{< card link="macos" title="macOS Guide" >}}
+  {{< card link="linux" title="Linux Guide" >}}
+  {{< card link="windows" title="Windows Guide" >}}
+{{< /cards >}}
