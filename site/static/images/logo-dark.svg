@@ -1,0 +1,7 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="8" fill="#F7A41D"/>
+  <path d="M10 12L20 8L30 12L20 16L10 12Z" fill="white"/>
+  <path d="M10 12V28L20 32V16L10 12Z" fill="#E8E8E8"/>
+  <path d="M30 12V28L20 32V16L30 12Z" fill="#D0D0D0"/>
+  <text x="20" y="26" text-anchor="middle" font-family="system-ui" font-size="10" font-weight="bold" fill="#333">Z</text>
+</svg>
