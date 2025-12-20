@@ -303,27 +303,21 @@ Let's create a simple counter app to understand the basics.
 
 ### Understanding the Data Flow
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    Platform Shell (Swift/Kotlin/etc.)         │
-│  1. Receives user tap/click                                   │
-│  2. Calls zylix_dispatch(event)                              │
-└─────────────────────────────┬────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                        Zylix Core (Zig)                       │
-│  3. Event handler updates state                               │
-│  4. State change triggers re-render                           │
-│  5. Virtual DOM diff produces patches                         │
-└─────────────────────────────┬────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Platform Shell (Swift/Kotlin/etc.)         │
-│  6. Applies patches to native UI                              │
-│  7. UI updates on screen                                      │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant User
+    participant Platform as Platform Shell<br/>(Swift/Kotlin/etc.)
+    participant Core as Zylix Core (Zig)
+
+    User->>Platform: 1. Tap/Click
+    Platform->>Core: 2. zylix_dispatch(event)
+
+    Note over Core: 3. Event handler updates state
+    Note over Core: 4. State change triggers re-render
+    Note over Core: 5. Virtual DOM diff produces patches
+
+    Core->>Platform: 6. Return patches
+    Platform->>User: 7. UI updates on screen
 ```
 
 ### Core Logic (Zig)
@@ -401,7 +395,6 @@ Now that you have Zylix running, explore these topics:
   {{< card link="../core-concepts" title="Core Concepts" subtitle="Deep dive into Virtual DOM, State, and Components" >}}
   {{< card link="../architecture" title="Architecture" subtitle="Understand how Zylix works internally" >}}
   {{< card link="../platforms" title="Platform Guides" subtitle="Platform-specific best practices" >}}
-  {{< card link="../api" title="API Reference" subtitle="Complete API documentation" >}}
 {{< /cards >}}
 
 ## Troubleshooting

@@ -21,29 +21,44 @@ Modern cross-platform frameworks often sacrifice performance for developer conve
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Platform Shells                             │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-│  │ SwiftUI │ │ Compose │ │  GTK4   │ │ WinUI 3 │ │ HTML/JS │   │
-│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘   │
-└───────┼──────────┼──────────┼──────────┼──────────┼─────────────┘
-        │          │          │          │          │
-        └──────────┴──────────┴─────┬────┴──────────┘
-                                    │
-                          C ABI / WASM Bindings
-                                    │
-┌───────────────────────────────────┼─────────────────────────────┐
-│                        Zylix Core (Zig)                          │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │  Virtual │ │   Diff   │ │  State   │ │Component │            │
-│  │   DOM    │ │Algorithm │ │  Store   │ │ System   │            │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │  Event   │ │  Layout  │ │   CSS    │ │Scheduler │            │
-│  │  System  │ │  Engine  │ │  Engine  │ │          │            │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Platform["Platform Shells"]
+        SwiftUI["SwiftUI<br/>(iOS/macOS)"]
+        Compose["Jetpack Compose<br/>(Android)"]
+        GTK4["GTK4<br/>(Linux)"]
+        WinUI3["WinUI 3<br/>(Windows)"]
+        HTMLJS["HTML/JS<br/>(Web)"]
+    end
+
+    subgraph Binding["Binding Layer"]
+        CABI["C ABI"]
+        WASM["WebAssembly"]
+    end
+
+    subgraph Core["Zylix Core (Zig)"]
+        subgraph Row1[" "]
+            VDOM["Virtual DOM"]
+            Diff["Diff Algorithm"]
+            State["State Store"]
+            Comp["Component System"]
+        end
+        subgraph Row2[" "]
+            Event["Event System"]
+            Layout["Layout Engine"]
+            CSS["CSS Engine"]
+            Sched["Scheduler"]
+        end
+    end
+
+    SwiftUI --> CABI
+    Compose --> CABI
+    GTK4 --> CABI
+    WinUI3 --> CABI
+    HTMLJS --> WASM
+
+    CABI --> Core
+    WASM --> Core
 ```
 
 ## Quick Links
@@ -53,8 +68,6 @@ Modern cross-platform frameworks often sacrifice performance for developer conve
   {{< card link="core-concepts" title="Core Concepts" subtitle="Understand Virtual DOM, State, Components, and Events" >}}
   {{< card link="architecture" title="Architecture" subtitle="Deep dive into Zylix internals" >}}
   {{< card link="platforms" title="Platform Guides" subtitle="Platform-specific setup and best practices" >}}
-  {{< card link="api" title="API Reference" subtitle="Complete API documentation" >}}
-  {{< card link="examples" title="Examples" subtitle="Real-world code examples and patterns" >}}
 {{< /cards >}}
 
 ## Supported Platforms

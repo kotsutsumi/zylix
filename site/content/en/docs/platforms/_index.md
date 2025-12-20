@@ -10,14 +10,14 @@ Zylix runs on six platforms, each using native UI frameworks for authentic user 
 
 ## Supported Platforms
 
-{{< cards >}}
-  {{< card link="web" title="Web/WASM" subtitle="HTML, JavaScript, WebAssembly" >}}
-  {{< card link="ios" title="iOS" subtitle="SwiftUI, UIKit, C ABI" >}}
-  {{< card link="android" title="Android" subtitle="Jetpack Compose, Kotlin, JNI" >}}
-  {{< card link="macos" title="macOS" subtitle="SwiftUI, AppKit, C ABI" >}}
-  {{< card link="linux" title="Linux" subtitle="GTK4, C, C ABI" >}}
-  {{< card link="windows" title="Windows" subtitle="WinUI 3, C#, P/Invoke" >}}
-{{< /cards >}}
+| Platform | UI Framework | Binding | Build Command |
+|----------|-------------|---------|---------------|
+| **Web/WASM** | HTML/JavaScript | WebAssembly | `zig build wasm` |
+| **iOS** | SwiftUI | C ABI | `zig build ios` |
+| **Android** | Jetpack Compose | JNI | `zig build android` |
+| **macOS** | SwiftUI | C ABI | `zig build` |
+| **Linux** | GTK4 | C ABI | `zig build linux` |
+| **Windows** | WinUI 3 | P/Invoke | `zig build windows-x64` |
 
 ## Platform Comparison
 
@@ -32,56 +32,52 @@ Zylix runs on six platforms, each using native UI frameworks for authentic user 
 
 ## Architecture Per Platform
 
-### Web/WASM
+### Web/WASM Architecture
 
-```
-┌─────────────────────────────────────┐
-│           Browser                    │
-│  ┌─────────────────────────────────┐│
-│  │     JavaScript (zylix.js)       ││
-│  │  • Load WASM module             ││
-│  │  • DOM manipulation             ││
-│  │  • Event forwarding             ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       WebAssembly               ││
-│  │      (zylix.wasm)               ││
-│  │  • Virtual DOM                  ││
-│  │  • State management             ││
-│  │  • Diff algorithm               ││
-│  └─────────────────────────────────┘│
-└─────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Browser["Browser"]
+        subgraph JS["JavaScript (zylix.js)"]
+            Load["Load WASM module"]
+            DOM["DOM manipulation"]
+            Events["Event forwarding"]
+        end
+
+        subgraph WASM["WebAssembly (zylix.wasm)"]
+            VDOM1["Virtual DOM"]
+            State1["State management"]
+            Diff1["Diff algorithm"]
+        end
+
+        JS --> WASM
+    end
 ```
 
-### Native Platforms (iOS, macOS, Android, Linux, Windows)
+### Native Platforms Architecture
 
-```
-┌─────────────────────────────────────┐
-│         Native App                   │
-│  ┌─────────────────────────────────┐│
-│  │     Platform UI Framework       ││
-│  │  (SwiftUI/Compose/GTK4/WinUI)  ││
-│  │  • Native rendering             ││
-│  │  • Platform events              ││
-│  │  • Accessibility                ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       Binding Layer             ││
-│  │  (C ABI / JNI / P/Invoke)      ││
-│  │  • Function calls               ││
-│  │  • Data marshaling              ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       Zylix Core                ││
-│  │      (libzylix.a)               ││
-│  │  • Virtual DOM                  ││
-│  │  • State management             ││
-│  │  • Diff algorithm               ││
-│  └─────────────────────────────────┘│
-└─────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph App["Native App"]
+        subgraph UI["Platform UI Framework<br/>(SwiftUI / Compose / GTK4 / WinUI)"]
+            Render["Native rendering"]
+            PlatformEvents["Platform events"]
+            A11y["Accessibility"]
+        end
+
+        subgraph Bind["Binding Layer<br/>(C ABI / JNI / P/Invoke)"]
+            Calls["Function calls"]
+            Marshal["Data marshaling"]
+        end
+
+        subgraph Core["Zylix Core (libzylix.a)"]
+            VDOM2["Virtual DOM"]
+            State2["State management"]
+            Diff2["Diff algorithm"]
+        end
+
+        UI --> Bind
+        Bind --> Core
+    end
 ```
 
 ## Binding Strategies
@@ -432,13 +428,6 @@ pub fn logStateChange(event: Event) void {
 
 ## Next Steps
 
-Choose your platform for detailed setup instructions:
-
-{{< cards >}}
-  {{< card link="web" title="Web/WASM Guide" >}}
-  {{< card link="ios" title="iOS Guide" >}}
-  {{< card link="android" title="Android Guide" >}}
-  {{< card link="macos" title="macOS Guide" >}}
-  {{< card link="linux" title="Linux Guide" >}}
-  {{< card link="windows" title="Windows Guide" >}}
-{{< /cards >}}
+- [Getting Started](../getting-started) - Installation and first app tutorial
+- [Architecture](../architecture) - Deep dive into Zylix internals
+- [Core Concepts](../core-concepts) - Virtual DOM, State, Components, and Events

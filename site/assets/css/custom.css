@@ -1,0 +1,5 @@
+/* Custom spacing for hero section */
+/* Use sibling selector to add margin-top to button container after subtitle */
+.hx-mb-12 + .hx-mb-12 {
+  margin-top: 2rem !important;
+}

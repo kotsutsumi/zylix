@@ -10,14 +10,14 @@ Zylix は 6 つのプラットフォームで動作し、それぞれネイテ�
 
 ## 対応プラットフォーム
 
-{{< cards >}}
-  {{< card link="web" title="Web/WASM" subtitle="HTML, JavaScript, WebAssembly" >}}
-  {{< card link="ios" title="iOS" subtitle="SwiftUI, UIKit, C ABI" >}}
-  {{< card link="android" title="Android" subtitle="Jetpack Compose, Kotlin, JNI" >}}
-  {{< card link="macos" title="macOS" subtitle="SwiftUI, AppKit, C ABI" >}}
-  {{< card link="linux" title="Linux" subtitle="GTK4, C, C ABI" >}}
-  {{< card link="windows" title="Windows" subtitle="WinUI 3, C#, P/Invoke" >}}
-{{< /cards >}}
+| プラットフォーム | UI フレームワーク | 言語 | バインディング | ビルドコマンド |
+|-----------------|------------------|------|---------------|---------------|
+| **Web/WASM** | HTML/JavaScript | JavaScript | WebAssembly | `zig build wasm` |
+| **iOS** | SwiftUI | Swift | C ABI | `zig build ios` |
+| **Android** | Jetpack Compose | Kotlin | JNI | `zig build android` |
+| **macOS** | SwiftUI | Swift | C ABI | `zig build` |
+| **Linux** | GTK4 | C | C ABI | `zig build linux` |
+| **Windows** | WinUI 3 | C# | P/Invoke | `zig build windows-x64` |
 
 ## プラットフォーム比較
 
@@ -32,56 +32,52 @@ Zylix は 6 つのプラットフォームで動作し、それぞれネイテ�
 
 ## プラットフォーム別アーキテクチャ
 
-### Web/WASM
+### Web/WASM アーキテクチャ
 
-```
-┌─────────────────────────────────────┐
-│           ブラウザ                   │
-│  ┌─────────────────────────────────┐│
-│  │     JavaScript (zylix.js)       ││
-│  │  • WASM モジュールをロード       ││
-│  │  • DOM 操作                      ││
-│  │  • イベント転送                  ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       WebAssembly               ││
-│  │      (zylix.wasm)               ││
-│  │  • Virtual DOM                  ││
-│  │  • 状態管理                      ││
-│  │  • 差分アルゴリズム              ││
-│  └─────────────────────────────────┘│
-└─────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Browser["ブラウザ"]
+        subgraph JS["JavaScript (zylix.js)"]
+            Load["WASM モジュールをロード"]
+            DOM["DOM 操作"]
+            Events["イベント転送"]
+        end
+
+        subgraph WASM["WebAssembly (zylix.wasm)"]
+            VDOM1["Virtual DOM"]
+            State1["状態管理"]
+            Diff1["差分アルゴリズム"]
+        end
+
+        JS --> WASM
+    end
 ```
 
-### ネイティブプラットフォーム (iOS, macOS, Android, Linux, Windows)
+### ネイティブプラットフォームアーキテクチャ
 
-```
-┌─────────────────────────────────────┐
-│         ネイティブアプリ             │
-│  ┌─────────────────────────────────┐│
-│  │     プラットフォーム UI          ││
-│  │  (SwiftUI/Compose/GTK4/WinUI)  ││
-│  │  • ネイティブレンダリング        ││
-│  │  • プラットフォームイベント      ││
-│  │  • アクセシビリティ              ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       バインディング層           ││
-│  │  (C ABI / JNI / P/Invoke)      ││
-│  │  • 関数呼び出し                  ││
-│  │  • データマーシャリング          ││
-│  └──────────────┬──────────────────┘│
-│                 │                    │
-│  ┌──────────────▼──────────────────┐│
-│  │       Zylix Core                ││
-│  │      (libzylix.a)               ││
-│  │  • Virtual DOM                  ││
-│  │  • 状態管理                      ││
-│  │  • 差分アルゴリズム              ││
-│  └─────────────────────────────────┘│
-└─────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph App["ネイティブアプリ"]
+        subgraph UI["プラットフォーム UI<br/>(SwiftUI / Compose / GTK4 / WinUI)"]
+            Render["ネイティブレンダリング"]
+            PlatformEvents["プラットフォームイベント"]
+            A11y["アクセシビリティ"]
+        end
+
+        subgraph Bind["バインディング層<br/>(C ABI / JNI / P/Invoke)"]
+            Calls["関数呼び出し"]
+            Marshal["データマーシャリング"]
+        end
+
+        subgraph Core["Zylix Core (libzylix.a)"]
+            VDOM2["Virtual DOM"]
+            State2["状態管理"]
+            Diff2["差分アルゴリズム"]
+        end
+
+        UI --> Bind
+        Bind --> Core
+    end
 ```
 
 ## バインディング戦略
@@ -432,13 +428,6 @@ pub fn logStateChange(event: Event) void {
 
 ## 次のステップ
 
-詳細なセットアップ手順については、各プラットフォームを選択してください：
-
-{{< cards >}}
-  {{< card link="web" title="Web/WASM ガイド" >}}
-  {{< card link="ios" title="iOS ガイド" >}}
-  {{< card link="android" title="Android ガイド" >}}
-  {{< card link="macos" title="macOS ガイド" >}}
-  {{< card link="linux" title="Linux ガイド" >}}
-  {{< card link="windows" title="Windows ガイド" >}}
-{{< /cards >}}
+- [はじめる](../getting-started) - インストールと最初のアプリチュートリアル
+- [アーキテクチャ](../architecture) - Zylix の内部構造の詳細
+- [コア概念](../core-concepts) - Virtual DOM、状態、コンポーネント、イベント

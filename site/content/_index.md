@@ -14,18 +14,14 @@ layout: hextra-home
 {{< /hextra/hero-headline >}}
 </div>
 
-<div class="hx-mb-12">
 {{< hextra/hero-subtitle >}}
   High-performance UI framework with Virtual DOM,&nbsp;<br class="sm:hx-block hx-hidden" />running on Web, iOS, Android, macOS, Linux, and Windows.
 {{< /hextra/hero-subtitle >}}
-</div>
 
-<div class="hx-mb-6">
-{{< hextra/hero-button text="Get Started" link="docs/getting-started" >}}
+{{< hextra/hero-button text="Get Started" link="en/docs/getting-started" >}}
 {{< hextra/hero-button text="Live Demo" link="demo" style="alt" >}}
-</div>
 
-<div class="hx-mt-6"></div>
+<div style="margin-top: 4rem;"></div>
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
@@ -60,7 +56,7 @@ layout: hextra-home
   >}}
 {{< /hextra/feature-grid >}}
 
-<div class="hx-mt-16">
+<div style="margin-top: 5rem; margin-bottom: 3rem;">
 
 ## Platform Support
 

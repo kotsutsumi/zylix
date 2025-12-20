@@ -20,12 +20,12 @@ layout: hextra-home
 {{< /hextra/hero-subtitle >}}
 </div>
 
-<div class="hx-mb-6">
-{{< hextra/hero-button text="はじめる" link="docs/getting-started" >}}
+<div style="margin-bottom: 3rem;">
+{{< hextra/hero-button text="はじめる" link="ja/docs/getting-started" >}}
 {{< hextra/hero-button text="ライブデモ" link="demo" style="alt" >}}
 </div>
 
-<div class="hx-mt-6"></div>
+<div style="margin-top: 4rem;"></div>
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
@@ -60,7 +60,7 @@ layout: hextra-home
   >}}
 {{< /hextra/feature-grid >}}
 
-<div class="hx-mt-16">
+<div style="margin-top: 5rem; margin-bottom: 3rem;">
 
 ## プラットフォームサポート
 

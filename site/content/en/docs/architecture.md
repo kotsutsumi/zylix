@@ -19,68 +19,57 @@ Zylix is built on three core principles:
 
 ## System Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Zylix Architecture                              │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                        Platform Layer                                │   │
-│  │                                                                      │   │
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │   │
-│  │  │   Web   │ │   iOS   │ │ Android │ │  macOS  │ │  Linux  │       │   │
-│  │  │  WASM   │ │ SwiftUI │ │ Compose │ │ SwiftUI │ │  GTK4   │       │   │
-│  │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘       │   │
-│  │       │           │           │           │           │    ┌───────┐│   │
-│  │       │           │           │           │           │    │Windows││   │
-│  │       │           │           │           │           │    │WinUI 3││   │
-│  │       │           │           │           │           │    └───┬───┘│   │
-│  └───────┼───────────┼───────────┼───────────┼───────────┼────────┼────┘   │
-│          │           │           │           │           │        │        │
-│          │      C ABI│      JNI  │      C ABI│      C ABI│   P/Invoke     │
-│          │           │           │           │           │        │        │
-│  ┌───────┴───────────┴───────────┴───────────┴───────────┴────────┴────┐   │
-│  │                         Binding Layer                                │   │
-│  │                                                                      │   │
-│  │  ┌──────────────────────────────────────────────────────────────┐   │   │
-│  │  │                      abi.zig / wasm.zig                       │   │   │
-│  │  │                                                               │   │   │
-│  │  │  • C-compatible function exports                              │   │   │
-│  │  │  • Memory management for cross-language data                  │   │   │
-│  │  │  • Event dispatch routing                                     │   │   │
-│  │  │  • State serialization for platform access                    │   │   │
-│  │  └──────────────────────────────────────────────────────────────┘   │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                      │                                      │
-│  ┌───────────────────────────────────┴──────────────────────────────────┐   │
-│  │                           Core Engine                                 │   │
-│  │                                                                       │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │
-│  │  │   vdom.zig  │  │   diff.zig  │  │  state.zig  │  │  store.zig  │  │   │
-│  │  │             │  │             │  │             │  │             │  │   │
-│  │  │ VNode       │  │ Differ      │  │ State       │  │ Store<T>    │  │   │
-│  │  │ VTree       │  │ Patch       │  │ AppState    │  │ Diff<T>     │  │   │
-│  │  │ Reconciler  │  │ DiffResult  │  │ UIState     │  │ Versioning  │  │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  │   │
-│  │                                                                       │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │
-│  │  │component.zig│  │  events.zig │  │  layout.zig │  │   css.zig   │  │   │
-│  │  │             │  │             │  │             │  │             │  │   │
-│  │  │ Component   │  │ Event       │  │ LayoutNode  │  │ Style       │  │   │
-│  │  │ Props       │  │ EventType   │  │ FlexLayout  │  │ StyleSheet  │  │   │
-│  │  │ Handlers    │  │ Dispatch    │  │ Constraints │  │ CSS Props   │  │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  │   │
-│  │                                                                       │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │
-│  │  │  arena.zig  │  │  queue.zig  │  │scheduler.zig│  │   dsl.zig   │  │   │
-│  │  │             │  │             │  │             │  │             │  │   │
-│  │  │ Arena<N>    │  │ Queue<T>    │  │ Scheduler   │  │ DSL Builder │  │   │
-│  │  │ BumpAlloc   │  │ RingBuffer  │  │ TaskQueue   │  │ Declarative │  │   │
-│  │  │ Reset       │  │ FIFO        │  │ Priorities  │  │ UI Syntax   │  │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  │   │
-│  └───────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Platform["Platform Layer"]
+        direction LR
+        Web["Web<br/>WASM"]
+        iOS["iOS<br/>SwiftUI"]
+        Android["Android<br/>Compose"]
+        macOS["macOS<br/>SwiftUI"]
+        Linux["Linux<br/>GTK4"]
+        Windows["Windows<br/>WinUI 3"]
+    end
+
+    subgraph Binding["Binding Layer (abi.zig / wasm.zig)"]
+        direction LR
+        Exports["C-compatible<br/>function exports"]
+        Memory["Memory management<br/>for cross-language data"]
+        Dispatch["Event dispatch<br/>routing"]
+        Serialize["State serialization<br/>for platform access"]
+    end
+
+    subgraph Core["Core Engine"]
+        subgraph CoreRow1[" "]
+            direction LR
+            vdom["vdom.zig<br/>VNode, VTree<br/>Reconciler"]
+            diff["diff.zig<br/>Differ, Patch<br/>DiffResult"]
+            state["state.zig<br/>State, AppState<br/>UIState"]
+            store["store.zig<br/>Store〈T〉, Diff〈T〉<br/>Versioning"]
+        end
+        subgraph CoreRow2[" "]
+            direction LR
+            component["component.zig<br/>Component, Props<br/>Handlers"]
+            events["events.zig<br/>Event, EventType<br/>Dispatch"]
+            layout["layout.zig<br/>LayoutNode<br/>FlexLayout"]
+            css["css.zig<br/>Style, StyleSheet<br/>CSS Props"]
+        end
+        subgraph CoreRow3[" "]
+            direction LR
+            arena["arena.zig<br/>Arena〈N〉<br/>BumpAlloc"]
+            queue["queue.zig<br/>Queue〈T〉<br/>RingBuffer"]
+            scheduler["scheduler.zig<br/>Scheduler<br/>TaskQueue"]
+            dsl["dsl.zig<br/>DSL Builder<br/>Declarative UI"]
+        end
+    end
+
+    Web -->|WASM| Binding
+    iOS -->|C ABI| Binding
+    Android -->|JNI| Binding
+    macOS -->|C ABI| Binding
+    Linux -->|C ABI| Binding
+    Windows -->|P/Invoke| Binding
+    Binding --> Core
 ```
 
 ## Module Deep Dive
@@ -558,5 +547,4 @@ export fn wasm_render() void {
 ## Next Steps
 
 - [Platform Guides](platforms) - Platform-specific implementation details
-- [API Reference](api) - Complete API documentation
-- [Examples](examples) - Real-world code examples
+- [Core Concepts](core-concepts) - Virtual DOM, State, Components, and Events

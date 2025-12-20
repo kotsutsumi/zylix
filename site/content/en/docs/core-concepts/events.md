@@ -7,49 +7,30 @@ Zylix uses a type-safe event system to handle user interactions. Events flow fro
 
 ## Event Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Platform Shell                                │
-│                                                                  │
-│  User taps button → Native event → Convert to Zylix event      │
-│                                                                  │
-│  zylixDispatch(EVENT_TODO_ADD, "Buy groceries", 13)            │
-└─────────────────────────────────┬───────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Zylix Core (Zig)                              │
-│                                                                  │
-│  zylix_dispatch(event_type, payload, len)                       │
-│      │                                                          │
-│      ├── Validate event type                                    │
-│      ├── Parse payload                                          │
-│      ├── Route to handler                                       │
-│      └── Return result code                                     │
-│                                                                  │
-└─────────────────────────────────┬───────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Event Handler                                 │
-│                                                                  │
-│  switch (event) {                                               │
-│      .todo_add => |text| addTodo(text),                        │
-│      .todo_toggle => |id| toggleTodo(id),                      │
-│      ...                                                        │
-│  }                                                              │
-│                                                                  │
-└─────────────────────────────────┬───────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    State Update                                  │
-│                                                                  │
-│  state.todos[id].completed = true;                              │
-│  state.version += 1;                                            │
-│  scheduleRender();                                              │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant User
+    participant Shell as Platform Shell
+    participant Core as Zylix Core (Zig)
+    participant Handler as Event Handler
+    participant State as State Update
+
+    User->>Shell: Tap button
+    Note over Shell: Convert to Zylix event
+    Shell->>Core: zylix_dispatch(EVENT_TODO_ADD, "Buy groceries", 13)
+
+    Note over Core: Validate event type
+    Note over Core: Parse payload
+    Note over Core: Route to handler
+
+    Core->>Handler: Dispatch event
+    Note over Handler: switch (event) {<br/>  .todo_add => addTodo(text),<br/>  .todo_toggle => toggleTodo(id),<br/>}
+
+    Handler->>State: Update state
+    Note over State: state.todos[id].completed = true<br/>state.version += 1<br/>scheduleRender()
+
+    State-->>Core: Result code
+    Core-->>Shell: Return result
 ```
 
 ## Event Types
