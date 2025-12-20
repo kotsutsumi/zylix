@@ -19,12 +19,12 @@ const dsl = @import("dsl.zig");
 // Virtual DOM Node
 // ============================================================================
 
-pub const MAX_VNODE_CHILDREN = 32;
-pub const MAX_VNODE_KEY_LEN = 64;
-pub const MAX_VNODE_TEXT_LEN = 256;
-pub const MAX_VNODE_CLASS_LEN = 128;
-pub const MAX_VNODES = 1024;
-pub const MAX_PATCHES = 512;
+pub const MAX_VNODE_CHILDREN = 16;
+pub const MAX_VNODE_KEY_LEN = 32;
+pub const MAX_VNODE_TEXT_LEN = 128;
+pub const MAX_VNODE_CLASS_LEN = 64;
+pub const MAX_VNODES = 256;
+pub const MAX_PATCHES = 128;
 
 pub const VNodeType = enum(u8) {
     element = 0, // DOM element (div, button, etc.)
@@ -691,23 +691,22 @@ pub const Reconciler = struct {
 // Global Instance
 // ============================================================================
 
-var global_reconciler: ?Reconciler = null;
+var global_reconciler: Reconciler = .{};
+var global_initialized: bool = false;
 
 pub fn initGlobal() void {
-    global_reconciler = Reconciler.init();
+    if (!global_initialized) {
+        global_reconciler.reset();
+        global_initialized = true;
+    }
 }
 
 pub fn getReconciler() *Reconciler {
-    if (global_reconciler == null) {
-        initGlobal();
-    }
-    return &global_reconciler.?;
+    return &global_reconciler;
 }
 
 pub fn resetGlobal() void {
-    if (global_reconciler) |*r| {
-        r.reset();
-    }
+    global_reconciler.reset();
 }
 
 // ============================================================================
