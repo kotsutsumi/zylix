@@ -54,27 +54,40 @@ pub fn build(b: *std.Build) void {
         .dest_dir = .{ .override = .{ .custom = "ios-simulator" } },
     }).step);
 
-    // Android ARM64
-    const android_arm64_step = b.step("android-arm64", "Build for Android (arm64)");
-    const android_arm64_lib = buildForTarget(b, .{
-        .cpu_arch = .aarch64,
-        .os_tag = .linux,
-        .abi = .android,
-    }, optimize);
+    // Android ARM64 (arm64-v8a)
+    const android_arm64_step = b.step("android-arm64", "Build for Android (arm64-v8a)");
+    const android_arm64_lib = buildAndroidShared(b, .aarch64, optimize);
     android_arm64_step.dependOn(&b.addInstallArtifact(android_arm64_lib, .{
-        .dest_dir = .{ .override = .{ .custom = "android-arm64" } },
+        .dest_dir = .{ .override = .{ .custom = "android/arm64-v8a" } },
+    }).step);
+
+    // Android ARMv7 (armeabi-v7a)
+    const android_arm32_step = b.step("android-arm32", "Build for Android (armeabi-v7a)");
+    const android_arm32_lib = buildAndroidShared(b, .arm, optimize);
+    android_arm32_step.dependOn(&b.addInstallArtifact(android_arm32_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "android/armeabi-v7a" } },
     }).step);
 
     // Android x86_64 (for emulator)
     const android_x64_step = b.step("android-x64", "Build for Android (x86_64)");
-    const android_x64_lib = buildForTarget(b, .{
-        .cpu_arch = .x86_64,
-        .os_tag = .linux,
-        .abi = .android,
-    }, optimize);
+    const android_x64_lib = buildAndroidShared(b, .x86_64, optimize);
     android_x64_step.dependOn(&b.addInstallArtifact(android_x64_lib, .{
-        .dest_dir = .{ .override = .{ .custom = "android-x64" } },
+        .dest_dir = .{ .override = .{ .custom = "android/x86_64" } },
     }).step);
+
+    // Android x86 (for older emulators)
+    const android_x86_step = b.step("android-x86", "Build for Android (x86)");
+    const android_x86_lib = buildAndroidShared(b, .x86, optimize);
+    android_x86_step.dependOn(&b.addInstallArtifact(android_x86_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "android/x86" } },
+    }).step);
+
+    // Android All ABIs
+    const android_all_step = b.step("android", "Build for all Android ABIs");
+    android_all_step.dependOn(android_arm64_step);
+    android_all_step.dependOn(android_arm32_step);
+    android_all_step.dependOn(android_x64_step);
+    android_all_step.dependOn(android_x86_step);
 
     // macOS ARM64
     const macos_arm64_step = b.step("macos-arm64", "Build for macOS (arm64)");
@@ -155,8 +168,7 @@ pub fn build(b: *std.Build) void {
     const all_step = b.step("all", "Build for all platforms");
     all_step.dependOn(ios_step);
     all_step.dependOn(ios_sim_step);
-    all_step.dependOn(android_arm64_step);
-    all_step.dependOn(android_x64_step);
+    all_step.dependOn(android_all_step);
     all_step.dependOn(macos_arm64_step);
     all_step.dependOn(macos_x64_step);
     all_step.dependOn(windows_x64_step);
@@ -212,4 +224,29 @@ fn buildWasm(
     wasm.entry = .disabled;
 
     return wasm;
+}
+
+fn buildAndroidShared(
+    b: *std.Build,
+    cpu_arch: std.Target.Cpu.Arch,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const resolved_target = b.resolveTargetQuery(.{
+        .cpu_arch = cpu_arch,
+        .os_tag = .linux,
+        .abi = .android,
+    });
+
+    // Build as shared library for JNI
+    const lib = b.addLibrary(.{
+        .linkage = .dynamic,
+        .name = "zylix",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = resolved_target,
+            .optimize = optimize,
+        }),
+    });
+
+    return lib;
 }
