@@ -3,55 +3,66 @@
 # Compiler settings
 CC = gcc
 CFLAGS = -Wall -Wextra -O2 $(shell pkg-config --cflags gtk4)
-LDFLAGS = $(shell pkg-config --libs gtk4) -L../../../core/zig-out/linux-x64 -lzylix -lm
+LDFLAGS = $(shell pkg-config --libs gtk4) -lm
 
 # Directories
 SRCDIR = .
 BUILDDIR = build
-CORE_LIB = ../../../core/zig-out/linux-x64/libzylix.a
 
-# Files
-TARGET = $(BUILDDIR)/zylix-counter
-SOURCES = $(SRCDIR)/main.c
-OBJECTS = $(BUILDDIR)/main.o
+# Targets
+COUNTER = $(BUILDDIR)/zylix-counter
+TODO = $(BUILDDIR)/zylix-todo
 
-# Default target
-all: $(TARGET)
+# Default target - build both apps
+all: $(COUNTER) $(TODO)
 
 # Create build directory
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
-# Compile main.c
+# Counter app
 $(BUILDDIR)/main.o: $(SRCDIR)/main.c $(SRCDIR)/zylix.h | $(BUILDDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Link
-$(TARGET): $(OBJECTS) $(CORE_LIB)
-	$(CC) $(OBJECTS) $(CORE_LIB) $(LDFLAGS) -o $@
+$(COUNTER): $(BUILDDIR)/main.o | $(BUILDDIR)
+	$(CC) $^ $(LDFLAGS) -o $@
 
-# Build Zig core library
-$(CORE_LIB):
-	cd ../../../core && zig build linux-x64 -Doptimize=ReleaseFast
+# Todo app
+$(BUILDDIR)/todo_app.o: $(SRCDIR)/todo_app.c $(SRCDIR)/zylix.h | $(BUILDDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(TODO): $(BUILDDIR)/todo_app.o | $(BUILDDIR)
+	$(CC) $^ $(LDFLAGS) -o $@
+
+# Individual targets
+counter: $(COUNTER)
+todo: $(TODO)
 
 # Clean
 clean:
 	rm -rf $(BUILDDIR)
 
-# Run
-run: $(TARGET)
-	$(TARGET)
+# Run targets
+run-counter: $(COUNTER)
+	$(COUNTER)
+
+run-todo: $(TODO)
+	$(TODO)
+
+run: run-todo
 
 # Debug build
 debug: CFLAGS += -g -DDEBUG
-debug: $(TARGET)
+debug: all
 
 # Install (requires root)
-install: $(TARGET)
-	install -Dm755 $(TARGET) /usr/local/bin/zylix-counter
+install: all
+	install -Dm755 $(COUNTER) /usr/local/bin/zylix-counter
+	install -Dm755 $(TODO) /usr/local/bin/zylix-todo
 
 # Uninstall
 uninstall:
 	rm -f /usr/local/bin/zylix-counter
+	rm -f /usr/local/bin/zylix-todo
 
-.PHONY: all clean run debug install uninstall
+.PHONY: all counter todo clean run run-counter run-todo debug install uninstall

@@ -1,14 +1,32 @@
-# Zylix Linux (GTK4)
+# Zylix Linux Platform (GTK4)
 
-Linux platform shell for Zylix using GTK4 and C.
+Native Linux applications using GTK4 and C.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│               GTK4 App Layer (C)                         │
+│  ┌─────────────┐  ┌─────────────────────────────────┐   │
+│  │  Todo UI    │  │ Application State               │   │
+│  │ (GtkWidgets)│  │ (Pure C structs)                │   │
+│  └─────────────┘  └─────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ Future: Direct linking
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│              libzylix.a (Zig → x86_64/ARM64)            │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Requirements
 
-- Linux (Ubuntu 22.04+, Fedora 36+, or similar)
+- Linux (Ubuntu 22.04+, Fedora 36+, Arch, etc.)
 - GTK 4.0+
 - GCC or Clang
 - pkg-config
-- Zig 0.13+ (for building core library)
+- Make or Meson
 
 ### Ubuntu/Debian
 
@@ -28,79 +46,115 @@ sudo dnf install gcc gtk4-devel pkg-config
 sudo pacman -S base-devel gtk4 pkg-config
 ```
 
-## Build
+## Building
 
-### 1. Build Zylix Core
-
-From the `core/` directory:
+### Using Make
 
 ```bash
-# Build for Linux x64
-zig build linux-x64 -Doptimize=ReleaseFast
+cd platforms/linux/zylix-gtk
 
-# Build for Linux ARM64
-zig build linux-arm64 -Doptimize=ReleaseFast
-```
-
-### 2. Build GTK App
-
-Using Make:
-
-```bash
-cd zylix-gtk
+# Build both apps
 make
+
+# Build only Todo app
+make todo
+
+# Build only Counter app
+make counter
 ```
 
-Or using Meson:
+### Using Meson
 
 ```bash
-cd zylix-gtk
+cd platforms/linux/zylix-gtk
 meson setup build
 meson compile -C build
 ```
 
-### 3. Run
+## Running
+
+### With Make
 
 ```bash
-./build/zylix-counter
-# or
+# Run Todo app (default)
 make run
+
+# Run Todo app explicitly
+make run-todo
+
+# Run Counter app
+make run-counter
 ```
 
-## Architecture
+### Direct execution
 
-```
-┌─────────────────────────────────────┐
-│           GTK4 (C)                  │
-│   - main.c                          │
-│   - GtkButton, GtkLabel             │
-└───────────────┬─────────────────────┘
-                │
-                │ Function calls
-                ▼
-┌─────────────────────────────────────┐
-│         zylix.h                     │
-│   - C ABI declarations              │
-│   - Struct definitions              │
-└───────────────┬─────────────────────┘
-                │
-                │ Direct linking
-                ▼
-┌─────────────────────────────────────┐
-│       Zylix Core (Zig)              │
-│   - libzylix.a                      │
-│   - State, Events, Logic            │
-└─────────────────────────────────────┘
+```bash
+./build/zylix-todo
+./build/zylix-counter
 ```
 
-## Files
+## Project Structure
 
-| File | Description |
-|------|-------------|
-| `main.c` | GTK4 application with counter UI |
-| `zylix.h` | C header for Zylix Core |
-| `Makefile` | GNU Make build configuration |
-| `meson.build` | Meson build configuration |
+```
+platforms/linux/
+├── README.md                    # This file
+└── zylix-gtk/
+    ├── Makefile                 # Make build config
+    ├── meson.build              # Meson build config
+    ├── zylix.h                  # C ABI header
+    ├── main.c                   # Counter demo app
+    └── todo_app.c               # Todo demo app
+```
+
+## Applications
+
+### Todo App (`zylix-todo`)
+
+Full-featured Todo application with GTK4:
+- Add, toggle, delete todos
+- Filter by All/Active/Completed
+- Clear completed items
+- Real-time render statistics
+
+### Counter App (`zylix-counter`)
+
+Simple counter demo:
+- Increment/Decrement buttons
+- Reset functionality
+- State version display
+
+## Event Types
+
+| Event Type | Value | Description |
+|------------|-------|-------------|
+| `TODO_ADD` | `0x3000` | Add new todo |
+| `TODO_REMOVE` | `0x3001` | Remove todo |
+| `TODO_TOGGLE` | `0x3002` | Toggle completion |
+| `TODO_TOGGLE_ALL` | `0x3003` | Toggle all todos |
+| `TODO_CLEAR_DONE` | `0x3004` | Clear completed |
+| `TODO_SET_FILTER` | `0x3005` | Set filter mode |
+| `COUNTER_INCREMENT` | `0x1000` | Increment counter |
+| `COUNTER_DECREMENT` | `0x1001` | Decrement counter |
+| `COUNTER_RESET` | `0x1002` | Reset counter |
+
+## Filter Types
+
+| Filter | Value | Description |
+|--------|-------|-------------|
+| `FILTER_ALL` | `0` | Show all todos |
+| `FILTER_ACTIVE` | `1` | Show active only |
+| `FILTER_COMPLETED` | `2` | Show completed only |
+
+## Future Integration
+
+The current demos use pure C for state management. Future versions will integrate with Zylix Core:
+
+```c
+// Future: Link with libzylix.a
+if (zylix_dispatch(ZYLIX_EVENT_TODO_ADD, text, strlen(text)) == ZYLIX_OK) {
+    refresh_from_zylix_state();
+}
+```
 
 ## Notes
 

@@ -1,30 +1,24 @@
 # Zylix GTK4 - Meson Build
 
-project('zylix-counter', 'c',
+project('zylix-gtk', 'c',
   version: '0.1.0',
   default_options: ['warning_level=3', 'c_std=c11']
 )
 
 # Dependencies
 gtk4_dep = dependency('gtk4', version: '>= 4.0')
+m_dep = meson.get_compiler('c').find_library('m', required: false)
 
-# Zylix Core library (pre-built)
-zylix_lib = declare_dependency(
-  link_args: [
-    '-L' + meson.source_root() + '/../../../core/zig-out/linux-x64',
-    '-lzylix',
-    '-lm'
-  ]
+# Counter app
+executable('zylix-counter',
+  'main.c',
+  dependencies: [gtk4_dep, m_dep],
+  install: true
 )
 
-# Sources
-sources = [
-  'main.c'
-]
-
-# Executable
-executable('zylix-counter',
-  sources,
-  dependencies: [gtk4_dep, zylix_lib],
+# Todo app
+executable('zylix-todo',
+  'todo_app.c',
+  dependencies: [gtk4_dep, m_dep],
   install: true
 )
