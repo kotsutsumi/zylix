@@ -44,3 +44,43 @@ coverage/
 platforms/macos/build/
 platforms/macos/*.xcodeproj/xcuserdata/
 platforms/macos/DerivedData/
+
+# Windows
+platforms/windows/build/
+platforms/windows/bin/
+platforms/windows/obj/
+platforms/windows/.vs/
+*.user
+
+# Linux
+platforms/linux/build/
+
+# Web
+platforms/web/dist/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+**/.playwright-mcp/
+
+# Android NDK
+**/.cxx/
+
+# Hugo
+site/public/
+site/resources/
+site/.hugo_build.lock
+
+# Vercel
+.vercel/
+**/.vercel/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
