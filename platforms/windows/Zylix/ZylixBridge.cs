@@ -18,10 +18,23 @@ internal static partial class ZylixNative
     public const int ZYLIX_ERR_INVALID_STATE = 3;
     public const int ZYLIX_ERR_NOT_INITIALIZED = 4;
 
-    // Event types
+    // Event types - Counter
     public const uint ZYLIX_EVENT_COUNTER_INCREMENT = 0x1000;
     public const uint ZYLIX_EVENT_COUNTER_DECREMENT = 0x1001;
     public const uint ZYLIX_EVENT_COUNTER_RESET = 0x1002;
+
+    // Event types - Todo
+    public const uint ZYLIX_EVENT_TODO_ADD = 0x3000;
+    public const uint ZYLIX_EVENT_TODO_REMOVE = 0x3001;
+    public const uint ZYLIX_EVENT_TODO_TOGGLE = 0x3002;
+    public const uint ZYLIX_EVENT_TODO_TOGGLE_ALL = 0x3003;
+    public const uint ZYLIX_EVENT_TODO_CLEAR_DONE = 0x3004;
+    public const uint ZYLIX_EVENT_TODO_SET_FILTER = 0x3005;
+
+    // Filter types
+    public const int ZYLIX_FILTER_ALL = 0;
+    public const int ZYLIX_FILTER_ACTIVE = 1;
+    public const int ZYLIX_FILTER_COMPLETED = 2;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct ZylixState

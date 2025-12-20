@@ -16,7 +16,8 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
+        // Launch Todo app (use MainWindow for Counter demo)
+        _window = new TodoWindow();
         _window.Activate();
     }
 }
