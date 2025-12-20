@@ -56,12 +56,12 @@ params:
   description: Cross-platform UI framework powered by Zig
 
   navbar:
-    displayTitle: true
+    displayTitle: false
     displayLogo: true
     logo:
-      path: images/logo.svg
-      dark: images/logo-dark.svg
-      width: 32
+      path: images/zylix-logo-full.svg
+      dark: images/zylix-logo-full-dark.svg
+      width: 99
       height: 32
 
   page:
