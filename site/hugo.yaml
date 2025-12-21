@@ -181,9 +181,10 @@ params:
   # Favicon (use default from theme)
   # favicon: favicon.png
 
-  # Logo
-  logo: img/logo.svg
-  secondaryLogo: img/logo-dark.svg
+  # Logo: logo = shown in light mode, secondaryLogo = shown in dark mode
+  # Swapped: logo-dark has light colors for dark backgrounds
+  logo: img/logo-dark.svg
+  secondaryLogo: img/logo.svg
 
   # Site image for social sharing
   # image: img/site.png

@@ -7,11 +7,11 @@
         <a href="{{ "" | relLangURL }}" class="flex">
           <span class="sr-only">{{ .Site.Title | markdownify }}</span>
           {{ if eq $logo.MediaType.SubType "svg" }}
-            {{/* Light mode logo - hidden in dark mode */}}
+            {{/* Logo shown in light mode (dark:hidden = hide in dark) */}}
             <span class="logo flex items-center dark:hidden" style="height: 2.5rem;">
               {{ $logo.Content | safeHTML }}
             </span>
-            {{/* Dark mode logo - shown only in dark mode */}}
+            {{/* Logo shown in dark mode (hidden dark:flex = show in dark) */}}
             {{ with .Site.Params.secondaryLogo }}
               {{ $logoDark := resources.Get . }}
               {{ if $logoDark }}
