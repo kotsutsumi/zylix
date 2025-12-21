@@ -104,6 +104,12 @@ python3 -m http.server 8080
   {{< card link="platforms" title="プラットフォームガイド" subtitle="全6プラットフォームの統合ガイド" >}}
 {{< /cards >}}
 
+### ロードマップ
+
+{{< cards >}}
+  {{< card link="roadmap" title="ロードマップ" subtitle="今後の計画：コンポーネント、ルーティング、非同期処理、Hot Reload" >}}
+{{< /cards >}}
+
 ## 対応プラットフォーム
 
 | プラットフォーム | UI フレームワーク | 言語 | バインディング | 最小バージョン |
