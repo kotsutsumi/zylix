@@ -4,7 +4,7 @@
   "description": "Unit tests for Zylix",
   "type": "module",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test **/*.test.js",
     "test:web": "node --test web/*.test.js",
     "test:samples": "node --test samples/*.test.js"
   },
