@@ -144,6 +144,23 @@ class ZylixRouter {
         return this
     }
 
+    /**
+     * Removes a navigation callback to prevent memory leaks.
+     * Should be called when the callback holder is being destroyed.
+     */
+    fun removeNavigateCallback(callback: (NavigationEvent, String, RouteContext) -> Unit): ZylixRouter {
+        navigationCallbacks.remove(callback)
+        return this
+    }
+
+    /**
+     * Clears all navigation callbacks.
+     */
+    fun clearNavigateCallbacks(): ZylixRouter {
+        navigationCallbacks.clear()
+        return this
+    }
+
     // ========================================================================
     // Navigation
     // ========================================================================
@@ -180,7 +197,10 @@ class ZylixRouter {
 
     fun handleDeepLink(uri: Uri) {
         val path = uri.path ?: "/"
-        navigate(path, NavigationEvent.DEEP_LINK)
+        // Preserve query parameters and fragment from deep link
+        val queryString = uri.query?.let { "?$it" } ?: ""
+        val fragment = uri.fragment?.let { "#$it" } ?: ""
+        navigate(path + queryString + fragment, NavigationEvent.DEEP_LINK)
     }
 
     fun handleDeepLink(url: String) {
@@ -211,12 +231,19 @@ class ZylixRouter {
             path = path.substring(0, queryIndex)
         }
 
-        // Parse query parameters
+        // Parse query parameters with URL decoding
         val query = mutableMapOf<String, String>()
         queryString?.split("&")?.forEach { pair ->
             val parts = pair.split("=", limit = 2)
             if (parts.size == 2) {
-                query[parts[0]] = parts[1]
+                try {
+                    val key = java.net.URLDecoder.decode(parts[0], "UTF-8")
+                    val value = java.net.URLDecoder.decode(parts[1], "UTF-8")
+                    query[key] = value
+                } catch (e: Exception) {
+                    // Fallback to raw values if decoding fails
+                    query[parts[0]] = parts[1]
+                }
             }
         }
 
@@ -338,8 +365,8 @@ class ZylixRouter {
             }
         }
 
-        // Notify callbacks
-        for (callback in navigationCallbacks) {
+        // Notify callbacks (use toList() to prevent ConcurrentModificationException)
+        navigationCallbacks.toList().forEach { callback ->
             callback(event, path, context)
         }
     }

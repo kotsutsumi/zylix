@@ -11,6 +11,27 @@
 // Configuration
 // ============================================================================
 
+// ============================================================================
+// Security Utilities
+// ============================================================================
+
+/**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
 const DEFAULT_CONFIG = {
     port: 3000,
     wsPort: 3001,
@@ -52,7 +73,11 @@ class ZylixHotReloadClient {
             };
 
             this.ws.onmessage = (event) => {
-                this.handleMessage(JSON.parse(event.data));
+                try {
+                    this.handleMessage(JSON.parse(event.data));
+                } catch (error) {
+                    console.error('[Zylix HMR] Failed to parse message:', error);
+                }
             };
 
             this.ws.onclose = () => {
@@ -115,7 +140,14 @@ class ZylixHotReloadClient {
 
         try {
             // Dynamic module replacement
+            // WARNING: Uses new Function() which is equivalent to eval()
+            // This is only safe in development environments
             if (window.__ZYLIX_MODULES__) {
+                // Ensure we're in development mode before executing dynamic code
+                if (typeof window.__ZYLIX_DEV__ === 'undefined' || !window.__ZYLIX_DEV__) {
+                    console.warn('[Zylix HMR] Hot module replacement disabled in non-development mode');
+                    return;
+                }
                 const moduleFactory = new Function('module', 'exports', 'require', code);
                 const moduleObj = { exports: {} };
                 moduleFactory(moduleObj, moduleObj.exports, window.__ZYLIX_REQUIRE__);
@@ -163,10 +195,10 @@ class ZylixHotReloadClient {
             html += `
                 <div style="background: #2d2d2d; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <div style="color: #888; margin-bottom: 5px;">
-                        ${error.file}:${error.line}:${error.column}
+                        ${escapeHtml(error.file)}:${escapeHtml(error.line)}:${escapeHtml(error.column)}
                     </div>
                     <div style="color: #ff6b6b; font-weight: bold;">
-                        ${error.message}
+                        ${escapeHtml(error.message)}
                     </div>
                 </div>
             `;
@@ -438,13 +470,16 @@ class ZylixDevServer {
             return;
         }
 
-        // Node.js open implementation
+        // Node.js open implementation - use spawn to prevent command injection
         const { platform } = process || {};
         const command = platform === 'darwin' ? 'open' :
                        platform === 'win32' ? 'start' : 'xdg-open';
 
         if (typeof require !== 'undefined') {
-            require('child_process').exec(`${command} ${url}`);
+            const { spawn } = require('child_process');
+            // Use spawn with arguments array to prevent command injection
+            const args = platform === 'win32' ? ['', url] : [url];
+            spawn(command, args, { detached: true, stdio: 'ignore', shell: platform === 'win32' }).unref();
         }
     }
 
