@@ -202,6 +202,27 @@
             cursor: not-allowed;
         }
 
+        .zylix-button:focus {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            z-index: 1000;
+            border-radius: var(--radius);
+        }
+
+        .skip-link:focus {
+            left: 1rem;
+            top: 1rem;
+        }
+
         .zylix-checkbox,
         .zylix-toggle {
             display: flex;
@@ -306,16 +327,27 @@
         }
 
         .zylix-accordion-header {
+            width: 100%;
             padding: 0.75rem 1rem;
             background: var(--card-bg);
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: none;
+            color: var(--text);
+            font-size: inherit;
+            font-family: inherit;
+            text-align: left;
         }
 
         .zylix-accordion-header:hover {
             background: rgba(255, 255, 255, 0.05);
+        }
+
+        .zylix-accordion-header:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
         }
 
         .zylix-accordion-content {
@@ -407,18 +439,19 @@
     </style>
 </head>
 <body>
+    <a href="#app" class="skip-link">Skip to main content</a>
     <div class="container">
         <header>
             <h1 class="logo">Zylix</h1>
             <p class="subtitle">Component Showcase — WebAssembly</p>
             <span class="version-badge">v0.7.0</span>
-            <div class="status loading" id="status" data-testid="status">Loading WASM...</div>
+            <div class="status loading" id="status" data-testid="status" role="status" aria-live="polite">Loading WASM...</div>
         </header>
 
-        <main id="app">
+        <main id="app" role="main" aria-label="Component Showcase">
             <!-- Layout Components -->
-            <section class="section">
-                <h2 class="section-title">Layout Components</h2>
+            <section class="section" aria-labelledby="layout-title">
+                <h2 class="section-title" id="layout-title">Layout Components</h2>
                 <div class="demo-grid">
                     <div class="demo-card">
                         <h3>VStack & HStack</h3>
@@ -459,8 +492,8 @@
             </section>
 
             <!-- Form Components -->
-            <section class="section">
-                <h2 class="section-title">Form Components</h2>
+            <section class="section" aria-labelledby="form-title">
+                <h2 class="section-title" id="form-title">Form Components</h2>
                 <div class="demo-grid">
                     <div class="demo-card">
                         <h3>Checkbox & Toggle</h3>
@@ -500,22 +533,22 @@
             </section>
 
             <!-- Feedback Components -->
-            <section class="section">
-                <h2 class="section-title">Feedback Components</h2>
+            <section class="section" aria-labelledby="feedback-title">
+                <h2 class="section-title" id="feedback-title">Feedback Components</h2>
                 <div class="demo-grid">
                     <div class="demo-card">
                         <h3>Alerts</h3>
                         <div class="demo-content" data-testid="feedback-alerts">
-                            <div class="zylix-alert info" data-testid="alert-info">
+                            <div class="zylix-alert info" data-testid="alert-info" role="status" aria-live="polite">
                                 ℹ️ This is an info alert
                             </div>
-                            <div class="zylix-alert success" data-testid="alert-success">
+                            <div class="zylix-alert success" data-testid="alert-success" role="status" aria-live="polite">
                                 ✓ Success! Operation completed
                             </div>
-                            <div class="zylix-alert warning" data-testid="alert-warning">
+                            <div class="zylix-alert warning" data-testid="alert-warning" role="alert" aria-live="assertive">
                                 ⚠️ Warning: Check your settings
                             </div>
-                            <div class="zylix-alert error" data-testid="alert-error">
+                            <div class="zylix-alert error" data-testid="alert-error" role="alert" aria-live="assertive">
                                 ✕ Error: Something went wrong
                             </div>
                         </div>
@@ -525,15 +558,15 @@
                         <h3>Progress & Spinner</h3>
                         <div class="demo-content" data-testid="feedback-progress">
                             <div class="zylix-vstack">
-                                <span class="zylix-text">Linear Progress</span>
-                                <div class="zylix-progress" data-testid="progress">
+                                <span class="zylix-text" id="progress-label">Linear Progress</span>
+                                <div class="zylix-progress" data-testid="progress" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-labelledby="progress-label">
                                     <div class="zylix-progress-bar" id="progress-bar" style="width: 65%"></div>
                                 </div>
-                                <span class="zylix-text" style="color: var(--text-muted);" data-testid="progress-value">65%</span>
+                                <span class="zylix-text" style="color: var(--text-muted);" data-testid="progress-value" aria-hidden="true">65%</span>
                             </div>
                             <div class="zylix-hstack" style="margin-top: 1rem;">
-                                <span class="zylix-text">Loading:</span>
-                                <div class="zylix-spinner" data-testid="spinner"></div>
+                                <span class="zylix-text" id="spinner-label">Loading:</span>
+                                <div class="zylix-spinner" data-testid="spinner" role="status" aria-label="Loading" aria-live="polite"></div>
                             </div>
                         </div>
                     </div>
@@ -541,8 +574,8 @@
             </section>
 
             <!-- Data Display Components -->
-            <section class="section">
-                <h2 class="section-title">Data Display Components</h2>
+            <section class="section" aria-labelledby="data-title">
+                <h2 class="section-title" id="data-title">Data Display Components</h2>
                 <div class="demo-grid">
                     <div class="demo-card">
                         <h3>Badge & Tag</h3>
@@ -564,11 +597,11 @@
                         <h3>Accordion</h3>
                         <div class="demo-content" data-testid="data-accordion">
                             <div class="zylix-accordion" id="accordion1" data-testid="accordion">
-                                <div class="zylix-accordion-header" onclick="toggleAccordion('accordion1')">
+                                <button class="zylix-accordion-header" onclick="toggleAccordion('accordion1')" aria-expanded="false" aria-controls="accordion1-content" id="accordion1-trigger" type="button">
                                     <span>Click to expand</span>
-                                    <span id="accordion1-icon">▼</span>
-                                </div>
-                                <div class="zylix-accordion-content" data-testid="accordion-content">
+                                    <span id="accordion1-icon" aria-hidden="true">▼</span>
+                                </button>
+                                <div class="zylix-accordion-content" data-testid="accordion-content" id="accordion1-content" role="region" aria-labelledby="accordion1-trigger">
                                     <p>This is the accordion content. It can contain any elements.</p>
                                     <p style="color: var(--text-muted); margin-top: 0.5rem;">
                                         Built with Zylix v0.7.0 Component Library.
@@ -581,17 +614,17 @@
             </section>
 
             <!-- Interactive Demo -->
-            <section class="section">
-                <h2 class="section-title">Interactive Demo</h2>
+            <section class="section" aria-labelledby="interactive-title">
+                <h2 class="section-title" id="interactive-title">Interactive Demo</h2>
                 <div class="demo-grid">
                     <div class="demo-card">
                         <h3>Component Creation</h3>
                         <div class="demo-content">
-                            <div class="zylix-vstack">
-                                <button class="zylix-button" id="btn-create" data-testid="btn-create">
+                            <div class="zylix-vstack" role="group" aria-label="Demo controls">
+                                <button class="zylix-button" id="btn-create" data-testid="btn-create" aria-describedby="dynamic-content">
                                     Create Component
                                 </button>
-                                <button class="zylix-button" id="btn-update" data-testid="btn-update" style="background: var(--success);">
+                                <button class="zylix-button" id="btn-update" data-testid="btn-update" style="background: var(--success);" aria-controls="progress-bar">
                                     Update Progress
                                 </button>
                                 <button class="zylix-button" id="btn-reset" data-testid="btn-reset" style="background: var(--border);">
@@ -613,20 +646,20 @@
             </section>
         </main>
 
-        <div class="stats" data-testid="stats">
+        <section class="stats" data-testid="stats" aria-label="Statistics">
             <div class="stat">
-                <div class="stat-value" id="component-count" data-testid="component-count">0</div>
-                <div class="stat-label">Components</div>
+                <div class="stat-value" id="component-count" data-testid="component-count" aria-describedby="stat-label-components">0</div>
+                <div class="stat-label" id="stat-label-components">Components</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="memory-used" data-testid="memory-used">0 KB</div>
-                <div class="stat-label">WASM Memory</div>
+                <div class="stat-value" id="memory-used" data-testid="memory-used" aria-describedby="stat-label-memory">0 KB</div>
+                <div class="stat-label" id="stat-label-memory">WASM Memory</div>
             </div>
             <div class="stat">
-                <div class="stat-value" id="abi-version" data-testid="abi-version">-</div>
-                <div class="stat-label">ABI Version</div>
+                <div class="stat-value" id="abi-version" data-testid="abi-version" aria-describedby="stat-label-abi">-</div>
+                <div class="stat-label" id="stat-label-abi">ABI Version</div>
             </div>
-        </div>
+        </section>
 
         <footer>
             <p>
@@ -642,8 +675,10 @@
         function toggleAccordion(id) {
             const accordion = document.getElementById(id);
             const icon = document.getElementById(id + '-icon');
-            accordion.classList.toggle('expanded');
-            icon.textContent = accordion.classList.contains('expanded') ? '▲' : '▼';
+            const trigger = document.getElementById(id + '-trigger');
+            const isExpanded = accordion.classList.toggle('expanded');
+            icon.textContent = isExpanded ? '▲' : '▼';
+            trigger.setAttribute('aria-expanded', isExpanded.toString());
         }
 
         // Update stats display
@@ -698,11 +733,13 @@
 
         function updateProgress() {
             const progressBar = document.getElementById('progress-bar');
+            const progressContainer = document.querySelector('[data-testid="progress"]');
             const progressValue = document.querySelector('[data-testid="progress-value"]');
             let current = parseInt(progressBar.style.width) || 0;
             current = (current + 15) % 101;
             progressBar.style.width = current + '%';
             progressValue.textContent = current + '%';
+            progressContainer.setAttribute('aria-valuenow', current);
 
             // Update via WASM
             const progressId = ZylixShowcase.createProgress(ZylixShowcase.ProgressStyle.LINEAR);

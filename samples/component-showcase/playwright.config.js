@@ -14,9 +14,26 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
 
+  // Visual comparison settings
+  snapshotDir: './tests/snapshots',
+  snapshotPathTemplate: '{snapshotDir}/{testFilePath}/{arg}{ext}',
+
+  // Expect settings for visual comparisons
+  expect: {
+    toHaveScreenshot: {
+      // Allow small differences for anti-aliasing
+      threshold: 0.2,
+      // Maximum allowed ratio of different pixels
+      maxDiffPixelRatio: 0.05,
+    },
+  },
+
   use: {
     baseURL: 'http://localhost:8081',
     trace: 'on-first-retry',
+    // Screenshot settings
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [

@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-22
-> **Current Version**: v0.6.3
+> **Current Version**: v0.7.0 (in development)
 
 ---
 
@@ -19,34 +19,80 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.6.1 | - | Sample Application Security | ✅ Done | 2025-12-21 |
 | v0.6.2 | - | Platform Security & Concurrency | ✅ Done | 2025-12-21 |
 | v0.6.3 | - | Platform Demos (iOS, Android) | ✅ Done | 2025-12-22 |
-| v0.7.0 | Phase 6 | Component Library Expansion | ⏳ Planned | Q1 2026 |
+| v0.7.0 | Phase 6 | Component Library Expansion | 🚧 In Progress | 2025-12-22 |
 | v0.8.0 | Phase 11 | Testing & Quality Infrastructure | ⏳ Planned | Q2 2026 |
 | v0.9.0 | Phase 12 | Performance & Production Readiness | ⏳ Planned | Q3 2026 |
 | v1.0.0 | Release | Stable Release | ⏳ Planned | Q4 2026 |
 
 ---
 
-## Phase 6: Component Library Expansion (v0.7.0)
+## Phase 6: Component Library Expansion (v0.7.0) 🚧 In Progress
 
 ### Overview
 
 Expand the current 9 basic components into a comprehensive UI component library that covers common use cases across all platforms.
 
-### Current State (v0.1.0)
+### Current State (v0.7.0)
 
 ```
-Basic Components (9 types):
-├── container   - div-like container
-├── text        - text/span element
-├── button      - clickable button
-├── input       - text input field
-├── image       - image element
-├── link        - anchor link
-├── list        - ul/ol list
-├── list_item   - li item
-├── heading     - h1-h6
-└── paragraph   - p element
+Components (40+ types):
+├── Basic Components (10 types)
+│   ├── container   - div-like container
+│   ├── text        - text/span element
+│   ├── button      - clickable button
+│   ├── input       - text input field
+│   ├── image       - image element
+│   ├── link        - anchor link
+│   ├── list        - ul/ol list
+│   ├── list_item   - li item
+│   ├── heading     - h1-h6
+│   └── paragraph   - p element
+│
+├── Form Components (7 types) ✅ Implemented
+│   ├── select        - dropdown
+│   ├── checkbox      - checkbox
+│   ├── radio         - radio button
+│   ├── textarea      - multi-line text
+│   ├── toggle_switch - toggle switch
+│   ├── slider        - slider
+│   └── form          - form container
+│
+├── Layout Components (8 types) ✅ Implemented
+│   ├── vstack      - vertical stack
+│   ├── hstack      - horizontal stack
+│   ├── zstack      - z-axis stack
+│   ├── grid        - grid layout
+│   ├── scroll_view - scrollable view
+│   ├── spacer      - spacer
+│   ├── divider     - divider
+│   └── card        - card container
+│
+├── Navigation Components (2 types) ✅ Implemented
+│   ├── nav_bar  - navigation bar
+│   └── tab_bar  - tab bar
+│
+├── Feedback Components (5 types) ✅ Implemented
+│   ├── alert    - alert
+│   ├── toast    - toast notification
+│   ├── modal    - modal dialog
+│   ├── progress - progress indicator
+│   └── spinner  - spinner
+│
+└── Data Display Components (5 types) ✅ Implemented
+    ├── icon      - icon
+    ├── avatar    - avatar
+    ├── tag       - tag/chip
+    ├── badge     - badge
+    └── accordion - accordion
 ```
+
+### Completed
+
+- ✅ Component definitions in Zig core (`core/src/component.zig`)
+- ✅ WASM exports (`core/src/wasm.zig`)
+- ✅ JavaScript bindings (`packages/zylix/src/component.js`)
+- ✅ component-showcase sample app (`samples/component-showcase/`)
+- ✅ Playwright E2E tests
 
 ### Planned Components
 
@@ -196,11 +242,12 @@ Each platform shell needs corresponding native implementations:
 
 ### Success Criteria
 
-- [ ] 30+ component types implemented in Zig core
-- [ ] All P0 components working on all 6 platforms
-- [ ] Component documentation with examples
-- [ ] Visual regression tests for components
-- [ ] Accessibility support (ARIA, VoiceOver, TalkBack)
+- [x] 30+ component types implemented in Zig core
+- [x] All P0 components working on Web/WASM platform
+- [x] Component documentation with examples (component-showcase)
+- [x] Visual regression tests for components
+- [x] Accessibility support (ARIA, VoiceOver, TalkBack)
+- [ ] Native platform support (iOS, Android, Windows)
 
 ---
 
