@@ -7,11 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2024-12-21
+
+### Fixed
+
+#### Security
+- **Web**: XSS vulnerability in error overlay by escaping dynamic content
+- **Web**: Command injection in browser opening function using spawn with arguments array
+- **Web**: Added development mode check for dynamic code execution
+
+#### Concurrency
+- **Windows**: CancellationTokenSource reuse issue after cancellation
+- **Windows**: Multi-frame WebSocket message handling
+- **Windows**: Blocking .Wait() calls causing deadlocks (replaced with fire-and-forget)
+- **Windows**: Thread-safety issue in file watcher debounce using Interlocked
+- **Android**: ConcurrentModificationException in callback iteration using toList()
+- **Android**: Reconnect backoff jitter to prevent thundering herd
+- **Android**: disconnect() to properly reset state and cancel pending jobs
+
 ### Added
+- **Android**: removeNavigateCallback() and clearNavigateCallbacks() for memory leak prevention
+- **Android**: Deep link handling to preserve query parameters
+- **Android**: URL decoding for query parameters
+- **Web**: JSON.parse error handling for malformed messages
+
+## [0.6.1] - 2024-12-21
+
+### Fixed
+
+#### Security (Sample Applications)
+- **All Samples**: Added escapeHtml, escapeAttr, escapeUrl utilities for XSS prevention
+- **All Samples**: Replaced inline onclick handlers with data-action event delegation
+- **All Samples**: Secure ID generation using crypto.randomUUID() with fallback
+
+#### Applications Fixed
+- todo-pro: XSS prevention, event delegation, secure IDs
+- dashboard: XSS prevention, event delegation
+- chat: XSS prevention, event delegation, secure message IDs
+- e-commerce: XSS prevention, event delegation, secure cart handling
+- notes: XSS prevention, event delegation, secure note IDs
+
+## [0.6.0] - 2024-12-21
+
+### Added
+
+#### Sample Applications
+- **todo-pro**: Advanced todo app with categories, priorities, and due dates
+- **dashboard**: Analytics dashboard with charts and metrics
+- **chat**: Real-time chat application with rooms and messages
+- **e-commerce**: Shopping cart with product catalog and checkout
+- **notes**: Note-taking app with folders and tags
+
+#### Platform Features
+- **All Platforms**: Router module with navigation guards and deep linking
+- **All Platforms**: Hot reload client with state preservation
+- **All Platforms**: Async utilities with promises and futures
+- **All Platforms**: Component library with common UI elements
+
+#### Documentation
+- Comprehensive ROADMAP.md with development phases
+- ROADMAP.ja.md Japanese translation
+- Sample applications README
+
+## [0.5.0] - 2024-12-21
+
+### Added
+
+#### GitHub Configuration
 - Comprehensive README with project documentation
 - Contributing guidelines (CONTRIBUTING.md)
 - Security policy (SECURITY.md)
-- Code of conduct (CODE_OF_CONDUCT.md)
+- GitHub issue templates (bug report, feature request)
+- Pull request template
+- CODEOWNERS file
+- Dependabot configuration
+- GitHub Actions CI/CD workflows
+
+### Changed
+- Updated documentation structure
 
 ## [0.1.0] - 2024-12-21
 
@@ -83,6 +156,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/kotsutsumi/zylix/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/kotsutsumi/zylix/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/kotsutsumi/zylix/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/kotsutsumi/zylix/compare/v0.1.0...v0.5.0
 [0.1.0]: https://github.com/kotsutsumi/zylix/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/kotsutsumi/zylix/releases/tag/v0.0.1
