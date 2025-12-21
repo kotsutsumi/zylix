@@ -1,6 +1,11 @@
 baseURL: https://zylix.dev/
 title: Zylix
 languageCode: en-us
+
+# Google Analytics 4
+services:
+  googleAnalytics:
+    id: G-E57XRGZ71T
 defaultContentLanguage: en
 enableRobotsTXT: true
 enableGitInfo: false
