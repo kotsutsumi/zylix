@@ -16,6 +16,7 @@ const layout = @import("layout.zig");
 // ============================================================================
 
 pub const ComponentType = enum(u8) {
+    // Basic Components (0-9)
     container = 0, // div-like container
     text = 1, // text/span element
     button = 2, // clickable button
@@ -26,6 +27,56 @@ pub const ComponentType = enum(u8) {
     list_item = 7, // li item
     heading = 8, // h1-h6
     paragraph = 9, // p element
+
+    // Form Components (10-19)
+    select = 10, // dropdown/picker
+    checkbox = 11, // boolean toggle
+    radio = 12, // single selection from group
+    textarea = 13, // multi-line text input
+    toggle_switch = 14, // toggle switch
+    slider = 15, // range input
+    date_picker = 16, // date selection
+    time_picker = 17, // time selection
+    file_input = 18, // file selection
+    color_picker = 19, // color selection
+    form = 20, // form container with validation
+
+    // Layout Components (21-29)
+    stack = 21, // vertical/horizontal stack
+    grid = 22, // CSS Grid-like layout
+    scroll_view = 23, // scrollable container
+    spacer = 24, // flexible space
+    divider = 25, // visual separator
+    card = 26, // card container with shadow
+    aspect_ratio = 27, // fixed aspect ratio container
+    safe_area = 28, // safe area insets
+
+    // Navigation Components (30-39)
+    nav_bar = 30, // navigation bar
+    tab_bar = 31, // tab navigation
+    drawer = 32, // side drawer/menu
+    breadcrumb = 33, // breadcrumb navigation
+    pagination = 34, // page navigation
+
+    // Feedback Components (40-49)
+    alert = 40, // alert dialog
+    toast = 41, // toast notification
+    modal = 42, // modal dialog
+    progress = 43, // progress indicator
+    spinner = 44, // loading spinner
+    skeleton = 45, // loading placeholder
+    badge = 46, // notification badge
+
+    // Data Display Components (50-59)
+    table = 50, // data table
+    avatar = 51, // user avatar
+    icon = 52, // icon component
+    tag = 53, // label/tag
+    tooltip = 54, // hover tooltip
+    accordion = 55, // expandable sections
+    carousel = 56, // image carousel
+
+    // Reserved
     custom = 255, // custom component
 };
 
@@ -48,6 +99,94 @@ pub const InputType = enum(u8) {
     url = 6,
     checkbox = 7,
     radio = 8,
+};
+
+// ============================================================================
+// Stack/Layout Types (v0.2.0)
+// ============================================================================
+
+pub const StackDirection = enum(u8) {
+    vertical = 0, // VStack
+    horizontal = 1, // HStack
+    z_stack = 2, // ZStack (overlay)
+};
+
+pub const StackAlignment = enum(u8) {
+    start = 0,
+    center = 1,
+    end = 2,
+    stretch = 3,
+    space_between = 4,
+    space_around = 5,
+    space_evenly = 6,
+};
+
+// ============================================================================
+// Progress/Feedback Types (v0.2.0)
+// ============================================================================
+
+pub const ProgressStyle = enum(u8) {
+    linear = 0,
+    circular = 1,
+    indeterminate = 2,
+};
+
+pub const AlertStyle = enum(u8) {
+    info = 0,
+    success = 1,
+    warning = 2,
+    error_alert = 3,
+};
+
+pub const ToastPosition = enum(u8) {
+    top = 0,
+    bottom = 1,
+    top_left = 2,
+    top_right = 3,
+    bottom_left = 4,
+    bottom_right = 5,
+};
+
+// ============================================================================
+// Select/Option Types (v0.2.0)
+// ============================================================================
+
+pub const MAX_OPTIONS = 32;
+pub const MAX_OPTION_TEXT = 64;
+
+pub const SelectOption = struct {
+    value: [MAX_OPTION_TEXT]u8 = std.mem.zeroes([MAX_OPTION_TEXT]u8),
+    value_len: u8 = 0,
+    label: [MAX_OPTION_TEXT]u8 = std.mem.zeroes([MAX_OPTION_TEXT]u8),
+    label_len: u8 = 0,
+    disabled: bool = false,
+
+    pub fn init(value: []const u8, label: []const u8) SelectOption {
+        var opt = SelectOption{};
+        opt.setValue(value);
+        opt.setLabel(label);
+        return opt;
+    }
+
+    pub fn setValue(self: *SelectOption, val: []const u8) void {
+        const len = @min(val.len, MAX_OPTION_TEXT);
+        @memcpy(self.value[0..len], val[0..len]);
+        self.value_len = @intCast(len);
+    }
+
+    pub fn setLabel(self: *SelectOption, lbl: []const u8) void {
+        const len = @min(lbl.len, MAX_OPTION_TEXT);
+        @memcpy(self.label[0..len], lbl[0..len]);
+        self.label_len = @intCast(len);
+    }
+
+    pub fn getValue(self: *const SelectOption) []const u8 {
+        return self.value[0..self.value_len];
+    }
+
+    pub fn getLabel(self: *const SelectOption) []const u8 {
+        return self.label[0..self.label_len];
+    }
 };
 
 // ============================================================================
@@ -158,6 +297,33 @@ pub const ComponentProps = extern struct {
 
     // Data attributes (for custom data)
     data_value: i64 = 0,
+
+    // ========================================================================
+    // v0.2.0 Component Props
+    // ========================================================================
+
+    // Stack/Layout props
+    stack_direction: StackDirection = .vertical,
+    stack_alignment: StackAlignment = .start,
+    stack_spacing: u16 = 0, // spacing between children in pixels
+
+    // Progress/Feedback props
+    progress_style: ProgressStyle = .linear,
+    progress_value: f32 = 0.0, // 0.0 to 1.0
+    alert_style: AlertStyle = .info,
+    toast_position: ToastPosition = .bottom,
+    toast_duration: u32 = 3000, // milliseconds
+
+    // Slider props
+    slider_min: f32 = 0.0,
+    slider_max: f32 = 100.0,
+    slider_step: f32 = 1.0,
+    slider_value: f32 = 0.0,
+
+    // Textarea props
+    textarea_rows: u8 = 3,
+    textarea_cols: u8 = 40,
+    textarea_resize: bool = true,
 
     // Helper methods
     pub fn setText(self: *ComponentProps, text_str: []const u8) void {
@@ -292,6 +458,166 @@ pub const Component = struct {
     pub fn paragraph(content: []const u8) Component {
         var c = Component{ .component_type = .paragraph };
         c.props.setText(content);
+        return c;
+    }
+
+    // ========================================================================
+    // Form Component Builders (v0.2.0)
+    // ========================================================================
+
+    pub fn selectDropdown(placeholder_text: []const u8) Component {
+        var c = Component{ .component_type = .select };
+        c.props.setPlaceholder(placeholder_text);
+        return c;
+    }
+
+    pub fn checkbox(label_text: []const u8) Component {
+        var c = Component{ .component_type = .checkbox };
+        c.props.setText(label_text);
+        return c;
+    }
+
+    pub fn radio(label_text: []const u8, group_name: []const u8) Component {
+        var c = Component{ .component_type = .radio };
+        c.props.setText(label_text);
+        c.props.setClassName(group_name); // Use className for group name
+        return c;
+    }
+
+    pub fn textarea(placeholder_text: []const u8) Component {
+        var c = Component{ .component_type = .textarea };
+        c.props.setPlaceholder(placeholder_text);
+        return c;
+    }
+
+    pub fn toggleSwitch(label_text: []const u8) Component {
+        var c = Component{ .component_type = .toggle_switch };
+        c.props.setText(label_text);
+        return c;
+    }
+
+    pub fn formContainer() Component {
+        return .{ .component_type = .form };
+    }
+
+    // ========================================================================
+    // Layout Component Builders (v0.2.0)
+    // ========================================================================
+
+    pub fn vstack() Component {
+        var c = Component{ .component_type = .stack };
+        c.props.stack_direction = .vertical;
+        return c;
+    }
+
+    pub fn hstack() Component {
+        var c = Component{ .component_type = .stack };
+        c.props.stack_direction = .horizontal;
+        return c;
+    }
+
+    pub fn zstack() Component {
+        var c = Component{ .component_type = .stack };
+        c.props.stack_direction = .z_stack;
+        return c;
+    }
+
+    pub fn scrollView() Component {
+        return .{ .component_type = .scroll_view };
+    }
+
+    pub fn spacerComponent() Component {
+        return .{ .component_type = .spacer };
+    }
+
+    pub fn dividerComponent() Component {
+        return .{ .component_type = .divider };
+    }
+
+    pub fn cardContainer() Component {
+        return .{ .component_type = .card };
+    }
+
+    // ========================================================================
+    // Navigation Component Builders (v0.2.0)
+    // ========================================================================
+
+    pub fn navBar(title_text: []const u8) Component {
+        var c = Component{ .component_type = .nav_bar };
+        c.props.setText(title_text);
+        return c;
+    }
+
+    pub fn tabBar() Component {
+        return .{ .component_type = .tab_bar };
+    }
+
+    // ========================================================================
+    // Feedback Component Builders (v0.2.0)
+    // ========================================================================
+
+    pub fn alertDialog(message: []const u8, style: AlertStyle) Component {
+        var c = Component{ .component_type = .alert };
+        c.props.setText(message);
+        c.props.alert_style = style;
+        return c;
+    }
+
+    pub fn toastNotification(message: []const u8, position: ToastPosition) Component {
+        var c = Component{ .component_type = .toast };
+        c.props.setText(message);
+        c.props.toast_position = position;
+        return c;
+    }
+
+    pub fn modalDialog(title_text: []const u8) Component {
+        var c = Component{ .component_type = .modal };
+        c.props.setText(title_text);
+        return c;
+    }
+
+    pub fn progressIndicator(style: ProgressStyle) Component {
+        var c = Component{ .component_type = .progress };
+        c.props.progress_style = style;
+        return c;
+    }
+
+    pub fn loadingSpinner() Component {
+        return .{ .component_type = .spinner };
+    }
+
+    pub fn badgeComponent(count: i64) Component {
+        var c = Component{ .component_type = .badge };
+        c.props.data_value = count;
+        return c;
+    }
+
+    // ========================================================================
+    // Data Display Component Builders (v0.2.0)
+    // ========================================================================
+
+    pub fn iconComponent(icon_name: []const u8) Component {
+        var c = Component{ .component_type = .icon };
+        c.props.setText(icon_name);
+        return c;
+    }
+
+    pub fn avatarComponent(src_url: []const u8, alt_text: []const u8) Component {
+        var c = Component{ .component_type = .avatar };
+        c.props.setSrc(src_url);
+        c.props.setAlt(alt_text);
+        return c;
+    }
+
+    pub fn tagComponent(label_text: []const u8) Component {
+        var c = Component{ .component_type = .tag };
+        c.props.setText(label_text);
+        return c;
+    }
+
+    pub fn accordionComponent(title_text: []const u8) Component {
+        var c = Component{ .component_type = .accordion };
+        c.props.setText(title_text);
         return c;
     }
 
