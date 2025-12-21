@@ -21,77 +21,16 @@ description: Build native apps for Web, iOS, Android, macOS, Linux, and Windows 
 {{< /hextra/hero-subtitle >}}
 </div>
 
-<!-- Key Metrics -->
-<div class="hx-flex hx-flex-wrap hx-justify-center hx-gap-6 hx-mb-8 hx-text-center">
-  <div class="hx-px-4">
-    <div class="hx-text-3xl hx-font-bold" style="color: rgb(251, 146, 60);">6</div>
-    <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Platforms</div>
-  </div>
-  <div class="hx-px-4">
-    <div class="hx-text-3xl hx-font-bold" style="color: rgb(59, 130, 246);">&lt;50KB</div>
-    <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Core Size</div>
-  </div>
-  <div class="hx-px-4">
-    <div class="hx-text-3xl hx-font-bold" style="color: rgb(16, 185, 129);">0ms</div>
-    <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">GC Pause</div>
-  </div>
-  <div class="hx-px-4">
-    <div class="hx-text-3xl hx-font-bold" style="color: rgb(139, 92, 246);">40+</div>
-    <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Components</div>
-  </div>
-</div>
-
-<!-- CTA Buttons -->
-<div class="hx-flex hx-flex-wrap hx-justify-center hx-gap-3 hx-mb-4">
+<div class="hx-mb-8">
 {{< hextra/hero-button text="Get Started" link="docs/getting-started" >}}
 {{< hextra/hero-button text="Try Live Demo →" link="demo" style="alt" >}}
 </div>
 
-<p class="hx-text-center hx-text-sm hx-text-gray-500 dark:hx-text-gray-400 hx-mb-12">
+<p class="hx-text-center hx-text-sm hx-text-gray-500 dark:hx-text-gray-400 hx-mb-6">
   No signup required. See Zylix components running in your browser.
 </p>
 
----
-
-<div style="margin-top: 4rem;"></div>
-
-## Why Zylix?
-
-<div class="hx-mt-4 hx-mb-8 hx-text-lg hx-text-gray-600 dark:hx-text-gray-400">
-Traditional cross-platform frameworks force you to choose: performance OR developer experience. Zylix gives you both.
-</div>
-
-<div class="hx-grid hx-grid-cols-1 md:hx-grid-cols-2 hx-gap-6 hx-mb-12">
-
-<div class="hx-p-6 hx-rounded-xl hx-border hx-border-gray-200 dark:hx-border-gray-800">
-
-### The Problem
-
-- **JavaScript frameworks** are slow and bloated
-- **Flutter** requires learning Dart, ships large runtimes
-- **React Native** bridges slow down performance
-- **Electron** consumes gigabytes of RAM
-- **Native development** means writing code 6 times
-
-</div>
-
-<div class="hx-p-6 hx-rounded-xl hx-border hx-border-gray-200 dark:hx-border-gray-800" style="background: linear-gradient(135deg, rgba(251,146,60,0.05), rgba(59,130,246,0.05));">
-
-### The Zylix Solution
-
-- **Zig-powered core** — zero GC, predictable latency
-- **True native UI** — SwiftUI, Compose, GTK4, WinUI
-- **Tiny footprint** — under 50KB WASM core
-- **Virtual DOM** — efficient diffing, minimal updates
-- **C ABI** — integrates with any language
-
-</div>
-
-</div>
-
----
-
-<div style="margin-top: 4rem;"></div>
+<div style="margin-top: 3rem;"></div>
 
 ## Features
 
@@ -134,61 +73,62 @@ Traditional cross-platform frameworks force you to choose: performance OR develo
   >}}
 {{< /hextra/feature-grid >}}
 
----
+<div style="margin-top: 4rem;"></div>
+
+## Why Zylix?
+
+Traditional cross-platform frameworks force you to choose: **performance OR developer experience**. Zylix gives you both.
+
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="The Problem"
+    subtitle="JavaScript frameworks are slow and bloated. Flutter requires Dart and ships large runtimes. React Native bridges slow down performance. Electron consumes gigabytes of RAM. Native development means writing code 6 times."
+  >}}
+  {{< hextra/feature-card
+    title="The Zylix Solution"
+    subtitle="Zig-powered core with zero GC and predictable latency. True native UI with SwiftUI, Compose, GTK4, WinUI. Tiny footprint under 50KB WASM core. Virtual DOM with efficient diffing. C ABI that integrates with any language."
+    style="background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(59,130,246,0.1));"
+  >}}
+{{< /hextra/feature-grid >}}
 
 <div style="margin-top: 4rem;"></div>
 
 ## Use Cases
 
-<div class="hx-grid hx-grid-cols-1 md:hx-grid-cols-3 hx-gap-6 hx-mb-8">
-
-<div class="hx-p-6 hx-rounded-xl hx-border hx-border-gray-200 dark:hx-border-gray-800 hx-text-center">
-  <div class="hx-text-4xl hx-mb-3">📱</div>
-  <h3 class="hx-text-lg hx-font-semibold hx-mb-2">Mobile Apps</h3>
-  <p class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Build iOS and Android apps with native SwiftUI and Jetpack Compose UI, powered by a shared Zig core.</p>
-</div>
-
-<div class="hx-p-6 hx-rounded-xl hx-border hx-border-gray-200 dark:hx-border-gray-800 hx-text-center">
-  <div class="hx-text-4xl hx-mb-3">🖥️</div>
-  <h3 class="hx-text-lg hx-font-semibold hx-mb-2">Desktop Apps</h3>
-  <p class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Create macOS, Windows, and Linux desktop apps with native widgets. No Electron, no bloat.</p>
-</div>
-
-<div class="hx-p-6 hx-rounded-xl hx-border hx-border-gray-200 dark:hx-border-gray-800 hx-text-center">
-  <div class="hx-text-4xl hx-mb-3">🌐</div>
-  <h3 class="hx-text-lg hx-font-semibold hx-mb-2">Web Apps</h3>
-  <p class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Deploy to the web via WebAssembly. Blazing fast, tiny bundles, works in any modern browser.</p>
-</div>
-
-</div>
-
----
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="📱 Mobile Apps"
+    subtitle="Build iOS and Android apps with native SwiftUI and Jetpack Compose UI, powered by a shared Zig core."
+  >}}
+  {{< hextra/feature-card
+    title="🖥️ Desktop Apps"
+    subtitle="Create macOS, Windows, and Linux desktop apps with native widgets. No Electron, no bloat."
+  >}}
+  {{< hextra/feature-card
+    title="🌐 Web Apps"
+    subtitle="Deploy to the web via WebAssembly. Blazing fast, tiny bundles, works in any modern browser."
+  >}}
+{{< /hextra/feature-grid >}}
 
 <div style="margin-top: 4rem;"></div>
 
 ## How It Compares
 
 | Feature | Zylix | React Native | Flutter | Electron |
-|---------|-------|--------------|---------|----------|
-| **Bundle Size** | ~50KB | ~1MB+ | ~5MB+ | ~150MB+ |
-| **GC Pauses** | None | Yes | Yes | Yes |
-| **Native UI** | Yes | Partial | No | No |
-| **Language** | Zig | JavaScript | Dart | JavaScript |
-| **Platforms** | 6 | 2 | 6 | 3 |
-| **Memory Usage** | Low | Medium | Medium | High |
-
-<p class="hx-text-sm hx-text-gray-500 dark:hx-text-gray-400 hx-mt-4">
-Bundle sizes are approximate and vary by application complexity.
-</p>
-
----
+|:--------|:------|:-------------|:--------|:---------|
+| Bundle Size | ~50KB | ~1MB+ | ~5MB+ | ~150MB+ |
+| GC Pauses | None | Yes | Yes | Yes |
+| Native UI | Yes | Partial | No | No |
+| Language | Zig | JavaScript | Dart | JavaScript |
+| Platforms | 6 | 2 | 6 | 3 |
+| Memory Usage | Low | Medium | Medium | High |
 
 <div style="margin-top: 4rem;"></div>
 
 ## Platform Support
 
 | Platform | Framework | Status |
-|----------|-----------|--------|
+|:---------|:----------|:-------|
 | Web/WASM | HTML/JavaScript | ✅ Production Ready |
 | iOS | SwiftUI | 🚧 In Development |
 | Android | Jetpack Compose | 🚧 In Development |
@@ -196,11 +136,7 @@ Bundle sizes are approximate and vary by application complexity.
 | Linux | GTK4 | 🚧 In Development |
 | Windows | WinUI 3 | 🚧 In Development |
 
-<p class="hx-text-sm hx-text-gray-500 dark:hx-text-gray-400 hx-mt-4">
 Web/WASM has full Zig core integration. Native platforms have UI demos and are progressing toward C ABI/JNI integration.
-</p>
-
----
 
 <div style="margin-top: 4rem;"></div>
 
@@ -221,10 +157,8 @@ python3 -m http.server 8080
 ```
 
 {{< callout type="info" >}}
-  **Prerequisites**: Zig 0.13+ and a modern web browser. See the [Getting Started](/docs/getting-started) guide for detailed instructions.
+**Prerequisites**: Zig 0.13+ and a modern web browser. See the [Getting Started](/docs/getting-started) guide for detailed instructions.
 {{< /callout >}}
-
----
 
 <div style="margin-top: 4rem;"></div>
 
@@ -232,23 +166,10 @@ python3 -m http.server 8080
 
 Zylix is open source and welcomes contributions from developers of all skill levels.
 
-<div class="hx-grid hx-grid-cols-1 md:hx-grid-cols-3 hx-gap-4 hx-mt-6">
-
-<a href="https://github.com/kotsutsumi/zylix/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" class="hx-block hx-p-4 hx-rounded-lg hx-border hx-border-gray-200 dark:hx-border-gray-800 hover:hx-border-blue-500 hx-transition-colors hx-no-underline">
-  <div class="hx-font-semibold hx-text-gray-900 dark:hx-text-gray-100">🏷️ Good First Issues</div>
-  <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Perfect for newcomers</div>
-</a>
-
-<a href="https://github.com/kotsutsumi/zylix/blob/main/CONTRIBUTING.md" class="hx-block hx-p-4 hx-rounded-lg hx-border hx-border-gray-200 dark:hx-border-gray-800 hover:hx-border-blue-500 hx-transition-colors hx-no-underline">
-  <div class="hx-font-semibold hx-text-gray-900 dark:hx-text-gray-100">📖 Contributing Guide</div>
-  <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">How to get involved</div>
-</a>
-
-<a href="https://github.com/kotsutsumi/zylix" class="hx-block hx-p-4 hx-rounded-lg hx-border hx-border-gray-200 dark:hx-border-gray-800 hover:hx-border-blue-500 hx-transition-colors hx-no-underline">
-  <div class="hx-font-semibold hx-text-gray-900 dark:hx-text-gray-100">⭐ Star on GitHub</div>
-  <div class="hx-text-sm hx-text-gray-600 dark:hx-text-gray-400">Show your support</div>
-</a>
-
-</div>
+{{< cards >}}
+  {{< card link="https://github.com/kotsutsumi/zylix/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" title="🏷️ Good First Issues" subtitle="Perfect for newcomers" >}}
+  {{< card link="https://github.com/kotsutsumi/zylix/blob/main/CONTRIBUTING.md" title="📖 Contributing Guide" subtitle="How to get involved" >}}
+  {{< card link="https://github.com/kotsutsumi/zylix" title="⭐ Star on GitHub" subtitle="Show your support" >}}
+{{< /cards >}}
 
 <div style="margin-top: 3rem;"></div>
