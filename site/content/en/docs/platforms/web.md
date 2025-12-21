@@ -3,6 +3,10 @@ title: Web/WASM
 weight: 1
 ---
 
+{{< callout type="info" >}}
+**Status: ✅ Production Ready** — This platform has full Zig core integration with working demos and tested functionality.
+{{< /callout >}}
+
 Build and deploy Zylix applications to the web using WebAssembly. This guide covers project setup, WASM compilation, JavaScript integration, and deployment strategies.
 
 ## Prerequisites

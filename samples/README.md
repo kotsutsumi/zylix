@@ -1,188 +1,134 @@
 # Zylix Sample Applications
 
-This directory contains 5 comprehensive sample applications demonstrating real-world Zylix usage across different complexity levels.
+This directory contains sample applications demonstrating Zylix usage.
 
-## Sample Apps Overview
+## Working Samples
 
-| App | Level | Key Features |
-|-----|-------|--------------|
-| **Todo Pro** | Beginner | State management, forms, local storage, dark/light theme |
-| **E-Commerce** | Intermediate | Routing, HTTP requests, authentication, shopping cart |
-| **Dashboard** | Intermediate | Real-time data, charts, tables, export functionality |
-| **Chat** | Advanced | WebSocket, real-time messaging, push notifications |
-| **Notes** | Advanced | Rich text editing, folder organization, full-text search, cloud sync |
+| Sample | Platform | Status | Description |
+|--------|----------|--------|-------------|
+| [**counter-wasm**](./counter-wasm/) | Web/WASM | ✅ Working | Minimal counter demo with actual WASM integration |
+| [**todo-wasm**](./todo-wasm/) | Web/WASM | ✅ Working | Full TodoMVC implementation with WASM |
+
+## Planned Samples (Not Yet Implemented)
+
+The following samples exist as design documents only. They demonstrate the target API but do not currently run because the Zylix JavaScript framework has not been built yet.
+
+| Sample | Level | Target Features |
+|--------|-------|-----------------|
+| todo-pro | Beginner | State management, forms, local storage |
+| e-commerce | Intermediate | Routing, HTTP requests, shopping cart |
+| dashboard | Intermediate | Real-time data, charts, tables |
+| chat | Advanced | WebSocket, real-time messaging |
+| notes | Advanced | Rich text editing, cloud sync |
+
+> ⚠️ **Note**: These planned samples import from a `zylix` package that does not exist yet. They serve as API design references for future development.
 
 ## Getting Started
 
-Each sample app can be run independently. Navigate to the sample directory and:
+### Working Samples
 
 ```bash
-# Install dependencies
+# Counter demo (minimal example)
+cd counter-wasm
+./build.sh
+python3 -m http.server 8080
+# Open http://localhost:8080
+
+# TodoMVC demo (full application)
+cd todo-wasm
+./build.sh
+python3 -m http.server 8081
+# Open http://localhost:8081
+```
+
+### Prerequisites
+
+- **Zig** 0.15.0 or later (for WASM compilation)
+- **Python 3** (for development server) or any HTTP server
+- Modern web browser with WebAssembly support
+
+## Architecture
+
+### counter-wasm
+
+```
+Browser
+├── index.html     → UI and event handlers
+├── zylix.js       → JavaScript ↔ WASM bridge
+└── zylix.wasm     → Zig core (state management)
+```
+
+The counter demo shows the fundamental Zylix architecture:
+1. Zig manages all application state
+2. JavaScript handles DOM rendering
+3. Events flow: User Action → JS → WASM → State Update → JS → DOM
+
+### todo-wasm
+
+```
+Browser
+├── index.html      → TodoMVC UI (HTML/CSS)
+├── zylix-todo.js   → JavaScript ↔ WASM bridge (todo-specific)
+└── zylix.wasm      → Zig core (todo state, filtering, VDOM)
+```
+
+The TodoMVC demo demonstrates a complete application:
+- Full CRUD operations (add, remove, toggle, update)
+- Filtering (all/active/completed)
+- Bulk operations (toggle all, clear completed)
+- URL hash routing for filter state
+
+### JavaScript SDK
+
+The Zylix JavaScript SDK is now available in `packages/zylix`:
+
+```javascript
+// Using the SDK
+import { init, state, todo, vdom, component } from 'zylix';
+
+await init('zylix.wasm');
+
+// State management
+state.increment();
+console.log(state.getCounter());
+
+// Todo API
+todo.init();
+todo.add('Learn Zylix');
+
+// VDOM and components
+vdom.init();
+component.init();
+```
+
+### Planned Samples
+
+The planned samples (todo-pro, e-commerce, etc.) can now use the SDK. They will be updated to use the actual `zylix` package once it's published to npm.
+
+## Testing
+
+The working samples include Playwright tests:
+
+```bash
+# Counter tests
+cd counter-wasm
 npm install
+npm test
 
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
+# TodoMVC tests
+cd todo-wasm
+npm install
+npm test
 ```
 
-## Todo Pro (Beginner)
+## Contributing
 
-A feature-rich todo application demonstrating core Zylix concepts:
+When adding new samples:
 
-- **State Management**: Reactive state with local storage persistence
-- **Form Handling**: Input validation and form submission
-- **Categories & Tags**: Organize todos with categories and searchable tags
-- **Due Dates**: Set due dates with browser notification reminders
-- **Theme Toggle**: Dark and light theme support
-
-```javascript
-import { ZylixApp, State, Storage } from 'zylix';
-
-const store = new State({
-    todos: Storage.get('todos') || [],
-    filter: 'all',
-    theme: 'light'
-});
-```
-
-## E-Commerce (Intermediate)
-
-A complete shopping experience showcasing routing and HTTP integration:
-
-- **Product Catalog**: Browse and search products with filtering
-- **Shopping Cart**: Add, remove, and update cart items
-- **User Authentication**: Login, register, and session management
-- **Order Management**: View order history and track status
-- **Responsive Design**: Mobile-first responsive layouts
-
-```javascript
-import { Router, Http } from 'zylix';
-
-Router.on('/products/:id', async (params) => {
-    const product = await Http.get(`/api/products/${params.id}`);
-    render(ProductPage, { product });
-});
-```
-
-## Dashboard (Intermediate)
-
-A data visualization dashboard with real-time updates:
-
-- **Metric Cards**: Key performance indicators with trend indicators
-- **Line Charts**: Time-series data visualization with SVG
-- **Bar Charts**: Category comparison charts
-- **Data Tables**: Sortable, filterable, paginated tables
-- **Export**: CSV export functionality
-- **Auto-Refresh**: Periodic data refresh with configurable interval
-
-```javascript
-import { State } from 'zylix';
-
-const store = new State({
-    metrics: {},
-    chartData: []
-});
-
-// Auto-refresh every 30 seconds
-setInterval(() => store.refreshData(), 30000);
-```
-
-## Chat (Advanced)
-
-A real-time messaging application with WebSocket communication:
-
-- **Real-time Messaging**: Instant message delivery via WebSocket
-- **User Presence**: Online/offline status indicators
-- **Typing Indicators**: "User is typing..." notifications
-- **File Attachments**: Image and file sharing
-- **Push Notifications**: Browser notifications for new messages
-- **Message Status**: Sent, delivered, and read receipts
-
-```javascript
-import { WebSocket } from 'zylix';
-
-const ws = new WebSocket('wss://chat.example.com');
-ws.on('message', (msg) => handleNewMessage(msg));
-ws.send('message', { content: 'Hello!' });
-```
-
-## Notes (Advanced)
-
-A feature-rich note-taking application with offline support:
-
-- **Rich Text Editor**: Full formatting with toolbar
-- **Folder Organization**: Organize notes into folders
-- **Tags**: Tag notes for easy categorization
-- **Full-text Search**: Fast search across all notes
-- **Cloud Sync**: Automatic sync with conflict resolution
-- **Offline Support**: Work offline with pending sync queue
-
-```javascript
-import { State, Sync, Storage } from 'zylix';
-
-const store = new State({
-    notes: Storage.get('notes') || [],
-    syncStatus: 'idle'
-});
-
-// Auto-save with debounce
-const autoSave = debounce((note) => {
-    store.saveNote(note);
-    Sync.queue(note);
-}, 1000);
-```
-
-## Architecture Patterns
-
-### State Management
-All apps use the reactive `State` class:
-- Immutable state updates
-- Subscription-based reactivity
-- Local storage integration
-
-### Routing
-E-Commerce app demonstrates SPA routing:
-- Path parameters (`:id`)
-- Route guards
-- Navigation history
-
-### API Integration
-E-Commerce and Dashboard apps show HTTP patterns:
-- RESTful API calls
-- Error handling
-- Loading states
-
-### Real-time Communication
-Chat app demonstrates WebSocket patterns:
-- Connection management
-- Reconnection with backoff
-- Message queuing
-
-### Offline Support
-Notes app shows offline-first patterns:
-- Service worker integration
-- Pending sync queue
-- Conflict resolution
-
-## Cross-Platform
-
-These samples are designed to work across all Zylix platforms:
-- **Web**: HTML/CSS/JavaScript
-- **iOS**: SwiftUI with native components
-- **Android**: Jetpack Compose with native components
-- **macOS**: AppKit with native components
-- **Windows**: WinUI 3 with native components
-- **Linux**: GTK4 with native components
-
-## Performance
-
-All samples are optimized for:
-- Bundle size < 50KB (gzipped)
-- Time to Interactive < 2s on 3G
-- 60fps animations
-- Lazy loading where applicable
+1. **Start with WASM**: Build samples that use the Zig core directly via WASM
+2. **Test thoroughly**: Include Playwright tests that verify functionality
+3. **Be honest**: Mark samples as "planned" if they don't actually run
+4. **Keep it simple**: Start with minimal examples that demonstrate one concept
 
 ## License
 

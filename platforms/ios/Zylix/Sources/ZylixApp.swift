@@ -20,8 +20,18 @@ struct ZylixApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(bridge)
+            TabView {
+                ContentView()
+                    .tabItem {
+                        Label("Counter", systemImage: "number.circle")
+                    }
+
+                TodoView()
+                    .tabItem {
+                        Label("Todos", systemImage: "checklist")
+                    }
+            }
+            .environmentObject(bridge)
         }
     }
 }

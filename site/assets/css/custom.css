@@ -1,5 +1,142 @@
-/* Custom spacing for hero section */
-/* Use sibling selector to add margin-top to button container after subtitle */
+/* ============================================
+   Zylix Design System
+   ============================================ */
+
+/* Color Palette - CSS Custom Properties */
+:root {
+  /* Primary Brand Colors */
+  --zylix-orange: 251, 146, 60;      /* Zig-inspired orange */
+  --zylix-blue: 59, 130, 246;        /* Platform blue */
+  --zylix-emerald: 16, 185, 129;     /* Performance green */
+  --zylix-purple: 139, 92, 246;      /* Type safety purple */
+  --zylix-cyan: 6, 182, 212;         /* Integration cyan */
+  --zylix-amber: 245, 158, 11;       /* Bundle/size amber */
+
+  /* Gradient opacity for light mode */
+  --gradient-opacity: 0.15;
+  --gradient-opacity-hover: 0.25;
+}
+
+/* Dark mode adjustments */
+.dark {
+  --gradient-opacity: 0.20;
+  --gradient-opacity-hover: 0.30;
+}
+
+/* ============================================
+   Feature Card Gradients
+   ============================================ */
+
+.feature-card-orange {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-orange), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+.feature-card-blue {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-blue), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+.feature-card-emerald {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-emerald), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+.feature-card-amber {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-amber), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+.feature-card-purple {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-purple), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+.feature-card-cyan {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    rgba(var(--zylix-cyan), var(--gradient-opacity)),
+    hsla(0, 0%, 100%, 0)
+  ) !important;
+}
+
+/* Hover effects for feature cards */
+.feature-card-orange:hover,
+.feature-card-blue:hover,
+.feature-card-emerald:hover,
+.feature-card-amber:hover,
+.feature-card-purple:hover,
+.feature-card-cyan:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* ============================================
+   Hero Section Enhancements
+   ============================================ */
+
+/* Spacing fix for hero section */
 .hx-mb-12 + .hx-mb-12 {
   margin-top: 2rem !important;
+}
+
+/* Hero headline gradient text */
+.hero-gradient-text {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--zylix-orange)) 0%,
+    rgb(var(--zylix-blue)) 50%,
+    rgb(var(--zylix-emerald)) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   Platform Status Table
+   ============================================ */
+
+/* Better table styling */
+.platform-table {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.platform-table th {
+  background: rgba(var(--zylix-blue), 0.1);
+}
+
+.dark .platform-table th {
+  background: rgba(var(--zylix-blue), 0.2);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 768px) {
+  .feature-card-orange,
+  .feature-card-blue,
+  .feature-card-emerald,
+  .feature-card-amber,
+  .feature-card-purple,
+  .feature-card-cyan {
+    min-height: 280px;
+  }
 }

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zylix Counter Demo</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --primary: #e94560;
+            --text: #eaeaea;
+            --text-muted: #8b8b8b;
+            --success: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), #ff9a8b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .counter-value {
+            font-size: 6rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin: 1rem 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .counter-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            min-width: 60px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-decrement {
+            background: #334155;
+            color: white;
+        }
+
+        .btn-increment {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 2px solid var(--text-muted);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .status {
+            margin-top: 2rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .status.loading {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status.ready {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .stats {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-value {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="logo">Zylix</h1>
+        <p class="subtitle">Counter Demo — WebAssembly</p>
+
+        <div class="card">
+            <div class="counter-value" id="counter">0</div>
+            <div class="counter-label">State managed by Zig/WASM</div>
+
+            <div class="buttons">
+                <button class="btn-decrement" id="btn-dec" disabled>−</button>
+                <button class="btn-reset" id="btn-reset" disabled>Reset</button>
+                <button class="btn-increment" id="btn-inc" disabled>+</button>
+            </div>
+
+            <div class="status loading" id="status">Loading WASM...</div>
+
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-value" id="version">0</span>
+                    <span>State Version</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="memory">0 KB</span>
+                    <span>WASM Memory</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="footer">
+            Built with <a href="https://zylix.dev" target="_blank">Zylix</a> — Zig-powered cross-platform UI
+        </p>
+    </div>
+
+    <script src="zylix.js"></script>
+    <script>
+        // Initialize Zylix and set up event handlers
+        async function main() {
+            const statusEl = document.getElementById('status');
+            const counterEl = document.getElementById('counter');
+            const versionEl = document.getElementById('version');
+            const memoryEl = document.getElementById('memory');
+            const btnInc = document.getElementById('btn-inc');
+            const btnDec = document.getElementById('btn-dec');
+            const btnReset = document.getElementById('btn-reset');
+
+            try {
+                // Load and initialize Zylix WASM
+                await Zylix.init('zylix.wasm');
+
+                // Update UI
+                statusEl.className = 'status ready';
+                statusEl.textContent = '✓ WASM loaded and initialized';
+                btnInc.disabled = false;
+                btnDec.disabled = false;
+                btnReset.disabled = false;
+
+                // Refresh display
+                function updateUI() {
+                    const counter = Zylix.getCounter();
+                    const version = Zylix.getStateVersion();
+                    const memory = Zylix.getMemoryUsed();
+
+                    counterEl.textContent = counter;
+                    versionEl.textContent = version;
+                    memoryEl.textContent = `${(memory / 1024).toFixed(1)} KB`;
+                }
+
+                // Event handlers
+                btnInc.addEventListener('click', () => {
+                    Zylix.dispatch(Zylix.Events.INCREMENT);
+                    updateUI();
+                });
+
+                btnDec.addEventListener('click', () => {
+                    Zylix.dispatch(Zylix.Events.DECREMENT);
+                    updateUI();
+                });
+
+                btnReset.addEventListener('click', () => {
+                    Zylix.dispatch(Zylix.Events.RESET);
+                    updateUI();
+                });
+
+                // Initial render
+                updateUI();
+
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `Error: ${error.message}`;
+                console.error('Zylix initialization failed:', error);
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>

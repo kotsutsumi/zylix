@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "Zylix"
 include(":zylix-android")
 include(":demo")
+include(":app")

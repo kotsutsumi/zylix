@@ -1,13 +1,13 @@
 # Zylix
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE.md)
-[![Zig](https://img.shields.io/badge/Zig-0.11.0+-orange.svg)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.15.0+-orange.svg)](https://ziglang.org/)
 
 **High-performance cross-platform UI framework powered by Zig**
 
 Zylix enables you to build native applications for Web, iOS, Android, macOS, Linux, and Windows from a single codebase. Leveraging Zig's zero-cost abstractions and predictable performance, Zylix provides a Virtual DOM architecture with native platform bindings.
 
-[Documentation](https://zylix.dev) | [Live Demo](https://zylix.dev/demo) | [Getting Started](https://zylix.dev/docs/getting-started)
+[Documentation](https://zylix.dev/en/docs) | [Live Demo](https://zylix.dev/demo) | [Getting Started](https://zylix.dev/en/docs/getting-started)
 
 ## Features
 
@@ -20,54 +20,90 @@ Zylix enables you to build native applications for Web, iOS, Android, macOS, Lin
 
 ## Platform Support
 
-| Platform | Framework | Status |
-|----------|-----------|--------|
-| Web/WASM | HTML/JavaScript | Production Ready |
-| iOS | SwiftUI | Production Ready |
-| Android | Jetpack Compose | Production Ready |
-| macOS | SwiftUI | Production Ready |
-| Linux | GTK4 | Production Ready |
-| Windows | WinUI 3 | Production Ready |
+| Platform | Framework | Status | Notes |
+|----------|-----------|--------|-------|
+| Web/WASM | HTML/JavaScript | ✅ Production Ready | Full Zig core integration, JavaScript SDK |
+| iOS | SwiftUI | ✅ Working | ZylixSwift package with C FFI integration |
+| macOS | SwiftUI | ✅ Working | Shares ZylixSwift package with iOS |
+| Android | Jetpack Compose | 🚧 In Development | UI demo only, JNI pending |
+| Linux | GTK4 | 🚧 In Development | Build infrastructure ready |
+| Windows | WinUI 3 | 🚧 In Development | Build infrastructure ready |
+
+> **Note**: Web/WASM and iOS/macOS platforms have full integration with the Zig core. See the [Roadmap](docs/ROADMAP.md) for details.
 
 ## Quick Start
 
 ### Prerequisites
 
-- [Zig](https://ziglang.org/download/) 0.11.0 or later
+- [Zig](https://ziglang.org/download/) 0.15.0 or later
 
-### Build the Core Library
+### Try the Working Samples
 
 ```bash
-cd core
-zig build
+# Counter demo (minimal example)
+cd samples/counter-wasm
+./build.sh
+python3 -m http.server 8080
+# Open http://localhost:8080
+
+# TodoMVC demo (full application)
+cd samples/todo-wasm
+./build.sh
+python3 -m http.server 8081
+# Open http://localhost:8081
+```
+
+### Use the JavaScript SDK
+
+```bash
+npm install zylix
+```
+
+```javascript
+import { init, state, todo } from 'zylix';
+
+await init('node_modules/zylix/wasm/zylix.wasm');
+
+// Counter operations
+state.increment();
+console.log(state.getCounter()); // 1
+
+// Todo operations
+todo.init();
+todo.add('Learn Zylix');
+console.log(todo.getCount()); // 1
 ```
 
 ### Platform-Specific Setup
 
 Each platform has its own setup requirements. See the platform documentation:
 
-- [Web/WASM](https://zylix.dev/docs/platforms/web)
-- [iOS](https://zylix.dev/docs/platforms/ios)
-- [Android](https://zylix.dev/docs/platforms/android)
-- [macOS](https://zylix.dev/docs/platforms/macos)
-- [Linux](https://zylix.dev/docs/platforms/linux)
-- [Windows](https://zylix.dev/docs/platforms/windows)
+- [Web/WASM](https://zylix.dev/en/docs/platforms/web)
+- [iOS](https://zylix.dev/en/docs/platforms/ios)
+- [Android](https://zylix.dev/en/docs/platforms/android)
+- [macOS](https://zylix.dev/en/docs/platforms/macos)
+- [Linux](https://zylix.dev/en/docs/platforms/linux)
+- [Windows](https://zylix.dev/en/docs/platforms/windows)
 
 ## Project Structure
 
 ```
 zylix/
 ├── core/           # Zig core library (Virtual DOM, state management, events)
+├── packages/       # Published packages
+│   └── zylix/      # JavaScript SDK (npm package)
 ├── platforms/      # Platform-specific implementations
 │   ├── android/    # Kotlin/Jetpack Compose + JNI
-│   ├── ios/        # Swift/SwiftUI bindings
+│   ├── ios/        # Swift/SwiftUI + ZylixSwift package
 │   ├── linux/      # GTK4 native app
 │   ├── macos/      # SwiftUI native app
 │   ├── web/        # WASM demos
 │   └── windows/    # WinUI 3 implementation
+├── samples/        # Working example applications
+│   ├── counter-wasm/  # Minimal counter demo
+│   └── todo-wasm/     # Full TodoMVC implementation
 ├── site/           # Documentation website (Hugo)
-├── docs/           # Internal documentation
-└── examples/       # Example projects
+└── docs/           # Internal documentation
 ```
 
 ## Architecture
@@ -93,16 +129,13 @@ Zylix uses a layered architecture:
 
 ## Documentation
 
-- [Official Documentation](https://zylix.dev/docs)
-- [API Reference](https://zylix.dev/docs/api)
+- [Official Documentation](https://zylix.dev/en/docs)
 - [Architecture Guide](docs/ARCHITECTURE.md)
 - [ABI Specification](docs/ABI.md)
 
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-Before contributing, please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

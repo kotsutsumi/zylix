@@ -57,6 +57,39 @@ typedef enum {
 } ZylixPriority;
 
 // =============================================================================
+// Event Types
+// =============================================================================
+
+/**
+ * Event type identifiers for dispatching events to Zylix Core.
+ */
+
+// Lifecycle events (0x0000 - 0x00FF)
+#define ZYLIX_EVENT_APP_INIT        0x0001
+#define ZYLIX_EVENT_APP_TERMINATE   0x0002
+#define ZYLIX_EVENT_APP_FOREGROUND  0x0003
+#define ZYLIX_EVENT_APP_BACKGROUND  0x0004
+#define ZYLIX_EVENT_APP_LOW_MEMORY  0x0005
+
+// User interaction (0x0100 - 0x01FF)
+#define ZYLIX_EVENT_BUTTON_PRESS    0x0100
+#define ZYLIX_EVENT_TEXT_INPUT      0x0101
+#define ZYLIX_EVENT_TEXT_COMMIT     0x0102
+#define ZYLIX_EVENT_SELECTION       0x0103
+#define ZYLIX_EVENT_SCROLL          0x0104
+#define ZYLIX_EVENT_GESTURE         0x0105
+
+// Navigation (0x0200 - 0x02FF)
+#define ZYLIX_EVENT_NAVIGATE        0x0200
+#define ZYLIX_EVENT_NAVIGATE_BACK   0x0201
+#define ZYLIX_EVENT_TAB_SWITCH      0x0202
+
+// Counter PoC events (0x1000+)
+#define ZYLIX_EVENT_COUNTER_INCREMENT 0x1000
+#define ZYLIX_EVENT_COUNTER_DECREMENT 0x1001
+#define ZYLIX_EVENT_COUNTER_RESET     0x1002
+
+// =============================================================================
 // Data Structures
 // =============================================================================
 
@@ -72,7 +105,20 @@ typedef struct {
     bool loading;                    /**< Whether a loading operation is in progress */
     const char* error_message;       /**< Current error message (null-terminated) or NULL */
     const void* view_data;           /**< Opaque pointer to view-specific data */
+    size_t view_data_size;           /**< Size of view_data in bytes */
 } ZylixState;
+
+/**
+ * Application state structure.
+ *
+ * This structure is pointed to by view_data in ZylixState
+ * and contains the actual application data.
+ */
+typedef struct {
+    int64_t counter;                 /**< Counter value */
+    char input_text[256];            /**< Input text buffer */
+    size_t input_len;                /**< Length of input text */
+} ZylixAppState;
 
 /**
  * ABI-compatible diff information.

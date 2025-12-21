@@ -1,0 +1,15 @@
+{
+  "name": "zylix-counter-wasm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zylix Counter Demo - WebAssembly",
+  "scripts": {
+    "build": "./build.sh",
+    "serve": "python3 -m http.server 8080",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

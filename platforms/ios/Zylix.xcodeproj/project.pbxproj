@@ -10,13 +10,30 @@
 		1E318BF58825F9A67D483247 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DFAA0407D4DF41AD2F392F /* ContentView.swift */; };
 		5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEE39EB5949C7C7C404455F /* ZylixApp.swift */; };
 		9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */; };
+		A1B2C3D4E5F60001 /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002 /* TodoView.swift */; };
+		A1B2C3D4E5F60003 /* TodoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004 /* TodoViewModel.swift */; };
+		B1C2D3E4F5A60001 /* TodoViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60002 /* TodoViewModelTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B1C2D3E4F5A60003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1BE5B4428E174D8FC8A3DE8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 13AD22E5E6ACD574E8DF0CE3;
+			remoteInfo = Zylix;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixBridge.swift; sourceTree = "<group>"; };
 		37DFAA0407D4DF41AD2F392F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4CEE39EB5949C7C7C404455F /* ZylixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixApp.swift; sourceTree = "<group>"; };
 		68D5815EF6AC3E7752F3CE5C /* Zylix-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Zylix-Bridging-Header.h"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60002 /* TodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60004 /* TodoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModel.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A60002 /* TodoViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModelTests.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A60004 /* ZylixTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ZylixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2DBDAFD8620743799661F03 /* Zylix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zylix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -25,14 +42,25 @@
 			isa = PBXGroup;
 			children = (
 				B89610221D5EB786816313F0 /* Sources */,
+				B1C2D3E4F5A60005 /* ZylixTests */,
 				C3B7D06E6A370E18E56C43BC /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		B1C2D3E4F5A60005 /* ZylixTests */ = {
+			isa = PBXGroup;
+			children = (
+				B1C2D3E4F5A60002 /* TodoViewModelTests.swift */,
+			);
+			path = ZylixTests;
 			sourceTree = "<group>";
 		};
 		B89610221D5EB786816313F0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				37DFAA0407D4DF41AD2F392F /* ContentView.swift */,
+				A1B2C3D4E5F60002 /* TodoView.swift */,
+				A1B2C3D4E5F60004 /* TodoViewModel.swift */,
 				68D5815EF6AC3E7752F3CE5C /* Zylix-Bridging-Header.h */,
 				4CEE39EB5949C7C7C404455F /* ZylixApp.swift */,
 				11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */,
@@ -45,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				C2DBDAFD8620743799661F03 /* Zylix.app */,
+				B1C2D3E4F5A60004 /* ZylixTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +99,24 @@
 			productReference = C2DBDAFD8620743799661F03 /* Zylix.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B1C2D3E4F5A60006 /* ZylixTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1C2D3E4F5A60010 /* Build configuration list for PBXNativeTarget "ZylixTests" */;
+			buildPhases = (
+				B1C2D3E4F5A60007 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1C2D3E4F5A60008 /* PBXTargetDependency */,
+			);
+			name = ZylixTests;
+			packageProductDependencies = (
+			);
+			productName = ZylixTests;
+			productReference = B1C2D3E4F5A60004 /* ZylixTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +129,11 @@
 					13AD22E5E6ACD574E8DF0CE3 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
+					};
+					B1C2D3E4F5A60006 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+						TestTargetID = 13AD22E5E6ACD574E8DF0CE3;
 					};
 				};
 			};
@@ -100,6 +152,7 @@
 			projectRoot = "";
 			targets = (
 				13AD22E5E6ACD574E8DF0CE3 /* Zylix */,
+				B1C2D3E4F5A60006 /* ZylixTests */,
 			);
 		};
 /* End PBXProject section */
@@ -132,12 +185,30 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E318BF58825F9A67D483247 /* ContentView.swift in Sources */,
+				A1B2C3D4E5F60001 /* TodoView.swift in Sources */,
+				A1B2C3D4E5F60003 /* TodoViewModel.swift in Sources */,
 				5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */,
 				9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1C2D3E4F5A60007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1C2D3E4F5A60001 /* TodoViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B1C2D3E4F5A60008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 13AD22E5E6ACD574E8DF0CE3 /* Zylix */;
+			targetProxy = B1C2D3E4F5A60003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		10A2C18620AE2CF0465D5295 /* Release */ = {
@@ -324,6 +395,44 @@
 			};
 			name = Debug;
 		};
+		B1C2D3E4F5A6000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zylix.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zylix.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Zylix";
+			};
+			name = Debug;
+		};
+		B1C2D3E4F5A6000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zylix.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zylix.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Zylix";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -332,6 +441,15 @@
 			buildConfigurations = (
 				ADFFA6D1CB0A7F7E1D83CF20 /* Debug */,
 				10A2C18620AE2CF0465D5295 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B1C2D3E4F5A60010 /* Build configuration list for PBXNativeTarget "ZylixTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1C2D3E4F5A6000A /* Debug */,
+				B1C2D3E4F5A6000B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

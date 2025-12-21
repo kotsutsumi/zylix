@@ -3,6 +3,10 @@ title: Windows
 weight: 6
 ---
 
+{{< callout type="warning" >}}
+**Status: 🚧 In Development** — This platform has build infrastructure but no working demo application yet. Zig core integration via P/Invoke is planned. The code below shows the target architecture.
+{{< /callout >}}
+
 Build native Windows applications with Zylix using WinUI 3. This guide covers Visual Studio setup, P/Invoke integration, and Microsoft Store deployment.
 
 ## Prerequisites
