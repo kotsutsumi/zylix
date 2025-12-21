@@ -7,7 +7,45 @@
 // - Export functionality
 // - Responsive layout
 
-import { ZylixApp, Component, State, Router, Http, Chart } from 'zylix';
+import { ZylixApp, Component, State } from 'zylix';
+
+// ============================================================================
+// Utilities
+// ============================================================================
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Escapes a value for use in HTML attributes
+ */
+function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Escapes a value for CSV export (RFC 4180 compliant)
+ */
+function escapeCSV(val) {
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+}
 
 // ============================================================================
 // Mock Data Generator
@@ -26,7 +64,8 @@ function generateChartData(days = 30) {
     const data = [];
     const now = new Date();
 
-    for (let i = days; i >= 0; i--) {
+    // Fixed: Generate exactly 'days' data points (was off-by-one)
+    for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(date.getDate() - i);
 
@@ -67,8 +106,16 @@ class DashboardStore extends State {
             tableData: generateTableData(),
             selectedPeriod: '30d',
             isLoading: false,
-            refreshInterval: null
+            // Table state
+            sortColumn: 'date',
+            sortDirection: 'desc',
+            currentPage: 1,
+            pageSize: 10,
+            tableFilter: ''
         });
+
+        // Store interval as instance property, not in state (prevents unnecessary re-renders)
+        this.refreshInterval = null;
     }
 
     setPeriod(period) {
@@ -88,171 +135,41 @@ class DashboardStore extends State {
 
     startAutoRefresh(interval = 30000) {
         this.stopAutoRefresh();
-        const refreshInterval = setInterval(() => this.refreshData(), interval);
-        this.setState({ refreshInterval });
+        this.refreshInterval = setInterval(() => this.refreshData(), interval);
     }
 
     stopAutoRefresh() {
-        if (this.state.refreshInterval) {
-            clearInterval(this.state.refreshInterval);
-            this.setState({ refreshInterval: null });
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
 
-    exportToCSV() {
-        const headers = ['ID', 'Customer', 'Product', 'Amount', 'Status', 'Date'];
-        const rows = this.state.tableData.map(row => [
-            row.id,
-            row.customer,
-            row.product,
-            row.amount.toFixed(2),
-            row.status,
-            new Date(row.date).toLocaleDateString()
-        ]);
-
-        const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'dashboard-export.csv';
-        a.click();
-        URL.revokeObjectURL(url);
+    // Table operations
+    setTableFilter(filter) {
+        this.setState({ tableFilter: filter, currentPage: 1 });
     }
-}
 
-// ============================================================================
-// Components
-// ============================================================================
-
-class MetricCard extends Component {
-    render() {
-        const { title, value, change, icon, format } = this.props;
-        const isPositive = change >= 0;
-        const formattedValue = format === 'currency'
-            ? `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-            : format === 'percent'
-                ? `${value.toFixed(1)}%`
-                : value.toLocaleString();
-
-        return `
-            <div class="metric-card">
-                <div class="metric-icon">${icon}</div>
-                <div class="metric-content">
-                    <div class="metric-value">${formattedValue}</div>
-                    <div class="metric-title">${title}</div>
-                    <div class="metric-change ${isPositive ? 'positive' : 'negative'}">
-                        ${isPositive ? '↑' : '↓'} ${Math.abs(change).toFixed(1)}%
-                    </div>
-                </div>
-            </div>
-        `;
+    setSortColumn(column) {
+        const { sortColumn, sortDirection } = this.state;
+        this.setState({
+            sortColumn: column,
+            sortDirection: sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc'
+        });
     }
-}
 
-class LineChart extends Component {
-    render() {
-        const { data, title, xKey, yKey, color } = this.props;
-
-        // Simple SVG line chart
-        const width = 600;
-        const height = 200;
-        const padding = 40;
-
-        const xScale = (i) => padding + (i / (data.length - 1)) * (width - 2 * padding);
-        const maxY = Math.max(...data.map(d => d[yKey]));
-        const yScale = (v) => height - padding - (v / maxY) * (height - 2 * padding);
-
-        const points = data.map((d, i) => `${xScale(i)},${yScale(d[yKey])}`).join(' ');
-
-        return `
-            <div class="chart-container">
-                <h3 class="chart-title">${title}</h3>
-                <svg viewBox="0 0 ${width} ${height}" class="line-chart">
-                    <!-- Grid lines -->
-                    ${[0, 0.25, 0.5, 0.75, 1].map(ratio => `
-                        <line x1="${padding}" y1="${yScale(maxY * ratio)}"
-                              x2="${width - padding}" y2="${yScale(maxY * ratio)}"
-                              stroke="#ddd" stroke-dasharray="4" />
-                    `).join('')}
-
-                    <!-- Line -->
-                    <polyline points="${points}" fill="none"
-                              stroke="${color}" stroke-width="2" />
-
-                    <!-- Data points -->
-                    ${data.map((d, i) => `
-                        <circle cx="${xScale(i)}" cy="${yScale(d[yKey])}"
-                                r="4" fill="${color}" />
-                    `).join('')}
-
-                    <!-- X axis labels -->
-                    ${data.filter((_, i) => i % 5 === 0).map((d, i) => `
-                        <text x="${xScale(i * 5)}" y="${height - 10}"
-                              text-anchor="middle" font-size="10">${d[xKey].slice(5)}</text>
-                    `).join('')}
-                </svg>
-            </div>
-        `;
-    }
-}
-
-class BarChart extends Component {
-    render() {
-        const { data, title, labels, values, colors } = this.props;
-
-        const width = 400;
-        const height = 200;
-        const padding = 40;
-        const barWidth = (width - 2 * padding) / data.length - 10;
-
-        const maxVal = Math.max(...data.map(d => d[values]));
-
-        return `
-            <div class="chart-container">
-                <h3 class="chart-title">${title}</h3>
-                <svg viewBox="0 0 ${width} ${height}" class="bar-chart">
-                    ${data.map((d, i) => {
-                        const barHeight = (d[values] / maxVal) * (height - 2 * padding);
-                        const x = padding + i * (barWidth + 10);
-                        const y = height - padding - barHeight;
-
-                        return `
-                            <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}"
-                                  fill="${colors[i % colors.length]}" rx="4" />
-                            <text x="${x + barWidth / 2}" y="${height - 10}"
-                                  text-anchor="middle" font-size="10">${d[labels]}</text>
-                            <text x="${x + barWidth / 2}" y="${y - 5}"
-                                  text-anchor="middle" font-size="10">${d[values]}</text>
-                        `;
-                    }).join('')}
-                </svg>
-            </div>
-        `;
-    }
-}
-
-class DataTable extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            sortColumn: 'date',
-            sortDirection: 'desc',
-            currentPage: 1,
-            pageSize: 10,
-            filter: ''
-        };
+    setPage(page) {
+        this.setState({ currentPage: page });
     }
 
     getSortedData() {
-        const { data } = this.props;
-        const { sortColumn, sortDirection, filter } = this.state;
+        const { tableData, sortColumn, sortDirection, tableFilter } = this.state;
 
-        let filtered = data;
+        let filtered = tableData;
 
-        if (filter) {
-            const lowerFilter = filter.toLowerCase();
-            filtered = data.filter(row =>
+        if (tableFilter) {
+            const lowerFilter = tableFilter.toLowerCase();
+            filtered = tableData.filter(row =>
                 row.id.toLowerCase().includes(lowerFilter) ||
                 row.customer.toLowerCase().includes(lowerFilter) ||
                 row.product.toLowerCase().includes(lowerFilter)
@@ -278,20 +195,187 @@ class DataTable extends Component {
         return sorted.slice(start, start + pageSize);
     }
 
+    getTotalPages() {
+        const { pageSize } = this.state;
+        return Math.ceil(this.getSortedData().length / pageSize);
+    }
+
+    exportToCSV() {
+        const headers = ['ID', 'Customer', 'Product', 'Amount', 'Status', 'Date'];
+        const rows = this.state.tableData.map(row => [
+            row.id,
+            row.customer,
+            row.product,
+            row.amount.toFixed(2),
+            row.status,
+            new Date(row.date).toLocaleDateString()
+        ]);
+
+        // Proper CSV escaping
+        const csv = [headers, ...rows]
+            .map(row => row.map(escapeCSV).join(','))
+            .join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dashboard-export.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+}
+
+// ============================================================================
+// Components
+// ============================================================================
+
+class MetricCard extends Component {
     render() {
-        const { onExport } = this.props;
-        const { currentPage, pageSize, filter } = this.state;
-        const sorted = this.getSortedData();
-        const paged = this.getPagedData();
-        const totalPages = Math.ceil(sorted.length / pageSize);
+        const { title, value, change, icon, format } = this.props;
+        const isPositive = change >= 0;
+        const formattedValue = format === 'currency'
+            ? `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+            : format === 'percent'
+                ? `${value.toFixed(1)}%`
+                : value.toLocaleString();
+
+        return `
+            <div class="metric-card">
+                <div class="metric-icon">${escapeHtml(icon)}</div>
+                <div class="metric-content">
+                    <div class="metric-value">${escapeHtml(formattedValue)}</div>
+                    <div class="metric-title">${escapeHtml(title)}</div>
+                    <div class="metric-change ${isPositive ? 'positive' : 'negative'}">
+                        ${isPositive ? '↑' : '↓'} ${Math.abs(change).toFixed(1)}%
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+class LineChart extends Component {
+    render() {
+        const { data, title, xKey, yKey, color } = this.props;
+
+        // Handle empty or insufficient data
+        if (!data || data.length === 0) {
+            return `
+                <div class="chart-container">
+                    <h3 class="chart-title">${escapeHtml(title)}</h3>
+                    <div class="chart-empty">No data available</div>
+                </div>
+            `;
+        }
+
+        // Simple SVG line chart
+        const width = 600;
+        const height = 200;
+        const padding = 40;
+
+        // Handle single data point
+        const xScale = (i) => data.length === 1
+            ? width / 2
+            : padding + (i / (data.length - 1)) * (width - 2 * padding);
+
+        const maxY = Math.max(...data.map(d => d[yKey])) || 1;
+        const yScale = (v) => height - padding - (v / maxY) * (height - 2 * padding);
+
+        const points = data.map((d, i) => `${xScale(i)},${yScale(d[yKey])}`).join(' ');
+
+        return `
+            <div class="chart-container">
+                <h3 class="chart-title">${escapeHtml(title)}</h3>
+                <svg viewBox="0 0 ${width} ${height}" class="line-chart">
+                    <!-- Grid lines -->
+                    ${[0, 0.25, 0.5, 0.75, 1].map(ratio => `
+                        <line x1="${padding}" y1="${yScale(maxY * ratio)}"
+                              x2="${width - padding}" y2="${yScale(maxY * ratio)}"
+                              stroke="#ddd" stroke-dasharray="4" />
+                    `).join('')}
+
+                    <!-- Line -->
+                    <polyline points="${points}" fill="none"
+                              stroke="${escapeAttr(color)}" stroke-width="2" />
+
+                    <!-- Data points -->
+                    ${data.map((d, i) => `
+                        <circle cx="${xScale(i)}" cy="${yScale(d[yKey])}"
+                                r="4" fill="${escapeAttr(color)}" />
+                    `).join('')}
+
+                    <!-- X axis labels -->
+                    ${data.filter((_, i) => i % Math.max(1, Math.floor(data.length / 6)) === 0).map((d, idx, arr) => {
+                        const i = data.indexOf(d);
+                        return `
+                            <text x="${xScale(i)}" y="${height - 10}"
+                                  text-anchor="middle" font-size="10">${escapeHtml(d[xKey].slice(5))}</text>
+                        `;
+                    }).join('')}
+                </svg>
+            </div>
+        `;
+    }
+}
+
+class BarChart extends Component {
+    render() {
+        const { data, title, labels, values, colors } = this.props;
+
+        // Handle empty data
+        if (!data || data.length === 0) {
+            return `
+                <div class="chart-container">
+                    <h3 class="chart-title">${escapeHtml(title)}</h3>
+                    <div class="chart-empty">No data available</div>
+                </div>
+            `;
+        }
+
+        const width = 400;
+        const height = 200;
+        const padding = 40;
+        const barWidth = (width - 2 * padding) / data.length - 10;
+
+        const maxVal = Math.max(...data.map(d => d[values])) || 1;
+
+        return `
+            <div class="chart-container">
+                <h3 class="chart-title">${escapeHtml(title)}</h3>
+                <svg viewBox="0 0 ${width} ${height}" class="bar-chart">
+                    ${data.map((d, i) => {
+                        const barHeight = (d[values] / maxVal) * (height - 2 * padding);
+                        const x = padding + i * (barWidth + 10);
+                        const y = height - padding - barHeight;
+
+                        return `
+                            <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}"
+                                  fill="${escapeAttr(colors[i % colors.length])}" rx="4" />
+                            <text x="${x + barWidth / 2}" y="${height - 10}"
+                                  text-anchor="middle" font-size="10">${escapeHtml(d[labels])}</text>
+                            <text x="${x + barWidth / 2}" y="${y - 5}"
+                                  text-anchor="middle" font-size="10">${d[values]}</text>
+                        `;
+                    }).join('')}
+                </svg>
+            </div>
+        `;
+    }
+}
+
+class DataTable extends Component {
+    render() {
+        const { data, currentPage, totalPages, tableFilter, sortColumn, sortDirection } = this.props;
 
         return `
             <div class="data-table-container">
                 <div class="table-toolbar">
                     <input type="search" placeholder="Search..."
-                           value="${filter}" oninput="handleTableFilter(event)"
+                           value="${escapeAttr(tableFilter)}"
+                           data-action="table-filter"
                            class="table-search" />
-                    <button class="btn btn-secondary" onclick="exportData()">
+                    <button class="btn btn-secondary" data-action="export">
                         📥 Export CSV
                     </button>
                 </div>
@@ -299,38 +383,50 @@ class DataTable extends Component {
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th onclick="sortTable('id')">Order ID</th>
-                            <th onclick="sortTable('customer')">Customer</th>
-                            <th onclick="sortTable('product')">Product</th>
-                            <th onclick="sortTable('amount')">Amount</th>
-                            <th onclick="sortTable('status')">Status</th>
-                            <th onclick="sortTable('date')">Date</th>
+                            <th data-action="sort" data-column="id">
+                                Order ID ${sortColumn === 'id' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
+                            <th data-action="sort" data-column="customer">
+                                Customer ${sortColumn === 'customer' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
+                            <th data-action="sort" data-column="product">
+                                Product ${sortColumn === 'product' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
+                            <th data-action="sort" data-column="amount">
+                                Amount ${sortColumn === 'amount' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
+                            <th data-action="sort" data-column="status">
+                                Status ${sortColumn === 'status' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
+                            <th data-action="sort" data-column="date">
+                                Date ${sortColumn === 'date' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${paged.map(row => `
+                        ${data.map(row => `
                             <tr>
-                                <td>${row.id}</td>
-                                <td>${row.customer}</td>
-                                <td>${row.product}</td>
+                                <td>${escapeHtml(row.id)}</td>
+                                <td>${escapeHtml(row.customer)}</td>
+                                <td>${escapeHtml(row.product)}</td>
                                 <td>$${row.amount.toFixed(2)}</td>
                                 <td>
-                                    <span class="status-badge status-${row.status}">
-                                        ${row.status}
+                                    <span class="status-badge status-${escapeAttr(row.status)}">
+                                        ${escapeHtml(row.status)}
                                     </span>
                                 </td>
-                                <td>${new Date(row.date).toLocaleDateString()}</td>
+                                <td>${escapeHtml(new Date(row.date).toLocaleDateString())}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
 
                 <div class="table-pagination">
-                    <button onclick="prevPage()" ${currentPage === 1 ? 'disabled' : ''}>
+                    <button data-action="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
                         Previous
                     </button>
                     <span>Page ${currentPage} of ${totalPages}</span>
-                    <button onclick="nextPage()" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <button data-action="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
                         Next
                     </button>
                 </div>
@@ -359,10 +455,10 @@ class Sidebar extends Component {
                 </div>
                 <nav class="sidebar-nav">
                     ${menuItems.map(item => `
-                        <a href="#${item.id}"
+                        <a href="#${escapeAttr(item.id)}"
                            class="nav-item ${activePage === item.id ? 'active' : ''}">
                             <span class="nav-icon">${item.icon}</span>
-                            <span class="nav-label">${item.label}</span>
+                            <span class="nav-label">${escapeHtml(item.label)}</span>
                         </a>
                     `).join('')}
                 </nav>
@@ -381,12 +477,71 @@ class DashboardApp extends Component {
         this.store = new DashboardStore();
         this.store.subscribe(() => this.render());
         this.store.startAutoRefresh();
+
+        this.boundHandleClick = this.handleClick.bind(this);
+        this.boundHandleInput = this.handleInput.bind(this);
+        this.boundHandleChange = this.handleChange.bind(this);
+    }
+
+    mount(container) {
+        this.container = container;
+        this.render();
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        if (!this.container) return;
+
+        this.container.addEventListener('click', this.boundHandleClick);
+        this.container.addEventListener('input', this.boundHandleInput);
+        this.container.addEventListener('change', this.boundHandleChange);
+    }
+
+    handleClick(event) {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+
+        switch (action) {
+            case 'refresh':
+                this.store.refreshData();
+                break;
+            case 'export':
+                this.store.exportToCSV();
+                break;
+            case 'sort':
+                this.store.setSortColumn(target.dataset.column);
+                break;
+            case 'prev-page':
+                this.store.setPage(this.store.state.currentPage - 1);
+                break;
+            case 'next-page':
+                this.store.setPage(this.store.state.currentPage + 1);
+                break;
+        }
+    }
+
+    handleInput(event) {
+        const target = event.target;
+        if (target.dataset.action === 'table-filter') {
+            this.store.setTableFilter(target.value);
+        }
+    }
+
+    handleChange(event) {
+        const target = event.target;
+        if (target.dataset.action === 'period-select') {
+            this.store.setPeriod(target.value);
+        }
     }
 
     render() {
-        const { metrics, chartData, tableData, selectedPeriod } = this.store.state;
+        const { metrics, chartData, selectedPeriod, currentPage, tableFilter, sortColumn, sortDirection } = this.store.state;
+        const pagedData = this.store.getPagedData();
+        const totalPages = this.store.getTotalPages();
 
-        return `
+        const html = `
             <div class="dashboard-app">
                 ${new Sidebar({ activePage: 'overview' }).render()}
 
@@ -394,12 +549,12 @@ class DashboardApp extends Component {
                     <header class="dashboard-header">
                         <h1>Dashboard Overview</h1>
                         <div class="header-actions">
-                            <select class="period-select" onchange="changePeriod(event)">
+                            <select class="period-select" data-action="period-select">
                                 <option value="7d" ${selectedPeriod === '7d' ? 'selected' : ''}>Last 7 days</option>
                                 <option value="30d" ${selectedPeriod === '30d' ? 'selected' : ''}>Last 30 days</option>
                                 <option value="90d" ${selectedPeriod === '90d' ? 'selected' : ''}>Last 90 days</option>
                             </select>
-                            <button class="btn btn-primary" onclick="refreshData()">
+                            <button class="btn btn-primary" data-action="refresh">
                                 🔄 Refresh
                             </button>
                         </div>
@@ -456,13 +611,23 @@ class DashboardApp extends Component {
                     <section class="table-section">
                         <h2>Recent Orders</h2>
                         ${new DataTable({
-                            data: tableData,
-                            onExport: () => this.store.exportToCSV()
+                            data: pagedData,
+                            currentPage,
+                            totalPages,
+                            tableFilter,
+                            sortColumn,
+                            sortDirection
                         }).render()}
                     </section>
                 </main>
             </div>
         `;
+
+        if (this.container) {
+            this.container.innerHTML = html;
+        }
+
+        return html;
     }
 }
 
@@ -477,4 +642,4 @@ const app = new ZylixApp({
 
 app.mount();
 
-export { DashboardApp, DashboardStore };
+export { DashboardApp, DashboardStore, escapeHtml, escapeAttr, escapeCSV };
