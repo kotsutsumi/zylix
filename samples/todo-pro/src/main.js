@@ -9,7 +9,59 @@
 // - Due dates with notifications
 // - Search and filter
 
-import { ZylixApp, Component, State, Router, Storage } from 'zylix';
+import { ZylixApp, Component, State, Storage } from 'zylix';
+
+// ============================================================================
+// Utilities
+// ============================================================================
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Escapes a value for use in HTML attributes
+ */
+function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Generates a unique ID using crypto.randomUUID with fallback
+ */
+function generateId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    // Fallback for older browsers
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = date - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days < 0) return 'Overdue';
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    if (days < 7) return `In ${days} days`;
+
+    return date.toLocaleDateString();
+}
 
 // ============================================================================
 // Types
@@ -52,6 +104,10 @@ class TodoStore extends State {
                 todos: saved.todos || [],
                 theme: saved.theme || 'light'
             });
+            // Apply theme on load
+            if (typeof document !== 'undefined') {
+                document.documentElement.setAttribute('data-theme', saved.theme || 'light');
+            }
         }
     }
 
@@ -64,7 +120,7 @@ class TodoStore extends State {
 
     addTodo(todo) {
         const newTodo = {
-            id: Date.now(),
+            id: generateId(),
             text: todo.text,
             completed: false,
             category: todo.category || Category.PERSONAL,
@@ -127,7 +183,7 @@ class TodoStore extends State {
         const newTheme = this.state.theme === 'light' ? 'dark' : 'light';
         this.setState({ theme: newTheme });
         this.saveToStorage();
-        document.documentElement.setAttribute('data-theme', newTheme);
+        // Theme DOM update is handled by UI layer subscription
     }
 
     getFilteredTodos() {
@@ -170,7 +226,7 @@ class TodoStore extends State {
     }
 
     scheduleNotification(todo) {
-        if (!todo.dueDate || !('Notification' in window)) return;
+        if (!todo.dueDate || typeof window === 'undefined' || !('Notification' in window)) return;
 
         const dueTime = new Date(todo.dueDate).getTime();
         const now = Date.now();
@@ -195,26 +251,27 @@ class TodoStore extends State {
 
 class TodoItem extends Component {
     render() {
-        const { todo, onToggle, onDelete, onEdit } = this.props;
-        const priorityClass = `priority-${todo.priority}`;
-        const categoryClass = `category-${todo.category}`;
+        const { todo } = this.props;
+        const priorityClass = `priority-${escapeAttr(todo.priority)}`;
+        const categoryClass = `category-${escapeAttr(todo.category)}`;
+        const escapedId = escapeAttr(todo.id);
 
         return `
             <div class="todo-item ${todo.completed ? 'completed' : ''} ${priorityClass}">
-                <div class="todo-checkbox" onclick="handleToggle(${todo.id})">
+                <div class="todo-checkbox" data-action="toggle" data-id="${escapedId}">
                     ${todo.completed ? '✓' : '○'}
                 </div>
                 <div class="todo-content">
-                    <span class="todo-text">${todo.text}</span>
+                    <span class="todo-text">${escapeHtml(todo.text)}</span>
                     <div class="todo-meta">
-                        <span class="todo-category ${categoryClass}">${todo.category}</span>
-                        ${todo.dueDate ? `<span class="todo-due">${formatDate(todo.dueDate)}</span>` : ''}
-                        ${todo.tags.map(tag => `<span class="todo-tag">#${tag}</span>`).join('')}
+                        <span class="todo-category ${categoryClass}">${escapeHtml(todo.category)}</span>
+                        ${todo.dueDate ? `<span class="todo-due">${escapeHtml(formatDate(todo.dueDate))}</span>` : ''}
+                        ${todo.tags.map(tag => `<span class="todo-tag">#${escapeHtml(tag)}</span>`).join('')}
                     </div>
                 </div>
                 <div class="todo-actions">
-                    <button class="btn-edit" onclick="handleEdit(${todo.id})">✎</button>
-                    <button class="btn-delete" onclick="handleDelete(${todo.id})">×</button>
+                    <button class="btn-edit" data-action="edit" data-id="${escapedId}">✎</button>
+                    <button class="btn-delete" data-action="delete" data-id="${escapedId}">×</button>
                 </div>
             </div>
         `;
@@ -233,43 +290,24 @@ class TodoForm extends Component {
         };
     }
 
-    handleSubmit(e) {
-        e.preventDefault();
-        if (!this.state.text.trim()) return;
-
-        this.props.onAdd({
-            text: this.state.text,
-            category: this.state.category,
-            priority: this.state.priority,
-            tags: this.state.tags.split(',').map(t => t.trim()).filter(Boolean),
-            dueDate: this.state.dueDate || null
-        });
-
-        this.setState({
-            text: '',
-            tags: '',
-            dueDate: ''
-        });
-    }
-
     render() {
         return `
-            <form class="todo-form" onsubmit="handleFormSubmit(event)">
+            <form class="todo-form" data-action="submit-form">
                 <input
                     type="text"
                     class="todo-input"
+                    name="text"
                     placeholder="What needs to be done?"
-                    value="${this.state.text}"
-                    oninput="handleTextChange(event)"
+                    value="${escapeAttr(this.state.text)}"
                 />
                 <div class="todo-form-options">
-                    <select class="select-category" onchange="handleCategoryChange(event)">
+                    <select class="select-category" name="category">
                         <option value="personal" ${this.state.category === 'personal' ? 'selected' : ''}>Personal</option>
                         <option value="work" ${this.state.category === 'work' ? 'selected' : ''}>Work</option>
                         <option value="shopping" ${this.state.category === 'shopping' ? 'selected' : ''}>Shopping</option>
                         <option value="health" ${this.state.category === 'health' ? 'selected' : ''}>Health</option>
                     </select>
-                    <select class="select-priority" onchange="handlePriorityChange(event)">
+                    <select class="select-priority" name="priority">
                         <option value="low" ${this.state.priority === 'low' ? 'selected' : ''}>Low</option>
                         <option value="medium" ${this.state.priority === 'medium' ? 'selected' : ''}>Medium</option>
                         <option value="high" ${this.state.priority === 'high' ? 'selected' : ''}>High</option>
@@ -277,15 +315,15 @@ class TodoForm extends Component {
                     <input
                         type="date"
                         class="input-date"
-                        value="${this.state.dueDate}"
-                        onchange="handleDateChange(event)"
+                        name="dueDate"
+                        value="${escapeAttr(this.state.dueDate)}"
                     />
                     <input
                         type="text"
                         class="input-tags"
+                        name="tags"
                         placeholder="Tags (comma separated)"
-                        value="${this.state.tags}"
-                        oninput="handleTagsChange(event)"
+                        value="${escapeAttr(this.state.tags)}"
                     />
                 </div>
                 <button type="submit" class="btn-add">Add Todo</button>
@@ -296,23 +334,24 @@ class TodoForm extends Component {
 
 class FilterBar extends Component {
     render() {
-        const { filter, searchQuery, selectedCategory, onFilterChange, onSearchChange, onCategoryChange } = this.props;
+        const { filter, searchQuery, selectedCategory } = this.props;
 
         return `
             <div class="filter-bar">
                 <input
                     type="search"
                     class="search-input"
+                    name="search"
                     placeholder="Search todos..."
-                    value="${searchQuery}"
-                    oninput="handleSearchChange(event)"
+                    value="${escapeAttr(searchQuery)}"
+                    data-action="search"
                 />
                 <div class="filter-buttons">
-                    <button class="filter-btn ${filter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>
-                    <button class="filter-btn ${filter === 'active' ? 'active' : ''}" onclick="setFilter('active')">Active</button>
-                    <button class="filter-btn ${filter === 'completed' ? 'active' : ''}" onclick="setFilter('completed')">Completed</button>
+                    <button class="filter-btn ${filter === 'all' ? 'active' : ''}" data-action="filter" data-filter="all">All</button>
+                    <button class="filter-btn ${filter === 'active' ? 'active' : ''}" data-action="filter" data-filter="active">Active</button>
+                    <button class="filter-btn ${filter === 'completed' ? 'active' : ''}" data-action="filter" data-filter="completed">Completed</button>
                 </div>
-                <select class="category-filter" onchange="handleCategoryFilter(event)">
+                <select class="category-filter" data-action="category-filter">
                     <option value="">All Categories</option>
                     <option value="personal" ${selectedCategory === 'personal' ? 'selected' : ''}>Personal</option>
                     <option value="work" ${selectedCategory === 'work' ? 'selected' : ''}>Work</option>
@@ -364,17 +403,101 @@ class TodoProApp extends Component {
         super();
         this.store = new TodoStore();
         this.store.subscribe(() => this.render());
+        this.boundHandleClick = this.handleClick.bind(this);
+        this.boundHandleSubmit = this.handleSubmit.bind(this);
+        this.boundHandleInput = this.handleInput.bind(this);
+        this.boundHandleChange = this.handleChange.bind(this);
+    }
+
+    mount(container) {
+        this.container = container;
+        this.render();
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        if (!this.container) return;
+
+        this.container.addEventListener('click', this.boundHandleClick);
+        this.container.addEventListener('submit', this.boundHandleSubmit);
+        this.container.addEventListener('input', this.boundHandleInput);
+        this.container.addEventListener('change', this.boundHandleChange);
+    }
+
+    handleClick(event) {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+        const id = target.dataset.id;
+
+        switch (action) {
+            case 'toggle':
+                this.store.toggleTodo(id);
+                break;
+            case 'delete':
+                this.store.deleteTodo(id);
+                break;
+            case 'edit':
+                // For now, just log - could open modal
+                console.log('Edit todo:', id);
+                break;
+            case 'filter':
+                this.store.setFilter(target.dataset.filter);
+                break;
+            case 'toggle-theme':
+                this.store.toggleTheme();
+                // Update DOM theme
+                document.documentElement.setAttribute('data-theme', this.store.state.theme);
+                break;
+        }
+    }
+
+    handleSubmit(event) {
+        const form = event.target.closest('[data-action="submit-form"]');
+        if (!form) return;
+
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const text = formData.get('text')?.trim();
+
+        if (!text) return;
+
+        this.store.addTodo({
+            text: text,
+            category: formData.get('category') || Category.PERSONAL,
+            priority: formData.get('priority') || Priority.MEDIUM,
+            tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
+            dueDate: formData.get('dueDate') || null
+        });
+
+        form.reset();
+    }
+
+    handleInput(event) {
+        const target = event.target;
+        if (target.dataset.action === 'search') {
+            this.store.setSearchQuery(target.value);
+        }
+    }
+
+    handleChange(event) {
+        const target = event.target;
+        if (target.dataset.action === 'category-filter') {
+            this.store.setCategory(target.value || null);
+        }
     }
 
     render() {
         const { theme, filter, searchQuery, selectedCategory } = this.store.state;
         const filteredTodos = this.store.getFilteredTodos();
 
-        return `
-            <div class="app ${theme}">
+        const html = `
+            <div class="app ${escapeAttr(theme)}">
                 <header class="header">
                     <h1>Todo Pro</h1>
-                    <button class="theme-toggle" onclick="toggleTheme()">
+                    <button class="theme-toggle" data-action="toggle-theme">
                         ${theme === 'light' ? '🌙' : '☀️'}
                     </button>
                 </header>
@@ -407,25 +530,13 @@ class TodoProApp extends Component {
                 </footer>
             </div>
         `;
+
+        if (this.container) {
+            this.container.innerHTML = html;
+        }
+
+        return html;
     }
-}
-
-// ============================================================================
-// Utilities
-// ============================================================================
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = date - now;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days < 0) return 'Overdue';
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Tomorrow';
-    if (days < 7) return `In ${days} days`;
-
-    return date.toLocaleDateString();
 }
 
 // ============================================================================
@@ -438,10 +549,10 @@ const app = new ZylixApp({
 });
 
 // Request notification permission
-if ('Notification' in window && Notification.permission === 'default') {
+if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
 }
 
 app.mount();
 
-export { TodoProApp, TodoStore };
+export { TodoProApp, TodoStore, escapeHtml, escapeAttr, generateId };
