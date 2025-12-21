@@ -181,11 +181,11 @@ params:
   # Favicon (use default from theme)
   # favicon: favicon.png
 
-  # Logo: logo = shown in light mode, secondaryLogo = shown in dark mode
-  # logo.svg = dark colors (#555654) for light backgrounds
+  # Logo: In Blowfish theme, logo shows in dark mode, secondaryLogo shows in light mode
   # logo-dark.svg = light colors (#D4D4D4) for dark backgrounds
-  logo: img/logo.svg
-  secondaryLogo: img/logo-dark.svg
+  # logo.svg = dark colors (#555654) for light backgrounds
+  logo: img/logo-dark.svg
+  secondaryLogo: img/logo.svg
 
   # Site image for social sharing
   # image: img/site.png
