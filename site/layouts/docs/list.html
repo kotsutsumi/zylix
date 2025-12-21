@@ -6,7 +6,7 @@
     {{ partial "docs-sidebar.html" . }}
 
     {{/* Main content */}}
-    <main class="flex-1 min-w-0">
+    <main class="flex-1 min-w-0 pt-0">
       {{/* Header */}}
       <header>
         {{ if .Params.showBreadcrumbs | default (site.Params.list.showBreadcrumbs | default false) }}
