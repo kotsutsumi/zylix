@@ -1,0 +1,23 @@
+# Default owners for everything in the repo
+* @kotsutsumi
+
+# Core (Zig)
+/core/ @kotsutsumi
+
+# Platform-specific owners
+/platforms/android/ @kotsutsumi
+/platforms/ios/ @kotsutsumi
+/platforms/macos/ @kotsutsumi
+/platforms/windows/ @kotsutsumi
+/platforms/linux/ @kotsutsumi
+/platforms/web/ @kotsutsumi
+
+# Samples
+/samples/ @kotsutsumi
+
+# Documentation
+/docs/ @kotsutsumi
+/site/ @kotsutsumi
+
+# CI/CD
+/.github/ @kotsutsumi
