@@ -132,7 +132,7 @@ languages:
 params:
   # Header settings
   header:
-    layout: fixed
+    layout: basic
 
   # Footer settings (appearance switcher)
   footer:
