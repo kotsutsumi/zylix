@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zylix Component Showcase - v0.7.0</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #06b6d4;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .status.loading {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status.ready {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 1.5rem;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .demo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+
+        .demo-card h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .demo-content {
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* Component Styles */
+
+        .zylix-vstack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .zylix-hstack {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .zylix-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+
+        .zylix-divider {
+            height: 1px;
+            background: var(--border);
+            width: 100%;
+        }
+
+        .zylix-spacer {
+            flex: 1;
+        }
+
+        .zylix-text {
+            color: var(--text);
+        }
+
+        .zylix-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .zylix-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .zylix-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .zylix-checkbox,
+        .zylix-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .zylix-checkbox input,
+        .zylix-toggle input {
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: var(--primary);
+        }
+
+        .zylix-alert {
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+        }
+
+        .zylix-alert.info {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--info);
+            color: var(--info);
+        }
+
+        .zylix-alert.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .zylix-alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .zylix-alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .zylix-progress {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .zylix-progress-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .zylix-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .zylix-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.5rem;
+            background: var(--error);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 999px;
+        }
+
+        .zylix-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            font-size: 0.85rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--primary);
+        }
+
+        .zylix-accordion {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .zylix-accordion-header {
+            padding: 0.75rem 1rem;
+            background: var(--card-bg);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zylix-accordion-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .zylix-accordion-content {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+
+        .zylix-accordion.expanded .zylix-accordion-content {
+            display: block;
+        }
+
+        .zylix-select {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .zylix-textarea {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem 1rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+            width: 100%;
+        }
+
+        .zylix-textarea:focus,
+        .zylix-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .stats {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Test IDs for E2E testing */
+        [data-testid] {
+            /* E2E test markers */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">Zylix</h1>
+            <p class="subtitle">Component Showcase — WebAssembly</p>
+            <span class="version-badge">v0.7.0</span>
+            <div class="status loading" id="status" data-testid="status">Loading WASM...</div>
+        </header>
+
+        <main id="app">
+            <!-- Layout Components -->
+            <section class="section">
+                <h2 class="section-title">Layout Components</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>VStack & HStack</h3>
+                        <div class="demo-content" data-testid="layout-stack">
+                            <div class="zylix-vstack" data-testid="vstack">
+                                <div class="zylix-hstack">
+                                    <button class="zylix-button" data-testid="btn-1">Button 1</button>
+                                    <button class="zylix-button" data-testid="btn-2">Button 2</button>
+                                </div>
+                                <div class="zylix-divider"></div>
+                                <div class="zylix-hstack">
+                                    <span class="zylix-text">Horizontal layout</span>
+                                    <div class="zylix-spacer"></div>
+                                    <span class="zylix-badge" data-testid="badge">3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Card Component</h3>
+                        <div class="demo-content" data-testid="layout-card">
+                            <div class="zylix-card" data-testid="card">
+                                <div class="zylix-vstack">
+                                    <strong>Card Title</strong>
+                                    <span class="zylix-text" style="color: var(--text-muted);">
+                                        This is a card component with nested layout.
+                                    </span>
+                                    <div class="zylix-hstack">
+                                        <div class="zylix-tag" data-testid="tag">Feature</div>
+                                        <div class="zylix-tag">v0.7.0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Components -->
+            <section class="section">
+                <h2 class="section-title">Form Components</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Checkbox & Toggle</h3>
+                        <div class="demo-content" data-testid="form-controls">
+                            <label class="zylix-checkbox">
+                                <input type="checkbox" id="checkbox1" data-testid="checkbox-1">
+                                <span>Enable notifications</span>
+                            </label>
+                            <label class="zylix-checkbox">
+                                <input type="checkbox" id="checkbox2" data-testid="checkbox-2" checked>
+                                <span>Dark mode (checked)</span>
+                            </label>
+                            <label class="zylix-toggle">
+                                <input type="checkbox" id="toggle1" data-testid="toggle-1">
+                                <span>Toggle switch</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Select & Textarea</h3>
+                        <div class="demo-content" data-testid="form-inputs">
+                            <select class="zylix-select" data-testid="select">
+                                <option value="">Select option...</option>
+                                <option value="opt1">Option 1</option>
+                                <option value="opt2">Option 2</option>
+                                <option value="opt3">Option 3</option>
+                            </select>
+                            <textarea
+                                class="zylix-textarea"
+                                placeholder="Enter text here..."
+                                data-testid="textarea"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feedback Components -->
+            <section class="section">
+                <h2 class="section-title">Feedback Components</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Alerts</h3>
+                        <div class="demo-content" data-testid="feedback-alerts">
+                            <div class="zylix-alert info" data-testid="alert-info">
+                                ℹ️ This is an info alert
+                            </div>
+                            <div class="zylix-alert success" data-testid="alert-success">
+                                ✓ Success! Operation completed
+                            </div>
+                            <div class="zylix-alert warning" data-testid="alert-warning">
+                                ⚠️ Warning: Check your settings
+                            </div>
+                            <div class="zylix-alert error" data-testid="alert-error">
+                                ✕ Error: Something went wrong
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Progress & Spinner</h3>
+                        <div class="demo-content" data-testid="feedback-progress">
+                            <div class="zylix-vstack">
+                                <span class="zylix-text">Linear Progress</span>
+                                <div class="zylix-progress" data-testid="progress">
+                                    <div class="zylix-progress-bar" id="progress-bar" style="width: 65%"></div>
+                                </div>
+                                <span class="zylix-text" style="color: var(--text-muted);" data-testid="progress-value">65%</span>
+                            </div>
+                            <div class="zylix-hstack" style="margin-top: 1rem;">
+                                <span class="zylix-text">Loading:</span>
+                                <div class="zylix-spinner" data-testid="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Display Components -->
+            <section class="section">
+                <h2 class="section-title">Data Display Components</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Badge & Tag</h3>
+                        <div class="demo-content" data-testid="data-badges">
+                            <div class="zylix-hstack">
+                                <span class="zylix-text">Notifications</span>
+                                <span class="zylix-badge" data-testid="notification-badge">5</span>
+                            </div>
+                            <div class="zylix-hstack" style="flex-wrap: wrap;">
+                                <div class="zylix-tag" data-testid="tag-layout">Layout</div>
+                                <div class="zylix-tag" data-testid="tag-form">Form</div>
+                                <div class="zylix-tag" data-testid="tag-feedback">Feedback</div>
+                                <div class="zylix-tag" data-testid="tag-navigation">Navigation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Accordion</h3>
+                        <div class="demo-content" data-testid="data-accordion">
+                            <div class="zylix-accordion" id="accordion1" data-testid="accordion">
+                                <div class="zylix-accordion-header" onclick="toggleAccordion('accordion1')">
+                                    <span>Click to expand</span>
+                                    <span id="accordion1-icon">▼</span>
+                                </div>
+                                <div class="zylix-accordion-content" data-testid="accordion-content">
+                                    <p>This is the accordion content. It can contain any elements.</p>
+                                    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+                                        Built with Zylix v0.7.0 Component Library.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Demo -->
+            <section class="section">
+                <h2 class="section-title">Interactive Demo</h2>
+                <div class="demo-grid">
+                    <div class="demo-card">
+                        <h3>Component Creation</h3>
+                        <div class="demo-content">
+                            <div class="zylix-vstack">
+                                <button class="zylix-button" id="btn-create" data-testid="btn-create">
+                                    Create Component
+                                </button>
+                                <button class="zylix-button" id="btn-update" data-testid="btn-update" style="background: var(--success);">
+                                    Update Progress
+                                </button>
+                                <button class="zylix-button" id="btn-reset" data-testid="btn-reset" style="background: var(--border);">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-card">
+                        <h3>Dynamic Content</h3>
+                        <div class="demo-content" id="dynamic-content" data-testid="dynamic-content">
+                            <span class="zylix-text" style="color: var(--text-muted);">
+                                Click "Create Component" to add components here.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div class="stats" data-testid="stats">
+            <div class="stat">
+                <div class="stat-value" id="component-count" data-testid="component-count">0</div>
+                <div class="stat-label">Components</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="memory-used" data-testid="memory-used">0 KB</div>
+                <div class="stat-label">WASM Memory</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="abi-version" data-testid="abi-version">-</div>
+                <div class="stat-label">ABI Version</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Built with <a href="https://github.com/kotsutsumi/zylix" target="_blank">Zylix</a> —
+                Zig-powered cross-platform UI framework
+            </p>
+        </footer>
+    </div>
+
+    <script src="zylix-showcase.js"></script>
+    <script>
+        // Toggle accordion
+        function toggleAccordion(id) {
+            const accordion = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            accordion.classList.toggle('expanded');
+            icon.textContent = accordion.classList.contains('expanded') ? '▲' : '▼';
+        }
+
+        // Update stats display
+        function updateStats() {
+            const componentCount = document.getElementById('component-count');
+            const memoryUsed = document.getElementById('memory-used');
+
+            if (ZylixShowcase.initialized) {
+                componentCount.textContent = ZylixShowcase.getComponentCount();
+                const memory = ZylixShowcase.getMemoryUsed();
+                memoryUsed.textContent = `${(memory / 1024).toFixed(1)} KB`;
+            }
+        }
+
+        // Create dynamic components
+        let dynamicCount = 0;
+
+        function createDynamicComponent() {
+            dynamicCount++;
+
+            // Create components via WASM
+            const cardId = ZylixShowcase.createCard();
+            const textId = ZylixShowcase.createText(`Component #${dynamicCount}`);
+            const badgeId = ZylixShowcase.createBadge(dynamicCount);
+
+            if (cardId > 0) {
+                ZylixShowcase.addChild(cardId, textId);
+            }
+
+            // Render to DOM
+            const container = document.getElementById('dynamic-content');
+            const element = document.createElement('div');
+            element.className = 'zylix-card';
+            element.style.marginBottom = '0.5rem';
+            element.innerHTML = `
+                <div class="zylix-hstack">
+                    <span class="zylix-text">Component #${dynamicCount}</span>
+                    <div class="zylix-spacer"></div>
+                    <span class="zylix-badge">${dynamicCount}</span>
+                </div>
+            `;
+            element.setAttribute('data-testid', `dynamic-card-${dynamicCount}`);
+
+            if (dynamicCount === 1) {
+                container.innerHTML = '';
+            }
+            container.appendChild(element);
+
+            updateStats();
+            console.log(`Created component #${dynamicCount}, Card ID: ${cardId}, Text ID: ${textId}, Badge ID: ${badgeId}`);
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progressValue = document.querySelector('[data-testid="progress-value"]');
+            let current = parseInt(progressBar.style.width) || 0;
+            current = (current + 15) % 101;
+            progressBar.style.width = current + '%';
+            progressValue.textContent = current + '%';
+
+            // Update via WASM
+            const progressId = ZylixShowcase.createProgress(ZylixShowcase.ProgressStyle.LINEAR);
+            if (progressId > 0) {
+                ZylixShowcase.setProgressValue(progressId, current / 100);
+            }
+
+            updateStats();
+        }
+
+        function resetDemo() {
+            dynamicCount = 0;
+            const container = document.getElementById('dynamic-content');
+            container.innerHTML = `
+                <span class="zylix-text" style="color: var(--text-muted);">
+                    Click "Create Component" to add components here.
+                </span>
+            `;
+
+            const progressBar = document.getElementById('progress-bar');
+            const progressValue = document.querySelector('[data-testid="progress-value"]');
+            progressBar.style.width = '65%';
+            progressValue.textContent = '65%';
+
+            // Reset WASM component tree
+            if (ZylixShowcase.initialized) {
+                ZylixShowcase.wasm.zigdom_component_reset?.();
+                ZylixShowcase.wasm.zigdom_component_init?.();
+            }
+
+            updateStats();
+        }
+
+        // Initialize
+        async function main() {
+            const statusEl = document.getElementById('status');
+            const abiVersionEl = document.getElementById('abi-version');
+
+            try {
+                await ZylixShowcase.init('zylix.wasm');
+
+                statusEl.className = 'status ready';
+                statusEl.textContent = '✓ WASM loaded and initialized';
+                abiVersionEl.textContent = ZylixShowcase.wasm.zylix_get_abi_version?.() ?? 'N/A';
+
+                // Wire up buttons
+                document.getElementById('btn-create').addEventListener('click', createDynamicComponent);
+                document.getElementById('btn-update').addEventListener('click', updateProgress);
+                document.getElementById('btn-reset').addEventListener('click', resetDemo);
+
+                // Demo: Create some initial components via WASM
+                const vstackId = ZylixShowcase.createVStack();
+                const hstackId = ZylixShowcase.createHStack();
+                const cardId = ZylixShowcase.createCard();
+                const textId = ZylixShowcase.createText('Hello from WASM!');
+                const alertId = ZylixShowcase.createAlert('Component system initialized', ZylixShowcase.AlertStyle.SUCCESS);
+                const progressId = ZylixShowcase.createProgress(ZylixShowcase.ProgressStyle.LINEAR);
+
+                ZylixShowcase.setProgressValue(progressId, 0.65);
+
+                console.log('Created components:', {
+                    vstack: vstackId,
+                    hstack: hstackId,
+                    card: cardId,
+                    text: textId,
+                    alert: alertId,
+                    progress: progressId
+                });
+
+                updateStats();
+
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `Error: ${error.message}`;
+                console.error('ZylixShowcase initialization failed:', error);
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
