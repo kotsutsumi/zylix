@@ -115,6 +115,12 @@ namespace Zylix
 
             _webSocket?.Dispose();
             _webSocket = null;
+            _reconnectAttempts = 0;
+
+            // Reset CancellationTokenSource for reuse
+            _cts.Dispose();
+            _cts = new CancellationTokenSource();
+
             SetState(HotReloadState.Disconnected);
         }
 
@@ -146,6 +152,7 @@ namespace Zylix
         private async Task ReceiveLoopAsync()
         {
             var buffer = new byte[4096];
+            var messageBuffer = new List<byte>();
 
             while (_webSocket?.State == WebSocketState.Open && !_cts.IsCancellationRequested)
             {
@@ -160,8 +167,20 @@ namespace Zylix
                         return;
                     }
 
-                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    HandleMessage(message);
+                    // Accumulate message fragments for multi-frame messages
+                    messageBuffer.AddRange(buffer.Take(result.Count));
+
+                    if (result.EndOfMessage)
+                    {
+                        var message = Encoding.UTF8.GetString(messageBuffer.ToArray());
+                        messageBuffer.Clear();
+                        HandleMessage(message);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal cancellation, exit gracefully
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -195,7 +214,8 @@ namespace Zylix
                         HandleStateSync(json.RootElement.GetProperty("payload"));
                         break;
                     case "ping":
-                        SendAsync(new { type = "pong" }).Wait();
+                        // Fire-and-forget for ping response to avoid deadlock
+                        _ = SendAsync(new { type = "pong" });
                         break;
                     default:
                         if (_handlers.TryGetValue(type ?? "", out var handler))
@@ -461,8 +481,8 @@ namespace Zylix
     {
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly Action<string, WatcherChangeTypes> _callback;
-        private DateTime _lastChange = DateTime.MinValue;
-        private readonly TimeSpan _debounceTime = TimeSpan.FromMilliseconds(50);
+        private long _lastChangeTicks = 0;
+        private readonly long _debounceTimeTicks = TimeSpan.FromMilliseconds(50).Ticks;
 
         public ZylixFileWatcher(Action<string, WatcherChangeTypes> callback)
         {
@@ -487,9 +507,15 @@ namespace Zylix
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            var now = DateTime.Now;
-            if (now - _lastChange < _debounceTime) return;
-            _lastChange = now;
+            // Thread-safe debounce using atomic compare-and-swap
+            var nowTicks = DateTime.Now.Ticks;
+            var lastTicks = Interlocked.Read(ref _lastChangeTicks);
+
+            if (nowTicks - lastTicks < _debounceTimeTicks) return;
+
+            // Attempt atomic update only if we're the first to pass the debounce
+            if (Interlocked.CompareExchange(ref _lastChangeTicks, nowTicks, lastTicks) != lastTicks)
+                return;
 
             _callback(e.FullPath, e.ChangeType);
         }
@@ -573,17 +599,18 @@ namespace Zylix
 
         private void TriggerRebuild()
         {
-            // Notify for full reload
-            _hotReloadClient.SendAsync(new { type = "reload" }).Wait();
+            // Fire-and-forget to avoid deadlock from blocking on async method
+            _ = _hotReloadClient.SendAsync(new { type = "reload" });
         }
 
         private void TriggerHotUpdate(string module)
         {
-            _hotReloadClient.SendAsync(new
+            // Fire-and-forget to avoid deadlock from blocking on async method
+            _ = _hotReloadClient.SendAsync(new
             {
                 type = "hot_update",
                 payload = new { module }
-            }).Wait();
+            });
         }
 
         public void Dispose()

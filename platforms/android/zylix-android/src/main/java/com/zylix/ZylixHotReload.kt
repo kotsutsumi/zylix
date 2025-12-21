@@ -86,13 +86,24 @@ class ZylixHotReloadClient private constructor(context: Context) {
     private val handlers = mutableMapOf<String, (JSONObject) -> Unit>()
 
     var serverUrl: String = "ws://10.0.2.2:3001" // Android emulator localhost
-    var reconnectAttempts = 0
-    val maxReconnectAttempts = 10
+    private var reconnectAttempts = 0
+    private val maxReconnectAttempts = 10
 
     private var reconnectJob: Job? = null
 
     init {
         registerActivityLifecycle()
+    }
+
+    /**
+     * Shuts down the client, releasing all resources.
+     * Call this when the application is terminating.
+     */
+    fun shutdown() {
+        disconnect()
+        scope.cancel()
+        client.dispatcher.executorService.shutdown()
+        client.connectionPool.evictAll()
     }
 
     companion object {
@@ -155,8 +166,10 @@ class ZylixHotReloadClient private constructor(context: Context) {
 
     fun disconnect() {
         reconnectJob?.cancel()
+        reconnectJob = null
         webSocket?.close(1000, "Client closing")
         webSocket = null
+        reconnectAttempts = 0
         _state.value = HotReloadState.DISCONNECTED
     }
 
@@ -166,8 +179,14 @@ class ZylixHotReloadClient private constructor(context: Context) {
             return
         }
 
+        // Cancel any existing reconnect job to prevent concurrent reconnects
+        reconnectJob?.cancel()
+
         reconnectAttempts++
-        val delay = minOf(30000L, (1L shl (reconnectAttempts - 1)) * 1000)
+        val baseDelay = minOf(30000L, (1L shl (reconnectAttempts - 1)) * 1000)
+        // Add jitter to prevent thundering herd
+        val jitter = (Math.random() * 1000).toLong()
+        val delay = baseDelay + jitter
 
         Log.d(TAG, "Reconnecting in ${delay}ms (attempt $reconnectAttempts)")
 
@@ -216,8 +235,8 @@ class ZylixHotReloadClient private constructor(context: Context) {
 
         hideErrorOverlay()
 
-        // Notify observers
-        hotUpdateListeners.forEach { it(module) }
+        // Notify observers (use toList() to prevent ConcurrentModificationException)
+        hotUpdateListeners.toList().forEach { it(module) }
     }
 
     private fun handleErrorOverlay(payload: Any?) {

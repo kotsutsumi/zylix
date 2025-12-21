@@ -104,7 +104,12 @@ class ZylixFuture<T> {
         return this
     }
 
-    fun timeout(millis: Long, scope: CoroutineScope = GlobalScope): ZylixFuture<T> {
+    /**
+     * Sets a timeout for this future.
+     * @param millis Timeout duration in milliseconds
+     * @param scope CoroutineScope for the timeout job - required to ensure proper lifecycle management
+     */
+    fun timeout(millis: Long, scope: CoroutineScope): ZylixFuture<T> {
         timeoutJob = scope.launch {
             delay(millis)
             if (_state == FutureState.PENDING) {
@@ -131,8 +136,13 @@ class ZylixFuture<T> {
     }
 
     companion object {
+        /**
+         * Creates a ZylixFuture from a suspend block.
+         * @param scope CoroutineScope for the async operation - required to ensure proper lifecycle management
+         * @param block The suspend block to execute
+         */
         fun <T> from(
-            scope: CoroutineScope = GlobalScope,
+            scope: CoroutineScope,
             block: suspend () -> T
         ): ZylixFuture<T> {
             val future = ZylixFuture<T>()
