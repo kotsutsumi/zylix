@@ -8,6 +8,7 @@ This directory contains sample applications demonstrating Zylix usage.
 |--------|----------|--------|-------------|
 | [**counter-wasm**](./counter-wasm/) | Web/WASM | ✅ Working | Minimal counter demo with actual WASM integration |
 | [**todo-wasm**](./todo-wasm/) | Web/WASM | ✅ Working | Full TodoMVC implementation with WASM |
+| [**component-showcase**](./component-showcase/) | Web/WASM | ✅ Working | v0.7.0 Component Library showcase |
 
 ## Planned Samples (Not Yet Implemented)
 
@@ -39,6 +40,11 @@ cd todo-wasm
 ./build.sh
 python3 -m http.server 8081
 # Open http://localhost:8081
+
+# Component Showcase (v0.7.0 components)
+cd component-showcase
+python3 -m http.server 8082
+# Open http://localhost:8082
 ```
 
 ### Prerequisites
@@ -77,6 +83,22 @@ The TodoMVC demo demonstrates a complete application:
 - Filtering (all/active/completed)
 - Bulk operations (toggle all, clear completed)
 - URL hash routing for filter state
+
+### component-showcase
+
+```
+Browser
+├── index.html          → Component showcase UI
+├── zylix-showcase.js   → JavaScript ↔ WASM bridge (v0.7.0 components)
+└── zylix.wasm          → Zig core (component tree, state)
+```
+
+The Component Showcase demonstrates v0.7.0 Component Library:
+- **Layout**: VStack, HStack, Card, Divider, Spacer, Grid
+- **Form**: Checkbox, Toggle, Select, Textarea, Radio
+- **Feedback**: Alert, Progress, Spinner, Toast, Modal
+- **Data Display**: Badge, Tag, Accordion, Avatar, Icon
+- Interactive component creation via WASM
 
 ### JavaScript SDK
 
@@ -117,6 +139,11 @@ npm test
 
 # TodoMVC tests
 cd todo-wasm
+npm install
+npm test
+
+# Component Showcase tests
+cd component-showcase
 npm install
 npm test
 ```
