@@ -224,6 +224,471 @@
         .zig-link:hover {
             text-decoration: underline;
         }
+        /* Form Components */
+        .zig-select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            margin: 5px;
+            min-width: 150px;
+        }
+        .zig-checkbox, .zig-radio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .zig-checkbox input, .zig-radio input {
+            width: 18px;
+            height: 18px;
+            accent-color: #00d9ff;
+        }
+        .zig-textarea {
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            margin: 5px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .zig-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px;
+        }
+        .zig-toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .zig-toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        .zig-toggle-switch.active {
+            background: #00d9ff;
+        }
+        .zig-toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+        .zig-slider {
+            width: 100%;
+            margin: 5px;
+            accent-color: #00d9ff;
+        }
+        .zig-date-picker, .zig-time-picker {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #e8e8e8;
+            margin: 5px;
+        }
+        .zig-file-input {
+            padding: 8px 12px;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            color: #e8e8e8;
+            margin: 5px;
+        }
+        .zig-color-picker {
+            width: 50px;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .zig-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin: 5px;
+        }
+        /* Layout Components */
+        .zig-stack {
+            display: flex;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .zig-stack.vertical {
+            flex-direction: column;
+        }
+        .zig-stack.horizontal {
+            flex-direction: row;
+        }
+        .zig-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .zig-scroll-view {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .zig-spacer {
+            flex: 1;
+            min-height: 10px;
+        }
+        .zig-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 15px 0;
+        }
+        .zig-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
+        }
+        /* Navigation Components */
+        .zig-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin: 5px 0;
+        }
+        .zig-tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+        .zig-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .zig-tab:hover, .zig-tab.active {
+            color: #00d9ff;
+            border-bottom-color: #00d9ff;
+        }
+        .zig-drawer {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1a1a2e;
+            padding: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+        .zig-drawer.open {
+            transform: translateX(0);
+        }
+        .zig-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .zig-breadcrumb-item {
+            color: #888;
+        }
+        .zig-breadcrumb-item.active {
+            color: #e8e8e8;
+        }
+        .zig-breadcrumb-separator {
+            color: #555;
+        }
+        .zig-pagination {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .zig-pagination-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: transparent;
+            color: #e8e8e8;
+            cursor: pointer;
+        }
+        .zig-pagination-btn.active {
+            background: #00d9ff;
+            color: #1a1a2e;
+            border-color: #00d9ff;
+        }
+        /* Feedback Components */
+        .zig-alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .zig-alert.info {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            color: #00d9ff;
+        }
+        .zig-alert.success {
+            background: rgba(80, 250, 123, 0.1);
+            border: 1px solid rgba(80, 250, 123, 0.3);
+            color: #50fa7b;
+        }
+        .zig-alert.warning {
+            background: rgba(255, 184, 108, 0.1);
+            border: 1px solid rgba(255, 184, 108, 0.3);
+            color: #ffb86c;
+        }
+        .zig-alert.error {
+            background: rgba(255, 85, 85, 0.1);
+            border: 1px solid rgba(255, 85, 85, 0.3);
+            color: #ff5555;
+        }
+        .zig-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .zig-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zig-modal {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 300px;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .zig-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .zig-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d9ff, #00b8d9);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .zig-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00d9ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .zig-skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            height: 20px;
+            margin: 5px 0;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .zig-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            font-size: 0.75em;
+            font-weight: bold;
+            border-radius: 10px;
+            background: #00d9ff;
+            color: #1a1a2e;
+            margin: 2px;
+        }
+        /* Data Display Components */
+        .zig-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .zig-table th, .zig-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .zig-table th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+        }
+        .zig-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff, #00b8d9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        .zig-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .zig-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.85em;
+            margin: 2px;
+        }
+        .zig-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .zig-tooltip-text {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.85em;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .zig-tooltip:hover .zig-tooltip-text {
+            opacity: 1;
+        }
+        .zig-accordion {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .zig-accordion-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .zig-accordion-item:last-child {
+            border-bottom: none;
+        }
+        .zig-accordion-header {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .zig-accordion-content {
+            padding: 16px;
+            display: none;
+        }
+        .zig-accordion-item.open .zig-accordion-content {
+            display: block;
+        }
+        .zig-carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .zig-carousel-track {
+            display: flex;
+            transition: transform 0.3s;
+        }
+        .zig-carousel-slide {
+            min-width: 100%;
+        }
+        .zig-carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        .zig-carousel-prev { left: 10px; }
+        .zig-carousel-next { right: 10px; }
+        .zig-image {
+            max-width: 100%;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .zig-list {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .zig-list-item {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -252,13 +717,63 @@
                 <div class="control-group">
                     <label>Component Type</label>
                     <select id="component-type">
-                        <option value="container">Container</option>
-                        <option value="text">Text</option>
-                        <option value="button">Button</option>
-                        <option value="heading">Heading</option>
-                        <option value="paragraph">Paragraph</option>
-                        <option value="input">Input</option>
-                        <option value="link">Link</option>
+                        <optgroup label="Basic Components">
+                            <option value="container">Container</option>
+                            <option value="text">Text</option>
+                            <option value="button">Button</option>
+                            <option value="heading">Heading</option>
+                            <option value="paragraph">Paragraph</option>
+                            <option value="input">Input</option>
+                            <option value="link">Link</option>
+                            <option value="image">Image</option>
+                            <option value="list">List</option>
+                        </optgroup>
+                        <optgroup label="Form Components">
+                            <option value="select">Select</option>
+                            <option value="checkbox">Checkbox</option>
+                            <option value="radio">Radio</option>
+                            <option value="textarea">Textarea</option>
+                            <option value="toggle_switch">Toggle Switch</option>
+                            <option value="slider">Slider</option>
+                            <option value="date_picker">Date Picker</option>
+                            <option value="time_picker">Time Picker</option>
+                            <option value="file_input">File Input</option>
+                            <option value="color_picker">Color Picker</option>
+                            <option value="form">Form</option>
+                        </optgroup>
+                        <optgroup label="Layout Components">
+                            <option value="stack">Stack</option>
+                            <option value="grid">Grid</option>
+                            <option value="scroll_view">Scroll View</option>
+                            <option value="spacer">Spacer</option>
+                            <option value="divider">Divider</option>
+                            <option value="card">Card</option>
+                        </optgroup>
+                        <optgroup label="Navigation Components">
+                            <option value="nav_bar">Nav Bar</option>
+                            <option value="tab_bar">Tab Bar</option>
+                            <option value="drawer">Drawer</option>
+                            <option value="breadcrumb">Breadcrumb</option>
+                            <option value="pagination">Pagination</option>
+                        </optgroup>
+                        <optgroup label="Feedback Components">
+                            <option value="alert">Alert</option>
+                            <option value="toast">Toast</option>
+                            <option value="modal">Modal</option>
+                            <option value="progress">Progress</option>
+                            <option value="spinner">Spinner</option>
+                            <option value="skeleton">Skeleton</option>
+                            <option value="badge">Badge</option>
+                        </optgroup>
+                        <optgroup label="Data Display Components">
+                            <option value="table">Table</option>
+                            <option value="avatar">Avatar</option>
+                            <option value="icon">Icon</option>
+                            <option value="tag">Tag</option>
+                            <option value="tooltip">Tooltip</option>
+                            <option value="accordion">Accordion</option>
+                            <option value="carousel">Carousel</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="control-group">
@@ -282,6 +797,12 @@
                 <button class="secondary" onclick="presetLoginForm()">Login Form</button>
                 <button class="secondary" onclick="presetNavBar()">Nav Bar</button>
                 <button class="secondary" onclick="presetArticle()">Article</button>
+            </div>
+            <div class="button-row" style="margin-top: 10px;">
+                <button class="secondary" onclick="presetFormComponents()">Form Controls</button>
+                <button class="secondary" onclick="presetFeedbackComponents()">Feedback</button>
+                <button class="secondary" onclick="presetDataDisplay()">Data Display</button>
+                <button class="secondary" onclick="presetLayoutDemo()">Layout Demo</button>
             </div>
         </div>
 
@@ -308,6 +829,7 @@
         let callbacks = {};
 
         const ComponentType = {
+            // Basic Components (0-9)
             container: 0,
             text: 1,
             button: 2,
@@ -317,7 +839,57 @@
             list: 6,
             list_item: 7,
             heading: 8,
-            paragraph: 9
+            paragraph: 9,
+
+            // Form Components (10-20)
+            select: 10,
+            checkbox: 11,
+            radio: 12,
+            textarea: 13,
+            toggle_switch: 14,
+            slider: 15,
+            date_picker: 16,
+            time_picker: 17,
+            file_input: 18,
+            color_picker: 19,
+            form: 20,
+
+            // Layout Components (21-28)
+            stack: 21,
+            grid: 22,
+            scroll_view: 23,
+            spacer: 24,
+            divider: 25,
+            card: 26,
+            aspect_ratio: 27,
+            safe_area: 28,
+
+            // Navigation Components (30-34)
+            nav_bar: 30,
+            tab_bar: 31,
+            drawer: 32,
+            breadcrumb: 33,
+            pagination: 34,
+
+            // Feedback Components (40-46)
+            alert: 40,
+            toast: 41,
+            modal: 42,
+            progress: 43,
+            spinner: 44,
+            skeleton: 45,
+            badge: 46,
+
+            // Data Display Components (50-56)
+            table: 50,
+            avatar: 51,
+            icon: 52,
+            tag: 53,
+            tooltip: 54,
+            accordion: 55,
+            carousel: 56,
+
+            custom: 255
         };
 
         const RenderCommandType = {
@@ -401,6 +973,7 @@
             const { ptr, len } = writeString(text || `${type}-${componentIds.length + 1}`);
 
             switch (type) {
+                // Basic Components
                 case 'container':
                     componentId = wasm.zigdom_component_create_container();
                     break;
@@ -409,7 +982,6 @@
                     break;
                 case 'button':
                     componentId = wasm.zigdom_component_create_button(ptr, len);
-                    // Add click handler
                     wasm.zigdom_component_on_click(componentId, componentId);
                     break;
                 case 'heading':
@@ -419,7 +991,7 @@
                     componentId = wasm.zigdom_component_create_paragraph(ptr, len);
                     break;
                 case 'input':
-                    componentId = wasm.zigdom_component_create_input(0); // text input
+                    componentId = wasm.zigdom_component_create_input(0);
                     if (text) {
                         const { ptr: pPtr, len: pLen } = writeString(text);
                         wasm.zigdom_component_set_placeholder(componentId, pPtr, pLen);
@@ -428,6 +1000,130 @@
                 case 'link':
                     const { ptr: hPtr, len: hLen } = writeString('#');
                     componentId = wasm.zigdom_component_create_link(hPtr, hLen, ptr, len);
+                    break;
+                case 'image':
+                    componentId = createGenericComponent(ComponentType.image, text);
+                    break;
+                case 'list':
+                    componentId = createGenericComponent(ComponentType.list, text);
+                    break;
+
+                // Form Components
+                case 'select':
+                    componentId = createGenericComponent(ComponentType.select, text);
+                    break;
+                case 'checkbox':
+                    componentId = createGenericComponent(ComponentType.checkbox, text);
+                    break;
+                case 'radio':
+                    componentId = createGenericComponent(ComponentType.radio, text);
+                    break;
+                case 'textarea':
+                    componentId = createGenericComponent(ComponentType.textarea, text);
+                    break;
+                case 'toggle_switch':
+                    componentId = createGenericComponent(ComponentType.toggle_switch, text);
+                    break;
+                case 'slider':
+                    componentId = createGenericComponent(ComponentType.slider, text);
+                    break;
+                case 'date_picker':
+                    componentId = createGenericComponent(ComponentType.date_picker, text);
+                    break;
+                case 'time_picker':
+                    componentId = createGenericComponent(ComponentType.time_picker, text);
+                    break;
+                case 'file_input':
+                    componentId = createGenericComponent(ComponentType.file_input, text);
+                    break;
+                case 'color_picker':
+                    componentId = createGenericComponent(ComponentType.color_picker, text);
+                    break;
+                case 'form':
+                    componentId = createGenericComponent(ComponentType.form, text);
+                    break;
+
+                // Layout Components
+                case 'stack':
+                    componentId = createGenericComponent(ComponentType.stack, text);
+                    break;
+                case 'grid':
+                    componentId = createGenericComponent(ComponentType.grid, text);
+                    break;
+                case 'scroll_view':
+                    componentId = createGenericComponent(ComponentType.scroll_view, text);
+                    break;
+                case 'spacer':
+                    componentId = createGenericComponent(ComponentType.spacer, text);
+                    break;
+                case 'divider':
+                    componentId = createGenericComponent(ComponentType.divider, text);
+                    break;
+                case 'card':
+                    componentId = createGenericComponent(ComponentType.card, text);
+                    break;
+
+                // Navigation Components
+                case 'nav_bar':
+                    componentId = createGenericComponent(ComponentType.nav_bar, text);
+                    break;
+                case 'tab_bar':
+                    componentId = createGenericComponent(ComponentType.tab_bar, text);
+                    break;
+                case 'drawer':
+                    componentId = createGenericComponent(ComponentType.drawer, text);
+                    break;
+                case 'breadcrumb':
+                    componentId = createGenericComponent(ComponentType.breadcrumb, text);
+                    break;
+                case 'pagination':
+                    componentId = createGenericComponent(ComponentType.pagination, text);
+                    break;
+
+                // Feedback Components
+                case 'alert':
+                    componentId = createGenericComponent(ComponentType.alert, text);
+                    break;
+                case 'toast':
+                    componentId = createGenericComponent(ComponentType.toast, text);
+                    break;
+                case 'modal':
+                    componentId = createGenericComponent(ComponentType.modal, text);
+                    break;
+                case 'progress':
+                    componentId = createGenericComponent(ComponentType.progress, text);
+                    break;
+                case 'spinner':
+                    componentId = createGenericComponent(ComponentType.spinner, text);
+                    break;
+                case 'skeleton':
+                    componentId = createGenericComponent(ComponentType.skeleton, text);
+                    break;
+                case 'badge':
+                    componentId = createGenericComponent(ComponentType.badge, text);
+                    break;
+
+                // Data Display Components
+                case 'table':
+                    componentId = createGenericComponent(ComponentType.table, text);
+                    break;
+                case 'avatar':
+                    componentId = createGenericComponent(ComponentType.avatar, text);
+                    break;
+                case 'icon':
+                    componentId = createGenericComponent(ComponentType.icon, text);
+                    break;
+                case 'tag':
+                    componentId = createGenericComponent(ComponentType.tag, text);
+                    break;
+                case 'tooltip':
+                    componentId = createGenericComponent(ComponentType.tooltip, text);
+                    break;
+                case 'accordion':
+                    componentId = createGenericComponent(ComponentType.accordion, text);
+                    break;
+                case 'carousel':
+                    componentId = createGenericComponent(ComponentType.carousel, text);
                     break;
             }
 
@@ -445,6 +1141,15 @@
             }
 
             wasm.zylix_wasm_free_scratch();
+        }
+
+        // Helper function for creating components that may not have dedicated WASM functions yet
+        function createGenericComponent(componentType, text) {
+            // For new component types, we create a container and set its type
+            // This is a placeholder until the full WASM API is implemented
+            const componentId = wasm.zigdom_component_create_container();
+            // In a full implementation, we would set the component type here
+            return componentId;
         }
 
         function renderTree() {
@@ -518,6 +1223,7 @@
         function createDOMElement(componentType, componentId) {
             let el;
             switch (componentType) {
+                // Basic Components
                 case ComponentType.container:
                     el = document.createElement('div');
                     el.className = 'zig-container';
@@ -534,7 +1240,24 @@
                     el = document.createElement('input');
                     el.className = 'zig-input';
                     el.type = 'text';
-                    // Get placeholder from component
+                    break;
+                case ComponentType.image:
+                    el = document.createElement('img');
+                    el.className = 'zig-image';
+                    el.alt = '';
+                    break;
+                case ComponentType.link:
+                    el = document.createElement('a');
+                    el.className = 'zig-link';
+                    el.href = '#';
+                    break;
+                case ComponentType.list:
+                    el = document.createElement('ul');
+                    el.className = 'zig-list';
+                    break;
+                case ComponentType.list_item:
+                    el = document.createElement('li');
+                    el.className = 'zig-list-item';
                     break;
                 case ComponentType.heading:
                     el = document.createElement('h2');
@@ -544,11 +1267,202 @@
                     el = document.createElement('p');
                     el.className = 'zig-text';
                     break;
-                case ComponentType.link:
-                    el = document.createElement('a');
-                    el.className = 'zig-link';
-                    el.href = '#';
+
+                // Form Components
+                case ComponentType.select:
+                    el = document.createElement('select');
+                    el.className = 'zig-select';
                     break;
+                case ComponentType.checkbox:
+                    el = document.createElement('label');
+                    el.className = 'zig-checkbox';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    el.appendChild(cb);
+                    el.appendChild(document.createElement('span'));
+                    break;
+                case ComponentType.radio:
+                    el = document.createElement('label');
+                    el.className = 'zig-radio';
+                    const rb = document.createElement('input');
+                    rb.type = 'radio';
+                    el.appendChild(rb);
+                    el.appendChild(document.createElement('span'));
+                    break;
+                case ComponentType.textarea:
+                    el = document.createElement('textarea');
+                    el.className = 'zig-textarea';
+                    break;
+                case ComponentType.toggle_switch:
+                    el = document.createElement('div');
+                    el.className = 'zig-toggle';
+                    const toggle = document.createElement('div');
+                    toggle.className = 'zig-toggle-switch';
+                    toggle.onclick = () => toggle.classList.toggle('active');
+                    el.appendChild(toggle);
+                    break;
+                case ComponentType.slider:
+                    el = document.createElement('input');
+                    el.className = 'zig-slider';
+                    el.type = 'range';
+                    el.min = '0';
+                    el.max = '100';
+                    break;
+                case ComponentType.date_picker:
+                    el = document.createElement('input');
+                    el.className = 'zig-date-picker';
+                    el.type = 'date';
+                    break;
+                case ComponentType.time_picker:
+                    el = document.createElement('input');
+                    el.className = 'zig-time-picker';
+                    el.type = 'time';
+                    break;
+                case ComponentType.file_input:
+                    el = document.createElement('input');
+                    el.className = 'zig-file-input';
+                    el.type = 'file';
+                    break;
+                case ComponentType.color_picker:
+                    el = document.createElement('input');
+                    el.className = 'zig-color-picker';
+                    el.type = 'color';
+                    el.value = '#00d9ff';
+                    break;
+                case ComponentType.form:
+                    el = document.createElement('form');
+                    el.className = 'zig-form';
+                    el.onsubmit = (e) => e.preventDefault();
+                    break;
+
+                // Layout Components
+                case ComponentType.stack:
+                    el = document.createElement('div');
+                    el.className = 'zig-stack vertical';
+                    break;
+                case ComponentType.grid:
+                    el = document.createElement('div');
+                    el.className = 'zig-grid';
+                    break;
+                case ComponentType.scroll_view:
+                    el = document.createElement('div');
+                    el.className = 'zig-scroll-view';
+                    break;
+                case ComponentType.spacer:
+                    el = document.createElement('div');
+                    el.className = 'zig-spacer';
+                    break;
+                case ComponentType.divider:
+                    el = document.createElement('hr');
+                    el.className = 'zig-divider';
+                    break;
+                case ComponentType.card:
+                    el = document.createElement('div');
+                    el.className = 'zig-card';
+                    break;
+                case ComponentType.aspect_ratio:
+                    el = document.createElement('div');
+                    el.className = 'zig-aspect-ratio';
+                    el.style.aspectRatio = '16/9';
+                    break;
+                case ComponentType.safe_area:
+                    el = document.createElement('div');
+                    el.className = 'zig-safe-area';
+                    el.style.padding = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+                    break;
+
+                // Navigation Components
+                case ComponentType.nav_bar:
+                    el = document.createElement('nav');
+                    el.className = 'zig-nav-bar';
+                    break;
+                case ComponentType.tab_bar:
+                    el = document.createElement('div');
+                    el.className = 'zig-tab-bar';
+                    break;
+                case ComponentType.drawer:
+                    el = document.createElement('aside');
+                    el.className = 'zig-drawer';
+                    break;
+                case ComponentType.breadcrumb:
+                    el = document.createElement('nav');
+                    el.className = 'zig-breadcrumb';
+                    break;
+                case ComponentType.pagination:
+                    el = document.createElement('div');
+                    el.className = 'zig-pagination';
+                    break;
+
+                // Feedback Components
+                case ComponentType.alert:
+                    el = document.createElement('div');
+                    el.className = 'zig-alert info';
+                    break;
+                case ComponentType.toast:
+                    el = document.createElement('div');
+                    el.className = 'zig-toast';
+                    break;
+                case ComponentType.modal:
+                    el = document.createElement('div');
+                    el.className = 'zig-modal';
+                    break;
+                case ComponentType.progress:
+                    el = document.createElement('div');
+                    el.className = 'zig-progress';
+                    const bar = document.createElement('div');
+                    bar.className = 'zig-progress-bar';
+                    bar.style.width = '50%';
+                    el.appendChild(bar);
+                    break;
+                case ComponentType.spinner:
+                    el = document.createElement('div');
+                    el.className = 'zig-spinner';
+                    break;
+                case ComponentType.skeleton:
+                    el = document.createElement('div');
+                    el.className = 'zig-skeleton';
+                    break;
+                case ComponentType.badge:
+                    el = document.createElement('span');
+                    el.className = 'zig-badge';
+                    break;
+
+                // Data Display Components
+                case ComponentType.table:
+                    el = document.createElement('table');
+                    el.className = 'zig-table';
+                    break;
+                case ComponentType.avatar:
+                    el = document.createElement('div');
+                    el.className = 'zig-avatar';
+                    el.textContent = 'A';
+                    break;
+                case ComponentType.icon:
+                    el = document.createElement('span');
+                    el.className = 'zig-icon';
+                    el.textContent = '★';
+                    break;
+                case ComponentType.tag:
+                    el = document.createElement('span');
+                    el.className = 'zig-tag';
+                    break;
+                case ComponentType.tooltip:
+                    el = document.createElement('div');
+                    el.className = 'zig-tooltip';
+                    const tip = document.createElement('span');
+                    tip.className = 'zig-tooltip-text';
+                    tip.textContent = 'Tooltip';
+                    el.appendChild(tip);
+                    break;
+                case ComponentType.accordion:
+                    el = document.createElement('div');
+                    el.className = 'zig-accordion';
+                    break;
+                case ComponentType.carousel:
+                    el = document.createElement('div');
+                    el.className = 'zig-carousel';
+                    break;
+
                 default:
                     el = document.createElement('div');
             }
@@ -743,6 +1657,131 @@
             const btn = wasm.zigdom_component_create_button(bPtr, bLen);
             wasm.zigdom_component_on_click(btn, btn);
             wasm.zigdom_component_add_child(article, btn);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetFormComponents() {
+            resetComponents();
+
+            // Form container
+            const form = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Form Controls Demo');
+            const title = wasm.zigdom_component_create_heading(2, tPtr, tLen);
+            wasm.zigdom_component_add_child(form, title);
+
+            // Text input
+            const textInput = wasm.zigdom_component_create_input(0);
+            const { ptr: t1Ptr, len: t1Len } = writeString('Enter your name');
+            wasm.zigdom_component_set_placeholder(textInput, t1Ptr, t1Len);
+            wasm.zigdom_component_add_child(form, textInput);
+
+            // Email input
+            const emailInput = wasm.zigdom_component_create_input(0);
+            const { ptr: t2Ptr, len: t2Len } = writeString('Enter your email');
+            wasm.zigdom_component_set_placeholder(emailInput, t2Ptr, t2Len);
+            wasm.zigdom_component_add_child(form, emailInput);
+
+            // Submit button
+            const { ptr: bPtr, len: bLen } = writeString('Submit Form');
+            const submit = wasm.zigdom_component_create_button(bPtr, bLen);
+            wasm.zigdom_component_on_click(submit, submit);
+            wasm.zigdom_component_add_child(form, submit);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetFeedbackComponents() {
+            resetComponents();
+
+            // Container
+            const container = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Feedback Components');
+            const title = wasm.zigdom_component_create_heading(2, tPtr, tLen);
+            wasm.zigdom_component_add_child(container, title);
+
+            // Info text
+            const { ptr: p1Ptr, len: p1Len } = writeString('These components show various types of user feedback like alerts, progress bars, and loading states.');
+            const info = wasm.zigdom_component_create_paragraph(p1Ptr, p1Len);
+            wasm.zigdom_component_add_child(container, info);
+
+            // Button to demonstrate
+            const { ptr: bPtr, len: bLen } = writeString('Show Loading State');
+            const btn = wasm.zigdom_component_create_button(bPtr, bLen);
+            wasm.zigdom_component_on_click(btn, btn);
+            wasm.zigdom_component_add_child(container, btn);
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetDataDisplay() {
+            resetComponents();
+
+            // Container
+            const container = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Data Display Components');
+            const title = wasm.zigdom_component_create_heading(2, tPtr, tLen);
+            wasm.zigdom_component_add_child(container, title);
+
+            // Description
+            const { ptr: dPtr, len: dLen } = writeString('Components for displaying data including tables, avatars, tags, and more.');
+            const desc = wasm.zigdom_component_create_paragraph(dPtr, dLen);
+            wasm.zigdom_component_add_child(container, desc);
+
+            // Sample data items
+            const items = ['User Profile', 'Dashboard Stats', 'Activity Log'];
+            for (const item of items) {
+                const { ptr, len } = writeString(item);
+                const text = wasm.zigdom_component_create_text(ptr, len);
+                wasm.zigdom_component_add_child(container, text);
+            }
+
+            wasm.zylix_wasm_free_scratch();
+            updateStats();
+            updateTreeView();
+            renderTree();
+        }
+
+        function presetLayoutDemo() {
+            resetComponents();
+
+            // Main container
+            const main = wasm.zigdom_component_create_container();
+
+            // Title
+            const { ptr: tPtr, len: tLen } = writeString('Layout Components Demo');
+            const title = wasm.zigdom_component_create_heading(2, tPtr, tLen);
+            wasm.zigdom_component_add_child(main, title);
+
+            // Card-like containers
+            for (let i = 1; i <= 3; i++) {
+                const card = wasm.zigdom_component_create_container();
+
+                const { ptr: hPtr, len: hLen } = writeString(`Card ${i}`);
+                const heading = wasm.zigdom_component_create_heading(3, hPtr, hLen);
+                wasm.zigdom_component_add_child(card, heading);
+
+                const { ptr: pPtr, len: pLen } = writeString(`This is the content for card ${i}. Cards are great for grouping related content.`);
+                const para = wasm.zigdom_component_create_paragraph(pPtr, pLen);
+                wasm.zigdom_component_add_child(card, para);
+
+                wasm.zigdom_component_add_child(main, card);
+            }
 
             wasm.zylix_wasm_free_scratch();
             updateStats();
