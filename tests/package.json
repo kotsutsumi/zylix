@@ -1,0 +1,12 @@
+{
+  "name": "zylix-tests",
+  "version": "0.6.2",
+  "description": "Unit tests for Zylix",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:web": "node --test web/*.test.js",
+    "test:samples": "node --test samples/*.test.js"
+  },
+  "devDependencies": {}
+}
