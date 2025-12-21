@@ -73,12 +73,12 @@ flowchart TB
 
 | Platform | UI Framework | Binding | Min Version | Status |
 |----------|-------------|---------|-------------|--------|
-| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | ✅ Production Ready |
-| **iOS** | SwiftUI | C ABI | iOS 15+ | ✅ Production Ready |
-| **Android** | Jetpack Compose | JNI | API 26+ | ✅ Production Ready |
-| **macOS** | SwiftUI | C ABI | macOS 12+ | ✅ Production Ready |
-| **Linux** | GTK4 | C ABI | GTK 4.0+ | ✅ Production Ready |
-| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | ✅ Production Ready |
+| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | 🔵 Beta |
+| **iOS** | SwiftUI | C ABI | iOS 15+ | 🟡 Alpha |
+| **Android** | Jetpack Compose | JNI | API 26+ | 🟡 Alpha |
+| **macOS** | SwiftUI | C ABI | macOS 12+ | 🟡 Alpha |
+| **Linux** | GTK4 | C ABI | GTK 4.0+ | 🟡 Alpha |
+| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | 🟡 Alpha |
 
 ## Core Features
 
@@ -97,8 +97,8 @@ Seamless integration with platform languages through C ABI (Swift, Kotlin, C#) a
 ## Community & Support
 
 - **GitHub**: [github.com/kotsutsumi/zylix](https://github.com/kotsutsumi/zylix)
-- **Issues**: Report bugs and request features
-- **Discussions**: Ask questions and share ideas
+- **Issues**: [Report bugs and request features](https://github.com/kotsutsumi/zylix/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/kotsutsumi/zylix/discussions)
 - **License**: MIT
 
 ## Version

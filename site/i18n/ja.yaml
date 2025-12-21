@@ -64,6 +64,8 @@ table_platforms: "プラットフォーム数"
 # Platform Support
 platform_title: "プラットフォームサポート"
 status_ready: "本番対応"
+status_beta: "ベータ"
+status_alpha: "アルファ"
 status_dev: "開発中"
 
 # Get Started
@@ -76,6 +78,7 @@ prereq_guide: "ガイドをご覧ください。"
 # Contribute
 contribute_title: "コントリビュート"
 contribute_desc: "Zylixはオープンソースであり、あらゆるスキルレベルの開発者からのコントリビューションを歓迎します。"
+discussions: "ディスカッション"
 good_first_issues: "Good First Issues"
 contributing_guide: "コントリビュートガイド"
 star_github: "GitHubでスター"
