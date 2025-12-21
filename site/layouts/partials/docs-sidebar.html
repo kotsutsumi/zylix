@@ -4,11 +4,11 @@
 
 <nav class="docs-sidebar w-64 shrink-0 hidden lg:block">
   <div class="sticky top-24 overflow-y-auto max-h-[calc(100vh-8rem)] pb-10">
-    <ul class="space-y-2 text-sm">
+    <ul class="space-y-3 text-sm">
       {{/* Main docs link */}}
       <li>
         <a href="{{ $docsSection.RelPermalink }}"
-           class="block py-1.5 px-3 rounded-md font-medium transition-colors
+           class="block py-2 px-3 rounded-md font-medium transition-colors
                   {{ if eq $currentPage.RelPermalink $docsSection.RelPermalink }}
                     bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400
                   {{ else }}
@@ -24,7 +24,7 @@
         {{ if not .Params.hidden }}
         <li>
           <a href="{{ .RelPermalink }}"
-             class="block py-1.5 px-3 rounded-md transition-colors
+             class="block py-2 px-3 rounded-md transition-colors
                     {{ if eq $currentPage.RelPermalink .RelPermalink }}
                       bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 font-medium
                     {{ else }}
@@ -40,9 +40,9 @@
       {{ range $docsSection.Sections.ByWeight }}
         {{ $section := . }}
         {{ $isInSection := or (eq $currentPage.Section .Section) (hasPrefix $currentPage.RelPermalink .RelPermalink) }}
-        <li class="pt-4">
+        <li class="pt-5">
           <a href="{{ .RelPermalink }}"
-             class="block py-1.5 px-3 rounded-md font-medium transition-colors
+             class="block py-2 px-3 rounded-md font-medium transition-colors
                     {{ if eq $currentPage.RelPermalink .RelPermalink }}
                       bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400
                     {{ else }}
@@ -52,12 +52,12 @@
           </a>
           {{/* Section children */}}
           {{ if gt (len .Pages) 0 }}
-          <ul class="mt-1 ml-3 space-y-1 border-l border-neutral-200 dark:border-neutral-700">
+          <ul class="mt-2 ml-3 space-y-2 border-l border-neutral-200 dark:border-neutral-700">
             {{ range .Pages.ByWeight }}
               {{ if not .Params.hidden }}
               <li>
                 <a href="{{ .RelPermalink }}"
-                   class="block py-1 px-3 rounded-r-md transition-colors
+                   class="block py-1.5 px-3 rounded-r-md transition-colors
                           {{ if eq $currentPage.RelPermalink .RelPermalink }}
                             border-l-2 border-primary-500 -ml-px bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 font-medium
                           {{ else }}
