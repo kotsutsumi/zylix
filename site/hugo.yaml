@@ -178,8 +178,8 @@ params:
   # Robots
   robots: index, follow
 
-  # Favicon (use default from theme)
-  # favicon: favicon.png
+  # Favicon
+  favicon: favicon.svg
 
   # Logo: In Blowfish theme, logo shows in dark mode, secondaryLogo shows in light mode
   # logo-dark.svg = light colors (#D4D4D4) for dark backgrounds
