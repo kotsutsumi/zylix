@@ -68,6 +68,7 @@ flowchart TB
   {{< card link="core-concepts" title="Core Concepts" subtitle="Understand Virtual DOM, State, Components, and Events" >}}
   {{< card link="architecture" title="Architecture" subtitle="Deep dive into Zylix internals" >}}
   {{< card link="platforms" title="Platform Guides" subtitle="Platform-specific setup and best practices" >}}
+  {{< card link="roadmap" title="Roadmap" subtitle="Future plans: Components, Routing, Async, Hot Reload" >}}
 {{< /cards >}}
 
 ## Supported Platforms

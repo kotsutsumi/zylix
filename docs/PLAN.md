@@ -240,6 +240,20 @@ pub export fn zylix_deinit() void;
 
 ---
 
+## Future Roadmap
+
+For v0.2.0 and beyond, see **[ROADMAP.md](./ROADMAP.md)** for detailed planning:
+
+| Version | Focus |
+|---------|-------|
+| v0.2.0 | Component Library Expansion (30+ components) |
+| v0.3.0 | Routing System |
+| v0.4.0 | Async Processing Support |
+| v0.5.0 | Hot Reload (Development) |
+| v0.6.0 | Practical Sample Applications |
+
+---
+
 ## References
 
 - [Zig Language Reference](https://ziglang.org/documentation/master/)
