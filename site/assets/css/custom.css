@@ -140,3 +140,12 @@
     min-height: 280px;
   }
 }
+
+/* ============================================
+   Docs Sidebar Spacing
+   ============================================ */
+
+/* Add margin between sidebar and content */
+.docs-sidebar {
+  margin-right: 2rem;
+}
