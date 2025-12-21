@@ -1,0 +1,14 @@
+{
+  "name": "zylix-component-showcase",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zylix Component Showcase - v0.7.0 Component Library Demo",
+  "scripts": {
+    "serve": "python3 -m http.server 8081",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

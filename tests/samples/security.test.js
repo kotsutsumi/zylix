@@ -152,7 +152,7 @@ describe('Sample Applications Security', () => {
 
 describe('Sample Applications Structure', () => {
     // WASM samples use a different structure (zylix.js instead of src/main.js)
-    const wasmSamples = ['counter-wasm', 'todo-wasm'];
+    const wasmSamples = ['counter-wasm', 'todo-wasm', 'component-showcase'];
 
     const sampleApps = readdirSync(samplesDir, { withFileTypes: true })
         .filter(d => d.isDirectory() && !d.name.startsWith('.'))
@@ -205,7 +205,8 @@ describe('Sample Applications Structure', () => {
     // Separate tests for WASM samples with different structure
     const wasmMainFiles = {
         'counter-wasm': 'zylix.js',
-        'todo-wasm': 'zylix-todo.js'
+        'todo-wasm': 'zylix-todo.js',
+        'component-showcase': 'zylix-showcase.js'
     };
 
     for (const app of wasmSamples) {
