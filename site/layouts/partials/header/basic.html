@@ -8,23 +8,23 @@
           <span class="sr-only">{{ .Site.Title | markdownify }}</span>
           {{ if eq $logo.MediaType.SubType "svg" }}
             {{/* Light mode logo - hidden in dark mode */}}
-            <span class="logo max-h-[3rem] flex items-center dark:hidden [&>svg]:h-[2.5rem] [&>svg]:w-auto">
+            <span class="logo flex items-center dark:hidden" style="height: 2.5rem;">
               {{ $logo.Content | safeHTML }}
             </span>
             {{/* Dark mode logo - shown only in dark mode */}}
             {{ with .Site.Params.secondaryLogo }}
               {{ $logoDark := resources.Get . }}
               {{ if $logoDark }}
-                <span class="logo max-h-[3rem] hidden dark:flex items-center [&>svg]:h-[2.5rem] [&>svg]:w-auto">
+                <span class="logo hidden dark:flex items-center" style="height: 2.5rem;">
                   {{ $logoDark.Content | safeHTML }}
                 </span>
               {{ else }}
-                <span class="logo max-h-[3rem] hidden dark:flex items-center [&>svg]:h-[2.5rem] [&>svg]:w-auto">
+                <span class="logo hidden dark:flex items-center" style="height: 2.5rem;">
                   {{ $logo.Content | safeHTML }}
                 </span>
               {{ end }}
             {{ else }}
-              <span class="logo max-h-[3rem] hidden dark:flex items-center [&>svg]:h-[2.5rem] [&>svg]:w-auto">
+              <span class="logo hidden dark:flex items-center" style="height: 2.5rem;">
                 {{ $logo.Content | safeHTML }}
               </span>
             {{ end }}
