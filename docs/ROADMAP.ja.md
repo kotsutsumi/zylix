@@ -20,7 +20,7 @@
 | v0.6.2 | - | プラットフォームセキュリティ & 並行処理修正 | ✅ 完了 | 2025-12-21 |
 | v0.6.3 | - | npm パッケージ同期 | ✅ 完了 | 2025-12-21 |
 | v0.7.0 | Phase 6 | コンポーネントライブラリの拡充 | 🚧 開発中 | 2025-12-22 |
-| v0.8.0 | Phase 11 | テスト & 品質基盤 (Zylix Test) | ⏳ 計画中 | 2026年Q1 |
+| v0.8.0 | Phase 11 | テスト・品質 & 組み込みAI | ⏳ 計画中 | 2026年Q1 |
 | v0.9.0 | Phase 12 | デバイス機能 & ジェスチャー | ⏳ 計画中 | 2026年Q2 |
 | v0.10.0 | Phase 13 | パフォーマンス & 最適化 | ⏳ 計画中 | 2026年Q3 |
 | v0.11.0 | Phase 14 | ドキュメント充実 | ⏳ 計画中 | 2026年Q4 |
@@ -528,7 +528,7 @@ zylix dev --all --port 3000
 - アクセシビリティサポート（ARIA、VoiceOver、TalkBack）
 - ビジュアルリグレッションテスト
 
-#### v0.8.0 - テスト & 品質基盤（Zylix Test）
+#### v0.8.0 - テスト・品質基盤 & 組み込みAI（Zylix Test + Zylix AI）
 - **Zylix Test フレームワーク**: 統一されたクロスプラットフォームE2Eテスト
   - Web/WASM: Playwright統合
   - iOS: XCTest + Zylix Testラッパー
@@ -537,6 +537,31 @@ zylix dev --all --port 3000
 - **CodeRabbit CLI統合**: 自動コードレビュー
 - **品質ゲート**: CI/CDパイプライン強化
 - 包括的なテストカバレッジ (>80%)
+- **組み込みLLM/VLMサポート（Zylix AI）**:
+  - ローカルLLM統合（オンデバイス推論）
+  - **埋め込みモデル**:
+    - Qwen3-Embedding-0.6B統合
+    - Sentence Transformersサポート
+  - **言語モデル**:
+    - Qwen3シリーズ（0.6B-4B）
+    - Phi-3/Phi-4 miniモデル
+    - Gemma 2B/7B
+    - Llama 3.2（1B/3B）
+  - **ビジョン言語モデル（VLM）**:
+    - Qwen2-VL
+    - LLaVA
+    - PaliGemma
+  - **プラットフォーム固有バックエンド**:
+    - iOS: Core ML、Metal、Create ML、Apple Intelligence API
+    - Android: ML Kit、NNAPI、TensorFlow Lite、GPUデリゲート
+    - Web/WASM: WebGPU、ONNX.js、WebNN
+    - デスクトップ: GGML/llama.cpp、ONNX Runtime
+  - **ユースケース**:
+    - オンデバイスセマンティック検索
+    - テキスト生成/補完
+    - 画像理解
+    - 音声文字起こし（Whisper）
+    - プライバシー保護AI機能
 
 #### v0.9.0 - デバイス機能 & ジェスチャー
 - **デバイス機能**:
