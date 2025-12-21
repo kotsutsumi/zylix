@@ -20,7 +20,7 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.6.2 | - | Platform Security & Concurrency | ✅ Done | 2025-12-21 |
 | v0.6.3 | - | Platform Demos (iOS, Android) | ✅ Done | 2025-12-22 |
 | v0.7.0 | Phase 6 | Component Library Expansion | 🚧 In Progress | 2025-12-22 |
-| v0.8.0 | Phase 11 | Testing & Quality (Zylix Test) | ⏳ Planned | 2026-Q1 |
+| v0.8.0 | Phase 11 | Testing, Quality & Embedded AI | ⏳ Planned | 2026-Q1 |
 | v0.9.0 | Phase 12 | Device Features & Gestures | ⏳ Planned | 2026-Q2 |
 | v0.10.0 | Phase 13 | Performance & Optimization | ⏳ Planned | 2026-Q3 |
 | v0.11.0 | Phase 14 | Documentation Excellence | ⏳ Planned | 2026-Q4 |
@@ -875,6 +875,31 @@ Optimize performance, reduce bundle sizes, and prepare the framework for product
 - **CodeRabbit CLI Integration**: Automated code reviews
 - **Quality Gates**: CI/CD pipeline enhancements
 - Comprehensive test coverage (>80%)
+- **Embedded LLM/VLM Support (Zylix AI)**:
+  - Local LLM integration (on-device inference)
+  - **Embedding Models**:
+    - Qwen3-Embedding-0.6B integration
+    - Sentence transformers support
+  - **Language Models**:
+    - Qwen3 series (0.6B-4B)
+    - Phi-3/Phi-4 mini models
+    - Gemma 2B/7B
+    - Llama 3.2 (1B/3B)
+  - **Vision-Language Models (VLM)**:
+    - Qwen2-VL
+    - LLaVA
+    - PaliGemma
+  - **Platform-specific backends**:
+    - iOS: Core ML, Metal, Create ML, Apple Intelligence APIs
+    - Android: ML Kit, NNAPI, TensorFlow Lite, GPU delegates
+    - Web/WASM: WebGPU, ONNX.js, WebNN
+    - Desktop: GGML/llama.cpp, ONNX Runtime
+  - **Use cases**:
+    - On-device semantic search
+    - Text generation/completion
+    - Image understanding
+    - Voice transcription (Whisper)
+    - Privacy-preserving AI features
 
 #### v0.9.0 - Device Features & Gestures
 - **Device Features**:
