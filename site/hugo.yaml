@@ -127,6 +127,13 @@ languages:
           weight: 50
           params:
             icon: github
+      footer:
+        - name: プライバシー
+          pageRef: privacy
+          weight: 10
+        - name: 利用規約
+          pageRef: terms
+          weight: 20
 
 # Params
 params:
@@ -293,28 +300,6 @@ params:
     cardView: false
     cardViewScreenWidth: false
 
-  # Firebase (disabled)
-  firebase:
-    apiKey: ""
-    authDomain: ""
-    projectId: ""
-    storageBucket: ""
-    messagingSenderId: ""
-    appId: ""
-    measurementId: ""
-
-  # Fathom Analytics (disabled)
-  fathomAnalytics:
-    site: ""
-    domain: ""
-
-  # Buy Me a Coffee (disabled)
-  buymeacoffee:
-    identifier: ""
-    globalWidget: false
-    globalWidgetMessage: ""
-    globalWidgetColor: ""
-    globalWidgetPosition: ""
 
   # Verification
   verification:
