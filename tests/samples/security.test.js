@@ -151,8 +151,12 @@ describe('Sample Applications Security', () => {
 });
 
 describe('Sample Applications Structure', () => {
+    // WASM samples use a different structure (zylix.js instead of src/main.js)
+    const wasmSamples = ['counter-wasm', 'todo-wasm'];
+
     const sampleApps = readdirSync(samplesDir, { withFileTypes: true })
         .filter(d => d.isDirectory() && !d.name.startsWith('.'))
+        .filter(d => !wasmSamples.includes(d.name))
         .map(d => d.name);
 
     for (const app of sampleApps) {
@@ -194,6 +198,44 @@ describe('Sample Applications Structure', () => {
                     content.includes('window.');
 
                 assert.ok(hasExport, `${app} should export its main component`);
+            });
+        });
+    }
+
+    // Separate tests for WASM samples with different structure
+    const wasmMainFiles = {
+        'counter-wasm': 'zylix.js',
+        'todo-wasm': 'zylix-todo.js'
+    };
+
+    for (const app of wasmSamples) {
+        const mainFile = wasmMainFiles[app];
+
+        describe(`${app} (WASM)`, () => {
+            test(`should have ${mainFile} entry point`, () => {
+                const mainPath = join(samplesDir, app, mainFile);
+                assert.doesNotThrow(() => {
+                    readFileSync(mainPath);
+                }, `${app} should have ${mainFile}`);
+            });
+
+            test(`${mainFile} should be valid JavaScript`, async () => {
+                const mainPath = join(samplesDir, app, mainFile);
+                try {
+                    const { execSync } = await import('node:child_process');
+                    execSync(`node --check "${mainPath}"`, { stdio: 'pipe' });
+                } catch (error) {
+                    if (error.status !== 0 && error.stderr) {
+                        assert.fail(`${app}/${mainFile} has syntax errors: ${error.stderr.toString()}`);
+                    }
+                }
+            });
+
+            test('should have WASM file', () => {
+                const wasmPath = join(samplesDir, app, 'zylix.wasm');
+                assert.doesNotThrow(() => {
+                    readFileSync(wasmPath);
+                }, `${app} should have zylix.wasm`);
             });
         });
     }
