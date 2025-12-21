@@ -18,9 +18,10 @@
         </a>
       </li>
 
-      {{/* Top-level pages (not in subsections) */}}
+      {{/* Top-level pages (not in subsections, excluding section index pages) */}}
       {{ $topPages := where $docsSection.Pages "Section" "docs" }}
       {{ range $topPages.ByWeight }}
+        {{ if not .IsSection }}
         {{ if not .Params.hidden }}
         <li>
           <a href="{{ .RelPermalink }}"
@@ -33,6 +34,7 @@
             {{ .Title }}
           </a>
         </li>
+        {{ end }}
         {{ end }}
       {{ end }}
 
