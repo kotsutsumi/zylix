@@ -142,10 +142,15 @@
 }
 
 /* ============================================
-   Docs Sidebar Spacing
+   Docs Layout Fixes
    ============================================ */
 
 /* Add margin between sidebar and content */
 .docs-sidebar {
   margin-right: 2rem;
+}
+
+/* Reduce header spacer height for docs pages */
+body:has(.docs-sidebar) > div.min-h-\[148px\] {
+  min-height: 100px !important;
 }
