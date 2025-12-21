@@ -6,7 +6,9 @@
   "scripts": {
     "serve": "python3 -m http.server 8081",
     "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui"
+    "test:ui": "npx playwright test --ui",
+    "test:visual": "npx playwright test tests/visual.spec.js",
+    "test:visual:update": "npx playwright test tests/visual.spec.js --update-snapshots"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0"
