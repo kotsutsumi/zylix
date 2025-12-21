@@ -11,6 +11,41 @@
 import { ZylixApp, Component, State, Router, Http, Storage } from 'zylix';
 
 // ============================================================================
+// Utilities
+// ============================================================================
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Escapes a value for use in HTML attributes
+ */
+function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Escapes a value for use in URLs
+ */
+function escapeUrl(str) {
+    if (str == null) return '';
+    return encodeURIComponent(String(str));
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -234,7 +269,7 @@ class Header extends Component {
                 </div>
                 <div class="header-right">
                     <div class="search-box">
-                        <input type="search" placeholder="Search products..." oninput="handleSearch(event)" />
+                        <input type="search" placeholder="Search products..." data-action="search" />
                     </div>
                     <a href="/cart" class="cart-icon">
                         🛒 <span class="cart-badge">${cartCount}</span>
@@ -242,11 +277,11 @@ class Header extends Component {
                     ${user
                         ? `
                             <div class="user-menu">
-                                <span>${user.name}</span>
+                                <span>${escapeHtml(user.name)}</span>
                                 <div class="dropdown">
                                     <a href="/orders">Orders</a>
                                     <a href="/profile">Profile</a>
-                                    <button onclick="handleLogout()">Logout</button>
+                                    <button data-action="logout">Logout</button>
                                 </div>
                             </div>
                         `
@@ -263,27 +298,29 @@ class Header extends Component {
 class ProductCard extends Component {
     render() {
         const { product, onAddToCart } = this.props;
+        const escapedId = escapeAttr(product.id);
+        const rating = Math.max(0, Math.min(5, Math.round(product.rating || 0)));
 
         return `
             <div class="product-card">
-                <a href="/products/${product.id}">
-                    <img src="${product.image}" alt="${product.name}" class="product-image" />
+                <a href="/products/${escapeUrl(product.id)}">
+                    <img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" class="product-image" />
                 </a>
                 <div class="product-info">
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-category">${product.category}</p>
+                    <h3 class="product-name">${escapeHtml(product.name)}</h3>
+                    <p class="product-category">${escapeHtml(product.category)}</p>
                     <div class="product-rating">
-                        ${'★'.repeat(Math.round(product.rating))}${'☆'.repeat(5 - Math.round(product.rating))}
-                        <span>(${product.reviewCount})</span>
+                        ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}
+                        <span>(${escapeHtml(product.reviewCount)})</span>
                     </div>
                     <div class="product-price">
                         ${product.originalPrice > product.price
-                            ? `<span class="original-price">$${product.originalPrice.toFixed(2)}</span>`
+                            ? `<span class="original-price">$${escapeHtml(product.originalPrice.toFixed(2))}</span>`
                             : ''
                         }
-                        <span class="current-price">$${product.price.toFixed(2)}</span>
+                        <span class="current-price">$${escapeHtml(product.price.toFixed(2))}</span>
                     </div>
-                    <button class="btn btn-primary" onclick="addToCart(${product.id})">
+                    <button class="btn btn-primary" data-action="add-to-cart" data-product-id="${escapedId}">
                         Add to Cart
                     </button>
                 </div>
@@ -318,23 +355,24 @@ class CartItem extends Component {
     render() {
         const { item, onUpdateQuantity, onRemove } = this.props;
         const { product, quantity } = item;
+        const escapedId = escapeAttr(product.id);
 
         return `
             <div class="cart-item">
-                <img src="${product.image}" alt="${product.name}" class="cart-item-image" />
+                <img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" class="cart-item-image" />
                 <div class="cart-item-details">
-                    <h4>${product.name}</h4>
-                    <p class="price">$${product.price.toFixed(2)}</p>
+                    <h4>${escapeHtml(product.name)}</h4>
+                    <p class="price">$${escapeHtml(product.price.toFixed(2))}</p>
                 </div>
                 <div class="cart-item-quantity">
-                    <button onclick="updateQuantity(${product.id}, ${quantity - 1})">-</button>
-                    <span>${quantity}</span>
-                    <button onclick="updateQuantity(${product.id}, ${quantity + 1})">+</button>
+                    <button data-action="update-quantity" data-product-id="${escapedId}" data-quantity="${quantity - 1}">-</button>
+                    <span>${escapeHtml(quantity)}</span>
+                    <button data-action="update-quantity" data-product-id="${escapedId}" data-quantity="${quantity + 1}">+</button>
                 </div>
                 <div class="cart-item-total">
-                    $${(product.price * quantity).toFixed(2)}
+                    $${escapeHtml((product.price * quantity).toFixed(2))}
                 </div>
-                <button class="btn-remove" onclick="removeFromCart(${product.id})">×</button>
+                <button class="btn-remove" data-action="remove-from-cart" data-product-id="${escapedId}">×</button>
             </div>
         `;
     }
@@ -364,7 +402,7 @@ class CartPage extends Component {
                 <div class="cart-summary">
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span>$${total.toFixed(2)}</span>
+                        <span>$${escapeHtml(total.toFixed(2))}</span>
                     </div>
                     <div class="summary-row">
                         <span>Shipping</span>
@@ -372,9 +410,9 @@ class CartPage extends Component {
                     </div>
                     <div class="summary-row total">
                         <span>Total</span>
-                        <span>$${total.toFixed(2)}</span>
+                        <span>$${escapeHtml(total.toFixed(2))}</span>
                     </div>
-                    <button class="btn btn-primary btn-lg" onclick="goToCheckout()">
+                    <button class="btn btn-primary btn-lg" data-action="checkout">
                         Proceed to Checkout
                     </button>
                 </div>
@@ -398,8 +436,8 @@ class LoginPage extends Component {
             <div class="auth-page">
                 <div class="auth-card">
                     <h1>Login</h1>
-                    ${this.state.error ? `<div class="error">${this.state.error}</div>` : ''}
-                    <form onsubmit="handleLogin(event)">
+                    ${this.state.error ? `<div class="error">${escapeHtml(this.state.error)}</div>` : ''}
+                    <form data-action="login-form">
                         <div class="form-group">
                             <label>Email</label>
                             <input type="email" name="email" required />
@@ -443,21 +481,21 @@ class OrderHistory extends Component {
                     ${orders.map(order => `
                         <div class="order-card">
                             <div class="order-header">
-                                <span class="order-id">Order #${order.id}</span>
-                                <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
-                                <span class="order-status status-${order.status}">${order.status}</span>
+                                <span class="order-id">Order #${escapeHtml(order.id)}</span>
+                                <span class="order-date">${escapeHtml(new Date(order.createdAt).toLocaleDateString())}</span>
+                                <span class="order-status status-${escapeAttr(order.status)}">${escapeHtml(order.status)}</span>
                             </div>
                             <div class="order-items">
                                 ${order.items.map(item => `
                                     <div class="order-item">
-                                        <span>${item.product.name} × ${item.quantity}</span>
-                                        <span>$${(item.product.price * item.quantity).toFixed(2)}</span>
+                                        <span>${escapeHtml(item.product.name)} × ${escapeHtml(item.quantity)}</span>
+                                        <span>$${escapeHtml((item.product.price * item.quantity).toFixed(2))}</span>
                                     </div>
                                 `).join('')}
                             </div>
                             <div class="order-total">
                                 <span>Total:</span>
-                                <span>$${order.total.toFixed(2)}</span>
+                                <span>$${escapeHtml(order.total.toFixed(2))}</span>
                             </div>
                         </div>
                     `).join('')}
@@ -478,6 +516,9 @@ class ECommerceApp extends Component {
         this.store.subscribe(() => this.render());
 
         this.setupRoutes();
+        this.boundHandleClick = this.handleClick.bind(this);
+        this.boundHandleSubmit = this.handleSubmit.bind(this);
+        this.boundHandleInput = this.handleInput.bind(this);
     }
 
     setupRoutes() {
@@ -489,6 +530,74 @@ class ECommerceApp extends Component {
         Router.on('/login', () => this.renderLogin());
         Router.on('/register', () => this.renderRegister());
         Router.on('/orders', () => this.renderOrders());
+    }
+
+    mount(container) {
+        this.container = container;
+        this.render();
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        if (!this.container) return;
+
+        this.container.addEventListener('click', this.boundHandleClick);
+        this.container.addEventListener('submit', this.boundHandleSubmit);
+        this.container.addEventListener('input', this.boundHandleInput);
+    }
+
+    handleClick(event) {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+        const productId = target.dataset.productId;
+
+        switch (action) {
+            case 'add-to-cart':
+                const product = this.store.state.products.find(p => String(p.id) === productId);
+                if (product) {
+                    this.store.addToCart(product);
+                }
+                break;
+            case 'update-quantity':
+                const quantity = parseInt(target.dataset.quantity, 10);
+                this.store.updateCartQuantity(productId, quantity);
+                break;
+            case 'remove-from-cart':
+                this.store.removeFromCart(productId);
+                break;
+            case 'checkout':
+                Router.push('/checkout');
+                break;
+            case 'logout':
+                this.store.logout();
+                break;
+        }
+    }
+
+    handleSubmit(event) {
+        const form = event.target.closest('[data-action]');
+        if (!form) return;
+
+        event.preventDefault();
+        const action = form.dataset.action;
+
+        if (action === 'login-form') {
+            const formData = new FormData(form);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            this.store.login(email, password)
+                .then(() => Router.push('/'))
+                .catch(err => console.error('Login failed:', err));
+        }
+    }
+
+    handleInput(event) {
+        const target = event.target;
+        if (target.dataset.action === 'search') {
+            this.store.searchProducts(target.value);
+        }
     }
 
     render() {
@@ -563,4 +672,4 @@ const app = new ZylixApp({
 
 app.mount();
 
-export { ECommerceApp, AppStore };
+export { ECommerceApp, AppStore, escapeHtml, escapeAttr, escapeUrl };
