@@ -3,6 +3,10 @@ title: Windows
 weight: 6
 ---
 
+{{< callout type="warning" >}}
+**ステータス: 🚧 開発中** — このプラットフォームは現在ビルドインフラのみです。WinUI 3とのZigコア統合は計画中ですが、まだ実装されていません。以下のコードは目標アーキテクチャを示しています。
+{{< /callout >}}
+
 WinUI 3 を使用して Zylix でネイティブ Windows アプリケーションを構築します。このガイドでは、Visual Studio のセットアップ、P/Invoke 統合、Microsoft Store デプロイについて説明します。
 
 ## 前提条件

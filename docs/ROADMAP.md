@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
-> **Last Updated**: 2025-12-21
-> **Current Version**: v0.6.2
+> **Last Updated**: 2025-12-22
+> **Current Version**: v0.6.3
 
 ---
 
@@ -18,6 +18,7 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.6.0 | Phase 7-10 | Router, Async, Hot Reload, Samples | ✅ Done | 2025-12-21 |
 | v0.6.1 | - | Sample Application Security | ✅ Done | 2025-12-21 |
 | v0.6.2 | - | Platform Security & Concurrency | ✅ Done | 2025-12-21 |
+| v0.6.3 | - | Platform Demos (iOS, Android) | ✅ Done | 2025-12-22 |
 | v0.7.0 | Phase 6 | Component Library Expansion | ⏳ Planned | Q1 2026 |
 | v0.8.0 | Phase 11 | Testing & Quality Infrastructure | ⏳ Planned | Q2 2026 |
 | v0.9.0 | Phase 12 | Performance & Production Readiness | ⏳ Planned | Q3 2026 |
@@ -800,6 +801,12 @@ Optimize performance, reduce bundle sizes, and prepare the framework for product
 - Concurrency bug fixes
 - Thread-safety improvements
 - Memory leak prevention
+
+#### v0.6.3 - Platform Demos (2025-12-22)
+- iOS TodoMVC implementation with SwiftUI TabView
+- iOS unit tests for TodoViewModel (36 tests)
+- Android JNI integration with demo APK
+- npm package ready for publishing
 
 ### Planned Versions
 

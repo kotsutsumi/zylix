@@ -3,6 +3,10 @@ title: macOS
 weight: 4
 ---
 
+{{< callout type="warning" >}}
+**ステータス: 🚧 開発中** — このプラットフォームは現在SwiftUIデモアプリのみです。C FFI経由のZigコア統合は計画中ですが、まだ実装されていません。以下のコードは目標アーキテクチャを示しています。
+{{< /callout >}}
+
 SwiftUI を使用して Zylix でネイティブ macOS アプリケーションを構築します。このガイドでは、Xcode プロジェクトのセットアップ、C ABI 統合、Mac App Store デプロイについて説明します。
 
 ## 前提条件

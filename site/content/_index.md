@@ -25,34 +25,40 @@ layout: hextra-home
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
+    icon="lightning-bolt"
     title="Blazing Fast"
     subtitle="Zero-cost abstractions with Zig. No garbage collection, predictable performance."
-    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px]"
-    style="background: radial-gradient(ellipse at 50% 80%,rgba(251,146,60,0.15),hsla(0,0%,100%,0));"
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px] feature-card-orange"
   >}}
   {{< hextra/feature-card
+    icon="globe-alt"
     title="6 Platforms"
     subtitle="Web/WASM, iOS, Android, macOS, Linux, Windows. One codebase, native performance everywhere."
-    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-lg:hx-min-h-[340px]"
-    style="background: radial-gradient(ellipse at 50% 80%,rgba(59,130,246,0.15),hsla(0,0%,100%,0));"
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-lg:hx-min-h-[340px] feature-card-blue"
   >}}
   {{< hextra/feature-card
+    icon="cube-transparent"
     title="Virtual DOM"
     subtitle="Efficient diffing algorithm for minimal updates. Only render what changes."
-    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px]"
-    style="background: radial-gradient(ellipse at 50% 80%,rgba(16,185,129,0.15),hsla(0,0%,100%,0));"
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px] feature-card-emerald"
   >}}
   {{< hextra/feature-card
+    icon="scale"
     title="Tiny Bundle"
     subtitle="Core library under 50KB. WASM builds are incredibly small and load fast."
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px] feature-card-amber"
   >}}
   {{< hextra/feature-card
+    icon="shield-check"
     title="Type Safe"
     subtitle="Zig's compile-time checks catch errors before runtime. No null pointer exceptions."
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px] feature-card-purple"
   >}}
   {{< hextra/feature-card
+    icon="puzzle"
     title="Native Bindings"
     subtitle="C ABI for seamless integration with Swift, Kotlin, C#, and more."
+    class="hx-aspect-auto md:hx-aspect-[1.1/1] max-md:hx-min-h-[340px] feature-card-cyan"
   >}}
 {{< /hextra/feature-grid >}}
 
@@ -63,10 +69,14 @@ layout: hextra-home
 | Platform | Framework | Status |
 |----------|-----------|--------|
 | Web/WASM | HTML/JavaScript | ✅ Production Ready |
-| iOS | SwiftUI | ✅ Production Ready |
-| Android | Jetpack Compose | ✅ Production Ready |
-| macOS | SwiftUI | ✅ Production Ready |
-| Linux | GTK4 | ✅ Production Ready |
-| Windows | WinUI 3 | ✅ Production Ready |
+| iOS | SwiftUI | 🚧 In Development |
+| Android | Jetpack Compose | 🚧 In Development |
+| macOS | SwiftUI | 🚧 In Development |
+| Linux | GTK4 | 🚧 In Development |
+| Windows | WinUI 3 | 🚧 In Development |
+
+<p style="font-size: 0.875rem; color: var(--tw-prose-body); margin-top: 1rem;">
+Currently, only Web/WASM has full Zig core integration. Native platforms have UI demos but await C ABI/JNI integration.
+</p>
 
 </div>

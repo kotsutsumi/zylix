@@ -264,6 +264,43 @@ public final class ZylixCore {
     }
 }
 
+// MARK: - Event Type Constants
+
+extension ZylixCore {
+    /// Event type constants for dispatching
+    public enum EventType: UInt32 {
+        // Lifecycle events
+        case appInit = 0x0001
+        case appTerminate = 0x0002
+        case appForeground = 0x0003
+        case appBackground = 0x0004
+        case appLowMemory = 0x0005
+
+        // User interaction
+        case buttonPress = 0x0100
+        case textInput = 0x0101
+        case textCommit = 0x0102
+        case selection = 0x0103
+        case scroll = 0x0104
+        case gesture = 0x0105
+
+        // Navigation
+        case navigate = 0x0200
+        case navigateBack = 0x0201
+        case tabSwitch = 0x0202
+
+        // Counter PoC events
+        case counterIncrement = 0x1000
+        case counterDecrement = 0x1001
+        case counterReset = 0x1002
+    }
+
+    /// Dispatch an event using EventType enum
+    public func dispatch(_ event: EventType, payload: Data? = nil) throws {
+        try dispatch(eventType: event.rawValue, payload: payload)
+    }
+}
+
 // MARK: - Convenience Extensions
 
 extension ZylixCore {
@@ -274,6 +311,33 @@ extension ZylixCore {
     public func tick() {
         guard isInitialized else { return }
         processEvents(maxEvents: 10)
+    }
+
+    // MARK: - Counter Convenience Methods
+
+    /// Increment the counter
+    public func increment() throws {
+        try dispatch(.counterIncrement)
+    }
+
+    /// Decrement the counter
+    public func decrement() throws {
+        try dispatch(.counterDecrement)
+    }
+
+    /// Reset the counter to zero
+    public func reset() throws {
+        try dispatch(.counterReset)
+    }
+
+    /// Get the current counter value from app state
+    public var counterValue: Int64 {
+        guard let state = zylix_get_state(),
+              let viewData = state.pointee.view_data else {
+            return 0
+        }
+        let appState = viewData.assumingMemoryBound(to: ZylixAppState.self)
+        return appState.pointee.counter
     }
 }
 
@@ -304,6 +368,9 @@ public class ZylixObservable: ObservableObject {
 
     /// Current state snapshot
     @Published public private(set) var state: ZylixStateSnapshot?
+
+    /// Current counter value
+    @Published public private(set) var counter: Int64 = 0
 
     /// Whether core is initialized
     @Published public private(set) var isInitialized = false
@@ -349,9 +416,10 @@ public class ZylixObservable: ObservableObject {
     private func updateState() {
         stateVersion = ZylixCore.shared.stateVersion
         state = ZylixCore.shared.state
+        counter = ZylixCore.shared.counterValue
     }
 
-    /// Dispatch an event
+    /// Dispatch an event using raw event type
     public func dispatch(eventType: UInt32, payload: Data? = nil) {
         do {
             try ZylixCore.shared.dispatch(eventType: eventType, payload: payload)
@@ -359,6 +427,28 @@ public class ZylixObservable: ObservableObject {
         } catch {
             print("Dispatch failed: \(error)")
         }
+    }
+
+    /// Dispatch an event using EventType enum
+    public func dispatch(_ event: ZylixCore.EventType, payload: Data? = nil) {
+        dispatch(eventType: event.rawValue, payload: payload)
+    }
+
+    // MARK: - Counter Convenience Methods
+
+    /// Increment the counter
+    public func increment() {
+        dispatch(.counterIncrement)
+    }
+
+    /// Decrement the counter
+    public func decrement() {
+        dispatch(.counterDecrement)
+    }
+
+    /// Reset the counter
+    public func reset() {
+        dispatch(.counterReset)
     }
 }
 #endif

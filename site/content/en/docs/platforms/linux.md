@@ -3,6 +3,10 @@ title: Linux
 weight: 5
 ---
 
+{{< callout type="warning" >}}
+**Status: 🚧 In Development** — This platform has build infrastructure but no working demo application yet. Zig core integration via C ABI is planned. The code below shows the target architecture.
+{{< /callout >}}
+
 Build native Linux applications with Zylix using GTK4. This guide covers development environment setup, C ABI integration, and distribution packaging.
 
 ## Prerequisites

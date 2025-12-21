@@ -1,0 +1,57 @@
+{
+  "name": "zylix",
+  "version": "0.1.0",
+  "description": "Cross-platform UI framework with Zig core and JavaScript/WebAssembly bridge",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "types": "src/types.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js",
+      "types": "./src/types.d.ts"
+    },
+    "./core": "./src/core.js",
+    "./state": "./src/state.js",
+    "./todo": "./src/todo.js",
+    "./vdom": "./src/vdom.js",
+    "./component": "./src/component.js"
+  },
+  "files": [
+    "src",
+    "wasm",
+    "README.md"
+  ],
+  "scripts": {
+    "build:wasm": "cd ../../core && zig build wasm -Doptimize=ReleaseSmall",
+    "prepare:wasm": "npm run build:wasm && mkdir -p wasm && cp ../../core/zig-out/wasm/zylix.wasm wasm/",
+    "test": "node test/index.js",
+    "prepublishOnly": "npm run prepare:wasm"
+  },
+  "keywords": [
+    "zylix",
+    "wasm",
+    "webassembly",
+    "zig",
+    "ui",
+    "framework",
+    "cross-platform",
+    "vdom",
+    "state-management"
+  ],
+  "author": "Zylix Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kotsutsumi/zylix.git",
+    "directory": "packages/zylix"
+  },
+  "homepage": "https://github.com/kotsutsumi/zylix#readme",
+  "bugs": {
+    "url": "https://github.com/kotsutsumi/zylix/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {}
+}
