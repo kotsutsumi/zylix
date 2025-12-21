@@ -1,0 +1,70 @@
+{{ define "main" }}
+  {{ .Scratch.Set "scope" "single" }}
+
+  <div class="flex gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {{/* Sidebar */}}
+    {{ partial "docs-sidebar.html" . }}
+
+    {{/* Main content */}}
+    <main class="flex-1 min-w-0">
+      {{/* Header */}}
+      <header>
+        {{ if .Params.showBreadcrumbs | default (site.Params.article.showBreadcrumbs | default false) }}
+          {{ partial "breadcrumbs.html" . }}
+        {{ end }}
+        <h1 class="mt-5 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ .Title }}</h1>
+        <div class="mt-1 mb-4 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+          {{ partial "article-meta/basic.html" (dict "context" . "scope" "single") }}
+        </div>
+      </header>
+
+      {{/* Article content with optional TOC */}}
+      {{ $enableToc := site.Params.article.showTableOfContents | default false }}
+      {{ $enableToc = .Params.showTableOfContents | default $enableToc }}
+      {{ $showToc := and $enableToc (in .TableOfContents "<ul") }}
+
+      <div class="flex gap-8">
+        {{/* Main article */}}
+        <article class="flex-1 min-w-0 prose max-w-none dark:prose-invert">
+          {{ .Content }}
+        </article>
+
+        {{/* Table of Contents (right side) */}}
+        {{ if $showToc }}
+          <aside class="hidden xl:block w-56 shrink-0">
+            <div class="sticky top-24">
+              <h4 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                {{ i18n "article.table_of_contents" | default "On this page" }}
+              </h4>
+              <div class="text-sm text-neutral-600 dark:text-neutral-400">
+                {{ .TableOfContents }}
+              </div>
+            </div>
+          </aside>
+        {{ end }}
+      </div>
+
+      {{/* Pagination */}}
+      {{ if .Params.showPagination | default (site.Params.article.showPagination | default false) }}
+        <div class="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-700">
+          {{ partial "article-pagination.html" . }}
+        </div>
+      {{ end }}
+
+      {{/* Edit link */}}
+      {{ if .Params.showEdit | default (site.Params.article.showEdit | default false) }}
+        {{ $editURL := site.Params.article.editURL }}
+        {{ if $editURL }}
+          <div class="mt-8 text-sm">
+            <a href="{{ $editURL }}{{ .File.Path }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+              {{ i18n "article.edit_page" | default "Edit this page" }} →
+            </a>
+          </div>
+        {{ end }}
+      {{ end }}
+    </main>
+  </div>
+{{ end }}

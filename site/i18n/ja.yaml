@@ -1,0 +1,81 @@
+# Japanese translations for Zylix homepage
+
+# Hero Section
+hero_badge: "無料・オープンソース"
+hero_headline: "一度書いて、6プラットフォームでネイティブ動作"
+hero_subtitle: "Zigの超高速パフォーマンスでクロスプラットフォームアプリを構築。Web、iOS、Android、macOS、Linux、Windows — 1つのコードベース、どこでもネイティブUI。"
+hero_note: "登録不要。ブラウザでZylixコンポーネントを体験できます。"
+cta_get_started: "はじめる"
+cta_demo: "ライブデモを試す"
+
+# Features Section
+features_title: "特徴"
+feature_fast_title: "超高速"
+feature_fast_desc: "Zigによるゼロコスト抽象化。ガベージコレクションなしで、予測可能で一貫したパフォーマンスを実現。"
+feature_platforms_title: "6プラットフォーム"
+feature_platforms_desc: "Web/WASM、iOS、Android、macOS、Linux、Windows。一度書いて、どこでもデプロイ。"
+feature_vdom_title: "Virtual DOM"
+feature_vdom_desc: "効率的な差分検出アルゴリズムで最小限のDOM更新を計算。変更部分のみ再レンダリング。"
+feature_tiny_title: "軽量バンドル"
+feature_tiny_desc: "コアライブラリはgzip後50KB未満。メガバイトのJavaScriptをダウンロードする必要なし。"
+feature_safe_title: "型安全"
+feature_safe_desc: "Zigのコンパイル時安全性がバグを本番到達前にキャッチ。nullポインタ例外なし。"
+feature_bindings_title: "ネイティブバインディング"
+feature_bindings_desc: "C ABIによりSwift、Kotlin、C#、Pythonなどとシームレスに統合。"
+
+# Why Zylix Section
+why_title: "なぜZylix？"
+why_subtitle: "従来のクロスプラットフォームフレームワークは、パフォーマンスか開発体験かの選択を迫られます。Zylixは両方を提供します。"
+problem_title: "従来の課題"
+problem_1: "JavaScriptフレームワークは遅く肥大化している"
+problem_2: "FlutterはDartの習得が必要で、ランタイムが大きい"
+problem_3: "React Nativeはブリッジがパフォーマンスを低下させる"
+problem_4: "Electronはギガバイト単位のメモリを消費"
+problem_5: "ネイティブ開発は6回同じコードを書く必要がある"
+solution_title: "Zylixのソリューション"
+solution_1: "GCなし、予測可能なレイテンシのZigパワードコア"
+solution_2: "SwiftUI、Compose、GTK4、WinUIによる真のネイティブUI"
+solution_3: "50KB未満の超軽量WASMコア"
+solution_4: "効率的な差分検出を備えたVirtual DOM"
+solution_5: "あらゆる言語と統合可能なC ABI"
+
+# Use Cases Section
+usecases_title: "ユースケース"
+usecase_mobile_title: "モバイルアプリ"
+usecase_mobile_desc: "ネイティブSwiftUIとJetpack Compose UIを使用したiOS・Androidアプリを、共通のZigコアで構築。"
+usecase_desktop_title: "デスクトップアプリ"
+usecase_desktop_desc: "ネイティブウィジェットでmacOS、Windows、Linuxデスクトップアプリを作成。Electron不要、肥大化なし。"
+usecase_web_title: "Webアプリ"
+usecase_web_desc: "WebAssemblyでWebにデプロイ。超高速、軽量バンドル、すべてのモダンブラウザで動作。"
+
+# Comparison Table
+comparison_title: "他フレームワークとの比較"
+table_feature: "特徴"
+table_bundle: "バンドルサイズ"
+table_gc: "GC停止"
+table_native: "ネイティブUI"
+table_language: "言語"
+table_platforms: "プラットフォーム数"
+"none": "なし"
+"yes": "あり"
+"no": "×"
+"partial": "一部"
+
+# Platform Support
+platform_title: "プラットフォームサポート"
+status_ready: "本番対応"
+status_dev: "開発中"
+
+# Get Started
+getstarted_title: "数分ではじめる"
+prerequisites: "前提条件"
+prereq_text: "Zig 0.13+とモダンなWebブラウザ。詳細は"
+getting_started: "はじめる"
+prereq_guide: "ガイドをご覧ください。"
+
+# Contribute
+contribute_title: "コントリビュート"
+contribute_desc: "Zylixはオープンソースであり、あらゆるスキルレベルの開発者からのコントリビューションを歓迎します。"
+good_first_issues: "Good First Issues"
+contributing_guide: "コントリビュートガイド"
+star_github: "GitHubでスター"
