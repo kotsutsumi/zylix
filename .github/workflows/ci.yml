@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Core (Zig) Build
+  # ============================================================================
+  core-build:
+    name: Core Build (Zig)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.13.0
+
+      - name: Build Core
+        working-directory: core
+        run: zig build
+
+      - name: Run Core Tests
+        working-directory: core
+        run: zig build test
+        continue-on-error: true
+
+  # ============================================================================
+  # Web Platform Lint
+  # ============================================================================
+  web-lint:
+    name: Web Platform Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check JavaScript Syntax
+        run: |
+          for file in platforms/web/*.js samples/*/src/*.js; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              node --check "$file" || exit 1
+            fi
+          done
+
+  # ============================================================================
+  # Windows Build
+  # ============================================================================
+  windows-build:
+    name: Windows Build (.NET)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        working-directory: platforms/windows/Zylix
+        run: dotnet restore
+        continue-on-error: true
+
+      - name: Build
+        working-directory: platforms/windows/Zylix
+        run: dotnet build --no-restore
+        continue-on-error: true
+
+  # ============================================================================
+  # Documentation Site Build
+  # ============================================================================
+  docs-build:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Site
+        working-directory: site
+        run: hugo --minify
+
+  # ============================================================================
+  # CodeRabbit Review (on PRs only)
+  # ============================================================================
+  coderabbit:
+    name: CodeRabbit Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CodeRabbit
+        run: npm install -g coderabbit
+
+      - name: Run CodeRabbit Review
+        run: coderabbit review --plain --type committed --base-commit ${{ github.event.pull_request.base.sha }}
+        continue-on-error: true
+        env:
+          CODERABBIT_API_KEY: ${{ secrets.CODERABBIT_API_KEY }}
