@@ -84,13 +84,12 @@ jobs:
       - name: Build and Test iOS App
         working-directory: platforms/ios
         run: |
-          # Use iPhone 15 Pro which is widely available on macos-latest runners
-          # iPhone 16 Pro requires Xcode 16+ / macOS 15+
+          # Use iPhone 16 Pro which is available on macos-latest runners with Xcode 16+
           xcodebuild test \
             -project Zylix.xcodeproj \
             -scheme ZylixTests \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -resultBundlePath TestResults \
             CODE_SIGNING_ALLOWED=NO
 
