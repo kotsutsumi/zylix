@@ -23,7 +23,37 @@ const NoteFormat = {
 // Utilities
 // ============================================================================
 
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Escapes a value for use in HTML attributes
+ */
+function escapeAttr(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;');
+}
+
+/**
+ * Generates a unique ID using crypto.randomUUID with fallback
+ */
 function generateId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return `note_${crypto.randomUUID()}`;
+    }
+    // Fallback for older browsers
     return `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
@@ -535,26 +565,26 @@ class Sidebar extends Component {
             <aside class="sidebar">
                 <div class="sidebar-header">
                     <h1>Notes</h1>
-                    <button class="btn-new-note" onclick="createNote()">+</button>
+                    <button class="btn-new-note" data-action="create-note">+</button>
                 </div>
 
                 <div class="sidebar-search">
                     <input type="search" placeholder="Search notes..."
-                           oninput="handleSearch(event)" />
+                           data-action="search" />
                 </div>
 
                 <nav class="folder-list">
                     ${folders.map(folder => `
                         <div class="folder-item ${activeFolder === folder.id ? 'active' : ''}"
-                             onclick="selectFolder('${folder.id}')">
-                            <span class="folder-icon">${folder.icon}</span>
-                            <span class="folder-name">${folder.name}</span>
+                             data-action="select-folder" data-folder-id="${escapeAttr(folder.id)}">
+                            <span class="folder-icon">${escapeHtml(folder.icon)}</span>
+                            <span class="folder-name">${escapeHtml(folder.name)}</span>
                             <span class="folder-count">${counts[folder.id] || 0}</span>
                         </div>
                     `).join('')}
                 </nav>
 
-                <button class="btn-new-folder" onclick="createFolder()">
+                <button class="btn-new-folder" data-action="create-folder">
                     + New Folder
                 </button>
             </aside>
@@ -570,7 +600,7 @@ class NoteList extends Component {
             return `
                 <div class="note-list-empty">
                     <p>No notes yet</p>
-                    <button onclick="createNote()">Create your first note</button>
+                    <button data-action="create-note">Create your first note</button>
                 </div>
             `;
         }
@@ -579,16 +609,16 @@ class NoteList extends Component {
             <div class="note-list">
                 ${notes.map(note => `
                     <div class="note-item ${activeNote === note.id ? 'active' : ''}"
-                         onclick="selectNote('${note.id}')">
+                         data-action="select-note" data-note-id="${escapeAttr(note.id)}">
                         <div class="note-title">
-                            ${note.isFavorite ? '⭐ ' : ''}${note.title}
+                            ${note.isFavorite ? '⭐ ' : ''}${escapeHtml(note.title)}
                         </div>
                         <div class="note-preview">
-                            ${this.getPreview(note.content)}
+                            ${escapeHtml(this.getPreview(note.content))}
                         </div>
                         <div class="note-meta">
-                            <span class="note-date">${formatDate(note.updatedAt)}</span>
-                            ${note.tags.map(tag => `<span class="note-tag">#${tag}</span>`).join('')}
+                            <span class="note-date">${escapeHtml(formatDate(note.updatedAt))}</span>
+                            ${note.tags.map(tag => `<span class="note-tag">#${escapeHtml(tag)}</span>`).join('')}
                         </div>
                     </div>
                 `).join('')}
@@ -614,41 +644,43 @@ class NoteEditor extends Component {
             `;
         }
 
+        const escapedId = escapeAttr(note.id);
+
         return `
             <div class="note-editor">
                 <div class="editor-header">
                     <input type="text" class="note-title-input"
-                           value="${note.title}"
-                           oninput="handleTitleChange(event)"
+                           value="${escapeAttr(note.title)}"
+                           data-action="title-change"
                            placeholder="Note title" />
                     <div class="editor-actions">
-                        <button onclick="toggleFavorite('${note.id}')"
+                        <button data-action="toggle-favorite" data-note-id="${escapedId}"
                                 class="${note.isFavorite ? 'active' : ''}">
                             ${note.isFavorite ? '⭐' : '☆'}
                         </button>
-                        <button onclick="archiveNote('${note.id}')">📦</button>
-                        <button onclick="deleteNote('${note.id}')">🗑️</button>
+                        <button data-action="archive-note" data-note-id="${escapedId}">📦</button>
+                        <button data-action="delete-note" data-note-id="${escapedId}">🗑️</button>
                     </div>
                 </div>
 
                 <div class="editor-tags">
                     ${note.tags.map(tag => `
                         <span class="tag">
-                            #${tag}
-                            <button onclick="removeTag('${note.id}', '${tag}')">×</button>
+                            #${escapeHtml(tag)}
+                            <button data-action="remove-tag" data-note-id="${escapedId}" data-tag="${escapeAttr(tag)}">×</button>
                         </span>
                     `).join('')}
                     <input type="text" class="tag-input"
                            placeholder="Add tag..."
-                           onkeydown="handleAddTag(event, '${note.id}')" />
+                           data-action="add-tag" data-note-id="${escapedId}" />
                 </div>
 
                 <div id="rich-editor" class="editor-content">${note.content}</div>
 
                 <div class="editor-footer">
                     <span class="word-count">${this.getWordCount(note.content)} words</span>
-                    <span class="sync-status ${syncStatus}">${this.getSyncText(syncStatus)}</span>
-                    <span class="last-edited">Edited ${formatDate(note.updatedAt)}</span>
+                    <span class="sync-status ${escapeAttr(syncStatus)}">${this.getSyncText(syncStatus)}</span>
+                    <span class="last-edited">Edited ${escapeHtml(formatDate(note.updatedAt))}</span>
                 </div>
             </div>
         `;
@@ -678,6 +710,105 @@ class NotesApp extends Component {
         super();
         this.store = new NotesStore();
         this.store.subscribe(() => this.render());
+        this.boundHandleClick = this.handleClick.bind(this);
+        this.boundHandleInput = this.handleInput.bind(this);
+        this.boundHandleKeydown = this.handleKeydown.bind(this);
+    }
+
+    mount(container) {
+        this.container = container;
+        this.render();
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        if (!this.container) return;
+
+        this.container.addEventListener('click', this.boundHandleClick);
+        this.container.addEventListener('input', this.boundHandleInput);
+        this.container.addEventListener('keydown', this.boundHandleKeydown);
+    }
+
+    handleClick(event) {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+        const noteId = target.dataset.noteId;
+        const folderId = target.dataset.folderId;
+
+        switch (action) {
+            case 'create-note':
+                this.store.createNote(this.store.state.activeFolder);
+                break;
+            case 'create-folder':
+                const folderName = prompt('Enter folder name:');
+                if (folderName) {
+                    this.store.createFolder(folderName);
+                }
+                break;
+            case 'select-folder':
+                this.store.selectFolder(folderId);
+                break;
+            case 'select-note':
+                this.store.selectNote(noteId);
+                break;
+            case 'toggle-favorite':
+                this.store.toggleFavorite(noteId);
+                break;
+            case 'archive-note':
+                this.store.archiveNote(noteId);
+                break;
+            case 'delete-note':
+                this.store.deleteNote(noteId);
+                break;
+            case 'remove-tag':
+                const tagToRemove = target.dataset.tag;
+                const noteForTag = this.store.state.notes.find(n => n.id === noteId);
+                if (noteForTag) {
+                    this.store.saveNote({
+                        ...noteForTag,
+                        tags: noteForTag.tags.filter(t => t !== tagToRemove)
+                    });
+                }
+                break;
+        }
+    }
+
+    handleInput(event) {
+        const target = event.target;
+        const action = target.dataset.action;
+
+        if (action === 'search') {
+            this.store.search(target.value);
+        } else if (action === 'title-change') {
+            const note = this.store.getActiveNote();
+            if (note) {
+                this.store.autoSave({
+                    ...note,
+                    title: target.value
+                });
+            }
+        }
+    }
+
+    handleKeydown(event) {
+        const target = event.target;
+        if (target.dataset.action === 'add-tag' && event.key === 'Enter') {
+            event.preventDefault();
+            const tag = target.value.trim();
+            const noteId = target.dataset.noteId;
+            if (tag && noteId) {
+                const note = this.store.state.notes.find(n => n.id === noteId);
+                if (note && !note.tags.includes(tag)) {
+                    this.store.saveNote({
+                        ...note,
+                        tags: [...note.tags, tag]
+                    });
+                }
+                target.value = '';
+            }
+        }
     }
 
     componentDidMount() {
@@ -758,4 +889,4 @@ const app = new ZylixApp({
 
 app.mount();
 
-export { NotesApp, NotesStore };
+export { NotesApp, NotesStore, escapeHtml, escapeAttr, generateId };
