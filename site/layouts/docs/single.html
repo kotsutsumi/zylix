@@ -9,9 +9,6 @@
     <main class="flex-1 min-w-0 pt-0">
       {{/* Header */}}
       <header>
-        {{ if .Params.showBreadcrumbs | default (site.Params.article.showBreadcrumbs | default false) }}
-          {{ partial "breadcrumbs.html" . }}
-        {{ end }}
         <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ .Title }}</h1>
         <div class="mt-1 mb-4 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
           {{ partial "article-meta/basic.html" (dict "context" . "scope" "single") }}
