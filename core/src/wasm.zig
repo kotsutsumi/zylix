@@ -845,6 +845,227 @@ export fn zigdom_component_create_image(src_ptr: [*]const u8, src_len: usize, al
     return component.getTree().create(component.Component.image(src_ptr[0..src_len], alt_ptr[0..alt_len]));
 }
 
+// ============================================================================
+// Form Components (v0.7.0)
+// ============================================================================
+
+/// Create a select/dropdown component
+export fn zigdom_component_create_select(placeholder_ptr: [*]const u8, placeholder_len: usize) u32 {
+    return component.getTree().create(component.Component.selectDropdown(placeholder_ptr[0..placeholder_len]));
+}
+
+/// Create a checkbox component
+export fn zigdom_component_create_checkbox(label_ptr: [*]const u8, label_len: usize) u32 {
+    return component.getTree().create(component.Component.checkbox(label_ptr[0..label_len]));
+}
+
+/// Create a radio button component
+export fn zigdom_component_create_radio(label_ptr: [*]const u8, label_len: usize, group_ptr: [*]const u8, group_len: usize) u32 {
+    return component.getTree().create(component.Component.radio(label_ptr[0..label_len], group_ptr[0..group_len]));
+}
+
+/// Create a textarea component
+export fn zigdom_component_create_textarea(placeholder_ptr: [*]const u8, placeholder_len: usize) u32 {
+    return component.getTree().create(component.Component.textarea(placeholder_ptr[0..placeholder_len]));
+}
+
+/// Create a form container component
+export fn zigdom_component_create_form() u32 {
+    return component.getTree().create(component.Component.formContainer());
+}
+
+/// Create a toggle switch component
+export fn zigdom_component_create_toggle_switch(label_ptr: [*]const u8, label_len: usize) u32 {
+    return component.getTree().create(component.Component.toggleSwitch(label_ptr[0..label_len]));
+}
+
+/// Set checkbox/radio checked state
+export fn zigdom_component_set_checked(id: u32, is_checked: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.setChecked(is_checked);
+    }
+}
+
+/// Get checkbox/radio checked state
+export fn zigdom_component_get_checked(id: u32) bool {
+    if (component.getTree().get(id)) |c| {
+        return c.state.checked;
+    }
+    return false;
+}
+
+/// Set textarea rows
+export fn zigdom_component_set_textarea_rows(id: u32, rows: u8) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.textarea_rows = rows;
+        c.needs_render = true;
+    }
+}
+
+/// Set textarea cols
+export fn zigdom_component_set_textarea_cols(id: u32, cols: u8) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.textarea_cols = cols;
+        c.needs_render = true;
+    }
+}
+
+// ============================================================================
+// Layout Components (v0.7.0)
+// ============================================================================
+
+/// Create a vertical stack component
+export fn zigdom_component_create_vstack() u32 {
+    return component.getTree().create(component.Component.vstack());
+}
+
+/// Create a horizontal stack component
+export fn zigdom_component_create_hstack() u32 {
+    return component.getTree().create(component.Component.hstack());
+}
+
+/// Create a z-stack (overlay) component
+export fn zigdom_component_create_zstack() u32 {
+    return component.getTree().create(component.Component.zstack());
+}
+
+/// Create a grid component
+export fn zigdom_component_create_grid() u32 {
+    return component.getTree().create(.{ .component_type = .grid });
+}
+
+/// Create a scroll view component
+export fn zigdom_component_create_scroll_view() u32 {
+    return component.getTree().create(component.Component.scrollView());
+}
+
+/// Create a spacer component
+export fn zigdom_component_create_spacer() u32 {
+    return component.getTree().create(component.Component.spacerComponent());
+}
+
+/// Create a divider component
+export fn zigdom_component_create_divider() u32 {
+    return component.getTree().create(component.Component.dividerComponent());
+}
+
+/// Create a card component
+export fn zigdom_component_create_card() u32 {
+    return component.getTree().create(component.Component.cardContainer());
+}
+
+/// Set stack spacing
+export fn zigdom_component_set_stack_spacing(id: u32, spacing: u16) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.stack_spacing = spacing;
+        c.needs_render = true;
+    }
+}
+
+/// Set stack alignment
+export fn zigdom_component_set_stack_alignment(id: u32, alignment: u8) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.stack_alignment = @enumFromInt(alignment);
+        c.needs_render = true;
+    }
+}
+
+// ============================================================================
+// Navigation Components (v0.7.0)
+// ============================================================================
+
+/// Create a navigation bar component
+export fn zigdom_component_create_nav_bar(title_ptr: [*]const u8, title_len: usize) u32 {
+    return component.getTree().create(component.Component.navBar(title_ptr[0..title_len]));
+}
+
+/// Create a tab bar component
+export fn zigdom_component_create_tab_bar() u32 {
+    return component.getTree().create(component.Component.tabBar());
+}
+
+// ============================================================================
+// Feedback Components (v0.7.0)
+// ============================================================================
+
+/// Create an alert dialog component
+export fn zigdom_component_create_alert(message_ptr: [*]const u8, message_len: usize, style: u8) u32 {
+    return component.getTree().create(component.Component.alertDialog(message_ptr[0..message_len], @enumFromInt(style)));
+}
+
+/// Create a toast notification component
+export fn zigdom_component_create_toast(message_ptr: [*]const u8, message_len: usize, position: u8) u32 {
+    return component.getTree().create(component.Component.toastNotification(message_ptr[0..message_len], @enumFromInt(position)));
+}
+
+/// Create a modal dialog component
+export fn zigdom_component_create_modal(title_ptr: [*]const u8, title_len: usize) u32 {
+    return component.getTree().create(component.Component.modalDialog(title_ptr[0..title_len]));
+}
+
+/// Create a progress indicator component
+export fn zigdom_component_create_progress(style: u8) u32 {
+    return component.getTree().create(component.Component.progressIndicator(@enumFromInt(style)));
+}
+
+/// Create a loading spinner component
+export fn zigdom_component_create_spinner() u32 {
+    return component.getTree().create(component.Component.loadingSpinner());
+}
+
+/// Set progress value (0.0 to 1.0)
+export fn zigdom_component_set_progress_value(id: u32, value: f32) void {
+    if (component.getTree().get(id)) |c| {
+        c.props.progress_value = value;
+        c.needs_render = true;
+    }
+}
+
+// ============================================================================
+// Data Display Components (v0.7.0)
+// ============================================================================
+
+/// Create an icon component
+export fn zigdom_component_create_icon(name_ptr: [*]const u8, name_len: usize) u32 {
+    return component.getTree().create(component.Component.iconComponent(name_ptr[0..name_len]));
+}
+
+/// Create an avatar component
+export fn zigdom_component_create_avatar(src_ptr: [*]const u8, src_len: usize, alt_ptr: [*]const u8, alt_len: usize) u32 {
+    return component.getTree().create(component.Component.avatarComponent(src_ptr[0..src_len], alt_ptr[0..alt_len]));
+}
+
+/// Create a tag/badge component
+export fn zigdom_component_create_tag(label_ptr: [*]const u8, label_len: usize) u32 {
+    return component.getTree().create(component.Component.tagComponent(label_ptr[0..label_len]));
+}
+
+/// Create a badge component with count
+export fn zigdom_component_create_badge(count: i64) u32 {
+    return component.getTree().create(component.Component.badgeComponent(count));
+}
+
+/// Create an accordion component
+export fn zigdom_component_create_accordion(title_ptr: [*]const u8, title_len: usize) u32 {
+    return component.getTree().create(component.Component.accordionComponent(title_ptr[0..title_len]));
+}
+
+/// Set expanded state (for accordion, etc.)
+export fn zigdom_component_set_expanded(id: u32, is_expanded: bool) void {
+    if (component.getTree().get(id)) |c| {
+        c.state.expanded = is_expanded;
+        c.needs_render = true;
+    }
+}
+
+/// Get expanded state
+export fn zigdom_component_get_expanded(id: u32) bool {
+    if (component.getTree().get(id)) |c| {
+        return c.state.expanded;
+    }
+    return false;
+}
+
 /// Add child to parent component
 export fn zigdom_component_add_child(parent_id: u32, child_id: u32) bool {
     return component.getTree().addChild(parent_id, child_id);
