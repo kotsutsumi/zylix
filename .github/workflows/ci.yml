@@ -35,10 +35,10 @@ jobs:
         continue-on-error: true
 
   # ============================================================================
-  # Web Platform Lint
+  # Web Platform Lint & Tests
   # ============================================================================
-  web-lint:
-    name: Web Platform Lint
+  web-tests:
+    name: Web Platform Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +56,10 @@ jobs:
               node --check "$file" || exit 1
             fi
           done
+
+      - name: Run Unit Tests
+        working-directory: tests
+        run: npm test
 
   # ============================================================================
   # Windows Build
