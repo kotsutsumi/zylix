@@ -1,0 +1,781 @@
+{{/* Custom homepage layout for Zylix - Blowfish compatible */}}
+{{/* Design System: max-w-6xl, px-6 mobile / px-10 desktop, mt-24 sections, py-32 hero */}}
+
+<style>
+/* =============================================
+   ZYLIX DESIGN SYSTEM - STRUCTURAL RULES
+   max-width: 72rem (max-w-6xl)
+   padding: 1.5rem mobile (px-6), 2.5rem desktop (px-10)
+   section-spacing: 6rem (mt-24)
+   hero-padding: 8rem (py-32)
+   h2: mt-24 mb-8 (6rem/2rem)
+   h3: mt-12 mb-4 (3rem/1rem)
+   grid-gap: 2rem min (gap-8), 2.5rem standard (gap-10)
+   card-padding: 1.5rem min (p-6), 2rem content (p-8)
+   body: line-height 1.625 (leading-relaxed)
+   cta: mt-12 above (3rem), mt-24 below (6rem)
+   footer: mb-32 (8rem)
+============================================= */
+
+/* Base Container */
+.zylix-container {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 768px) {
+  .zylix-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+/* Hero Section */
+.zylix-hero {
+  text-align: center;
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 768px) {
+  .zylix-hero {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+.zylix-hero-inner {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.zylix-badge {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: background 0.2s;
+}
+.zylix-badge:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+.zylix-headline {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+@media (min-width: 768px) {
+  .zylix-headline {
+    font-size: 3.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .zylix-headline {
+    font-size: 4rem;
+  }
+}
+.zylix-subtitle {
+  font-size: 1.125rem;
+  color: #9ca3af;
+  line-height: 1.625;
+  margin-bottom: 3rem;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 768px) {
+  .zylix-subtitle {
+    font-size: 1.25rem;
+  }
+}
+.zylix-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 3rem;
+}
+.zylix-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.zylix-btn-primary:hover {
+  background: #2563eb;
+}
+.zylix-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #4b5563;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+.zylix-btn-secondary:hover {
+  border-color: #3b82f6;
+}
+.zylix-note {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 6rem;
+}
+
+/* Section */
+.zylix-section {
+  margin-top: 6rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 768px) {
+  .zylix-section {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+.zylix-section-inner {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.zylix-section-alt {
+  background: rgba(0,0,0,0.15);
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (min-width: 768px) {
+  .zylix-section-alt {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+.zylix-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+@media (min-width: 768px) {
+  .zylix-section-title {
+    font-size: 2.25rem;
+  }
+}
+.zylix-section-subtitle {
+  text-align: center;
+  color: #9ca3af;
+  line-height: 1.625;
+  margin-bottom: 3rem;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Grids */
+.zylix-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+@media (min-width: 640px) {
+  .zylix-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .zylix-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+.zylix-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+@media (min-width: 768px) {
+  .zylix-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+.zylix-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 640px) {
+  .zylix-grid-6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .zylix-grid-6 {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Cards */
+.zylix-card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+@media (min-width: 768px) {
+  .zylix-card {
+    padding: 2rem;
+  }
+}
+.zylix-card-orange { background: rgba(249, 115, 22, 0.1); border-color: rgba(249, 115, 22, 0.2); }
+.zylix-card-blue { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); }
+.zylix-card-emerald { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+.zylix-card-amber { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); }
+.zylix-card-purple { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); }
+.zylix-card-cyan { background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.2); }
+.zylix-card-white { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
+.zylix-card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(16, 185, 129, 0.12)); border-color: rgba(59, 130, 246, 0.25); }
+.zylix-card-green { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.25); }
+.zylix-card-yellow { background: rgba(234, 179, 8, 0.1); border-color: rgba(234, 179, 8, 0.25); }
+
+.zylix-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+.zylix-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+}
+.zylix-card-text {
+  color: #9ca3af;
+  font-size: 0.9375rem;
+  line-height: 1.625;
+  margin: 0;
+}
+
+/* Why Zylix - Problem/Solution Cards */
+.zylix-why-card {
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.zylix-problem-title {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.zylix-solution-title {
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.zylix-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.zylix-list li {
+  padding: 0.625rem 0;
+  color: #9ca3af;
+  line-height: 1.625;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.zylix-list li::before {
+  content: "•";
+  color: inherit;
+  flex-shrink: 0;
+}
+
+/* Use Cases */
+.zylix-usecase {
+  text-align: center;
+  padding: 2rem;
+}
+.zylix-usecase-icon {
+  font-size: 3rem;
+  margin-bottom: 1.25rem;
+  display: block;
+}
+
+/* Comparison Table */
+.zylix-table-wrapper {
+  overflow-x: auto;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  max-width: 56rem;
+  margin: 3rem auto 0;
+}
+.zylix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.zylix-table th {
+  padding: 1rem 1.25rem;
+  text-align: center;
+  font-weight: 700;
+  background: rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+.zylix-table th:first-child {
+  text-align: left;
+}
+.zylix-table td {
+  padding: 1rem 1.25rem;
+  text-align: center;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.zylix-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+.zylix-table .highlight { color: #22c55e; font-weight: 600; }
+.zylix-table .zylix-col { color: #60a5fa; font-weight: 700; }
+.zylix-table .warn { color: #fbbf24; }
+.zylix-table .bad { color: #f87171; }
+
+/* Platform Grid */
+.zylix-platform {
+  padding: 1.25rem;
+  text-align: center;
+  border-radius: 0.75rem;
+}
+.zylix-platform-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+.zylix-platform-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.zylix-platform-status {
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+}
+.zylix-status-ready { color: #22c55e; }
+.zylix-status-dev { color: #fbbf24; }
+
+/* Get Started */
+.zylix-getstarted-content {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 3rem;
+}
+.zylix-code {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.zylix-info {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  font-size: 0.9375rem;
+  line-height: 1.625;
+}
+.zylix-info a {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.zylix-info a:hover {
+  color: #93c5fd;
+}
+
+/* Contribute */
+.zylix-contribute-desc {
+  text-align: center;
+  color: #9ca3af;
+  line-height: 1.625;
+  margin-bottom: 3rem;
+}
+.zylix-contribute-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+.zylix-contribute-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: all 0.2s;
+}
+.zylix-contribute-btn-outline {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.zylix-contribute-btn-outline:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+.zylix-contribute-btn-primary {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid transparent;
+}
+.zylix-contribute-btn-primary:hover {
+  background: #2563eb;
+}
+
+/* Footer Spacing */
+.zylix-footer-spacer {
+  height: 8rem;
+}
+</style>
+
+{{/* Hero Section */}}
+<div class="zylix-hero">
+  <div class="zylix-hero-inner">
+    <a href="https://github.com/kotsutsumi/zylix" class="zylix-badge">
+      {{ i18n "hero_badge" | default "Free & Open Source" }} →
+    </a>
+
+    <h1 class="zylix-headline">
+      {{ i18n "hero_headline" | default "Write Once, Run Natively on 6 Platforms" }}
+    </h1>
+
+    <p class="zylix-subtitle">
+      {{ i18n "hero_subtitle" | default "Build cross-platform apps with Zig's blazing-fast performance. Web, iOS, Android, macOS, Linux, Windows — one codebase, native UI everywhere." }}
+    </p>
+
+    <div class="zylix-buttons">
+      <a href="{{ "docs/getting-started/" | relLangURL }}" class="zylix-btn-primary">
+        {{ i18n "cta_get_started" | default "Get Started" }}
+      </a>
+      <a href="{{ "demo/" | relLangURL }}" class="zylix-btn-secondary">
+        {{ i18n "cta_demo" | default "Try Live Demo" }} →
+      </a>
+    </div>
+
+    <p class="zylix-note">
+      {{ i18n "hero_note" | default "No signup required. See Zylix components running in your browser." }}
+    </p>
+  </div>
+</div>
+
+{{/* Features Section */}}
+<section class="zylix-section">
+  <div class="zylix-section-inner">
+    <h2 class="zylix-section-title">{{ i18n "features_title" | default "Features" }}</h2>
+
+    <div class="zylix-grid-3">
+      <div class="zylix-card zylix-card-orange">
+        <span class="zylix-icon">⚡</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_fast_title" | default "Blazing Fast" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_fast_desc" | default "Zero-cost abstractions with Zig. No garbage collection means predictable, consistent performance." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-blue">
+        <span class="zylix-icon">🌍</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_platforms_title" | default "6 Platforms" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_platforms_desc" | default "Web/WASM, iOS, Android, macOS, Linux, Windows. Write once, deploy everywhere." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-emerald">
+        <span class="zylix-icon">🔄</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_vdom_title" | default "Virtual DOM" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_vdom_desc" | default "Efficient diffing algorithm computes minimal DOM updates. Only what changes gets re-rendered." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-amber">
+        <span class="zylix-icon">📦</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_tiny_title" | default "Tiny Bundle" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_tiny_desc" | default "Core library under 50KB gzipped. No megabytes of JavaScript to download." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-purple">
+        <span class="zylix-icon">🛡️</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_safe_title" | default "Type Safe" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_safe_desc" | default "Zig's compile-time safety catches bugs before production. No null pointer exceptions." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-cyan">
+        <span class="zylix-icon">🧩</span>
+        <h3 class="zylix-card-title">{{ i18n "feature_bindings_title" | default "Native Bindings" }}</h3>
+        <p class="zylix-card-text">{{ i18n "feature_bindings_desc" | default "C ABI enables seamless integration with Swift, Kotlin, C#, Python, and more." }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Why Zylix Section */}}
+<section class="zylix-section">
+  <div class="zylix-section-alt">
+    <div class="zylix-section-inner">
+      <h2 class="zylix-section-title">{{ i18n "why_title" | default "Why Zylix?" }}</h2>
+      <p class="zylix-section-subtitle">
+        {{ i18n "why_subtitle" | default "Traditional cross-platform frameworks force you to choose: performance OR developer experience. Zylix gives you both." }}
+      </p>
+
+      <div class="zylix-grid-2">
+        <div class="zylix-why-card zylix-card-white">
+          <h3 class="zylix-problem-title">
+            <span>❌</span>
+            {{ i18n "problem_title" | default "The Problem" }}
+          </h3>
+          <ul class="zylix-list">
+            <li>{{ i18n "problem_1" | default "JavaScript frameworks are slow and bloated" }}</li>
+            <li>{{ i18n "problem_2" | default "Flutter requires Dart and ships large runtimes" }}</li>
+            <li>{{ i18n "problem_3" | default "React Native bridges slow down performance" }}</li>
+            <li>{{ i18n "problem_4" | default "Electron consumes gigabytes of RAM" }}</li>
+            <li>{{ i18n "problem_5" | default "Native development means writing code 6 times" }}</li>
+          </ul>
+        </div>
+
+        <div class="zylix-why-card zylix-card-gradient">
+          <h3 class="zylix-solution-title">
+            <span>✅</span>
+            {{ i18n "solution_title" | default "The Zylix Solution" }}
+          </h3>
+          <ul class="zylix-list">
+            <li>{{ i18n "solution_1" | default "Zig-powered core with zero GC and predictable latency" }}</li>
+            <li>{{ i18n "solution_2" | default "True native UI with SwiftUI, Compose, GTK4, WinUI" }}</li>
+            <li>{{ i18n "solution_3" | default "Tiny footprint under 50KB WASM core" }}</li>
+            <li>{{ i18n "solution_4" | default "Virtual DOM with efficient diffing" }}</li>
+            <li>{{ i18n "solution_5" | default "C ABI that integrates with any language" }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Use Cases Section */}}
+<section class="zylix-section">
+  <div class="zylix-section-inner">
+    <h2 class="zylix-section-title">{{ i18n "usecases_title" | default "Use Cases" }}</h2>
+
+    <div class="zylix-grid-3">
+      <div class="zylix-card zylix-card-white zylix-usecase">
+        <span class="zylix-usecase-icon">📱</span>
+        <h3 class="zylix-card-title">{{ i18n "usecase_mobile_title" | default "Mobile Apps" }}</h3>
+        <p class="zylix-card-text">{{ i18n "usecase_mobile_desc" | default "Build iOS and Android apps with native SwiftUI and Jetpack Compose UI, powered by a shared Zig core." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-white zylix-usecase">
+        <span class="zylix-usecase-icon">🖥️</span>
+        <h3 class="zylix-card-title">{{ i18n "usecase_desktop_title" | default "Desktop Apps" }}</h3>
+        <p class="zylix-card-text">{{ i18n "usecase_desktop_desc" | default "Create macOS, Windows, and Linux desktop apps with native widgets. No Electron, no bloat." }}</p>
+      </div>
+
+      <div class="zylix-card zylix-card-white zylix-usecase">
+        <span class="zylix-usecase-icon">🌐</span>
+        <h3 class="zylix-card-title">{{ i18n "usecase_web_title" | default "Web Apps" }}</h3>
+        <p class="zylix-card-text">{{ i18n "usecase_web_desc" | default "Deploy to the web via WebAssembly. Blazing fast, tiny bundles, works in any modern browser." }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Comparison Table */}}
+<section class="zylix-section">
+  <div class="zylix-section-alt">
+    <div class="zylix-section-inner">
+      <h2 class="zylix-section-title">{{ i18n "comparison_title" | default "How It Compares" }}</h2>
+
+      <div class="zylix-table-wrapper">
+        <table class="zylix-table">
+          <thead>
+            <tr>
+              <th>{{ i18n "table_feature" | default "Feature" }}</th>
+              <th class="zylix-col">Zylix</th>
+              <th>React Native</th>
+              <th>Flutter</th>
+              <th>Electron</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ i18n "table_bundle" | default "Bundle Size" }}</td>
+              <td class="highlight">~50KB</td>
+              <td>~1MB+</td>
+              <td>~5MB+</td>
+              <td class="bad">~150MB+</td>
+            </tr>
+            <tr>
+              <td>{{ i18n "table_gc" | default "GC Pauses" }}</td>
+              <td class="highlight">{{ i18n "none" | default "None" }}</td>
+              <td>{{ i18n "yes" | default "Yes" }}</td>
+              <td>{{ i18n "yes" | default "Yes" }}</td>
+              <td>{{ i18n "yes" | default "Yes" }}</td>
+            </tr>
+            <tr>
+              <td>{{ i18n "table_native" | default "Native UI" }}</td>
+              <td class="highlight">{{ i18n "yes" | default "Yes" }}</td>
+              <td class="warn">{{ i18n "partial" | default "Partial" }}</td>
+              <td class="bad">{{ i18n "no" | default "No" }}</td>
+              <td class="bad">{{ i18n "no" | default "No" }}</td>
+            </tr>
+            <tr>
+              <td>{{ i18n "table_language" | default "Language" }}</td>
+              <td class="zylix-col">Zig</td>
+              <td>JavaScript</td>
+              <td>Dart</td>
+              <td>JavaScript</td>
+            </tr>
+            <tr>
+              <td>{{ i18n "table_platforms" | default "Platforms" }}</td>
+              <td class="highlight">6</td>
+              <td>2</td>
+              <td>6</td>
+              <td>3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Platform Support */}}
+<section class="zylix-section">
+  <div class="zylix-section-inner">
+    <h2 class="zylix-section-title">{{ i18n "platform_title" | default "Platform Support" }}</h2>
+
+    <div class="zylix-grid-6">
+      <div class="zylix-platform zylix-card-green">
+        <span class="zylix-platform-icon">🌐</span>
+        <div class="zylix-platform-name">Web/WASM</div>
+        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-yellow">
+        <span class="zylix-platform-icon">🍎</span>
+        <div class="zylix-platform-name">iOS</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-yellow">
+        <span class="zylix-platform-icon">🤖</span>
+        <div class="zylix-platform-name">Android</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-yellow">
+        <span class="zylix-platform-icon">💻</span>
+        <div class="zylix-platform-name">macOS</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-yellow">
+        <span class="zylix-platform-icon">🐧</span>
+        <div class="zylix-platform-name">Linux</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-yellow">
+        <span class="zylix-platform-icon">🪟</span>
+        <div class="zylix-platform-name">Windows</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Get Started */}}
+<section class="zylix-section">
+  <div class="zylix-section-alt">
+    <div class="zylix-section-inner">
+      <h2 class="zylix-section-title">{{ i18n "getstarted_title" | default "Get Started in Minutes" }}</h2>
+
+      <div class="zylix-getstarted-content">
+        <div class="zylix-code">
+          {{ highlight `# Clone the repository
+git clone https://github.com/kotsutsumi/zylix.git
+cd zylix
+
+# Build the core
+cd core && zig build
+
+# Run the web sample
+cd ../samples/todo-app
+python3 -m http.server 8080
+# Open http://localhost:8080` "bash" "" }}
+        </div>
+
+        <div class="zylix-info">
+          <strong>{{ i18n "prerequisites" | default "Prerequisites" }}:</strong>
+          {{ i18n "prereq_text" | default "Zig 0.13+ and a modern web browser. See the" }}
+          <a href="{{ "docs/getting-started/" | relLangURL }}">{{ i18n "getting_started" | default "Getting Started" }}</a>
+          {{ i18n "prereq_guide" | default "guide for detailed instructions." }}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{/* Contribute */}}
+<section class="zylix-section">
+  <div class="zylix-section-inner">
+    <h2 class="zylix-section-title">{{ i18n "contribute_title" | default "Contribute" }}</h2>
+    <p class="zylix-contribute-desc">
+      {{ i18n "contribute_desc" | default "Zylix is open source and welcomes contributions from developers of all skill levels." }}
+    </p>
+
+    <div class="zylix-contribute-buttons">
+      <a href="https://github.com/kotsutsumi/zylix/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" class="zylix-contribute-btn zylix-contribute-btn-outline">
+        🏷️ {{ i18n "good_first_issues" | default "Good First Issues" }}
+      </a>
+      <a href="https://github.com/kotsutsumi/zylix/blob/main/CONTRIBUTING.md" class="zylix-contribute-btn zylix-contribute-btn-outline">
+        📖 {{ i18n "contributing_guide" | default "Contributing Guide" }}
+      </a>
+      <a href="https://github.com/kotsutsumi/zylix" class="zylix-contribute-btn zylix-contribute-btn-primary">
+        ⭐ {{ i18n "star_github" | default "Star on GitHub" }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{{/* Footer Spacer */}}
+<div class="zylix-footer-spacer"></div>

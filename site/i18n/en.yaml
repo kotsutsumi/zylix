@@ -1,0 +1,81 @@
+# English translations for Zylix homepage
+
+# Hero Section
+hero_badge: "Free & Open Source"
+hero_headline: "Write Once, Run Natively on 6 Platforms"
+hero_subtitle: "Build cross-platform apps with Zig's blazing-fast performance. Web, iOS, Android, macOS, Linux, Windows — one codebase, native UI everywhere."
+hero_note: "No signup required. See Zylix components running in your browser."
+cta_get_started: "Get Started"
+cta_demo: "Try Live Demo"
+
+# Features Section
+features_title: "Features"
+feature_fast_title: "Blazing Fast"
+feature_fast_desc: "Zero-cost abstractions with Zig. No garbage collection means predictable, consistent performance."
+feature_platforms_title: "6 Platforms"
+feature_platforms_desc: "Web/WASM, iOS, Android, macOS, Linux, Windows. Write once, deploy everywhere."
+feature_vdom_title: "Virtual DOM"
+feature_vdom_desc: "Efficient diffing algorithm computes minimal DOM updates. Only what changes gets re-rendered."
+feature_tiny_title: "Tiny Bundle"
+feature_tiny_desc: "Core library under 50KB gzipped. No megabytes of JavaScript to download."
+feature_safe_title: "Type Safe"
+feature_safe_desc: "Zig's compile-time safety catches bugs before production. No null pointer exceptions."
+feature_bindings_title: "Native Bindings"
+feature_bindings_desc: "C ABI enables seamless integration with Swift, Kotlin, C#, Python, and more."
+
+# Why Zylix Section
+why_title: "Why Zylix?"
+why_subtitle: "Traditional cross-platform frameworks force you to choose: performance OR developer experience. Zylix gives you both."
+problem_title: "The Problem"
+problem_1: "JavaScript frameworks are slow and bloated"
+problem_2: "Flutter requires Dart and ships large runtimes"
+problem_3: "React Native bridges slow down performance"
+problem_4: "Electron consumes gigabytes of RAM"
+problem_5: "Native development means writing code 6 times"
+solution_title: "The Zylix Solution"
+solution_1: "Zig-powered core with zero GC and predictable latency"
+solution_2: "True native UI with SwiftUI, Compose, GTK4, WinUI"
+solution_3: "Tiny footprint under 50KB WASM core"
+solution_4: "Virtual DOM with efficient diffing"
+solution_5: "C ABI that integrates with any language"
+
+# Use Cases Section
+usecases_title: "Use Cases"
+usecase_mobile_title: "Mobile Apps"
+usecase_mobile_desc: "Build iOS and Android apps with native SwiftUI and Jetpack Compose UI, powered by a shared Zig core."
+usecase_desktop_title: "Desktop Apps"
+usecase_desktop_desc: "Create macOS, Windows, and Linux desktop apps with native widgets. No Electron, no bloat."
+usecase_web_title: "Web Apps"
+usecase_web_desc: "Deploy to the web via WebAssembly. Blazing fast, tiny bundles, works in any modern browser."
+
+# Comparison Table
+comparison_title: "How It Compares"
+table_feature: "Feature"
+table_bundle: "Bundle Size"
+table_gc: "GC Pauses"
+table_native: "Native UI"
+table_language: "Language"
+table_platforms: "Platforms"
+"none": "None"
+"yes": "Yes"
+"no": "No"
+"partial": "Partial"
+
+# Platform Support
+platform_title: "Platform Support"
+status_ready: "Production Ready"
+status_dev: "In Development"
+
+# Get Started
+getstarted_title: "Get Started in Minutes"
+prerequisites: "Prerequisites"
+prereq_text: "Zig 0.13+ and a modern web browser. See the"
+getting_started: "Getting Started"
+prereq_guide: "guide for detailed instructions."
+
+# Contribute
+contribute_title: "Contribute"
+contribute_desc: "Zylix is open source and welcomes contributions from developers of all skill levels."
+good_first_issues: "Good First Issues"
+contributing_guide: "Contributing Guide"
+star_github: "Star on GitHub"

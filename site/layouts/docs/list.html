@@ -1,0 +1,62 @@
+{{ define "main" }}
+  {{ .Scratch.Set "scope" "list" }}
+
+  <div class="flex gap-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {{/* Sidebar */}}
+    {{ partial "docs-sidebar.html" . }}
+
+    {{/* Main content */}}
+    <main class="flex-1 min-w-0">
+      {{/* Header */}}
+      <header>
+        {{ if .Params.showBreadcrumbs | default (site.Params.list.showBreadcrumbs | default false) }}
+          {{ partial "breadcrumbs.html" . }}
+        {{ end }}
+        <h1 class="mt-5 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ .Title }}</h1>
+        <div class="mt-1 mb-2 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
+          {{ partial "article-meta/list.html" (dict "context" . "scope" "single") }}
+        </div>
+      </header>
+
+      {{/* Content */}}
+      <section class="mt-8 prose max-w-none dark:prose-invert">
+        {{ .Content }}
+      </section>
+
+      {{/* Child pages */}}
+      {{ if gt .Pages 0 }}
+        {{ $cardView := .Params.cardView | default (site.Params.list.cardView | default false) }}
+        {{ $orderByWeight := .Params.orderByWeight | default (site.Params.list.orderByWeight | default false) }}
+
+        {{ if not $cardView }}
+          <section class="mt-10 space-y-4">
+            {{ if not $orderByWeight }}
+              {{ range .Pages }}
+                {{ partial "article-link/simple.html" . }}
+              {{ end }}
+            {{ else }}
+              {{ range .Pages.ByWeight }}
+                {{ partial "article-link/simple.html" . }}
+              {{ end }}
+            {{ end }}
+          </section>
+        {{ else }}
+          <section class="mt-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {{ if not $orderByWeight }}
+              {{ range .Pages }}
+                {{ partial "article-link/card.html" . }}
+              {{ end }}
+            {{ else }}
+              {{ range .Pages.ByWeight }}
+                {{ partial "article-link/card.html" . }}
+              {{ end }}
+            {{ end }}
+          </section>
+        {{ end }}
+      {{ end }}
+
+      {{/* Pagination */}}
+      {{ partial "pagination.html" . }}
+    </main>
+  </div>
+{{ end }}

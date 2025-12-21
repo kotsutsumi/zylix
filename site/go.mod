@@ -1,5 +1,5 @@
 module github.com/kotsutsumi/zylix/site
 
-go 1.25.5
+go 1.21
 
-require github.com/imfing/hextra v0.11.1 // indirect
+require github.com/nunocoracao/blowfish/v2 v2.93.0

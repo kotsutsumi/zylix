@@ -1,19 +1,53 @@
 baseURL: https://zylix.dev/
 title: Zylix
-languageCode: en-us
+languageCode: en
+defaultContentLanguage: en
+enableRobotsTXT: true
+enableGitInfo: false
+pagination:
+  pagerSize: 10
+
+# Hugo modules
+module:
+  imports:
+    - path: github.com/nunocoracao/blowfish/v2
 
 # Google Analytics 4
 services:
   googleAnalytics:
     id: G-E57XRGZ71T
-defaultContentLanguage: en
-enableRobotsTXT: true
-enableGitInfo: false
 
-# Hugo modules
-module:
-  imports:
-    - path: github.com/imfing/hextra
+# Markup configuration
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    noClasses: false
+
+# Taxonomies
+taxonomies:
+  tag: tags
+  category: categories
+  author: authors
+  series: series
+
+# Related content
+related:
+  includeNewer: true
+  indices:
+    - name: tags
+      weight: 100
+    - name: categories
+      weight: 100
+    - name: series
+      weight: 50
+    - name: authors
+      weight: 20
+    - name: date
+      weight: 10
+  threshold: 10
+  toLower: false
 
 # Multilingual
 languages:
@@ -22,78 +56,283 @@ languages:
     weight: 1
     title: Zylix
     params:
+      displayName: EN
       description: Cross-platform UI framework powered by Zig
+    menu:
+      main:
+        - name: Features
+          pageRef: /
+          weight: 10
+          params:
+            icon: sparkles
+        - name: Docs
+          pageRef: docs
+          weight: 20
+          params:
+            icon: book-open
+        - name: Demo
+          pageRef: demo
+          weight: 30
+          params:
+            icon: play
+        - name: Blog
+          pageRef: blog
+          weight: 40
+          params:
+            icon: newspaper
+        - name: GitHub
+          url: https://github.com/kotsutsumi/zylix
+          weight: 50
+          params:
+            icon: github
+      footer:
+        - name: Privacy
+          pageRef: privacy
+          weight: 10
+        - name: Terms
+          pageRef: terms
+          weight: 20
+
   ja:
     languageName: 日本語
     weight: 2
     title: Zylix
     params:
+      displayName: JA
       description: Zig で構築されたクロスプラットフォーム UI フレームワーク
-
-# Markup
-markup:
-  goldmark:
-    renderer:
-      unsafe: true
-  highlight:
-    noClasses: false
-
-# Menu
-menu:
-  main:
-    - name: Docs
-      pageRef: /docs
-      weight: 1
-    - name: Demo
-      pageRef: /demo
-      weight: 2
-    - name: Blog
-      pageRef: /blog
-      weight: 3
-    - name: GitHub
-      url: https://github.com/kotsutsumi/zylix
-      weight: 4
-      params:
-        icon: github
+    menu:
+      main:
+        - name: 特徴
+          pageRef: /
+          weight: 10
+          params:
+            icon: sparkles
+        - name: ドキュメント
+          pageRef: docs
+          weight: 20
+          params:
+            icon: book-open
+        - name: デモ
+          pageRef: demo
+          weight: 30
+          params:
+            icon: play
+        - name: ブログ
+          pageRef: blog
+          weight: 40
+          params:
+            icon: newspaper
+        - name: GitHub
+          url: https://github.com/kotsutsumi/zylix
+          weight: 50
+          params:
+            icon: github
 
 # Params
 params:
-  description: Cross-platform UI framework powered by Zig
+  # Header settings
+  header:
+    layout: fixed
 
-  navbar:
-    displayTitle: false
-    displayLogo: true
-    logo:
-      path: images/zylix-logo-full.svg
-      dark: images/zylix-logo-full-dark.svg
-      width: 99
-      height: 32
-
-  page:
-    width: normal
-
-  theme:
-    default: system
-    displayToggle: true
-
+  # Footer settings (appearance switcher)
   footer:
-    displayCopyright: true
-    displayPoweredBy: false
+    showAppearanceSwitcher: true
 
-  editURL:
-    enable: true
-    base: https://github.com/kotsutsumi/zylix/edit/main/site/content
+  # Disable text next to logo in header
+  disableTextInHeader: true
 
-  search:
-    enable: true
-    type: flexsearch
+  # Language switcher
+  showLanguageSwitcher: true
 
-  comments:
-    enable: false
+  # Site metadata
+  description: Cross-platform UI framework powered by Zig. Build native apps for Web, iOS, Android, macOS, Linux, and Windows.
+  keywords:
+    - zylix
+    - zig
+    - cross-platform
+    - ui framework
+    - wasm
+    - webassembly
+    - native
+    - ios
+    - android
 
-# Output formats for search
+  # Color scheme
+  colorScheme: blowfish
+
+  # Default appearance
+  defaultAppearance: dark
+  autoSwitchAppearance: true
+
+  # Enable search
+  enableSearch: true
+
+  # Enable code copy
+  enableCodeCopy: true
+
+  # Main sections
+  mainSections:
+    - docs
+    - blog
+
+  # Robots
+  robots: index, follow
+
+  # Favicon (use default from theme)
+  # favicon: favicon.png
+
+  # Logo
+  logo: img/logo.svg
+  secondaryLogo: img/logo-dark.svg
+
+  # Site image for social sharing
+  # image: img/site.png
+
+  # Author
+  author:
+    name: Zylix Team
+    headline: Cross-platform UI Framework
+    bio: Build once, run natively on 6 platforms
+    links:
+      - github: https://github.com/kotsutsumi/zylix
+
+  # Homepage
+  homepage:
+    layout: custom
+    homepageImage: false
+    showRecent: false
+    showRecentItems: 6
+    showMoreLink: false
+    showMoreLinkDest: /blog
+    cardView: true
+    cardViewScreenWidth: false
+    layoutBackgroundBlur: true
+
+  # Article settings
+  article:
+    showDate: true
+    showViews: false
+    showLikes: false
+    showDateOnlyInArticle: false
+    showDateUpdated: true
+    showAuthor: true
+    showAuthorBottom: false
+    showHero: true
+    heroStyle: basic
+    layoutBackgroundBlur: true
+    layoutBackgroundHeaderSpace: true
+    showBreadcrumbs: true
+    showDraftLabel: true
+    showEdit: true
+    editURL: https://github.com/kotsutsumi/zylix/edit/main/site/content/
+    editAppendPath: true
+    seriesOpened: false
+    showHeadingAnchors: true
+    showPagination: true
+    invertPagination: false
+    showReadingTime: true
+    showTableOfContents: true
+    showRelatedContent: false
+    relatedContentLimit: 3
+    showTaxonomies: false
+    showAuthorsBadges: false
+    showWordCount: false
+    showSummary: true
+    sharingLinks:
+      - linkedin
+      - twitter
+      - reddit
+      - pinterest
+      - facebook
+      - email
+      - threads
+      - bluesky
+
+  # List settings
+  list:
+    showDate: true
+    showViews: false
+    showLikes: false
+    showBreadcrumbs: true
+    showEdit: false
+    showSummary: true
+    showCards: true
+    groupByYear: false
+    cardView: true
+    cardViewScreenWidth: false
+    constrainItemsWidth: false
+
+  # Sitemap
+  sitemap:
+    excludedKinds:
+      - taxonomy
+      - term
+
+  # Taxonomy settings
+  taxonomy:
+    showTermCount: true
+    showHero: false
+    heroStyle: background
+    showBreadcrumbs: false
+    showViews: false
+    showLikes: false
+    showTableOfContents: false
+    cardView: false
+
+  # Term settings
+  term:
+    showHero: false
+    heroStyle: background
+    showBreadcrumbs: false
+    showViews: false
+    showLikes: false
+    showTableOfContents: true
+    groupByYear: false
+    cardView: false
+    cardViewScreenWidth: false
+
+  # Firebase (disabled)
+  firebase:
+    apiKey: ""
+    authDomain: ""
+    projectId: ""
+    storageBucket: ""
+    messagingSenderId: ""
+    appId: ""
+    measurementId: ""
+
+  # Fathom Analytics (disabled)
+  fathomAnalytics:
+    site: ""
+    domain: ""
+
+  # Buy Me a Coffee (disabled)
+  buymeacoffee:
+    identifier: ""
+    globalWidget: false
+    globalWidgetMessage: ""
+    globalWidgetColor: ""
+    globalWidgetPosition: ""
+
+  # Verification
+  verification:
+    google: ""
+    bing: ""
+    pinterest: ""
+    yandex: ""
+
+# Outputs
 outputs:
   home:
     - HTML
     - RSS
     - JSON
+
+# Image processing
+imaging:
+  anchor: Smart
+
+# Privacy settings
+privacy:
+  googleAnalytics:
+    respectDoNotTrack: true
