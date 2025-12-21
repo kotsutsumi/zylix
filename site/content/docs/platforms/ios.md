@@ -3,10 +3,6 @@ title: iOS
 weight: 2
 ---
 
-{{< alert "warning" >}}
-**Status: 🚧 In Development** — This platform currently has a SwiftUI demo app only. Zig core integration via C FFI is planned but not yet implemented. The code below shows the target architecture.
-{{< /alert >}}
-
 Build native iOS applications with Zylix using SwiftUI. This guide covers Xcode project setup, C ABI integration, and App Store deployment.
 
 ## Prerequisites

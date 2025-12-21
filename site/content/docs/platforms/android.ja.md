@@ -3,10 +3,6 @@ title: Android
 weight: 3
 ---
 
-{{< alert "warning" >}}
-**ステータス: 🚧 開発中** — このプラットフォームは現在Jetpack Composeデモアプリのみです。JNI経由のZigコア統合は計画中ですが、まだ実装されていません。以下のコードは目標アーキテクチャを示しています。
-{{< /alert >}}
-
 Jetpack Compose を使用して Zylix でネイティブ Android アプリケーションを構築します。このガイドでは、Android Studio のセットアップ、JNI 統合、Google Play デプロイについて説明します。
 
 ## 前提条件

@@ -3,10 +3,6 @@ title: Android
 weight: 3
 ---
 
-{{< alert "warning" >}}
-**Status: 🚧 In Development** — This platform currently has a Jetpack Compose demo app only. Zig core integration via JNI is planned but not yet implemented. The code below shows the target architecture.
-{{< /alert >}}
-
 Build native Android applications with Zylix using Jetpack Compose. This guide covers Android Studio setup, JNI integration, and Google Play deployment.
 
 ## Prerequisites
