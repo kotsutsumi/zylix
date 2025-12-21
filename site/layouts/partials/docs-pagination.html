@@ -1,0 +1,32 @@
+{{/* Docs pagination without dates */}}
+{{ $showPagination := .Params.showPagination | default (site.Params.article.showPagination | default false) }}
+{{ if $showPagination }}
+  {{ $prev := .PrevInSection }}
+  {{ $next := .NextInSection }}
+
+  {{ if or $prev $next }}
+    <div class="flex justify-between gap-4">
+      {{/* Previous */}}
+      {{ with $prev }}
+        <a href="{{ .RelPermalink }}"
+           class="flex-1 group flex items-center gap-2 px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors">
+          <span class="text-neutral-400 dark:text-neutral-500 group-hover:text-primary-500">←</span>
+          <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-primary-600 dark:group-hover:text-primary-400">{{ .Title }}</span>
+        </a>
+      {{ else }}
+        <div class="flex-1"></div>
+      {{ end }}
+
+      {{/* Next */}}
+      {{ with $next }}
+        <a href="{{ .RelPermalink }}"
+           class="flex-1 group flex items-center justify-end gap-2 px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors">
+          <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-primary-600 dark:group-hover:text-primary-400">{{ .Title }}</span>
+          <span class="text-neutral-400 dark:text-neutral-500 group-hover:text-primary-500">→</span>
+        </a>
+      {{ else }}
+        <div class="flex-1"></div>
+      {{ end }}
+    </div>
+  {{ end }}
+{{ end }}

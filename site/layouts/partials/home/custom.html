@@ -401,6 +401,8 @@
   margin-top: 0.375rem;
 }
 .zylix-status-ready { color: #22c55e; }
+.zylix-status-beta { color: #3b82f6; }
+.zylix-status-alpha { color: #f59e0b; }
 .zylix-status-dev { color: #fbbf24; }
 
 /* Get Started */
@@ -689,35 +691,35 @@
     <h2 class="zylix-section-title">{{ i18n "platform_title" | default "Platform Support" }}</h2>
 
     <div class="zylix-grid-6">
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-blue">
         <span class="zylix-platform-icon">🌐</span>
         <div class="zylix-platform-name">Web/WASM</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-beta">{{ i18n "status_beta" | default "Beta" }}</div>
       </div>
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🍎</span>
         <div class="zylix-platform-name">iOS</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🤖</span>
         <div class="zylix-platform-name">Android</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">💻</span>
         <div class="zylix-platform-name">macOS</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🐧</span>
         <div class="zylix-platform-name">Linux</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
-      <div class="zylix-platform zylix-card-green">
+      <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🪟</span>
         <div class="zylix-platform-name">Windows</div>
-        <div class="zylix-platform-status zylix-status-ready">{{ i18n "status_ready" | default "Production Ready" }}</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
     </div>
   </div>
@@ -764,6 +766,9 @@ python3 -m http.server 8080
     </p>
 
     <div class="zylix-contribute-buttons">
+      <a href="https://github.com/kotsutsumi/zylix/discussions" class="zylix-contribute-btn zylix-contribute-btn-outline">
+        💬 {{ i18n "discussions" | default "Discussions" }}
+      </a>
       <a href="https://github.com/kotsutsumi/zylix/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" class="zylix-contribute-btn zylix-contribute-btn-outline">
         🏷️ {{ i18n "good_first_issues" | default "Good First Issues" }}
       </a>
