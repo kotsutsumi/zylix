@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.2] - 2024-12-21
+## [0.6.2] - 2025-12-21
 
 ### Fixed
 
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Android**: URL decoding for query parameters
 - **Web**: JSON.parse error handling for malformed messages
 
-## [0.6.1] - 2024-12-21
+## [0.6.1] - 2025-12-21
 
 ### Fixed
 
@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - e-commerce: XSS prevention, event delegation, secure cart handling
 - notes: XSS prevention, event delegation, secure note IDs
 
-## [0.6.0] - 2024-12-21
+## [0.6.0] - 2025-12-21
 
 ### Added
 
@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ROADMAP.ja.md Japanese translation
 - Sample applications README
 
-## [0.5.0] - 2024-12-21
+## [0.5.0] - 2025-12-21
 
 ### Added
 
@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated documentation structure
 
-## [0.1.0] - 2024-12-21
+## [0.1.0] - 2025-12-21
 
 ### Added
 
@@ -147,7 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory optimization for WASM builds (reduced array sizes)
 - JNI bridge compatibility with Zig C ABI signatures
 
-## [0.0.1] - 2024-12-01
+## [0.0.1] - 2025-12-01
 
 ### Added
 - Initial project scaffolding
