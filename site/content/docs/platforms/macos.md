@@ -3,10 +3,6 @@ title: macOS
 weight: 4
 ---
 
-{{< alert "warning" >}}
-**Status: 🚧 In Development** — This platform currently has a SwiftUI demo app only. Zig core integration via C FFI is planned but not yet implemented. The code below shows the target architecture.
-{{< /alert >}}
-
 Build native macOS applications with Zylix using SwiftUI. This guide covers Xcode project setup, C ABI integration, and Mac App Store deployment.
 
 ## Prerequisites
