@@ -38,6 +38,9 @@ pub const assert = @import("assert.zig");
 pub const screenshot = @import("screenshot.zig");
 pub const runner = @import("runner.zig");
 pub const reporter = @import("reporter.zig");
+pub const parallel = @import("parallel.zig");
+pub const metrics = @import("metrics.zig");
+pub const retry = @import("retry.zig");
 
 // Platform drivers
 pub const web_driver = @import("web_driver.zig");
@@ -125,6 +128,31 @@ pub const ReportTestResult = reporter.TestResult;
 pub const ReportTestStatus = reporter.TestStatus;
 pub const SuiteSummary = reporter.SuiteSummary;
 
+// Parallel execution types
+pub const ParallelExecutor = parallel.ParallelExecutor;
+pub const ParallelConfig = parallel.ParallelConfig;
+pub const TestTask = parallel.TestTask;
+pub const TaskResult = parallel.TaskResult;
+pub const WorkQueue = parallel.WorkQueue;
+pub const TestShard = parallel.TestShard;
+pub const FlakyDetector = parallel.FlakyDetector;
+
+// Metrics types
+pub const MetricsCollector = metrics.MetricsCollector;
+pub const PerformanceTracker = metrics.PerformanceTracker;
+pub const PerformanceSummary = metrics.PerformanceSummary;
+pub const Metric = metrics.Metric;
+pub const MetricType = metrics.MetricType;
+pub const Timer = metrics.Timer;
+
+// Retry types
+pub const RetryExecutor = retry.RetryExecutor;
+pub const RetryConfig = retry.RetryConfig;
+pub const RetryStrategy = retry.RetryStrategy;
+pub const RetryStats = retry.RetryStats;
+pub const FlakyHandler = retry.FlakyHandler;
+pub const FlakyConfig = retry.FlakyConfig;
+
 // Convenience functions
 pub const expect = assert.expect;
 pub const expectString = assert.expectString;
@@ -200,6 +228,9 @@ test "zylix_test module" {
     _ = windows_driver;
     _ = linux_driver;
     _ = reporter;
+    _ = parallel;
+    _ = metrics;
+    _ = retry;
 }
 
 test "convenience functions" {
