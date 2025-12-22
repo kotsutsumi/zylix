@@ -1,6 +1,6 @@
 {
   "name": "@zylix/test",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Zylix Test Framework - Cross-platform E2E testing for iOS, watchOS, Android, macOS, and Web",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

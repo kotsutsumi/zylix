@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zylix-test"
-version = "0.8.0"
+version = "0.8.1"
 description = "Cross-platform E2E testing for iOS, watchOS, Android, macOS, and Web"
 readme = "README.md"
 license = { file = "LICENSE" }
