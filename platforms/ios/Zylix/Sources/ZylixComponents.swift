@@ -311,8 +311,12 @@ public struct ZylixComponentFactory {
             ColorPickerView(props: props)
         case .textarea:
             TextareaView(props: props)
-        case .radio, .fileInput, .form:
-            PlaceholderView(props: props)
+        case .radio:
+            RadioView(props: props)
+        case .fileInput:
+            FileInputView(props: props)
+        case .form:
+            FormView(props: props)
 
         // Layout Components
         case .stack:
@@ -327,16 +331,22 @@ public struct ZylixComponentFactory {
             DividerView()
         case .card:
             CardView(props: props)
-        case .aspectRatio, .safeArea:
-            PlaceholderView(props: props)
+        case .aspectRatio:
+            AspectRatioView(props: props)
+        case .safeArea:
+            SafeAreaView(props: props)
 
         // Navigation Components
         case .navBar:
             NavBarView(props: props)
         case .tabBar:
             TabBarView(props: props)
-        case .breadcrumb, .pagination, .drawer:
-            PlaceholderView(props: props)
+        case .drawer:
+            DrawerView(props: props)
+        case .breadcrumb:
+            BreadcrumbView(props: props)
+        case .pagination:
+            PaginationView(props: props)
 
         // Feedback Components
         case .alert:
@@ -349,8 +359,10 @@ public struct ZylixComponentFactory {
             SkeletonView(props: props)
         case .badge:
             BadgeView(props: props)
-        case .toast, .modal:
-            PlaceholderView(props: props)
+        case .toast:
+            ToastView(props: props)
+        case .modal:
+            ModalView(props: props)
 
         // Data Display Components
         case .avatar:
@@ -359,8 +371,14 @@ public struct ZylixComponentFactory {
             IconView(props: props)
         case .tag:
             TagView(props: props)
-        case .table, .tooltip, .accordion, .carousel:
-            PlaceholderView(props: props)
+        case .table:
+            TableView(props: props)
+        case .tooltip:
+            TooltipView(props: props)
+        case .accordion:
+            AccordionView(props: props)
+        case .carousel:
+            CarouselView(props: props)
 
         case .custom:
             PlaceholderView(props: props)
@@ -777,6 +795,348 @@ struct TagView: View {
             .padding(.vertical, 4)
             .background(Color(.systemGray5))
             .clipShape(Capsule())
+    }
+}
+
+// MARK: - Feedback Component Views (Continued)
+
+struct ToastView: View {
+    let props: ZylixComponentProps
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: props.alertStyle.iconName)
+                .foregroundStyle(props.alertStyle.color)
+            Text(props.text)
+                .font(.subheadline)
+            Spacer()
+            Button(action: {}) {
+                Image(systemName: "xmark")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial)
+        .cornerRadius(12)
+        .shadow(radius: 8)
+    }
+}
+
+struct ModalView: View {
+    let props: ZylixComponentProps
+    @State private var isPresented = false
+
+    var body: some View {
+        Button("Show Modal") {
+            isPresented = true
+        }
+        .sheet(isPresented: $isPresented) {
+            VStack(spacing: 16) {
+                Text(props.text.isEmpty ? "Modal Content" : props.text)
+                    .font(.headline)
+                Button("Close") {
+                    isPresented = false
+                }
+                .buttonStyle(.bordered)
+            }
+            .padding()
+            .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+// MARK: - Data Display Component Views (Continued)
+
+struct TableView: View {
+    let props: ZylixComponentProps
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Text("Column 1").fontWeight(.bold).frame(maxWidth: .infinity, alignment: .leading)
+                Text("Column 2").fontWeight(.bold).frame(maxWidth: .infinity, alignment: .leading)
+                Text("Column 3").fontWeight(.bold).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding()
+            .background(Color(.systemGray5))
+
+            Divider()
+
+            // Rows
+            ForEach(0..<3, id: \.self) { row in
+                HStack {
+                    Text("Row \(row + 1)").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Data").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Value").frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding()
+
+                if row < 2 {
+                    Divider()
+                }
+            }
+        }
+        .background(Color(.systemBackground))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.systemGray4), lineWidth: 1)
+        )
+    }
+}
+
+struct TooltipView: View {
+    let props: ZylixComponentProps
+    @State private var showTooltip = false
+
+    var body: some View {
+        Text(props.text.isEmpty ? "Hover me" : props.text)
+            .padding(8)
+            .background(showTooltip ? Color(.systemGray5) : Color.clear)
+            .cornerRadius(4)
+            .overlay(
+                Group {
+                    if showTooltip {
+                        Text("Tooltip content")
+                            .font(.caption)
+                            .padding(8)
+                            .background(Color.black.opacity(0.8))
+                            .foregroundStyle(.white)
+                            .cornerRadius(4)
+                            .offset(y: -40)
+                    }
+                }
+            )
+            .onHover { hovering in
+                showTooltip = hovering
+            }
+    }
+}
+
+struct AccordionView: View {
+    let props: ZylixComponentProps
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: { withAnimation { isExpanded.toggle() } }) {
+                HStack {
+                    Text(props.text.isEmpty ? "Accordion Header" : props.text)
+                        .fontWeight(.medium)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                Text("Accordion content goes here. This section expands and collapses when the header is tapped.")
+                    .padding()
+                    .background(Color(.systemBackground))
+            }
+        }
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.systemGray4), lineWidth: 1)
+        )
+    }
+}
+
+struct CarouselView: View {
+    let props: ZylixComponentProps
+    @State private var currentIndex = 0
+    private let items = ["Slide 1", "Slide 2", "Slide 3"]
+
+    var body: some View {
+        VStack {
+            TabView(selection: $currentIndex) {
+                ForEach(0..<items.count, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(LinearGradient(
+                            colors: [.blue.opacity(0.3), .purple.opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .overlay(
+                            Text(items[index])
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                        )
+                        .padding(.horizontal)
+                        .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .automatic))
+            .frame(height: 200)
+        }
+    }
+}
+
+// MARK: - Navigation Component Views (Continued)
+
+struct DrawerView: View {
+    let props: ZylixComponentProps
+    @State private var isOpen = false
+
+    var body: some View {
+        Button("Open Drawer") {
+            isOpen = true
+        }
+        .sheet(isPresented: $isOpen) {
+            NavigationStack {
+                List {
+                    NavigationLink("Home", destination: Text("Home"))
+                    NavigationLink("Settings", destination: Text("Settings"))
+                    NavigationLink("Profile", destination: Text("Profile"))
+                }
+                .navigationTitle(props.text.isEmpty ? "Menu" : props.text)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") { isOpen = false }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+}
+
+struct BreadcrumbView: View {
+    let props: ZylixComponentProps
+    private let items = ["Home", "Category", "Current"]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                if index > 0 {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if index < items.count - 1 {
+                    Button(item) {}
+                        .foregroundStyle(.blue)
+                } else {
+                    Text(item)
+                        .foregroundStyle(.primary)
+                }
+            }
+        }
+        .font(.subheadline)
+    }
+}
+
+struct PaginationView: View {
+    let props: ZylixComponentProps
+    @State private var currentPage = 1
+    private let totalPages = 5
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button(action: { if currentPage > 1 { currentPage -= 1 } }) {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(currentPage == 1)
+
+            ForEach(1...totalPages, id: \.self) { page in
+                Button("\(page)") {
+                    currentPage = page
+                }
+                .buttonStyle(currentPage == page ? .borderedProminent : .bordered)
+            }
+
+            Button(action: { if currentPage < totalPages { currentPage += 1 } }) {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(currentPage == totalPages)
+        }
+    }
+}
+
+// MARK: - Form Component Views (Continued)
+
+struct RadioView: View {
+    let props: ZylixComponentProps
+    @State private var selected = false
+
+    var body: some View {
+        Button(action: { selected.toggle() }) {
+            HStack {
+                Image(systemName: selected ? "circle.inset.filled" : "circle")
+                    .foregroundStyle(selected ? .blue : .secondary)
+                Text(props.text)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(props.isDisabled)
+    }
+}
+
+struct FileInputView: View {
+    let props: ZylixComponentProps
+    @State private var selectedFile: String = ""
+
+    var body: some View {
+        HStack {
+            Text(selectedFile.isEmpty ? "No file selected" : selectedFile)
+                .foregroundStyle(selectedFile.isEmpty ? .secondary : .primary)
+            Spacer()
+            Button("Browse...") {
+                selectedFile = "example.pdf"
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+    }
+}
+
+struct FormView: View {
+    let props: ZylixComponentProps
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Form container for children
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Layout Component Views (Continued)
+
+struct AspectRatioView: View {
+    let props: ZylixComponentProps
+
+    var body: some View {
+        Color(.systemGray5)
+            .aspectRatio(16/9, contentMode: .fit)
+            .overlay(
+                Text("16:9")
+                    .foregroundStyle(.secondary)
+            )
+            .cornerRadius(8)
+    }
+}
+
+struct SafeAreaView: View {
+    let props: ZylixComponentProps
+
+    var body: some View {
+        GeometryReader { geometry in
+            VStack {
+                // Content respecting safe areas
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
+        }
     }
 }
 

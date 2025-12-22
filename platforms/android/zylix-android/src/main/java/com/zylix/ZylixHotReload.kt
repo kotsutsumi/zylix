@@ -436,8 +436,9 @@ class ErrorOverlayView(
         })
 
         // Location
+        val buildError = this.error
         content.addView(TextView(activity).apply {
-            text = "${error.file}:${error.line}:${error.column}"
+            text = "${buildError.file}:${buildError.line}:${buildError.column}"
             setTextColor(Color.GRAY)
             textSize = 14f
             typeface = android.graphics.Typeface.MONOSPACE
@@ -447,7 +448,7 @@ class ErrorOverlayView(
         // Message
         content.addView(ScrollView(activity).apply {
             addView(TextView(activity).apply {
-                text = error.message
+                text = buildError.message
                 setTextColor(Color.WHITE)
                 textSize = 16f
                 typeface = android.graphics.Typeface.MONOSPACE

@@ -258,10 +258,10 @@ object ZylixComponentFactory {
             ZylixComponentType.TEXTAREA -> TextareaView(props)
             ZylixComponentType.TOGGLE_SWITCH -> ToggleSwitchView(props)
             ZylixComponentType.SLIDER -> SliderView(props)
-            ZylixComponentType.DATE_PICKER -> PlaceholderView(props)
-            ZylixComponentType.TIME_PICKER -> PlaceholderView(props)
-            ZylixComponentType.FILE_INPUT -> PlaceholderView(props)
-            ZylixComponentType.COLOR_PICKER -> PlaceholderView(props)
+            ZylixComponentType.DATE_PICKER -> DatePickerView(props)
+            ZylixComponentType.TIME_PICKER -> TimePickerView(props)
+            ZylixComponentType.FILE_INPUT -> FileInputView(props)
+            ZylixComponentType.COLOR_PICKER -> ColorPickerView(props)
             ZylixComponentType.FORM -> FormView(props)
 
             // Layout Components
@@ -271,33 +271,33 @@ object ZylixComponentFactory {
             ZylixComponentType.SPACER -> SpacerView()
             ZylixComponentType.DIVIDER -> DividerView()
             ZylixComponentType.CARD -> CardView(props)
-            ZylixComponentType.ASPECT_RATIO -> PlaceholderView(props)
-            ZylixComponentType.SAFE_AREA -> PlaceholderView(props)
+            ZylixComponentType.ASPECT_RATIO -> AspectRatioView(props)
+            ZylixComponentType.SAFE_AREA -> SafeAreaView(props)
 
             // Navigation Components
             ZylixComponentType.NAV_BAR -> NavBarView(props)
             ZylixComponentType.TAB_BAR -> TabBarView(props)
-            ZylixComponentType.DRAWER -> PlaceholderView(props)
+            ZylixComponentType.DRAWER -> DrawerView(props)
             ZylixComponentType.BREADCRUMB -> BreadcrumbView(props)
             ZylixComponentType.PAGINATION -> PaginationView(props)
 
             // Feedback Components
             ZylixComponentType.ALERT -> AlertView(props)
-            ZylixComponentType.TOAST -> PlaceholderView(props)
-            ZylixComponentType.MODAL -> PlaceholderView(props)
+            ZylixComponentType.TOAST -> ToastView(props)
+            ZylixComponentType.MODAL -> ModalView(props)
             ZylixComponentType.PROGRESS -> ProgressView(props)
             ZylixComponentType.SPINNER -> SpinnerView()
             ZylixComponentType.SKELETON -> SkeletonView(props)
             ZylixComponentType.BADGE -> BadgeView(props)
 
             // Data Display Components
-            ZylixComponentType.TABLE -> PlaceholderView(props)
+            ZylixComponentType.TABLE -> TableView(props)
             ZylixComponentType.AVATAR -> AvatarView(props)
             ZylixComponentType.ICON -> IconView(props)
             ZylixComponentType.TAG -> TagView(props)
-            ZylixComponentType.TOOLTIP -> PlaceholderView(props)
-            ZylixComponentType.ACCORDION -> PlaceholderView(props)
-            ZylixComponentType.CAROUSEL -> PlaceholderView(props)
+            ZylixComponentType.TOOLTIP -> TooltipView(props)
+            ZylixComponentType.ACCORDION -> AccordionView(props)
+            ZylixComponentType.CAROUSEL -> CarouselView(props)
 
             ZylixComponentType.CUSTOM -> PlaceholderView(props)
         }
@@ -401,6 +401,7 @@ private fun ParagraphView(props: ZylixComponentProps) {
 
 // MARK: - Form Component Views
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SelectView(props: ZylixComponentProps) {
     var expanded by remember { mutableStateOf(false) }
@@ -512,6 +513,117 @@ private fun FormView(props: ZylixComponentProps) {
     }
 }
 
+@Composable
+private fun DatePickerView(props: ZylixComponentProps) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf("Select Date") }
+
+    OutlinedButton(
+        onClick = { showDialog = true },
+        enabled = !props.isDisabled
+    ) {
+        Icon(Icons.Default.DateRange, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(selectedDate)
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Select Date") },
+            text = { Text("Date picker would appear here") },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedDate = "2024-01-15"
+                    showDialog = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun TimePickerView(props: ZylixComponentProps) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedTime by remember { mutableStateOf("Select Time") }
+
+    OutlinedButton(
+        onClick = { showDialog = true },
+        enabled = !props.isDisabled
+    ) {
+        Icon(Icons.Default.Schedule, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(selectedTime)
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Select Time") },
+            text = { Text("Time picker would appear here") },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedTime = "14:30"
+                    showDialog = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun FileInputView(props: ZylixComponentProps) {
+    var selectedFile by remember { mutableStateOf<String?>(null) }
+
+    OutlinedButton(
+        onClick = { /* File picker would open here */ },
+        enabled = !props.isDisabled
+    ) {
+        Icon(Icons.Default.AttachFile, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(selectedFile ?: "Choose File")
+    }
+}
+
+@Composable
+private fun ColorPickerView(props: ZylixComponentProps) {
+    var selectedColor by remember { mutableStateOf(Color(0xFF2196F3)) }
+    val colors = listOf(
+        Color(0xFFF44336), Color(0xFFE91E63), Color(0xFF9C27B0),
+        Color(0xFF673AB7), Color(0xFF3F51B5), Color(0xFF2196F3),
+        Color(0xFF03A9F4), Color(0xFF00BCD4), Color(0xFF009688),
+        Color(0xFF4CAF50), Color(0xFF8BC34A), Color(0xFFCDDC39)
+    )
+
+    Column {
+        if (props.text.isNotEmpty()) {
+            Text(props.text, modifier = Modifier.padding(bottom = 8.dp))
+        }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(colors.size) { index ->
+                val color = colors[index]
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .border(
+                            width = if (color == selectedColor) 3.dp else 0.dp,
+                            color = Color.Black,
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+    }
+}
+
 // MARK: - Layout Component Views
 
 @Composable
@@ -573,6 +685,34 @@ private fun CardView(props: ZylixComponentProps) {
             if (props.text.isNotEmpty()) {
                 Text(props.text)
             }
+        }
+    }
+}
+
+@Composable
+private fun AspectRatioView(props: ZylixComponentProps) {
+    val ratio = props.value.takeIf { it > 0 } ?: 16f / 9f
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(ratio)
+            .background(Color.LightGray.copy(alpha = 0.3f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("${ratio}:1", color = Color.Gray)
+    }
+}
+
+@Composable
+private fun SafeAreaView(props: ZylixComponentProps) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // Children would go here with safe area insets applied
+        if (props.text.isNotEmpty()) {
+            Text(props.text)
         }
     }
 }
@@ -661,6 +801,41 @@ private fun PaginationView(props: ZylixComponentProps) {
     }
 }
 
+@Composable
+private fun DrawerView(props: ZylixComponentProps) {
+    var isOpen by remember { mutableStateOf(false) }
+
+    Column {
+        Button(onClick = { isOpen = !isOpen }) {
+            Icon(Icons.Default.Menu, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (isOpen) "Close Drawer" else "Open Drawer")
+        }
+
+        if (isOpen) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    listOf("Home", "Profile", "Settings", "Help").forEach { item ->
+                        Text(
+                            text = item,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                        )
+                        if (item != "Help") HorizontalDivider()
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Feedback Component Views
 
 @Composable
@@ -740,6 +915,77 @@ private fun BadgeView(props: ZylixComponentProps) {
     }
 }
 
+@Composable
+private fun ToastView(props: ZylixComponentProps) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.inverseSurface,
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = props.alertStyle.icon,
+                contentDescription = null,
+                tint = props.alertStyle.color
+            )
+            Text(
+                text = props.text.ifEmpty { "Toast message" },
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = { /* Dismiss */ },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Dismiss",
+                    tint = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModalView(props: ZylixComponentProps) {
+    var isVisible by remember { mutableStateOf(false) }
+
+    Column {
+        Button(onClick = { isVisible = true }) {
+            Text("Show Modal")
+        }
+
+        if (isVisible) {
+            AlertDialog(
+                onDismissRequest = { isVisible = false },
+                title = { Text(props.text.ifEmpty { "Modal Title" }) },
+                text = {
+                    Column {
+                        Text("This is the modal content.")
+                        Text("You can add any content here.")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { isVisible = false }) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { isVisible = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
+
 // MARK: - Data Display Component Views
 
 @Composable
@@ -786,6 +1032,196 @@ private fun TagView(props: ZylixComponentProps) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             fontSize = 14.sp
         )
+    }
+}
+
+@Composable
+private fun TableView(props: ZylixComponentProps) {
+    val headers = listOf("Name", "Value", "Status")
+    val rows = listOf(
+        listOf("Item 1", "100", "Active"),
+        listOf("Item 2", "200", "Pending"),
+        listOf("Item 3", "300", "Complete")
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+    ) {
+        // Header row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(12.dp)
+        ) {
+            headers.forEach { header ->
+                Text(
+                    text = header,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        HorizontalDivider()
+        // Data rows
+        rows.forEach { row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                row.forEach { cell ->
+                    Text(text = cell, modifier = Modifier.weight(1f))
+                }
+            }
+            HorizontalDivider()
+        }
+    }
+}
+
+@Composable
+private fun TooltipView(props: ZylixComponentProps) {
+    var showTooltip by remember { mutableStateOf(false) }
+
+    Box {
+        Button(onClick = { showTooltip = !showTooltip }) {
+            Text(props.text.ifEmpty { "Hover me" })
+        }
+
+        if (showTooltip) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(bottom = 48.dp),
+                color = Color.DarkGray,
+                shape = RoundedCornerShape(4.dp),
+                shadowElevation = 4.dp
+            ) {
+                Text(
+                    text = "This is a tooltip",
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccordionView(props: ZylixComponentProps) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+    ) {
+        Surface(
+            onClick = { isExpanded = !isExpanded },
+            color = MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = props.text.ifEmpty { "Accordion Header" },
+                    fontWeight = FontWeight.Medium
+                )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand"
+                )
+            }
+        }
+
+        if (isExpanded) {
+            HorizontalDivider()
+            Text(
+                text = "This is the accordion content. It can contain any information that you want to show when expanded.",
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CarouselView(props: ZylixComponentProps) {
+    var currentIndex by remember { mutableStateOf(0) }
+    val items = listOf("Slide 1", "Slide 2", "Slide 3", "Slide 4")
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = items[currentIndex],
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { if (currentIndex > 0) currentIndex-- },
+                enabled = currentIndex > 0
+            ) {
+                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous")
+            }
+
+            items.forEachIndexed { index, _ ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (index == currentIndex)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                Color.LightGray
+                        )
+                )
+            }
+
+            IconButton(
+                onClick = { if (currentIndex < items.lastIndex) currentIndex++ },
+                enabled = currentIndex < items.lastIndex
+            ) {
+                Icon(Icons.Default.ChevronRight, contentDescription = "Next")
+            }
+        }
     }
 }
 

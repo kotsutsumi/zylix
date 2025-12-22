@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-22
+
+### Added
+
+#### Component Library Expansion
+- **Core**: 57 component types defined in Zig core (up from 9)
+- **Core**: New component categories: Form, Layout, Navigation, Feedback, Data Display
+
+#### Native Platform Support
+- **iOS**: Full SwiftUI implementations for all 57 component types
+- **Android**: Full Jetpack Compose implementations for all 57 component types
+- **Windows**: Full WinUI 3 implementations for all 57 component types
+- **macOS**: SwiftUI component implementations
+
+#### New Components
+- **Form**: DatePicker, TimePicker, FileInput, ColorPicker
+- **Layout**: AspectRatio, SafeArea
+- **Navigation**: Drawer, Breadcrumb, Pagination
+- **Feedback**: Toast, Modal, Skeleton
+- **Data Display**: Table, Tooltip, Accordion, Carousel
+
+### Fixed
+
+#### Android
+- Gradle dependencies for Jetpack Compose and Navigation
+- OkHttp dependency for networking
+- `ExperimentalMaterial3Api` opt-in for dropdown menus
+- `SelectBuilder` type mismatch in coroutines
+- Variable shadowing in `apply` blocks (ZylixHotReload)
+
 ## [0.6.2] - 2025-12-21
 
 ### Fixed

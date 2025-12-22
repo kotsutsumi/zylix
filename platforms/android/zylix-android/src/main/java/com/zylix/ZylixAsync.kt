@@ -407,7 +407,7 @@ suspend fun <T> all(futures: List<ZylixFuture<T>>): List<T> {
 
 suspend fun <T> race(futures: List<ZylixFuture<T>>): T {
     return coroutineScope {
-        select<T> {
+        kotlinx.coroutines.selects.select {
             futures.forEach { future ->
                 async { future.await() }.onAwait { it }
             }
@@ -441,13 +441,4 @@ suspend fun <T> retry(
     }
 
     throw lastError!!
-}
-
-// select helper for race
-private suspend fun <T> select(block: SelectBuilder<T>.() -> Unit): T {
-    return kotlinx.coroutines.selects.select(block)
-}
-
-private interface SelectBuilder<T> {
-    fun Deferred<T>.onAwait(block: (T) -> T)
 }
