@@ -324,6 +324,7 @@ public static class ZylixComponentFactory
             ZylixComponentType.TimePicker => CreateTimePicker(props),
             ZylixComponentType.ColorPicker => CreateColorPicker(props),
             ZylixComponentType.Form => CreateForm(props),
+            ZylixComponentType.FileInput => CreateFileInput(props),
 
             // Layout Components
             ZylixComponentType.Stack => CreateStack(props),
@@ -332,24 +333,33 @@ public static class ZylixComponentFactory
             ZylixComponentType.Spacer => CreateSpacer(props),
             ZylixComponentType.Divider => CreateDivider(props),
             ZylixComponentType.Card => CreateCard(props),
+            ZylixComponentType.AspectRatio => CreateAspectRatio(props),
+            ZylixComponentType.SafeArea => CreateSafeArea(props),
 
             // Navigation Components
             ZylixComponentType.NavBar => CreateNavBar(props),
             ZylixComponentType.TabBar => CreateTabBar(props),
+            ZylixComponentType.Drawer => CreateDrawer(props),
             ZylixComponentType.Breadcrumb => CreateBreadcrumb(props),
             ZylixComponentType.Pagination => CreatePagination(props),
 
             // Feedback Components
             ZylixComponentType.Alert => CreateAlert(props),
+            ZylixComponentType.Toast => CreateToast(props),
+            ZylixComponentType.Modal => CreateModal(props),
             ZylixComponentType.Progress => CreateProgress(props),
             ZylixComponentType.Spinner => CreateSpinner(props),
             ZylixComponentType.Skeleton => CreateSkeleton(props),
             ZylixComponentType.Badge => CreateBadge(props),
 
             // Data Display Components
+            ZylixComponentType.Table => CreateTable(props),
             ZylixComponentType.Avatar => CreateAvatar(props),
             ZylixComponentType.Icon => CreateIcon(props),
             ZylixComponentType.Tag => CreateTag(props),
+            ZylixComponentType.Tooltip => CreateTooltip(props),
+            ZylixComponentType.Accordion => CreateAccordion(props),
+            ZylixComponentType.Carousel => CreateCarousel(props),
 
             // Placeholder for unimplemented
             _ => CreatePlaceholder(props)
@@ -549,6 +559,38 @@ public static class ZylixComponentFactory
         };
     }
 
+    private static UIElement CreateFileInput(ZylixComponentProps props)
+    {
+        return new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 8,
+            Children =
+            {
+                new Microsoft.UI.Xaml.Controls.Button
+                {
+                    Content = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Spacing = 8,
+                        Children =
+                        {
+                            new SymbolIcon { Symbol = Symbol.Attach },
+                            new TextBlock { Text = "Choose File" }
+                        }
+                    },
+                    IsEnabled = !props.IsDisabled
+                },
+                new TextBlock
+                {
+                    Text = "No file selected",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = new SolidColorBrush(Colors.Gray)
+                }
+            }
+        };
+    }
+
     // Layout Components
     private static UIElement CreateStack(ZylixComponentProps props)
     {
@@ -597,6 +639,39 @@ public static class ZylixComponentFactory
         };
     }
 
+    private static UIElement CreateAspectRatio(ZylixComponentProps props)
+    {
+        var ratio = props.Value > 0 ? props.Value : 16.0 / 9.0;
+        return new Viewbox
+        {
+            Stretch = Stretch.Uniform,
+            Child = new Border
+            {
+                Width = 320,
+                Height = 320 / ratio,
+                Background = new SolidColorBrush(Color.FromArgb(50, 128, 128, 128)),
+                Child = new TextBlock
+                {
+                    Text = $"{ratio:F2}:1",
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = new SolidColorBrush(Colors.Gray)
+                }
+            }
+        };
+    }
+
+    private static UIElement CreateSafeArea(ZylixComponentProps props)
+    {
+        return new Border
+        {
+            Padding = new Thickness(16),
+            Child = string.IsNullOrEmpty(props.Text)
+                ? null
+                : new TextBlock { Text = props.Text }
+        };
+    }
+
     // Navigation Components
     private static UIElement CreateNavBar(ZylixComponentProps props)
     {
@@ -624,6 +699,49 @@ public static class ZylixComponentFactory
         pivot.Items.Add(new PivotItem { Header = "Tab 2" });
         pivot.Items.Add(new PivotItem { Header = "Tab 3" });
         return pivot;
+    }
+
+    private static UIElement CreateDrawer(ZylixComponentProps props)
+    {
+        var menuItems = new StackPanel { Spacing = 4 };
+        foreach (var item in new[] { "Home", "Profile", "Settings", "Help" })
+        {
+            menuItems.Children.Add(new Microsoft.UI.Xaml.Controls.Button
+            {
+                Content = item,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = new SolidColorBrush(Colors.Transparent)
+            });
+        }
+
+        return new StackPanel
+        {
+            Children =
+            {
+                new Microsoft.UI.Xaml.Controls.Button
+                {
+                    Content = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Spacing = 8,
+                        Children =
+                        {
+                            new SymbolIcon { Symbol = Symbol.GlobalNavigationButton },
+                            new TextBlock { Text = "Toggle Drawer" }
+                        }
+                    }
+                },
+                new Border
+                {
+                    Margin = new Thickness(0, 8, 0, 0),
+                    Padding = new Thickness(12),
+                    Background = new SolidColorBrush(Colors.LightGray),
+                    CornerRadius = new CornerRadius(8),
+                    Child = menuItems
+                }
+            }
+        };
     }
 
     private static UIElement CreateBreadcrumb(ZylixComponentProps props)
@@ -676,6 +794,87 @@ public static class ZylixComponentFactory
                 {
                     new SymbolIcon { Symbol = props.AlertStyle.GetAlertIcon(), Foreground = new SolidColorBrush(color) },
                     new TextBlock { Text = props.Text, Foreground = new SolidColorBrush(color) }
+                }
+            }
+        };
+    }
+
+    private static UIElement CreateToast(ZylixComponentProps props)
+    {
+        var color = props.AlertStyle.GetAlertColor();
+        return new Border
+        {
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(16, 12, 16, 12),
+            Background = new SolidColorBrush(Color.FromArgb(230, 50, 50, 50)),
+            Child = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 12,
+                Children =
+                {
+                    new SymbolIcon { Symbol = props.AlertStyle.GetAlertIcon(), Foreground = new SolidColorBrush(color) },
+                    new TextBlock
+                    {
+                        Text = string.IsNullOrEmpty(props.Text) ? "Toast message" : props.Text,
+                        Foreground = new SolidColorBrush(Colors.White),
+                        VerticalAlignment = VerticalAlignment.Center
+                    },
+                    new Microsoft.UI.Xaml.Controls.Button
+                    {
+                        Content = new SymbolIcon { Symbol = Symbol.Cancel },
+                        Background = new SolidColorBrush(Colors.Transparent),
+                        Padding = new Thickness(4)
+                    }
+                }
+            }
+        };
+    }
+
+    private static UIElement CreateModal(ZylixComponentProps props)
+    {
+        return new StackPanel
+        {
+            Children =
+            {
+                new Microsoft.UI.Xaml.Controls.Button { Content = "Show Modal" },
+                new Border
+                {
+                    Margin = new Thickness(0, 16, 0, 0),
+                    Padding = new Thickness(24),
+                    Background = new SolidColorBrush(Colors.White),
+                    CornerRadius = new CornerRadius(12),
+                    BorderBrush = new SolidColorBrush(Colors.LightGray),
+                    BorderThickness = new Thickness(1),
+                    Child = new StackPanel
+                    {
+                        Spacing = 16,
+                        Children =
+                        {
+                            new TextBlock
+                            {
+                                Text = string.IsNullOrEmpty(props.Text) ? "Modal Title" : props.Text,
+                                FontSize = 20,
+                                FontWeight = Microsoft.UI.Text.FontWeights.Bold
+                            },
+                            new TextBlock { Text = "This is the modal content.", TextWrapping = TextWrapping.Wrap },
+                            new StackPanel
+                            {
+                                Orientation = Orientation.Horizontal,
+                                Spacing = 8,
+                                HorizontalAlignment = HorizontalAlignment.Right,
+                                Children =
+                                {
+                                    new Microsoft.UI.Xaml.Controls.Button { Content = "Cancel" },
+                                    new Microsoft.UI.Xaml.Controls.Button
+                                    {
+                                        Content = "Confirm",
+                                        Style = Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"] as Style
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         };
@@ -776,6 +975,132 @@ public static class ZylixComponentFactory
                 FontSize = 14
             }
         };
+    }
+
+    private static UIElement CreateTable(ZylixComponentProps props)
+    {
+        var grid = new Microsoft.UI.Xaml.Controls.Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var headers = new[] { "Name", "Value", "Status" };
+        var rows = new[] {
+            new[] { "Item 1", "100", "Active" },
+            new[] { "Item 2", "200", "Pending" },
+            new[] { "Item 3", "300", "Complete" }
+        };
+
+        // Header row
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (int col = 0; col < headers.Length; col++)
+        {
+            var header = new Border
+            {
+                Background = new SolidColorBrush(Colors.LightGray),
+                Padding = new Thickness(12),
+                Child = new TextBlock
+                {
+                    Text = headers[col],
+                    FontWeight = Microsoft.UI.Text.FontWeights.Bold
+                }
+            };
+            Microsoft.UI.Xaml.Controls.Grid.SetRow(header, 0);
+            Microsoft.UI.Xaml.Controls.Grid.SetColumn(header, col);
+            grid.Children.Add(header);
+        }
+
+        // Data rows
+        for (int row = 0; row < rows.Length; row++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            for (int col = 0; col < rows[row].Length; col++)
+            {
+                var cell = new Border
+                {
+                    Padding = new Thickness(12),
+                    BorderBrush = new SolidColorBrush(Colors.LightGray),
+                    BorderThickness = new Thickness(0, 0, 0, 1),
+                    Child = new TextBlock { Text = rows[row][col] }
+                };
+                Microsoft.UI.Xaml.Controls.Grid.SetRow(cell, row + 1);
+                Microsoft.UI.Xaml.Controls.Grid.SetColumn(cell, col);
+                grid.Children.Add(cell);
+            }
+        }
+
+        return new Border
+        {
+            BorderBrush = new SolidColorBrush(Colors.LightGray),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Child = grid
+        };
+    }
+
+    private static UIElement CreateTooltip(ZylixComponentProps props)
+    {
+        var button = new Microsoft.UI.Xaml.Controls.Button
+        {
+            Content = string.IsNullOrEmpty(props.Text) ? "Hover me" : props.Text
+        };
+        ToolTipService.SetToolTip(button, "This is a tooltip");
+        return button;
+    }
+
+    private static UIElement CreateAccordion(ZylixComponentProps props)
+    {
+        var expander = new Expander
+        {
+            Header = string.IsNullOrEmpty(props.Text) ? "Accordion Header" : props.Text,
+            Content = new TextBlock
+            {
+                Text = "This is the accordion content. It can contain any information that you want to show when expanded.",
+                TextWrapping = TextWrapping.Wrap,
+                Padding = new Thickness(16)
+            },
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch
+        };
+        return expander;
+    }
+
+    private static UIElement CreateCarousel(ZylixComponentProps props)
+    {
+        var items = new[] { "Slide 1", "Slide 2", "Slide 3", "Slide 4" };
+
+        var flipView = new FlipView
+        {
+            Height = 150
+        };
+
+        foreach (var item in items)
+        {
+            flipView.Items.Add(new Border
+            {
+                Background = new LinearGradientBrush
+                {
+                    StartPoint = new Windows.Foundation.Point(0, 0),
+                    EndPoint = new Windows.Foundation.Point(1, 1),
+                    GradientStops =
+                    {
+                        new GradientStop { Color = Colors.DodgerBlue, Offset = 0 },
+                        new GradientStop { Color = Colors.Purple, Offset = 1 }
+                    }
+                },
+                Child = new TextBlock
+                {
+                    Text = item,
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 24,
+                    FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            });
+        }
+
+        return flipView;
     }
 
     // Placeholder
