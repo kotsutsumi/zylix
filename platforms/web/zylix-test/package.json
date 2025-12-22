@@ -1,0 +1,27 @@
+{
+  "name": "@zylix/test-web",
+  "version": "0.8.0",
+  "description": "Zylix Test Framework - Playwright Bridge for Web Platform",
+  "type": "module",
+  "main": "src/server.js",
+  "bin": {
+    "zylix-test-server": "./src/server.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "zylix",
+    "testing",
+    "e2e",
+    "playwright"
+  ],
+  "license": "MIT"
+}
