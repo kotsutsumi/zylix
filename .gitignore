@@ -76,6 +76,7 @@ site/.hugo_build.lock
 
 # Node
 node_modules/
+.npmrc
 
 # Logs
 *.log
