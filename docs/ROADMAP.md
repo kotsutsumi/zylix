@@ -25,10 +25,9 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.10.0 | Phase 12 | Device Features & Gestures | ⏳ Planned | 2026-Q2 |
 | v0.11.0 | - | Performance & Optimization | ⏳ Planned | 2026-Q3 |
 | v0.12.0 | - | Documentation Excellence | ⏳ Planned | 2026-Q4 |
-| v1.0.0 | Release | Stable Release | ⏳ Planned | 2027-Q1 |
-| v1.1.0 | Phase 13 | Animation (Lottie, Live2D) | ⏳ Planned | 2027-Q2 |
-| v1.2.0 | Phase 14 | 3D Graphics (Three.js-style) | ⏳ Planned | 2027-Q3 |
-| v1.3.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ⏳ Planned | 2027-Q4 |
+| v0.13.0 | Phase 13 | Animation (Lottie, Live2D) | ⏳ Planned | 2027-Q1 |
+| v0.14.0 | Phase 14 | 3D Graphics (Three.js-style) | ⏳ Planned | 2027-Q2 |
+| v0.15.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ⏳ Planned | 2027-Q3 |
 
 ---
 
@@ -840,7 +839,7 @@ AI-powered development assistant that understands Zylix components and provides 
 
 ---
 
-## Phase 12: Performance & Production Readiness (v1.0.0)
+## Phase 12: Performance & Production Readiness (v0.11.0-v0.12.0)
 
 ### Overview
 
@@ -881,7 +880,7 @@ Optimize performance, reduce bundle sizes, and prepare the framework for product
 
 ---
 
-## Phase 13: Animation System (v1.1.0)
+## Phase 13: Animation System (v0.13.0)
 
 ### Overview
 
@@ -931,7 +930,7 @@ Comprehensive animation system supporting vector animations (Lottie) and Live2D 
 
 ---
 
-## Phase 14: 3D Graphics Engine (v1.2.0)
+## Phase 14: 3D Graphics Engine (v0.14.0)
 
 ### Overview
 
@@ -985,7 +984,7 @@ Hardware-accelerated 3D graphics engine inspired by [Three.js](https://github.co
 
 ---
 
-## Phase 15: Game Development Platform (v1.3.0)
+## Phase 15: Game Development Platform (v0.15.0)
 
 ### Overview
 
@@ -1174,25 +1173,19 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 - Interactive playground
 - Video tutorials
 
-#### v1.0.0 - Stable Release
-- API stabilization
-- Long-term support commitment
-- Complete documentation verified with working examples
-- All platforms tested and certified
-
-#### v1.1.0 - Animation System
+#### v0.13.0 - Animation System
 - Lottie vector animation support
 - Live2D Cubism SDK integration
 - Animation control API
 - Timeline-based sequencing
 
-#### v1.2.0 - 3D Graphics Engine
+#### v0.14.0 - 3D Graphics Engine
 - Three.js/Babylon.js-inspired 3D engine
 - Platform-native rendering (Metal, Vulkan, DirectX, WebGL/WebGPU)
 - 3D model loading (glTF, OBJ, FBX)
 - Lighting, shadows, and post-processing
 
-#### v1.3.0 - Game Development Platform
+#### v0.15.0 - Game Development Platform
 - PIXI.js-inspired 2D game engine
 - Matter.js-based physics engine
 - Complete audio system (SFX, BGM)
