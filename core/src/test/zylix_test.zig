@@ -40,6 +40,8 @@ pub const runner = @import("runner.zig");
 
 // Platform drivers
 pub const web_driver = @import("web_driver.zig");
+pub const ios_driver = @import("ios_driver.zig");
+pub const android_driver = @import("android_driver.zig");
 
 // Primary types
 pub const Selector = selector.Selector;
@@ -83,6 +85,17 @@ pub const WebDriverConfig = web_driver.WebDriverConfig;
 pub const WebDriverContext = web_driver.WebDriverContext;
 pub const BrowserType = web_driver.BrowserType;
 pub const createWebDriver = web_driver.createWebDriver;
+
+// iOS driver types
+pub const IOSDriverConfig = ios_driver.IOSDriverConfig;
+pub const IOSDriverContext = ios_driver.IOSDriverContext;
+pub const createIOSDriver = ios_driver.createIOSDriver;
+
+// Android driver types
+pub const AndroidDriverConfig = android_driver.AndroidDriverConfig;
+pub const AndroidDriverContext = android_driver.AndroidDriverContext;
+pub const createAndroidDriver = android_driver.createAndroidDriver;
+
 pub const TestSuite = runner.TestSuite;
 pub const TestCase = runner.TestCase;
 pub const TestResult = runner.TestResult;
@@ -159,6 +172,9 @@ test "zylix_test module" {
     _ = assert;
     _ = screenshot;
     _ = runner;
+    _ = web_driver;
+    _ = ios_driver;
+    _ = android_driver;
 }
 
 test "convenience functions" {
