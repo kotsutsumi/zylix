@@ -87,6 +87,7 @@ pub const AppConfig = struct {
 /// Supported platforms
 pub const Platform = enum {
     ios,
+    watchos,
     android,
     macos,
     windows,
@@ -103,6 +104,17 @@ pub const Platform = enum {
             else => .web,
         };
     }
+
+    /// Check if this is an Apple mobile platform (iOS or watchOS)
+    pub fn isAppleMobile(self: Platform) bool {
+        return self == .ios or self == .watchos;
+    }
+};
+
+/// Digital Crown rotation direction (watchOS-specific)
+pub const CrownRotationDirection = enum {
+    up,
+    down,
 };
 
 /// Screenshot image data

@@ -18,6 +18,27 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(lib);
 
+    // === CLI Executable ===
+    const cli_exe = b.addExecutable(.{
+        .name = "zylix-test",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/cli/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    b.installArtifact(cli_exe);
+
+    // Run CLI
+    const run_cli = b.addRunArtifact(cli_exe);
+    run_cli.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cli.addArgs(args);
+    }
+    const run_step = b.step("run", "Run the Zylix Test CLI");
+    run_step.dependOn(&run_cli.step);
+
     // === Tests ===
     const unit_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -27,9 +48,58 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const cli_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/cli/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
     const run_unit_tests = b.addRunArtifact(unit_tests);
+    const run_cli_tests = b.addRunArtifact(cli_tests);
     const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&run_cli_tests.step);
     test_step.dependOn(&run_unit_tests.step);
+
+    // === Integration Tests ===
+    const integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/test/integration/integration_tests.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const run_integration_tests = b.addRunArtifact(integration_tests);
+    const integration_step = b.step("test-integration", "Run integration tests");
+    integration_step.dependOn(&run_integration_tests.step);
+
+    // === E2E Tests ===
+    const e2e_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/test/e2e/e2e_tests.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    const run_e2e_tests = b.addRunArtifact(e2e_tests);
+    const e2e_step = b.step("test-e2e", "Run E2E tests (requires running bridge servers)");
+    e2e_step.dependOn(&run_e2e_tests.step);
+
+    // Test all (unit + integration)
+    const test_all_step = b.step("test-all", "Run all tests (unit + integration)");
+    test_all_step.dependOn(&run_unit_tests.step);
+    test_all_step.dependOn(&run_cli_tests.step);
+    test_all_step.dependOn(&run_integration_tests.step);
+
+    // Test everything (unit + integration + e2e)
+    const test_everything_step = b.step("test-everything", "Run all tests including E2E");
+    test_everything_step.dependOn(&run_unit_tests.step);
+    test_everything_step.dependOn(&run_cli_tests.step);
+    test_everything_step.dependOn(&run_integration_tests.step);
+    test_everything_step.dependOn(&run_e2e_tests.step);
 
     // === Cross-compilation targets ===
 

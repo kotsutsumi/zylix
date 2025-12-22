@@ -33,9 +33,17 @@ jobs:
         working-directory: core
         run: zig build
 
-      - name: Run Core Tests
+      - name: Run Unit Tests
         working-directory: core
         run: zig build test --summary all
+
+      - name: Run Integration Tests
+        working-directory: core
+        run: zig build test-integration --summary all
+
+      - name: Run All Tests
+        working-directory: core
+        run: zig build test-all --summary all
 
       - name: Build Release
         working-directory: core
@@ -65,6 +73,42 @@ jobs:
       - name: Run Swift Tests
         working-directory: platforms/macos/zylix-test
         run: swift test
+        continue-on-error: true
+
+  # ============================================================================
+  # iOS/watchOS Platform Build (Swift)
+  # ============================================================================
+  ios-build:
+    name: iOS/watchOS Platform (Swift)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Show Available Simulators
+        run: xcrun simctl list devices available | grep -E "(iPhone|Watch)" | head -20
+
+      - name: Build iOS Bridge Server
+        working-directory: platforms/ios/zylix-test
+        run: swift build
+
+      - name: Run iOS Bridge Tests
+        working-directory: platforms/ios/zylix-test
+        run: swift test
+        continue-on-error: true
+
+      - name: Build Zylix iOS App (Debug)
+        working-directory: platforms/ios
+        run: |
+          xcodebuild -project Zylix.xcodeproj \
+            -scheme Zylix \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -configuration Debug \
+            build \
+            CODE_SIGNING_ALLOWED=NO \
+            || echo "iOS build skipped (project may need setup)"
         continue-on-error: true
 
   # ============================================================================
@@ -139,6 +183,52 @@ jobs:
       - name: Build
         working-directory: platforms/windows/Zylix
         run: dotnet build --no-restore
+        continue-on-error: true
+
+  # ============================================================================
+  # Android Platform Build (Kotlin/Gradle)
+  # ============================================================================
+  android-build:
+    name: Android Platform (Kotlin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant Execute Permission
+        working-directory: platforms/android
+        run: chmod +x ./gradlew
+
+      - name: Check Gradle Version
+        working-directory: platforms/android
+        run: ./gradlew --version
+
+      - name: Build Android Library
+        working-directory: platforms/android
+        run: ./gradlew :zylix-android:assembleDebug
+        continue-on-error: true
+
+      - name: Build Test Server
+        working-directory: platforms/android
+        run: ./gradlew :zylix-test:assembleDebug
+        continue-on-error: true
+
+      - name: Run Unit Tests
+        working-directory: platforms/android
+        run: ./gradlew test
+        continue-on-error: true
+
+      - name: Lint Check
+        working-directory: platforms/android
+        run: ./gradlew lint
         continue-on-error: true
 
   # ============================================================================

@@ -1,9 +1,10 @@
 {
   "name": "@zylix/test-web",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Zylix Test Framework - Playwright Bridge for Web Platform",
   "type": "module",
   "main": "src/server.js",
+  "types": "src/types.d.ts",
   "bin": {
     "zylix-test-server": "./src/server.js"
   },
@@ -14,6 +15,10 @@
   "dependencies": {
     "playwright": "^1.40.0"
   },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
@@ -21,7 +26,8 @@
     "zylix",
     "testing",
     "e2e",
-    "playwright"
+    "playwright",
+    "automation"
   ],
   "license": "MIT"
 }
