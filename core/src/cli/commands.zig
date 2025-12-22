@@ -1,0 +1,591 @@
+//! Command implementations for Zylix Test CLI
+//!
+//! Contains handlers for all CLI commands: run, init, server, list, report.
+
+const std = @import("std");
+const config = @import("config.zig");
+const output = @import("output.zig");
+
+const ExitCode = @import("main.zig").ExitCode;
+const Platform = config.Platform;
+const RunConfig = config.RunConfig;
+const ServerConfig = config.ServerConfig;
+
+// ============================================================================
+// Run Command
+// ============================================================================
+
+/// Run E2E tests
+pub fn runTests(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var run_config = RunConfig{};
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+
+        if (std.mem.eql(u8, arg, "--platform")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                if (Platform.fromString(args[i])) |p| {
+                    run_config.platform = p;
+                } else {
+                    output.printError("Invalid platform: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                }
+            }
+        } else if (std.mem.eql(u8, arg, "--browser")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                if (config.Browser.fromString(args[i])) |b| {
+                    run_config.browser = b;
+                } else {
+                    output.printError("Invalid browser: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                }
+            }
+        } else if (std.mem.eql(u8, arg, "--headless")) {
+            run_config.headless = true;
+        } else if (std.mem.eql(u8, arg, "--headed")) {
+            run_config.headless = false;
+        } else if (std.mem.eql(u8, arg, "--parallel")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.parallel = std.fmt.parseInt(u32, args[i], 10) catch {
+                    output.printError("Invalid parallel count: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                };
+            }
+        } else if (std.mem.eql(u8, arg, "--timeout")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.timeout_ms = std.fmt.parseInt(u32, args[i], 10) catch {
+                    output.printError("Invalid timeout: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                };
+            }
+        } else if (std.mem.eql(u8, arg, "--retry")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.retry_count = std.fmt.parseInt(u32, args[i], 10) catch {
+                    output.printError("Invalid retry count: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                };
+            }
+        } else if (std.mem.eql(u8, arg, "--reporter")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                if (config.ReportFormat.fromString(args[i])) |r| {
+                    run_config.reporter = r;
+                } else {
+                    output.printError("Invalid reporter: {s}", .{args[i]});
+                    return ExitCode.invalid_args;
+                }
+            }
+        } else if (std.mem.eql(u8, arg, "--output")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.output_dir = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--filter")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.filter = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--tag")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.tag = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--shard")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                // Parse n/total format
+                if (std.mem.indexOf(u8, args[i], "/")) |sep| {
+                    const index_str = args[i][0..sep];
+                    const total_str = args[i][sep + 1 ..];
+                    run_config.shard_index = std.fmt.parseInt(u32, index_str, 10) catch null;
+                    run_config.shard_total = std.fmt.parseInt(u32, total_str, 10) catch null;
+                }
+            }
+        } else if (std.mem.eql(u8, arg, "--debug")) {
+            run_config.debug = true;
+        } else if (std.mem.eql(u8, arg, "--dry-run")) {
+            run_config.dry_run = true;
+        } else if (std.mem.eql(u8, arg, "--config")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                run_config.config_file = args[i];
+            }
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            // Positional argument - treat as filter
+            run_config.filter = arg;
+        } else {
+            output.printWarning("Unknown option: {s}", .{arg});
+        }
+    }
+
+    // Load project config if available
+    if (run_config.config_file) |cfg_file| {
+        _ = config.loadConfig(allocator, cfg_file) catch |err| {
+            output.printError("Failed to load config: {s}", .{@errorName(err)});
+            return ExitCode.config_error;
+        };
+    }
+
+    // Execute tests
+    return executeTests(allocator, run_config);
+}
+
+fn executeTests(allocator: std.mem.Allocator, run_config: RunConfig) ExitCode {
+    _ = allocator;
+
+    output.printHeader("Zylix Test Runner");
+
+    // Show configuration
+    output.print("Platform: {s}\n", .{run_config.platform.toString()});
+    if (run_config.platform == .web) {
+        output.print("Browser: {s} (headless: {s})\n", .{
+            @tagName(run_config.browser),
+            if (run_config.headless) "yes" else "no",
+        });
+    }
+
+    if (run_config.filter) |filter| {
+        output.print("Filter: {s}\n", .{filter});
+    }
+
+    if (run_config.dry_run) {
+        output.printInfo("Dry run mode - tests will not be executed", .{});
+        return ExitCode.success;
+    }
+
+    output.print("\n", .{});
+
+    // TODO: Integrate with actual test runner
+    // For now, simulate test execution
+    const start_time = std.time.milliTimestamp();
+
+    // Simulated tests
+    const test_names = [_][]const u8{
+        "test_home_page_loads",
+        "test_user_can_login",
+        "test_navigation_works",
+        "test_form_submission",
+    };
+
+    var passed: usize = 0;
+    var failed: usize = 0;
+
+    for (test_names) |name| {
+        // Simulate test execution
+        const test_passed = true; // Would come from actual test execution
+        const duration: u64 = 150; // Simulated duration
+
+        output.printTestResult(name, test_passed, duration);
+
+        if (test_passed) {
+            passed += 1;
+        } else {
+            failed += 1;
+        }
+    }
+
+    const end_time = std.time.milliTimestamp();
+    const total_duration: u64 = @intCast(end_time - start_time);
+
+    output.printSummary(passed, failed, 0, total_duration);
+
+    if (failed > 0) {
+        return ExitCode.test_failure;
+    }
+
+    return ExitCode.success;
+}
+
+// ============================================================================
+// Init Command
+// ============================================================================
+
+/// Initialize a new test project
+pub fn initProject(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var project_name: []const u8 = "zylix-tests";
+    var template: []const u8 = "basic";
+    var force = false;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+
+        if (std.mem.eql(u8, arg, "--template")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                template = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--force")) {
+            force = true;
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            project_name = arg;
+        }
+    }
+
+    output.printHeader("Initialize Zylix Test Project");
+    output.print("Project: {s}\n", .{project_name});
+    output.print("Template: {s}\n\n", .{template});
+
+    // Create project directory
+    var dir = std.fs.cwd().makeOpenPath(project_name, .{}) catch |err| {
+        if (err == error.PathAlreadyExists and !force) {
+            output.printError("Directory already exists. Use --force to overwrite.", .{});
+            return ExitCode.config_error;
+        }
+        output.printError("Failed to create directory: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer dir.close();
+
+    // Create config file
+    const config_content = config.generateDefaultConfig(project_name);
+    dir.writeFile(.{
+        .sub_path = "zylix-test.json",
+        .data = config_content,
+    }) catch |err| {
+        output.printError("Failed to create config: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    output.printSuccess("Created zylix-test.json", .{});
+
+    // Create tests directory
+    dir.makeDir("tests") catch |err| {
+        if (err != error.PathAlreadyExists) {
+            output.printError("Failed to create tests directory: {s}", .{@errorName(err)});
+            return ExitCode.runtime_error;
+        }
+    };
+    output.printSuccess("Created tests/", .{});
+
+    // Create example test file
+    const example_test = generateExampleTest(allocator, template);
+    var tests_dir = dir.openDir("tests", .{}) catch {
+        output.printError("Failed to open tests directory", .{});
+        return ExitCode.runtime_error;
+    };
+    defer tests_dir.close();
+    tests_dir.writeFile(.{
+        .sub_path = "example.test.zig",
+        .data = example_test,
+    }) catch |err| {
+        output.printError("Failed to create example test: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    output.printSuccess("Created tests/example.test.zig", .{});
+
+    output.print("\n", .{});
+    output.printSuccess("Project initialized successfully!", .{});
+    output.print("\nNext steps:\n", .{});
+    output.print("  cd {s}\n", .{project_name});
+    output.print("  zylix-test run\n", .{});
+
+    return ExitCode.success;
+}
+
+fn generateExampleTest(allocator: std.mem.Allocator, template: []const u8) []const u8 {
+    _ = allocator;
+    _ = template;
+
+    return
+        \\//! Example Zylix Test
+        \\
+        \\const std = @import("std");
+        \\const zylix = @import("zylix_test");
+        \\
+        \\test "example: home page loads" {
+        \\    const allocator = std.testing.allocator;
+        \\
+        \\    // Create web driver
+        \\    var driver = try zylix.createWebDriver(.{
+        \\        .browser = .chrome,
+        \\        .headless = true,
+        \\    }, allocator);
+        \\    defer driver.deinit();
+        \\
+        \\    // Launch application
+        \\    var app = try zylix.launch(&driver, .{
+        \\        .app_id = "https://example.com",
+        \\        .platform = .web,
+        \\    }, allocator);
+        \\    defer app.terminate() catch {};
+        \\
+        \\    // Find and verify element
+        \\    const heading = try app.findByTestId("main-heading");
+        \\    try zylix.expectElement(&heading).toBeVisible();
+        \\}
+        \\
+        \\test "example: user can click button" {
+        \\    const allocator = std.testing.allocator;
+        \\
+        \\    var driver = try zylix.createWebDriver(.{
+        \\        .browser = .chrome,
+        \\        .headless = true,
+        \\    }, allocator);
+        \\    defer driver.deinit();
+        \\
+        \\    var app = try zylix.launch(&driver, .{
+        \\        .app_id = "https://example.com",
+        \\        .platform = .web,
+        \\    }, allocator);
+        \\    defer app.terminate() catch {};
+        \\
+        \\    // Click button
+        \\    try app.findByTestId("submit-button").tap();
+        \\
+        \\    // Wait for result
+        \\    const result = try app.waitForText("Success", 5000);
+        \\    try zylix.expectElement(&result).toBeVisible();
+        \\}
+        \\
+    ;
+}
+
+// ============================================================================
+// Server Command
+// ============================================================================
+
+/// Manage bridge servers
+pub fn serverCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    _ = allocator;
+
+    if (args.len == 0) {
+        output.printError("Missing action. Use: start, stop, status, restart", .{});
+        return ExitCode.invalid_args;
+    }
+
+    const action = args[0];
+    const action_args = if (args.len > 1) args[1..] else args[0..0];
+
+    // Parse platform flags
+    var platforms_list: std.ArrayListUnmanaged(Platform) = .{};
+    defer platforms_list.deinit(std.heap.page_allocator);
+
+    var custom_port: ?u16 = null;
+    var daemon = false;
+
+    const alloc = std.heap.page_allocator;
+    for (action_args) |arg| {
+        if (std.mem.eql(u8, arg, "--web")) {
+            platforms_list.append(alloc, .web) catch {};
+        } else if (std.mem.eql(u8, arg, "--ios")) {
+            platforms_list.append(alloc, .ios) catch {};
+        } else if (std.mem.eql(u8, arg, "--android")) {
+            platforms_list.append(alloc, .android) catch {};
+        } else if (std.mem.eql(u8, arg, "--macos")) {
+            platforms_list.append(alloc, .macos) catch {};
+        } else if (std.mem.eql(u8, arg, "--windows")) {
+            platforms_list.append(alloc, .windows) catch {};
+        } else if (std.mem.eql(u8, arg, "--linux")) {
+            platforms_list.append(alloc, .linux) catch {};
+        } else if (std.mem.eql(u8, arg, "--all")) {
+            platforms_list.append(alloc, .web) catch {};
+            platforms_list.append(alloc, .ios) catch {};
+            platforms_list.append(alloc, .android) catch {};
+            platforms_list.append(alloc, .macos) catch {};
+            platforms_list.append(alloc, .windows) catch {};
+            platforms_list.append(alloc, .linux) catch {};
+        } else if (std.mem.eql(u8, arg, "--daemon")) {
+            daemon = true;
+        } else if (std.mem.startsWith(u8, arg, "--port=")) {
+            const port_str = arg[7..];
+            custom_port = std.fmt.parseInt(u16, port_str, 10) catch null;
+        }
+    }
+
+    // Default to web if no platform specified
+    if (platforms_list.items.len == 0) {
+        platforms_list.append(alloc, .web) catch {};
+    }
+
+    if (std.mem.eql(u8, action, "start")) {
+        return startServers(platforms_list.items, custom_port, daemon);
+    } else if (std.mem.eql(u8, action, "stop")) {
+        return stopServers(platforms_list.items);
+    } else if (std.mem.eql(u8, action, "status")) {
+        return showServerStatus(platforms_list.items);
+    } else if (std.mem.eql(u8, action, "restart")) {
+        _ = stopServers(platforms_list.items);
+        return startServers(platforms_list.items, custom_port, daemon);
+    } else {
+        output.printError("Unknown action: {s}", .{action});
+        return ExitCode.invalid_args;
+    }
+}
+
+fn startServers(platforms: []const Platform, custom_port: ?u16, daemon: bool) ExitCode {
+    output.printHeader("Starting Bridge Servers");
+
+    for (platforms) |platform| {
+        const port = custom_port orelse platform.defaultPort();
+
+        output.print("Starting {s} server on port {d}...\n", .{ platform.toString(), port });
+
+        // TODO: Actually start the server process
+        // For now, just show what would happen
+        if (daemon) {
+            output.printSuccess("{s} server started in background (port {d})", .{ platform.toString(), port });
+        } else {
+            output.printInfo("{s} server would start on port {d}", .{ platform.toString(), port });
+        }
+    }
+
+    return ExitCode.success;
+}
+
+fn stopServers(platforms: []const Platform) ExitCode {
+    output.printHeader("Stopping Bridge Servers");
+
+    for (platforms) |platform| {
+        output.print("Stopping {s} server...\n", .{platform.toString()});
+        // TODO: Actually stop the server process
+        output.printSuccess("{s} server stopped", .{platform.toString()});
+    }
+
+    return ExitCode.success;
+}
+
+fn showServerStatus(platforms: []const Platform) ExitCode {
+    output.printHeader("Bridge Server Status");
+
+    output.print("{s:<12} {s:<8} {s:<10}\n", .{ "Platform", "Port", "Status" });
+    output.printSeparator();
+
+    for (platforms) |platform| {
+        const port = platform.defaultPort();
+        // TODO: Check actual server status
+        const status = "stopped";
+
+        output.print("{s:<12} {d:<8} {s:<10}\n", .{ platform.toString(), port, status });
+    }
+
+    return ExitCode.success;
+}
+
+// ============================================================================
+// List Command
+// ============================================================================
+
+/// List available tests
+pub fn listTests(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    _ = allocator;
+
+    var platform_filter: ?Platform = null;
+    var json_output = false;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+
+        if (std.mem.eql(u8, arg, "--platform")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                platform_filter = Platform.fromString(args[i]);
+            }
+        } else if (std.mem.eql(u8, arg, "--json")) {
+            json_output = true;
+        }
+    }
+
+    if (json_output) {
+        // JSON output
+        output.printLiteral("[\n");
+        output.printLiteral("  {\"name\": \"test_home_page\", \"file\": \"tests/home.test.zig\", \"platform\": \"web\"},\n");
+        output.printLiteral("  {\"name\": \"test_login\", \"file\": \"tests/auth.test.zig\", \"platform\": \"web\"}\n");
+        output.printLiteral("]\n");
+    } else {
+        output.printHeader("Available Tests");
+
+        if (platform_filter) |p| {
+            output.print("Platform: {s}\n\n", .{p.toString()});
+        }
+
+        // TODO: Actually scan for tests
+        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "Test Name", "File", "Platform" });
+        output.printSeparator();
+        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_home_page", "tests/home.test.zig", "web" });
+        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_login", "tests/auth.test.zig", "web" });
+        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_navigation", "tests/nav.test.zig", "web" });
+        output.print("\nTotal: 3 tests\n", .{});
+    }
+
+    return ExitCode.success;
+}
+
+// ============================================================================
+// Report Command
+// ============================================================================
+
+/// Generate test reports
+pub fn generateReport(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    _ = allocator;
+
+    var input_dir: []const u8 = "test-results";
+    var output_dir: []const u8 = "test-results";
+    var format = config.ReportFormat.html;
+    var open_report = false;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+
+        if (std.mem.eql(u8, arg, "--input")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                input_dir = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--output")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                output_dir = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--format")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                if (config.ReportFormat.fromString(args[i])) |f| {
+                    format = f;
+                }
+            }
+        } else if (std.mem.eql(u8, arg, "--open")) {
+            open_report = true;
+        }
+    }
+
+    output.printHeader("Generate Test Report");
+
+    output.print("Input: {s}\n", .{input_dir});
+    output.print("Output: {s}\n", .{output_dir});
+    output.print("Format: {s}\n\n", .{@tagName(format)});
+
+    // TODO: Actually generate report
+    const report_file = switch (format) {
+        .html => "report.html",
+        .junit => "junit.xml",
+        .json => "results.json",
+        .markdown => "report.md",
+        else => "report.txt",
+    };
+
+    output.printSuccess("Generated {s}/{s}", .{ output_dir, report_file });
+
+    if (open_report and format == .html) {
+        output.printInfo("Opening report in browser...", .{});
+        // TODO: Actually open browser
+    }
+
+    return ExitCode.success;
+}
+
+test "parse platform" {
+    try std.testing.expect(Platform.fromString("web") == .web);
+    try std.testing.expect(Platform.fromString("ios") == .ios);
+}

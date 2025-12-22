@@ -1,10 +1,10 @@
-// Zylix Test Framework - iOS XCUITest Bridge Server
-// HTTP server that receives commands from Zig iOS driver
+// Zylix Test Framework - iOS/watchOS XCUITest Bridge Server
+// HTTP server that receives commands from Zig iOS/watchOS driver
 
 import Foundation
 import XCTest
 
-/// Zylix Test Server for iOS
+/// Zylix Test Server for iOS and watchOS
 /// Provides HTTP endpoints for Zig driver to control XCUITest
 public final class ZylixTestServer {
 
@@ -25,9 +25,15 @@ public final class ZylixTestServer {
         var elements: [String: XCUIElement] = [:]
         var elementCounter: Int = 0
 
-        init(id: String, bundleId: String) {
+        // watchOS-specific properties
+        let isWatchOS: Bool
+        let companionDeviceUDID: String?
+
+        init(id: String, bundleId: String, isWatchOS: Bool = false, companionDeviceUDID: String? = nil) {
             self.id = id
             self.app = XCUIApplication(bundleIdentifier: bundleId)
+            self.isWatchOS = isWatchOS
+            self.companionDeviceUDID = companionDeviceUDID
         }
 
         func storeElement(_ element: XCUIElement) -> String {
@@ -136,9 +142,19 @@ public final class ZylixTestServer {
             return CommandResult(error: "Missing bundleId in capabilities")
         }
 
+        // Check platform name for watchOS
+        let platformName = alwaysMatch["platformName"] as? String ?? "iOS"
+        let isWatchOS = platformName.lowercased() == "watchos"
+        let companionDeviceUDID = alwaysMatch["companionDeviceUDID"] as? String
+
         sessionCounter += 1
         let sessionId = "session-\(sessionCounter)"
-        let session = Session(id: sessionId, bundleId: bundleId)
+        let session = Session(
+            id: sessionId,
+            bundleId: bundleId,
+            isWatchOS: isWatchOS,
+            companionDeviceUDID: companionDeviceUDID
+        )
 
         // Launch the app
         session.app.launch()
@@ -318,6 +334,27 @@ public final class ZylixTestServer {
     // MARK: - WDA Commands
 
     private func handleWDACommand(session: Session, subpath: [String], body: [String: Any]?) -> CommandResult {
+        // Handle watchOS-specific commands first
+        if subpath.count >= 2 {
+            let category = subpath[0]
+
+            // Digital Crown commands (watchOS)
+            if category == "digitalCrown" {
+                return handleDigitalCrownCommand(session: session, action: subpath[1], body: body)
+            }
+
+            // Side Button commands (watchOS)
+            if category == "sideButton" {
+                return handleSideButtonCommand(session: session, action: subpath[1], body: body)
+            }
+
+            // Companion device info (watchOS)
+            if category == "companion" && subpath[1] == "info" {
+                return handleCompanionInfoCommand(session: session)
+            }
+        }
+
+        // Standard element-based WDA commands
         guard subpath.count >= 2, subpath[0] == "element" else {
             return CommandResult(error: "Invalid WDA command path")
         }
@@ -375,6 +412,102 @@ public final class ZylixTestServer {
         default:
             return CommandResult(error: "Unknown WDA action: \(action)")
         }
+    }
+
+    // MARK: - watchOS-specific Commands
+
+    /// Handle Digital Crown rotation (watchOS only)
+    private func handleDigitalCrownCommand(session: Session, action: String, body: [String: Any]?) -> CommandResult {
+        guard session.isWatchOS else {
+            return CommandResult(error: "Digital Crown is only available on watchOS")
+        }
+
+        switch action {
+        case "rotate":
+            guard let direction = body?["direction"] as? String else {
+                return CommandResult(error: "Missing direction for Digital Crown rotation")
+            }
+            let velocity = body?["velocity"] as? Double ?? 0.5
+
+            // XCUIDevice.shared has rotateDigitalCrown available on watchOS
+            #if os(watchOS)
+            let crownDirection: XCUIDevice.DigitalCrownDirection = direction == "up" ? .up : .down
+            XCUIDevice.shared.rotate(crownDirection, velocity: CGFloat(velocity))
+            #else
+            // On iOS simulator testing watchOS, we simulate via coordinate actions
+            // This is a simplified simulation
+            if direction == "up" {
+                session.app.swipeUp()
+            } else {
+                session.app.swipeDown()
+            }
+            #endif
+
+            return CommandResult(success: true)
+
+        default:
+            return CommandResult(error: "Unknown Digital Crown action: \(action)")
+        }
+    }
+
+    /// Handle Side Button press (watchOS only)
+    private func handleSideButtonCommand(session: Session, action: String, body: [String: Any]?) -> CommandResult {
+        guard session.isWatchOS else {
+            return CommandResult(error: "Side Button is only available on watchOS")
+        }
+
+        switch action {
+        case "press":
+            let duration = body?["duration"] as? Int ?? 0
+
+            #if os(watchOS)
+            if duration > 0 {
+                XCUIDevice.shared.press(.sideButton, forDuration: TimeInterval(duration) / 1000.0)
+            } else {
+                XCUIDevice.shared.press(.sideButton)
+            }
+            #else
+            // On iOS simulator, simulate by pressing home button equivalent
+            // watchOS side button usually triggers app switcher or Siri
+            XCUIDevice.shared.press(.home)
+            #endif
+
+            return CommandResult(success: true)
+
+        case "doublePress":
+            #if os(watchOS)
+            // Double-press side button (Apple Pay, etc.)
+            XCUIDevice.shared.press(.sideButton)
+            Thread.sleep(forTimeInterval: 0.15)
+            XCUIDevice.shared.press(.sideButton)
+            #else
+            // Simulate on iOS
+            XCUIDevice.shared.press(.home)
+            Thread.sleep(forTimeInterval: 0.15)
+            XCUIDevice.shared.press(.home)
+            #endif
+
+            return CommandResult(success: true)
+
+        default:
+            return CommandResult(error: "Unknown Side Button action: \(action)")
+        }
+    }
+
+    /// Get companion device info (watchOS paired iPhone)
+    private func handleCompanionInfoCommand(session: Session) -> CommandResult {
+        guard session.isWatchOS else {
+            return CommandResult(error: "Companion info is only available on watchOS")
+        }
+
+        guard let companionUDID = session.companionDeviceUDID else {
+            return CommandResult(value: AnyCodable(["paired": false]))
+        }
+
+        return CommandResult(value: AnyCodable([
+            "paired": true,
+            "companionDeviceUDID": companionUDID
+        ]))
     }
 }
 

@@ -1,0 +1,15 @@
+{
+  "name": "zylix-test-web-demo",
+  "version": "0.8.0",
+  "description": "Zylix Test Framework - Web E2E Demo",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "keywords": ["zylix", "testing", "e2e", "web"],
+  "license": "MIT"
+}

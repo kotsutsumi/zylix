@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-12-23
+
+### Added
+
+#### watchOS Support
+- **Core**: watchOS platform support in Zig driver
+- **Core**: SimulatorType extended with Apple Watch device types
+  - Apple Watch Series 9 (41mm, 45mm)
+  - Apple Watch Series 10 (42mm, 46mm)
+  - Apple Watch Ultra 2
+  - Apple Watch SE (40mm, 44mm)
+- **Core**: watchOS-specific configuration options
+  - `is_watchos` flag
+  - `watchos_version` setting
+  - `companion_device_udid` for paired iPhone
+- **Core**: watchOS-specific actions
+  - `rotateDigitalCrown()` - Digital Crown rotation
+  - `pressSideButton()` - Side button press
+  - `doublePresssSideButton()` - Double press for Apple Pay
+  - `getCompanionDeviceInfo()` - Companion device information
+
+#### Language Bindings
+- **TypeScript**: `@zylix/test` npm package (v0.8.0)
+  - Full platform support (Web, iOS, watchOS, Android, macOS)
+  - 10 selector types (testId, accessibilityId, XPath, CSS, etc.)
+  - Element actions (tap, type, swipe, longPress, etc.)
+  - Complete TypeScript type definitions
+  - ESM + CommonJS dual exports
+- **Python**: `zylix-test` PyPI package (v0.8.0)
+  - Full async/await support
+  - Full platform support (Web, iOS, watchOS, Android, macOS)
+  - 10 selector types
+  - Complete type annotations (mypy strict compatible)
+  - PEP 561 typed package
+
+#### CI/CD
+- **GitHub Actions**: Comprehensive CI workflow
+  - Core build (Ubuntu, macOS, Windows) with Zig 0.15.2
+  - iOS/watchOS build with Swift
+  - Android build with Kotlin/Gradle (JDK 17)
+  - Windows build with .NET 8.0
+  - Web tests with Node.js 20
+  - Documentation build with Hugo
+- **GitHub Actions**: Release workflow for automated releases
+
+#### E2E Testing
+- **Core**: E2E test framework (`core/src/test/e2e/`)
+  - Web E2E tests (ChromeDriver)
+  - iOS/watchOS E2E tests (WebDriverAgent)
+  - Android E2E tests (Appium/UIAutomator2)
+  - Desktop E2E tests (macOS/Windows/Linux)
+
+#### Sample Demos
+- **Samples**: Platform-specific test demos (`samples/test-demos/`)
+  - Web (Playwright)
+  - iOS (Swift/WebDriverAgent)
+  - watchOS (Swift/WDA + Digital Crown)
+  - Android (Kotlin/Appium)
+  - macOS (Swift/Accessibility Bridge)
+
+#### Documentation
+- **API Reference**: Comprehensive API documentation
+- **Platform Guides**: Setup guides for all platforms
+
 ## [0.7.0] - 2025-12-22
 
 ### Added
@@ -186,7 +250,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/kotsutsumi/zylix/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/kotsutsumi/zylix/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/kotsutsumi/zylix/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/kotsutsumi/zylix/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/kotsutsumi/zylix/compare/v0.5.0...v0.6.0

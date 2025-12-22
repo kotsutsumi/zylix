@@ -1,5 +1,5 @@
-// Zylix Test Framework - iOS Driver
-// XCUITest bridge for iOS platform E2E testing
+// Zylix Test Framework - iOS/watchOS Driver
+// XCUITest bridge for iOS and watchOS platform E2E testing
 
 const std = @import("std");
 const driver = @import("driver.zig");
@@ -15,8 +15,9 @@ const Rect = driver.Rect;
 const SwipeDirection = driver.SwipeDirection;
 const ScrollDirection = driver.ScrollDirection;
 const Screenshot = driver.Screenshot;
+const CrownRotationDirection = driver.CrownRotationDirection;
 
-/// iOS driver configuration
+/// iOS/watchOS driver configuration
 pub const IOSDriverConfig = struct {
     /// XCUITest server host
     host: []const u8 = "127.0.0.1",
@@ -35,14 +36,32 @@ pub const IOSDriverConfig = struct {
     /// Default element timeout (ms)
     element_timeout_ms: u32 = 10000,
 
+    // watchOS-specific configuration
+    /// Whether this is a watchOS target
+    is_watchos: bool = false,
+    /// watchOS version (for watchOS targets)
+    watchos_version: []const u8 = "11.0",
+    /// Companion iPhone device UDID (for paired testing)
+    companion_device_udid: ?[]const u8 = null,
+
     pub const SimulatorType = enum {
+        // iPhone devices
         iphone_15,
         iphone_15_pro,
         iphone_15_pro_max,
         iphone_se,
+        // iPad devices
         ipad_pro_11,
         ipad_pro_12_9,
         ipad_air,
+        // Apple Watch devices (watchOS)
+        apple_watch_series_9_41mm,
+        apple_watch_series_9_45mm,
+        apple_watch_series_10_42mm,
+        apple_watch_series_10_46mm,
+        apple_watch_ultra_2,
+        apple_watch_se_40mm,
+        apple_watch_se_44mm,
     };
 
     pub fn simulatorName(self: *const IOSDriverConfig) []const u8 {
@@ -54,7 +73,40 @@ pub const IOSDriverConfig = struct {
             .ipad_pro_11 => "iPad Pro 11-inch (4th generation)",
             .ipad_pro_12_9 => "iPad Pro 12.9-inch (6th generation)",
             .ipad_air => "iPad Air (5th generation)",
+            // watchOS devices
+            .apple_watch_series_9_41mm => "Apple Watch Series 9 (41mm)",
+            .apple_watch_series_9_45mm => "Apple Watch Series 9 (45mm)",
+            .apple_watch_series_10_42mm => "Apple Watch Series 10 (42mm)",
+            .apple_watch_series_10_46mm => "Apple Watch Series 10 (46mm)",
+            .apple_watch_ultra_2 => "Apple Watch Ultra 2",
+            .apple_watch_se_40mm => "Apple Watch SE (40mm) (2nd generation)",
+            .apple_watch_se_44mm => "Apple Watch SE (44mm) (2nd generation)",
         };
+    }
+
+    /// Check if this is a watchOS device type
+    pub fn isWatchOS(self: *const IOSDriverConfig) bool {
+        return switch (self.simulator_type) {
+            .apple_watch_series_9_41mm,
+            .apple_watch_series_9_45mm,
+            .apple_watch_series_10_42mm,
+            .apple_watch_series_10_46mm,
+            .apple_watch_ultra_2,
+            .apple_watch_se_40mm,
+            .apple_watch_se_44mm,
+            => true,
+            else => false,
+        };
+    }
+
+    /// Get platform version string (iOS or watchOS)
+    pub fn platformVersion(self: *const IOSDriverConfig) []const u8 {
+        return if (self.isWatchOS()) self.watchos_version else self.ios_version;
+    }
+
+    /// Get platform name
+    pub fn platformName(self: *const IOSDriverConfig) []const u8 {
+        return if (self.isWatchOS()) "watchOS" else "iOS";
     }
 };
 
@@ -144,12 +196,12 @@ pub const ios_driver_vtable = DriverVTable{
 fn iosLaunch(ctx: *anyopaque, config: AppConfig) DriverError!void {
     const self: *IOSDriverContext = @ptrCast(@alignCast(ctx));
 
-    // Build WebDriverAgent session request
+    // Build WebDriverAgent session request with iOS/watchOS platform support
     var json_buf: [4096]u8 = undefined;
     const json = std.fmt.bufPrint(&json_buf,
         \\{{"capabilities": {{
         \\  "alwaysMatch": {{
-        \\    "platformName": "iOS",
+        \\    "platformName": "{s}",
         \\    "platformVersion": "{s}",
         \\    "deviceName": "{s}",
         \\    "bundleId": "{s}",
@@ -157,7 +209,8 @@ fn iosLaunch(ctx: *anyopaque, config: AppConfig) DriverError!void {
         \\  }}
         \\}}}}
     , .{
-        self.config.ios_version,
+        self.config.platformName(),
+        self.config.platformVersion(),
         if (self.config.device_udid) |_| "Device" else self.config.simulatorName(),
         config.app_id,
     }) catch return DriverError.ConnectionFailed;
@@ -724,6 +777,87 @@ fn sendDeleteRequest(self: *IOSDriverContext, path: []const u8) ![]const u8 {
     return response;
 }
 
+// ============================================================================
+// watchOS-specific Actions
+// ============================================================================
+
+/// Rotate the Digital Crown (watchOS only)
+/// direction: .up or .down
+/// velocity: rotation velocity (0.0 to 1.0, default 0.5)
+pub fn rotateDigitalCrown(ctx: *IOSDriverContext, direction: CrownRotationDirection, velocity: f32) DriverError!void {
+    const sid = ctx.session_id orelse return DriverError.NotConnected;
+
+    // Check if this is a watchOS device
+    if (!ctx.config.isWatchOS()) {
+        return DriverError.PlatformNotSupported;
+    }
+
+    var json_buf: [256]u8 = undefined;
+    const dir_str = switch (direction) {
+        .up => "up",
+        .down => "down",
+    };
+    const json = std.fmt.bufPrint(&json_buf,
+        \\{{"direction": "{s}", "velocity": {d:.2}}}
+    , .{ dir_str, velocity }) catch return DriverError.ActionFailed;
+
+    var path_buf: [256]u8 = undefined;
+    const path = std.fmt.bufPrint(&path_buf, "/session/{s}/wda/digitalCrown/rotate", .{sid}) catch return DriverError.ActionFailed;
+
+    _ = ctx.sendRequest(path, json) catch return DriverError.ActionFailed;
+}
+
+/// Press the side button (watchOS only)
+/// duration_ms: how long to hold (0 for tap)
+pub fn pressSideButton(ctx: *IOSDriverContext, duration_ms: u32) DriverError!void {
+    const sid = ctx.session_id orelse return DriverError.NotConnected;
+
+    // Check if this is a watchOS device
+    if (!ctx.config.isWatchOS()) {
+        return DriverError.PlatformNotSupported;
+    }
+
+    var json_buf: [128]u8 = undefined;
+    const json = std.fmt.bufPrint(&json_buf,
+        \\{{"duration": {d}}}
+    , .{duration_ms}) catch return DriverError.ActionFailed;
+
+    var path_buf: [256]u8 = undefined;
+    const path = std.fmt.bufPrint(&path_buf, "/session/{s}/wda/sideButton/press", .{sid}) catch return DriverError.ActionFailed;
+
+    _ = ctx.sendRequest(path, json) catch return DriverError.ActionFailed;
+}
+
+/// Double-press the side button (Apple Pay, etc.) (watchOS only)
+pub fn doublePresssSideButton(ctx: *IOSDriverContext) DriverError!void {
+    const sid = ctx.session_id orelse return DriverError.NotConnected;
+
+    // Check if this is a watchOS device
+    if (!ctx.config.isWatchOS()) {
+        return DriverError.PlatformNotSupported;
+    }
+
+    var path_buf: [256]u8 = undefined;
+    const path = std.fmt.bufPrint(&path_buf, "/session/{s}/wda/sideButton/doublePress", .{sid}) catch return DriverError.ActionFailed;
+
+    _ = ctx.sendRequest(path, "{}") catch return DriverError.ActionFailed;
+}
+
+/// Get companion device info (for paired iPhone)
+pub fn getCompanionDeviceInfo(ctx: *IOSDriverContext) DriverError!?[]const u8 {
+    const sid = ctx.session_id orelse return DriverError.NotConnected;
+
+    if (ctx.config.companion_device_udid == null) {
+        return null;
+    }
+
+    var path_buf: [256]u8 = undefined;
+    const path = std.fmt.bufPrint(&path_buf, "/session/{s}/wda/companion/info", .{sid}) catch return DriverError.ActionFailed;
+
+    const response = ctx.sendGetRequest(path) catch return null;
+    return response;
+}
+
 // Tests
 test "ios driver config" {
     const config = IOSDriverConfig{};
@@ -775,4 +909,81 @@ test "parse number" {
     try std.testing.expectEqual(@as(f64, 100), parseNumber(response, "\"x\":").?);
     try std.testing.expectEqual(@as(f64, 200.5), parseNumber(response, "\"y\":").?);
     try std.testing.expect(parseNumber(response, "\"z\":") == null);
+}
+
+// ============================================================================
+// watchOS-specific Tests
+// ============================================================================
+
+test "watchos device type detection" {
+    var config = IOSDriverConfig{};
+
+    // iPhone should not be watchOS
+    config.simulator_type = .iphone_15;
+    try std.testing.expect(!config.isWatchOS());
+
+    // iPad should not be watchOS
+    config.simulator_type = .ipad_pro_11;
+    try std.testing.expect(!config.isWatchOS());
+
+    // Apple Watch should be watchOS
+    config.simulator_type = .apple_watch_series_9_45mm;
+    try std.testing.expect(config.isWatchOS());
+
+    config.simulator_type = .apple_watch_ultra_2;
+    try std.testing.expect(config.isWatchOS());
+
+    config.simulator_type = .apple_watch_se_40mm;
+    try std.testing.expect(config.isWatchOS());
+}
+
+test "watchos simulator names" {
+    var config = IOSDriverConfig{};
+
+    config.simulator_type = .apple_watch_series_9_41mm;
+    try std.testing.expectEqualStrings("Apple Watch Series 9 (41mm)", config.simulatorName());
+
+    config.simulator_type = .apple_watch_series_9_45mm;
+    try std.testing.expectEqualStrings("Apple Watch Series 9 (45mm)", config.simulatorName());
+
+    config.simulator_type = .apple_watch_series_10_42mm;
+    try std.testing.expectEqualStrings("Apple Watch Series 10 (42mm)", config.simulatorName());
+
+    config.simulator_type = .apple_watch_series_10_46mm;
+    try std.testing.expectEqualStrings("Apple Watch Series 10 (46mm)", config.simulatorName());
+
+    config.simulator_type = .apple_watch_ultra_2;
+    try std.testing.expectEqualStrings("Apple Watch Ultra 2", config.simulatorName());
+
+    config.simulator_type = .apple_watch_se_40mm;
+    try std.testing.expectEqualStrings("Apple Watch SE (40mm) (2nd generation)", config.simulatorName());
+
+    config.simulator_type = .apple_watch_se_44mm;
+    try std.testing.expectEqualStrings("Apple Watch SE (44mm) (2nd generation)", config.simulatorName());
+}
+
+test "watchos platform version" {
+    var config = IOSDriverConfig{};
+    config.ios_version = "17.0";
+    config.watchos_version = "11.0";
+
+    // iPhone should use iOS version
+    config.simulator_type = .iphone_15;
+    try std.testing.expectEqualStrings("17.0", config.platformVersion());
+    try std.testing.expectEqualStrings("iOS", config.platformName());
+
+    // Apple Watch should use watchOS version
+    config.simulator_type = .apple_watch_series_9_45mm;
+    try std.testing.expectEqualStrings("11.0", config.platformVersion());
+    try std.testing.expectEqualStrings("watchOS", config.platformName());
+}
+
+test "watchos companion device config" {
+    var config = IOSDriverConfig{};
+    config.simulator_type = .apple_watch_series_9_45mm;
+    config.companion_device_udid = "ABC123-iPhone-UDID";
+
+    try std.testing.expect(config.isWatchOS());
+    try std.testing.expect(config.companion_device_udid != null);
+    try std.testing.expectEqualStrings("ABC123-iPhone-UDID", config.companion_device_udid.?);
 }
