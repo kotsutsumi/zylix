@@ -41,6 +41,7 @@ pub const reporter = @import("reporter.zig");
 pub const parallel = @import("parallel.zig");
 pub const metrics = @import("metrics.zig");
 pub const retry = @import("retry.zig");
+pub const visual = @import("visual.zig");
 
 // Platform drivers
 pub const web_driver = @import("web_driver.zig");
@@ -153,6 +154,13 @@ pub const RetryStats = retry.RetryStats;
 pub const FlakyHandler = retry.FlakyHandler;
 pub const FlakyConfig = retry.FlakyConfig;
 
+// Visual testing types
+pub const VisualTestRunner = visual.VisualTestRunner;
+pub const VisualConfig = visual.VisualConfig;
+pub const VisualResult = visual.VisualResult;
+pub const CompareAlgorithm = visual.CompareAlgorithm;
+pub const BaselineManager = visual.BaselineManager;
+
 // Convenience functions
 pub const expect = assert.expect;
 pub const expectString = assert.expectString;
@@ -231,6 +239,7 @@ test "zylix_test module" {
     _ = parallel;
     _ = metrics;
     _ = retry;
+    _ = visual;
 }
 
 test "convenience functions" {
