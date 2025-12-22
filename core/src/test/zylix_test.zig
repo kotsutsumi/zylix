@@ -37,6 +37,7 @@ pub const app = @import("app.zig");
 pub const assert = @import("assert.zig");
 pub const screenshot = @import("screenshot.zig");
 pub const runner = @import("runner.zig");
+pub const reporter = @import("reporter.zig");
 
 // Platform drivers
 pub const web_driver = @import("web_driver.zig");
@@ -113,11 +114,16 @@ pub const LinuxDriver = linux_driver.LinuxDriver;
 
 pub const TestSuite = runner.TestSuite;
 pub const TestCase = runner.TestCase;
-pub const TestResult = runner.TestResult;
-pub const SuiteResult = runner.SuiteResult;
-pub const TestStatus = runner.TestStatus;
 pub const RunnerConfig = runner.RunnerConfig;
 pub const OutputFormat = runner.OutputFormat;
+
+// Reporter types
+pub const Reporter = reporter.Reporter;
+pub const ReporterConfig = reporter.ReporterConfig;
+pub const ReportFormat = reporter.ReportFormat;
+pub const ReportTestResult = reporter.TestResult;
+pub const ReportTestStatus = reporter.TestStatus;
+pub const SuiteSummary = reporter.SuiteSummary;
 
 // Convenience functions
 pub const expect = assert.expect;
@@ -193,6 +199,7 @@ test "zylix_test module" {
     _ = macos_driver;
     _ = windows_driver;
     _ = linux_driver;
+    _ = reporter;
 }
 
 test "convenience functions" {
