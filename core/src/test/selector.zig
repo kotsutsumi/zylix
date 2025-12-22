@@ -82,6 +82,20 @@ pub const Selector = struct {
     enabled: ?bool = null,
     visible: ?bool = null,
 
+    // Platform-specific selectors
+    /// XPath selector (Web, iOS, Android)
+    xpath: ?[]const u8 = null,
+    /// iOS class chain selector
+    class_chain: ?[]const u8 = null,
+    /// iOS predicate string selector
+    predicate: ?[]const u8 = null,
+    /// Android resource ID selector
+    resource_id: ?[]const u8 = null,
+    /// Android/Web class name selector
+    class_name: ?[]const u8 = null,
+    /// CSS selector (Web only)
+    css: ?[]const u8 = null,
+
     const Self = @This();
 
     /// Select by component type
@@ -185,7 +199,13 @@ pub const Selector = struct {
             self.text != null or
             self.text_contains != null or
             self.accessibility_id != null or
-            self.test_id != null;
+            self.test_id != null or
+            self.xpath != null or
+            self.class_chain != null or
+            self.predicate != null or
+            self.resource_id != null or
+            self.class_name != null or
+            self.css != null;
     }
 
     /// Convert selector to debug string
