@@ -42,6 +42,9 @@ pub const runner = @import("runner.zig");
 pub const web_driver = @import("web_driver.zig");
 pub const ios_driver = @import("ios_driver.zig");
 pub const android_driver = @import("android_driver.zig");
+pub const macos_driver = @import("macos_driver.zig");
+pub const windows_driver = @import("windows_driver.zig");
+pub const linux_driver = @import("linux_driver.zig");
 
 // Primary types
 pub const Selector = selector.Selector;
@@ -95,6 +98,18 @@ pub const createIOSDriver = ios_driver.createIOSDriver;
 pub const AndroidDriverConfig = android_driver.AndroidDriverConfig;
 pub const AndroidDriverContext = android_driver.AndroidDriverContext;
 pub const createAndroidDriver = android_driver.createAndroidDriver;
+
+// macOS driver types
+pub const MacOSDriverConfig = macos_driver.MacOSDriverConfig;
+pub const MacOSDriver = macos_driver.MacOSDriver;
+
+// Windows driver types
+pub const WindowsDriverConfig = windows_driver.WindowsDriverConfig;
+pub const WindowsDriver = windows_driver.WindowsDriver;
+
+// Linux driver types
+pub const LinuxDriverConfig = linux_driver.LinuxDriverConfig;
+pub const LinuxDriver = linux_driver.LinuxDriver;
 
 pub const TestSuite = runner.TestSuite;
 pub const TestCase = runner.TestCase;
@@ -157,9 +172,9 @@ pub fn visualTest(baseline_dir: []const u8, diff_dir: []const u8, allocator: std
 // Version info
 pub const version = struct {
     pub const major = 0;
-    pub const minor = 8;
+    pub const minor = 9;
     pub const patch = 0;
-    pub const string = "0.8.0";
+    pub const string = "0.9.0";
 };
 
 // Tests
@@ -175,6 +190,9 @@ test "zylix_test module" {
     _ = web_driver;
     _ = ios_driver;
     _ = android_driver;
+    _ = macos_driver;
+    _ = windows_driver;
+    _ = linux_driver;
 }
 
 test "convenience functions" {
@@ -189,7 +207,7 @@ test "convenience functions" {
 }
 
 test "version info" {
-    try std.testing.expectEqualStrings("0.8.0", version.string);
+    try std.testing.expectEqualStrings("0.9.0", version.string);
     try std.testing.expect(version.major == 0);
-    try std.testing.expect(version.minor == 8);
+    try std.testing.expect(version.minor == 9);
 }
