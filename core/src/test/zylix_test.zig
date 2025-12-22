@@ -42,6 +42,7 @@ pub const parallel = @import("parallel.zig");
 pub const metrics = @import("metrics.zig");
 pub const retry = @import("retry.zig");
 pub const visual = @import("visual.zig");
+pub const device = @import("device.zig");
 
 // Platform drivers
 pub const web_driver = @import("web_driver.zig");
@@ -161,6 +162,18 @@ pub const VisualResult = visual.VisualResult;
 pub const CompareAlgorithm = visual.CompareAlgorithm;
 pub const BaselineManager = visual.BaselineManager;
 
+// Device management types
+pub const DeviceRegistry = device.DeviceRegistry;
+pub const DevicePool = device.DevicePool;
+pub const DeviceInfo = device.DeviceInfo;
+pub const DeviceStatus = device.DeviceStatus;
+pub const DeviceCapability = device.DeviceCapability;
+pub const DeviceFilter = device.DeviceFilter;
+pub const HealthMonitor = device.HealthMonitor;
+pub const DeviceFarm = device.DeviceFarm;
+pub const PoolStats = device.PoolStats;
+pub const HealthSummary = device.HealthSummary;
+
 // Convenience functions
 pub const expect = assert.expect;
 pub const expectString = assert.expectString;
@@ -240,6 +253,7 @@ test "zylix_test module" {
     _ = metrics;
     _ = retry;
     _ = visual;
+    _ = device;
 }
 
 test "convenience functions" {
