@@ -1,7 +1,7 @@
 # Zylix ロードマップ
 
-> **最終更新**: 2025-12-22
-> **現在のバージョン**: v0.7.0
+> **最終更新**: 2025-12-23
+> **現在のバージョン**: v0.8.1
 
 ---
 
@@ -20,10 +20,11 @@
 | v0.6.2 | - | プラットフォームセキュリティ & 並行処理修正 | ✅ 完了 | 2025-12-21 |
 | v0.6.3 | - | npm パッケージ同期 | ✅ 完了 | 2025-12-21 |
 | v0.7.0 | Phase 6 | コンポーネントライブラリの拡充 | ✅ 完了 | 2025-12-22 |
-| v0.8.0 | Phase 11 | テスト・品質 & 組み込みAI | ⏳ 計画中 | 2026年Q1 |
-| v0.9.0 | Phase 12 | デバイス機能 & ジェスチャー | ⏳ 計画中 | 2026年Q2 |
-| v0.10.0 | Phase 13 | パフォーマンス & 最適化 | ⏳ 計画中 | 2026年Q3 |
-| v0.11.0 | Phase 14 | ドキュメント充実 | ⏳ 計画中 | 2026年Q4 |
+| v0.8.1 | Phase 11a | watchOS対応, 言語バインディング, CI/CD, E2Eテスト | ✅ 完了 | 2025-12-23 |
+| v0.9.0 | Phase 11b | 組み込みAI (Zylix AI) | ⏳ 計画中 | 2026年Q1 |
+| v0.10.0 | Phase 12 | デバイス機能 & ジェスチャー | ⏳ 計画中 | 2026年Q2 |
+| v0.11.0 | Phase 13 | パフォーマンス & 最適化 | ⏳ 計画中 | 2026年Q3 |
+| v0.12.0 | Phase 14 | ドキュメント充実 | ⏳ 計画中 | 2026年Q4 |
 | v1.0.0 | リリース | 安定版リリース | ⏳ 計画中 | 2027年Q1 |
 
 ---
@@ -410,43 +411,98 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 11: テスト & 品質インフラ (v0.8.0)
+## Phase 11a: テスト基盤 & 言語バインディング (v0.8.1) ✅ 完了
 
 ### 概要
 
-全プラットフォームでの信頼性を確保するための包括的なテストインフラと品質保証ツールを構築します。
+クロスプラットフォームE2Eテストフレームワーク、watchOS対応、TypeScript/Python言語バインディングを実装しました。
 
-### 計画機能
+### 実装完了
 
-#### 11.1 テストフレームワーク
-- Zigコア用ユニットテストフレームワーク
-- プラットフォームバインディング用統合テスト
-- Playwright によるWeb E2Eテスト
-- ビジュアルリグレッションテスト
+#### 11a.1 watchOS サポート
+- ✅ Apple Watch デバイスタイプ (Series 9/10, Ultra 2, SE)
+- ✅ Digital Crown 回転操作
+- ✅ サイドボタン (シングル/ダブルプレス)
+- ✅ コンパニオンデバイス (ペアリング情報取得)
+- ✅ watchOS シミュレータ対応
 
-#### 11.2 CI/CD強化
-- 全プラットフォームでの自動テスト
-- コードカバレッジレポート
-- パフォーマンスベンチマーク
-- リリース自動化
+#### 11a.2 言語バインディング
+- ✅ **TypeScript**: `@zylix/test` npm パッケージ
+  - 全プラットフォームドライバー (Web, iOS, watchOS, Android, macOS)
+  - 10種類のセレクター
+  - 完全な型定義
+  - ESM + CommonJS デュアルエクスポート
+- ✅ **Python**: `zylix-test` PyPI パッケージ
+  - async/await 対応
+  - 全プラットフォームドライバー
+  - mypy strict 対応型アノテーション
+  - PEP 561 型付きパッケージ
 
-#### 11.3 品質ツール
-- 静的解析の統合
-- メモリリーク検出
-- APIドキュメント生成
-- Changelog自動化
+#### 11a.3 CI/CD
+- ✅ GitHub Actions ワークフロー
+  - Core ビルド (Ubuntu, macOS, Windows)
+  - iOS/watchOS ビルド (Swift)
+  - Android ビルド (Kotlin/Gradle)
+  - Windows ビルド (.NET 8.0)
+  - Web テスト (Node.js 20)
+  - ドキュメントビルド (Hugo)
+- ✅ リリースワークフロー
+
+#### 11a.4 E2E テスト
+- ✅ E2E テストフレームワーク (`core/src/test/e2e/`)
+- ✅ プラットフォーム別サンプルデモ (`samples/test-demos/`)
 
 ### 成功基準
 
-- [ ] コアライブラリのコードカバレッジ80%以上
-- [ ] 全6プラットフォームでの自動テスト
-- [ ] UIコンポーネントのビジュアルリグレッションテスト
-- [ ] 履歴追跡付きパフォーマンスベンチマーク
-- [ ] 自動リリースパイプライン
+- [x] watchOS Digital Crown/サイドボタン対応
+- [x] TypeScript/Python 言語バインディング
+- [x] 全6プラットフォームでの CI/CD
+- [x] E2E テストフレームワーク
+- [x] プラットフォーム別サンプルデモ
 
 ---
 
-## Phase 12: パフォーマンス & 本番対応 (v0.9.0)
+## Phase 11b: 組み込みAI - Zylix AI (v0.9.0)
+
+### 概要
+
+オンデバイスLLM/VLM推論を実現する組み込みAI機能を実装します。プライバシー保護とオフライン動作を重視します。
+
+### 計画機能
+
+#### 11b.1 埋め込みモデル
+- Qwen3-Embedding-0.6B 統合
+- Sentence Transformers サポート
+- セマンティック検索
+
+#### 11b.2 言語モデル
+- Qwen3 シリーズ (0.6B-4B)
+- Phi-3/Phi-4 mini モデル
+- Gemma 2B/7B
+- Llama 3.2 (1B/3B)
+
+#### 11b.3 ビジョン言語モデル (VLM)
+- Qwen2-VL
+- LLaVA
+- PaliGemma
+
+#### 11b.4 プラットフォームバックエンド
+- iOS: Core ML, Metal, Apple Intelligence API
+- Android: ML Kit, NNAPI, TensorFlow Lite
+- Web/WASM: WebGPU, ONNX.js, WebNN
+- Desktop: GGML/llama.cpp, ONNX Runtime
+
+### 成功基準
+
+- [ ] オンデバイス推論 (iOS/Android/Desktop)
+- [ ] セマンティック検索機能
+- [ ] テキスト生成/補完
+- [ ] 画像理解 (VLM)
+- [ ] 音声文字起こし (Whisper)
+
+---
+
+## Phase 12: デバイス機能 & ジェスチャー (v0.10.0)
 
 ### 概要
 
@@ -519,51 +575,40 @@ zylix dev --all --port 3000
 - スレッドセーフティの改善
 - メモリリーク防止
 
-### 計画中のバージョン
-
-#### v0.7.0 - コンポーネントライブラリの拡充
-- 30種類以上のコンポーネント
+#### v0.7.0 - コンポーネントライブラリの拡充 (2025-12-22) ✅ 完了
+- 40種類以上のコンポーネント
 - フォーム、レイアウト、ナビゲーション、フィードバックコンポーネント
 - プラットフォームネイティブ実装
 - アクセシビリティサポート（ARIA、VoiceOver、TalkBack）
 - ビジュアルリグレッションテスト
 
-#### v0.8.0 - テスト・品質基盤 & 組み込みAI（Zylix Test + Zylix AI）
-- **Zylix Test フレームワーク**: 統一されたクロスプラットフォームE2Eテスト
-  - Web/WASM: Playwright統合
-  - iOS: XCTest + Zylix Testラッパー
-  - Android: Espresso + Zylix Testラッパー
-  - 全プラットフォーム共通のテストDSL
-- **CodeRabbit CLI統合**: 自動コードレビュー
-- **品質ゲート**: CI/CDパイプライン強化
-- 包括的なテストカバレッジ (>80%)
-- **組み込みLLM/VLMサポート（Zylix AI）**:
-  - ローカルLLM統合（オンデバイス推論）
-  - **埋め込みモデル**:
-    - Qwen3-Embedding-0.6B統合
-    - Sentence Transformersサポート
-  - **言語モデル**:
-    - Qwen3シリーズ（0.6B-4B）
-    - Phi-3/Phi-4 miniモデル
-    - Gemma 2B/7B
-    - Llama 3.2（1B/3B）
-  - **ビジョン言語モデル（VLM）**:
-    - Qwen2-VL
-    - LLaVA
-    - PaliGemma
-  - **プラットフォーム固有バックエンド**:
-    - iOS: Core ML、Metal、Create ML、Apple Intelligence API
-    - Android: ML Kit、NNAPI、TensorFlow Lite、GPUデリゲート
-    - Web/WASM: WebGPU、ONNX.js、WebNN
-    - デスクトップ: GGML/llama.cpp、ONNX Runtime
-  - **ユースケース**:
-    - オンデバイスセマンティック検索
-    - テキスト生成/補完
-    - 画像理解
-    - 音声文字起こし（Whisper）
-    - プライバシー保護AI機能
+#### v0.8.1 - テスト基盤 & 言語バインディング (2025-12-23) ✅ 完了
+- **watchOS サポート**:
+  - Digital Crown 回転
+  - サイドボタン操作
+  - コンパニオンデバイス連携
+- **言語バインディング**:
+  - TypeScript: `@zylix/test` npm パッケージ
+  - Python: `zylix-test` PyPI パッケージ
+- **CI/CD**: GitHub Actions ワークフロー
+- **E2E テスト**: クロスプラットフォームテストフレームワーク
+- **サンプルデモ**: プラットフォーム別テストデモ
 
-#### v0.9.0 - デバイス機能 & ジェスチャー
+### 計画中のバージョン
+
+#### v0.9.0 - 組み込みAI (Zylix AI)
+- **組み込みLLM/VLMサポート**:
+  - ローカルLLM統合（オンデバイス推論）
+  - **埋め込みモデル**: Qwen3-Embedding-0.6B
+  - **言語モデル**: Qwen3, Phi-3/4, Gemma, Llama 3.2
+  - **VLM**: Qwen2-VL, LLaVA, PaliGemma
+  - **プラットフォームバックエンド**:
+    - iOS: Core ML, Metal, Apple Intelligence API
+    - Android: ML Kit, NNAPI, TensorFlow Lite
+    - Web/WASM: WebGPU, ONNX.js, WebNN
+    - Desktop: GGML/llama.cpp, ONNX Runtime
+
+#### v0.10.0 - デバイス機能 & ジェスチャー
 - **デバイス機能**:
   - GPS/位置情報サービス
   - オーディオ/サウンド制御
@@ -586,13 +631,13 @@ zylix dev --all --port 3000
   - スワイプジェスチャー
   - マルチタッチサポート
 
-#### v0.10.0 - パフォーマンス & 最適化
+#### v0.11.0 - パフォーマンス & 最適化
 - パフォーマンスプロファイリングと最適化
 - バンドルサイズ削減
 - メモリ使用量の最適化
 - 遅延読み込みとコード分割
 
-#### v0.11.0 - ドキュメント充実
+#### v0.12.0 - ドキュメント充実
 - 完全なAPIドキュメント
 - 包括的なチュートリアル
 - 実用的なサンプルアプリケーション
