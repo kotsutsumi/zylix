@@ -38,6 +38,9 @@ pub const assert = @import("assert.zig");
 pub const screenshot = @import("screenshot.zig");
 pub const runner = @import("runner.zig");
 
+// Platform drivers
+pub const web_driver = @import("web_driver.zig");
+
 // Primary types
 pub const Selector = selector.Selector;
 pub const SelectorBuilder = selector.SelectorBuilder;
@@ -74,6 +77,12 @@ pub const CompareConfig = screenshot.CompareConfig;
 pub const VisualTest = screenshot.VisualTest;
 
 pub const TestRunner = runner.TestRunner;
+
+// Web driver types
+pub const WebDriverConfig = web_driver.WebDriverConfig;
+pub const WebDriverContext = web_driver.WebDriverContext;
+pub const BrowserType = web_driver.BrowserType;
+pub const createWebDriver = web_driver.createWebDriver;
 pub const TestSuite = runner.TestSuite;
 pub const TestCase = runner.TestCase;
 pub const TestResult = runner.TestResult;

@@ -29,11 +29,10 @@ platforms/ios/DerivedData/
 
 # Android
 platforms/android/.gradle/
-platforms/android/build/
-platforms/android/app/build/
-platforms/android/app/.cxx/
+platforms/android/**/build/
+platforms/android/**/.cxx/
 platforms/android/local.properties
-platforms/android/*.iml
+platforms/android/**/*.iml
 
 # Test
 coverage/
