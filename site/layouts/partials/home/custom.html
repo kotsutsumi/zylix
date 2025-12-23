@@ -365,59 +365,86 @@
   display: block;
 }
 
-/* Comparison Table */
-/* Make table section full width */
-.zylix-table-section {
-  max-width: 100% !important;
+/* Framework Comparison Cards */
+.zylix-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
 }
-.zylix-table-wrapper {
-  overflow-x: auto;
-  border-radius: 1rem;
+@media (min-width: 640px) {
+  .zylix-compare-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .zylix-compare-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.zylix-compare-card {
+  background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.1);
-  margin: 3rem -40px 0;
-  width: calc(100% + 80px);
-  max-width: none !important;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.zylix-table {
-  display: table !important;
-  width: 100% !important;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-  table-layout: fixed !important;
+.zylix-compare-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
-.zylix-table th,
-.zylix-table td {
-  width: 20% !important;
-  white-space: normal !important;
-  box-sizing: border-box;
+.zylix-compare-featured {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15));
+  border-color: rgba(59, 130, 246, 0.3);
 }
-.zylix-table th:first-child,
-.zylix-table td:first-child {
-  width: 20% !important;
+.zylix-compare-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
-.zylix-table th {
-  padding: 1rem 1.25rem;
-  text-align: center;
+.zylix-compare-icon {
+  font-size: 1.5rem;
+}
+.zylix-compare-name {
+  font-size: 1.25rem;
   font-weight: 700;
-  background: rgba(0,0,0,0.3);
-  white-space: normal !important;
 }
-.zylix-table th:first-child {
-  text-align: left;
+.zylix-compare-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border-radius: 9999px;
 }
-.zylix-table td {
-  padding: 1rem 1.25rem;
-  text-align: center;
-  border-top: 1px solid rgba(255,255,255,0.08);
+.zylix-compare-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
-.zylix-table td:first-child {
-  text-align: left;
-  font-weight: 500;
+.zylix-compare-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.zylix-table .highlight { color: #22c55e; font-weight: 600; }
-.zylix-table .zylix-col { color: #60a5fa; font-weight: 700; }
-.zylix-table .warn { color: #fbbf24; }
-.zylix-table .bad { color: #f87171; }
+.zylix-compare-stat:last-child {
+  border-bottom: none;
+}
+.zylix-compare-value {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.zylix-compare-label {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+}
+.zylix-compare-value.highlight { color: #22c55e; }
+.zylix-compare-value.warn { color: #fbbf24; }
+.zylix-compare-value.bad { color: #f87171; }
 
 /* Platform Grid */
 .zylix-platform {
@@ -549,23 +576,31 @@
   color: #4b5563;  /* gray-600 - readable on light pink background */
 }
 
-/* Light mode table styling */
-:root:not(.dark) .zylix-table .zylix-col {
-  color: #2563eb;  /* blue-600 - darker blue for better visibility */
+/* Light mode comparison cards */
+:root:not(.dark) .zylix-compare-card {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.1);
 }
 
-:root:not(.dark) .zylix-table th {
-  background: rgba(0,0,0,0.08);  /* lighter background for light mode */
+:root:not(.dark) .zylix-compare-featured {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.08));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+:root:not(.dark) .zylix-compare-name {
   color: #1f2937;  /* gray-800 */
 }
 
-:root:not(.dark) .zylix-table td {
+:root:not(.dark) .zylix-compare-value {
   color: #374151;  /* gray-700 */
-  border-top-color: rgba(0,0,0,0.1);
 }
 
-:root:not(.dark) .zylix-table-wrapper {
-  border-color: rgba(0,0,0,0.15);
+:root:not(.dark) .zylix-compare-label {
+  color: #6b7280;  /* gray-500 */
+}
+
+:root:not(.dark) .zylix-compare-stat {
+  border-bottom-color: rgba(0,0,0,0.05);
 }
 
 /* Light mode cards */
@@ -826,61 +861,133 @@
   </div>
 </section>
 
-{{/* Comparison Table */}}
+{{/* Framework Comparison Cards */}}
 <section class="zylix-section">
   <div class="zylix-section-alt">
-    <div class="zylix-section-inner zylix-table-section">
+    <div class="zylix-section-inner">
       <h2 class="zylix-section-title">{{ i18n "comparison_title" | default "How It Compares" }}</h2>
 
-      <div class="zylix-table-wrapper">
-        <table class="zylix-table">
-          <thead>
-            <tr>
-              <th>{{ i18n "table_feature" | default "Feature" }}</th>
-              <th class="zylix-col">Zylix</th>
-              <th>React Native</th>
-              <th>Flutter</th>
-              <th>Electron</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{{ i18n "table_bundle" | default "Bundle Size" }}</td>
-              <td class="highlight">~50KB</td>
-              <td>~1MB+</td>
-              <td>~5MB+</td>
-              <td class="bad">~150MB+</td>
-            </tr>
-            <tr>
-              <td>{{ i18n "table_gc" | default "GC Pauses" }}</td>
-              <td class="highlight">{{ i18n "none" | default "None" }}</td>
-              <td>{{ i18n "yes" | default "Yes" }}</td>
-              <td>{{ i18n "yes" | default "Yes" }}</td>
-              <td>{{ i18n "yes" | default "Yes" }}</td>
-            </tr>
-            <tr>
-              <td>{{ i18n "table_native" | default "Native UI" }}</td>
-              <td class="highlight">{{ i18n "yes" | default "Yes" }}</td>
-              <td class="warn">{{ i18n "partial" | default "Partial" }}</td>
-              <td class="bad">{{ i18n "no" | default "No" }}</td>
-              <td class="bad">{{ i18n "no" | default "No" }}</td>
-            </tr>
-            <tr>
-              <td>{{ i18n "table_language" | default "Language" }}</td>
-              <td class="zylix-col">Zig</td>
-              <td>JavaScript</td>
-              <td>Dart</td>
-              <td>JavaScript</td>
-            </tr>
-            <tr>
-              <td>{{ i18n "table_platforms" | default "Platforms" }}</td>
-              <td class="highlight">7</td>
-              <td>2</td>
-              <td>6</td>
-              <td>3</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="zylix-compare-grid">
+        {{/* Zylix - Featured */}}
+        <div class="zylix-compare-card zylix-compare-featured">
+          <div class="zylix-compare-header">
+            <span class="zylix-compare-icon">⚡</span>
+            <span class="zylix-compare-name">Zylix</span>
+            <span class="zylix-compare-badge">{{ i18n "recommended" | default "Recommended" }}</span>
+          </div>
+          <div class="zylix-compare-stats">
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value highlight">~50KB</span>
+              <span class="zylix-compare-label">{{ i18n "table_bundle" | default "Bundle Size" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value highlight">{{ i18n "none" | default "None" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_gc" | default "GC Pauses" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value highlight">{{ i18n "yes" | default "Yes" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_native" | default "Native UI" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">Zig</span>
+              <span class="zylix-compare-label">{{ i18n "table_language" | default "Language" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value highlight">7</span>
+              <span class="zylix-compare-label">{{ i18n "table_platforms" | default "Platforms" }}</span>
+            </div>
+          </div>
+        </div>
+
+        {{/* React Native */}}
+        <div class="zylix-compare-card">
+          <div class="zylix-compare-header">
+            <span class="zylix-compare-icon">⚛️</span>
+            <span class="zylix-compare-name">React Native</span>
+          </div>
+          <div class="zylix-compare-stats">
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">~1MB+</span>
+              <span class="zylix-compare-label">{{ i18n "table_bundle" | default "Bundle Size" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value warn">{{ i18n "yes" | default "Yes" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_gc" | default "GC Pauses" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value warn">{{ i18n "partial" | default "Partial" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_native" | default "Native UI" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">JavaScript</span>
+              <span class="zylix-compare-label">{{ i18n "table_language" | default "Language" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">2</span>
+              <span class="zylix-compare-label">{{ i18n "table_platforms" | default "Platforms" }}</span>
+            </div>
+          </div>
+        </div>
+
+        {{/* Flutter */}}
+        <div class="zylix-compare-card">
+          <div class="zylix-compare-header">
+            <span class="zylix-compare-icon">🐦</span>
+            <span class="zylix-compare-name">Flutter</span>
+          </div>
+          <div class="zylix-compare-stats">
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">~5MB+</span>
+              <span class="zylix-compare-label">{{ i18n "table_bundle" | default "Bundle Size" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value warn">{{ i18n "yes" | default "Yes" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_gc" | default "GC Pauses" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value bad">{{ i18n "no" | default "No" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_native" | default "Native UI" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">Dart</span>
+              <span class="zylix-compare-label">{{ i18n "table_language" | default "Language" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">6</span>
+              <span class="zylix-compare-label">{{ i18n "table_platforms" | default "Platforms" }}</span>
+            </div>
+          </div>
+        </div>
+
+        {{/* Electron */}}
+        <div class="zylix-compare-card">
+          <div class="zylix-compare-header">
+            <span class="zylix-compare-icon">💻</span>
+            <span class="zylix-compare-name">Electron</span>
+          </div>
+          <div class="zylix-compare-stats">
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value bad">~150MB+</span>
+              <span class="zylix-compare-label">{{ i18n "table_bundle" | default "Bundle Size" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value warn">{{ i18n "yes" | default "Yes" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_gc" | default "GC Pauses" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value bad">{{ i18n "no" | default "No" }}</span>
+              <span class="zylix-compare-label">{{ i18n "table_native" | default "Native UI" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">JavaScript</span>
+              <span class="zylix-compare-label">{{ i18n "table_language" | default "Language" }}</span>
+            </div>
+            <div class="zylix-compare-stat">
+              <span class="zylix-compare-value">3</span>
+              <span class="zylix-compare-label">{{ i18n "table_platforms" | default "Platforms" }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
