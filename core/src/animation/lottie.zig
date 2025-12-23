@@ -135,15 +135,17 @@ pub const PathVertex = struct {
 pub const BezierPath = struct {
     vertices: std.ArrayList(PathVertex),
     closed: bool = false,
+    allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator) BezierPath {
         return BezierPath{
-            .vertices = std.ArrayList(PathVertex).init(allocator),
+            .vertices = .{},
+            .allocator = allocator,
         };
     }
 
     pub fn deinit(self: *BezierPath) void {
-        self.vertices.deinit();
+        self.vertices.deinit(self.allocator);
     }
 };
 
@@ -198,17 +200,19 @@ pub fn AnimatedValue(comptime T: type) type {
         keyframes: std.ArrayList(Keyframe),
         is_animated: bool,
         static_value: T,
+        allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator, initial_value: T) Self {
             return Self{
-                .keyframes = std.ArrayList(Keyframe).init(allocator),
+                .keyframes = .{},
                 .is_animated = false,
                 .static_value = initial_value,
+                .allocator = allocator,
             };
         }
 
         pub fn deinit(self: *Self) void {
-            self.keyframes.deinit();
+            self.keyframes.deinit(self.allocator);
         }
 
         /// Get value at specific frame
@@ -330,8 +334,8 @@ pub const Layer = struct {
             .scale = AnimatedValue(Point2D).init(allocator, Point2D{ .x = 100, .y = 100 }),
             .rotation = AnimatedValue(f32).init(allocator, 0),
             .opacity = AnimatedValue(f32).init(allocator, 100),
-            .shapes = std.ArrayList(ShapeElement).init(allocator),
-            .masks = std.ArrayList(BezierPath).init(allocator),
+            .shapes = .{},
+            .masks = .{},
             .allocator = allocator,
         };
     }
@@ -342,11 +346,11 @@ pub const Layer = struct {
         self.scale.deinit();
         self.rotation.deinit();
         self.opacity.deinit();
-        self.shapes.deinit();
+        self.shapes.deinit(self.allocator);
         for (self.masks.items) |*mask| {
             mask.deinit();
         }
-        self.masks.deinit();
+        self.masks.deinit(self.allocator);
     }
 
     /// Check if layer is visible at given frame
@@ -421,10 +425,10 @@ pub const Animation = struct {
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
-            .layers = std.ArrayList(Layer).init(allocator),
-            .markers = std.ArrayList(LottieMarker).init(allocator),
+            .layers = .{},
+            .markers = .{},
             .assets = std.StringHashMap([]const u8).init(allocator),
-            .callbacks = std.ArrayList(*const fn (AnimationEvent) void).init(allocator),
+            .callbacks = .{},
             .allocator = allocator,
         };
     }
@@ -441,7 +445,7 @@ pub const Animation = struct {
         for (self.layers.items) |*layer| {
             layer.deinit();
         }
-        self.layers.deinit();
+        self.layers.deinit(self.allocator);
 
         // Free marker names
         for (self.markers.items) |marker| {
@@ -449,10 +453,10 @@ pub const Animation = struct {
                 self.allocator.free(marker.name);
             }
         }
-        self.markers.deinit();
+        self.markers.deinit(self.allocator);
 
         self.assets.deinit();
-        self.callbacks.deinit();
+        self.callbacks.deinit(self.allocator);
     }
 
     /// Load animation from JSON string
@@ -546,7 +550,7 @@ pub const Animation = struct {
                                 else => 0,
                             };
                         }
-                        animation.markers.append(marker) catch {};
+                        animation.markers.append(allocator, marker) catch {};
                     }
                 }
             }
@@ -737,7 +741,7 @@ pub const Animation = struct {
 
     /// Register event callback
     pub fn onEvent(self: *Self, callback: *const fn (AnimationEvent) void) void {
-        self.callbacks.append(callback) catch {};
+        self.callbacks.append(self.allocator, callback) catch {};
     }
 
     fn emitEvent(self: *Self, event_type: AnimationEventType) void {

@@ -202,16 +202,18 @@ pub const MotionCurve = struct {
     segments: std.ArrayList(MotionSegment),
     fade_in_time: f32 = 0,
     fade_out_time: f32 = 0,
+    allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator, target_id: []const u8) MotionCurve {
         return MotionCurve{
             .target_id = target_id,
-            .segments = std.ArrayList(MotionSegment).init(allocator),
+            .segments = .{},
+            .allocator = allocator,
         };
     }
 
     pub fn deinit(self: *MotionCurve) void {
-        self.segments.deinit();
+        self.segments.deinit(self.allocator);
     }
 
     /// Get value at time with interpolation
@@ -286,7 +288,7 @@ pub const Motion = struct {
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
-            .curves = std.ArrayList(MotionCurve).init(allocator),
+            .curves = .{},
             .allocator = allocator,
         };
     }
@@ -295,7 +297,7 @@ pub const Motion = struct {
         for (self.curves.items) |*curve| {
             curve.deinit();
         }
-        self.curves.deinit();
+        self.curves.deinit(self.allocator);
     }
 
     /// Start playing the motion
@@ -437,42 +439,43 @@ pub const PhysicsPendulum = struct {
     gravity: f32 = 1.0,
 };
 
+/// Physics setting entry
+pub const PhysicsSetting = struct {
+    id: []const u8,
+    inputs: std.ArrayList(PhysicsParameter),
+    outputs: std.ArrayList(PhysicsParameter),
+    pendulum: PhysicsPendulum,
+    // Simulation state
+    position: Point2D,
+    velocity: Point2D,
+    allocator: std.mem.Allocator,
+
+    pub fn deinit(self: *PhysicsSetting) void {
+        self.inputs.deinit(self.allocator);
+        self.outputs.deinit(self.allocator);
+    }
+};
+
 /// Physics rig for simulation
 pub const PhysicsRig = struct {
     const Self = @This();
 
-    settings: std.ArrayList(struct {
-        id: []const u8,
-        inputs: std.ArrayList(PhysicsParameter),
-        outputs: std.ArrayList(PhysicsParameter),
-        pendulum: PhysicsPendulum,
-        // Simulation state
-        position: Point2D,
-        velocity: Point2D,
-    }),
+    settings: std.ArrayList(PhysicsSetting),
 
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
-            .settings = std.ArrayList(struct {
-                id: []const u8,
-                inputs: std.ArrayList(PhysicsParameter),
-                outputs: std.ArrayList(PhysicsParameter),
-                pendulum: PhysicsPendulum,
-                position: Point2D,
-                velocity: Point2D,
-            }).init(allocator),
+            .settings = .{},
             .allocator = allocator,
         };
     }
 
     pub fn deinit(self: *Self) void {
         for (self.settings.items) |*setting| {
-            setting.inputs.deinit();
-            setting.outputs.deinit();
+            setting.deinit();
         }
-        self.settings.deinit();
+        self.settings.deinit(self.allocator);
     }
 
     /// Update physics simulation
@@ -673,21 +676,21 @@ pub const Model = struct {
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
             .parameters = std.StringHashMap(Parameter).init(allocator),
-            .parts = std.ArrayList(Part).init(allocator),
-            .drawables = std.ArrayList(Drawable).init(allocator),
-            .textures = std.ArrayList([]const u8).init(allocator),
+            .parts = .{},
+            .drawables = .{},
+            .textures = .{},
             .motions = std.StringHashMap(Motion).init(allocator),
             .expressions = std.StringHashMap(Expression).init(allocator),
-            .callbacks = std.ArrayList(*const fn (AnimationEvent) void).init(allocator),
+            .callbacks = .{},
             .allocator = allocator,
         };
     }
 
     pub fn deinit(self: *Self) void {
         self.parameters.deinit();
-        self.parts.deinit();
-        self.drawables.deinit();
-        self.textures.deinit();
+        self.parts.deinit(self.allocator);
+        self.drawables.deinit(self.allocator);
+        self.textures.deinit(self.allocator);
 
         var motion_it = self.motions.iterator();
         while (motion_it.next()) |entry| {
@@ -707,7 +710,7 @@ pub const Model = struct {
             physics.deinit();
         }
 
-        self.callbacks.deinit();
+        self.callbacks.deinit(self.allocator);
     }
 
     // === Parameter Control ===
@@ -894,7 +897,7 @@ pub const Model = struct {
 
     /// Register event callback
     pub fn onEvent(self: *Self, callback: *const fn (AnimationEvent) void) !void {
-        try self.callbacks.append(callback);
+        try self.callbacks.append(self.allocator, callback);
     }
 
     /// Remove all event callbacks
