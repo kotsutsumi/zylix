@@ -15,6 +15,7 @@
 		B1C2D3E4F5A60001 /* TodoViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60002 /* TodoViewModelTests.swift */; };
 		C1D2E3F4A5B60001 /* ZylixDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60002 /* ZylixDevice.swift */; };
 		D1E2F3A4B5C60001 /* DeviceTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A4B5C60002 /* DeviceTestView.swift */; };
+		E1F2A3B4C5D60001 /* ZylixGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A3B4C5D60002 /* ZylixGesture.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,6 +40,7 @@
 		C1D2E3F4A5B60002 /* ZylixDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixDevice.swift; sourceTree = "<group>"; };
 		C2DBDAFD8620743799661F03 /* Zylix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zylix.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1E2F3A4B5C60002 /* DeviceTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTestView.swift; sourceTree = "<group>"; };
+		E1F2A3B4C5D60002 /* ZylixGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixGesture.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -70,6 +72,7 @@
 				4CEE39EB5949C7C7C404455F /* ZylixApp.swift */,
 				11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */,
 				C1D2E3F4A5B60002 /* ZylixDevice.swift */,
+				E1F2A3B4C5D60002 /* ZylixGesture.swift */,
 			);
 			name = Sources;
 			path = Zylix/Sources;
@@ -197,6 +200,7 @@
 				5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */,
 				9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */,
 				C1D2E3F4A5B60001 /* ZylixDevice.swift in Sources */,
+				E1F2A3B4C5D60001 /* ZylixGesture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

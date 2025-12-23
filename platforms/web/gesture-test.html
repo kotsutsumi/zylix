@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zylix Gesture Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+            touch-action: none;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .gesture-area {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gesture-target {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            transition: transform 0.1s ease-out;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .gesture-target:active {
+            cursor: grabbing;
+        }
+
+        .log-section {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .log-section h3 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        #gestureLog {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0f0f23;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .log-entry.tap { background: rgba(0, 212, 255, 0.2); }
+        .log-entry.longpress { background: rgba(255, 107, 107, 0.2); }
+        .log-entry.pan { background: rgba(78, 205, 196, 0.2); }
+        .log-entry.swipe { background: rgba(255, 230, 109, 0.2); }
+        .log-entry.pinch { background: rgba(168, 230, 207, 0.2); }
+        .log-entry.rotation { background: rgba(199, 125, 255, 0.2); }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: #16213e;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .info-card h4 {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .info-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .info-card .unit {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .instructions {
+            background: #16213e;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            padding: 8px 0;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .instructions li:last-child {
+            border-bottom: none;
+        }
+
+        .gesture-icon {
+            width: 32px;
+            height: 32px;
+            background: #0f3460;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .clear-btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        .clear-btn:hover {
+            background: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zylix Gesture Test</h1>
+
+        <div class="instructions">
+            <h3>Supported Gestures</h3>
+            <ul>
+                <li><span class="gesture-icon">1</span> <strong>Tap:</strong> Single tap on target</li>
+                <li><span class="gesture-icon">2</span> <strong>Double Tap:</strong> Double tap quickly</li>
+                <li><span class="gesture-icon">...</span> <strong>Long Press:</strong> Press and hold</li>
+                <li><span class="gesture-icon">&harr;</span> <strong>Pan/Drag:</strong> Press and drag</li>
+                <li><span class="gesture-icon">&rarr;</span> <strong>Swipe:</strong> Quick swipe in any direction</li>
+                <li><span class="gesture-icon">&darr;&uarr;</span> <strong>Pinch:</strong> Two fingers pinch (touch devices)</li>
+                <li><span class="gesture-icon">&circlearrowright;</span> <strong>Rotation:</strong> Two fingers rotate (touch devices)</li>
+            </ul>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h4>Scale</h4>
+                <div class="value" id="scaleValue">1.00</div>
+                <div class="unit">x</div>
+            </div>
+            <div class="info-card">
+                <h4>Rotation</h4>
+                <div class="value" id="rotationValue">0</div>
+                <div class="unit">deg</div>
+            </div>
+            <div class="info-card">
+                <h4>Position X</h4>
+                <div class="value" id="posXValue">0</div>
+                <div class="unit">px</div>
+            </div>
+            <div class="info-card">
+                <h4>Position Y</h4>
+                <div class="value" id="posYValue">0</div>
+                <div class="unit">px</div>
+            </div>
+        </div>
+
+        <div class="gesture-area" id="gestureArea">
+            <div class="gesture-target" id="gestureTarget">
+                Tap, Drag, or<br>Pinch Me!
+            </div>
+        </div>
+
+        <div class="log-section">
+            <h3>Gesture Log</h3>
+            <div id="gestureLog"></div>
+            <button class="clear-btn" onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="zylix-gesture.js"></script>
+    <script>
+        const target = document.getElementById('gestureTarget');
+        const area = document.getElementById('gestureArea');
+        const log = document.getElementById('gestureLog');
+
+        // Transform state
+        let currentScale = 1;
+        let currentRotation = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        function updateTransform() {
+            target.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale}) rotate(${currentRotation}deg)`;
+
+            document.getElementById('scaleValue').textContent = currentScale.toFixed(2);
+            document.getElementById('rotationValue').textContent = Math.round(currentRotation * 180 / Math.PI);
+            document.getElementById('posXValue').textContent = Math.round(currentX);
+            document.getElementById('posYValue').textContent = Math.round(currentY);
+        }
+
+        function addLog(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            // Keep log manageable
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function clearLog() {
+            log.innerHTML = '';
+            currentScale = 1;
+            currentRotation = 0;
+            currentX = 0;
+            currentY = 0;
+            updateTransform();
+        }
+
+        // Single Tap
+        ZylixGesture.onTap(target, (result) => {
+            addLog('tap', `at (${Math.round(result.position.x)}, ${Math.round(result.position.y)})`);
+        });
+
+        // Double Tap
+        const doubleTap = ZylixGesture.Manager.shared().addTap(target, { requiredTaps: 2 });
+        doubleTap.on('tap', (result) => {
+            addLog('tap', `DOUBLE TAP at (${Math.round(result.position.x)}, ${Math.round(result.position.y)})`);
+            // Reset on double tap
+            currentScale = 1;
+            currentRotation = 0;
+            currentX = 0;
+            currentY = 0;
+            updateTransform();
+        });
+
+        // Long Press
+        ZylixGesture.onLongPress(target, (result) => {
+            addLog('longpress', `${result.state} - duration: ${result.duration}ms`);
+        });
+
+        // Pan/Drag
+        ZylixGesture.onPan(target, (result) => {
+            if (result.state === 'changed') {
+                currentX = result.translation.x;
+                currentY = result.translation.y;
+                updateTransform();
+            }
+            addLog('pan', `${result.state} - delta: (${Math.round(result.translation.x)}, ${Math.round(result.translation.y)})`);
+        });
+
+        // Swipe
+        ZylixGesture.onSwipe(area, (result) => {
+            addLog('swipe', `${result.direction} - velocity: ${Math.round(result.velocity.magnitude)}px/s`);
+        });
+
+        // Pinch
+        ZylixGesture.onPinch(target, (result) => {
+            if (result.state === 'changed') {
+                currentScale = result.scale;
+                updateTransform();
+            }
+            addLog('pinch', `${result.state} - scale: ${result.scale.toFixed(2)}`);
+        });
+
+        // Rotation
+        ZylixGesture.onRotation(target, (result) => {
+            if (result.state === 'changed') {
+                currentRotation = result.angle;
+                updateTransform();
+            }
+            addLog('rotation', `${result.state} - angle: ${Math.round(result.angle * 180 / Math.PI)}deg`);
+        });
+
+        // Initial log
+        addLog('info', 'Gesture system initialized. Try interacting with the purple box!');
+
+        // Prevent context menu on long press
+        target.addEventListener('contextmenu', (e) => e.preventDefault());
+        area.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
