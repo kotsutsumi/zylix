@@ -11,6 +11,8 @@ pub const abi = @import("abi.zig");
 pub const ai = @import("ai/ai.zig");
 pub const animation = @import("animation/animation.zig");
 pub const graphics3d = @import("graphics3d/graphics3d.zig");
+pub const integration = @import("integration/integration.zig");
+pub const tooling = @import("tooling/tooling.zig");
 
 // Re-export types for internal use
 pub const State = state.State;

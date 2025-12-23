@@ -510,6 +510,7 @@ test "AudioClipPlayer initialization" {
     defer player.deinit();
 
     const future = player.initialize();
+    defer allocator.destroy(future);
     try std.testing.expect(future.isCompleted());
     try std.testing.expect(player.initialized);
 }
@@ -519,7 +520,8 @@ test "Clip loading" {
     var player = createDefaultPlayer(allocator);
     defer player.deinit();
 
-    _ = player.initialize();
+    const init_future = player.initialize();
+    defer allocator.destroy(init_future);
 
     const clips = [_]AudioClip{
         .{ .id = "click", .data = "dummy" },
@@ -527,6 +529,7 @@ test "Clip loading" {
     };
 
     const future = player.preload(&clips);
+    defer allocator.destroy(future);
     try std.testing.expect(future.isCompleted());
 
     try std.testing.expect(player.isLoaded("click"));
@@ -539,10 +542,12 @@ test "Playback control" {
     var player = createDefaultPlayer(allocator);
     defer player.deinit();
 
-    _ = player.initialize();
+    const init_future = player.initialize();
+    defer allocator.destroy(init_future);
 
     const clips = [_]AudioClip{.{ .id = "test", .data = "dummy" }};
-    _ = player.preload(&clips);
+    const preload_future = player.preload(&clips);
+    defer allocator.destroy(preload_future);
 
     const handle = player.play("test", 0.5);
     try std.testing.expect(handle.id > 0);
@@ -557,7 +562,8 @@ test "Volume control" {
     var player = createDefaultPlayer(allocator);
     defer player.deinit();
 
-    _ = player.initialize();
+    const init_future = player.initialize();
+    defer allocator.destroy(init_future);
 
     try std.testing.expectApproxEqAbs(@as(f32, 1.0), player.getMasterVolume(), 0.001);
 
@@ -598,10 +604,12 @@ test "Stop all" {
     var player = createDefaultPlayer(allocator);
     defer player.deinit();
 
-    _ = player.initialize();
+    const init_future = player.initialize();
+    defer allocator.destroy(init_future);
 
     const clips = [_]AudioClip{.{ .id = "test", .data = "dummy" }};
-    _ = player.preload(&clips);
+    const preload_future = player.preload(&clips);
+    defer allocator.destroy(preload_future);
 
     _ = player.play("test", 1.0);
     _ = player.play("test", 1.0);

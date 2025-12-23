@@ -28,7 +28,7 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ✅ Complete | 2025-12-24 |
 | v0.14.0 | Phase 16 | Database Support (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ✅ Complete | 2025-12-24 |
 | v0.15.0 | Phase 17 | App Integration APIs (IAP, Ads, KeyValueStore, Lifecycle) | ✅ Complete | 2025-12-24 |
-| v0.16.0 | Phase 18 | Developer Tooling (CLI, Scaffolding, Build, Templates) | ⏳ Planned | 2026-Q1 |
+| v0.16.0 | Phase 18 | Developer Tooling (CLI, Scaffolding, Build, Templates) | ✅ Complete | 2025-12-24 |
 | v0.17.0 | Phase 19 | Node-based UI (React Flow-style) | ⏳ Planned | 2026-Q1 |
 | v0.18.0 | Phase 20 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2026-Q2 |
 | v0.19.0 | Phase 21 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2026-Q2 |
@@ -1375,13 +1375,13 @@ pub const AudioClipPlayer = struct {
 
 ---
 
-## Phase 18: Developer Tooling (v0.16.0)
+## Phase 18: Developer Tooling (v0.16.0) ✅
 
 ### Overview
 
 Comprehensive developer tooling for Zylix applications: CLI for project management, scaffolding system, build orchestration, template catalog, and live preview capabilities.
 
-### Planned Features
+### Implemented Features
 
 #### 18.1 Project Scaffolding API
 - Create project layouts for all 7 platforms
@@ -1518,14 +1518,14 @@ zylix templates add ./my-template
 
 ### Success Criteria
 
-- [ ] Project creation for all 7 platforms with single command
-- [ ] Build start/completion events emitted with logs
-- [ ] Artifact paths and metadata queryable
-- [ ] Target capabilities queryable without hardcoding
-- [ ] Template catalog accessible via API
-- [ ] File changes reflected in editor reliably
-- [ ] Component tree exportable without manual parsing
-- [ ] Preview launchable with single action
+- [x] Project creation for all 7 platforms with single command
+- [x] Build start/completion events emitted with logs
+- [x] Artifact paths and metadata queryable
+- [x] Target capabilities queryable without hardcoding
+- [x] Template catalog accessible via API
+- [x] File changes reflected in editor reliably
+- [x] Component tree exportable without manual parsing
+- [x] Preview launchable with single action
 
 ---
 

@@ -393,7 +393,7 @@ test "Callback registration" {
     var lifecycle = createDefaultLifecycle(allocator);
     defer lifecycle.deinit();
 
-    var called = false;
+    const called = false;
     const callback: LifecycleCallback = struct {
         fn handler(_: LifecycleEvent) void {
             // Cannot capture mutable variable in Zig, use different approach
@@ -439,8 +439,8 @@ test "Simple callbacks" {
     var lifecycle = createDefaultLifecycle(allocator);
     defer lifecycle.deinit();
 
-    var foreground_count: u32 = 0;
-    var background_count: u32 = 0;
+    const foreground_count: u32 = 0;
+    const background_count: u32 = 0;
 
     // Note: In real Zig, we'd need a different pattern for mutable captures
     // This test demonstrates the API structure

@@ -199,16 +199,16 @@ pub const AdEventCallback = *const fn (AdEvent) void;
 /// Ad events
 pub const AdEvent = union(enum) {
     banner_loaded: []const u8, // placement_id
-    banner_failed: struct { placement_id: []const u8, error: []const u8 },
+    banner_failed: struct { placement_id: []const u8, err_msg: []const u8 },
     banner_clicked: []const u8,
     banner_impression: []const u8,
     interstitial_loaded: []const u8,
-    interstitial_failed: struct { placement_id: []const u8, error: []const u8 },
+    interstitial_failed: struct { placement_id: []const u8, err_msg: []const u8 },
     interstitial_shown: []const u8,
     interstitial_closed: []const u8,
     interstitial_clicked: []const u8,
     rewarded_loaded: []const u8,
-    rewarded_failed: struct { placement_id: []const u8, error: []const u8 },
+    rewarded_failed: struct { placement_id: []const u8, err_msg: []const u8 },
     rewarded_shown: []const u8,
     rewarded_closed: []const u8,
     rewarded_earned: struct { placement_id: []const u8, reward_type: []const u8, amount: u32 },
@@ -476,6 +476,7 @@ test "Ads initialization" {
     defer ads.deinit();
 
     const future = ads.initialize();
+    defer allocator.destroy(future);
     try std.testing.expect(future.isCompleted());
     try std.testing.expect(ads.initialized);
 }
