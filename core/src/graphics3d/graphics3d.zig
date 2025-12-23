@@ -148,6 +148,97 @@ pub const Renderer = renderer.Renderer;
 pub const DebugDraw = renderer.DebugDraw;
 
 // ============================================================================
+// Model Loaders
+// ============================================================================
+
+pub const gltf = @import("gltf.zig");
+pub const obj = @import("obj.zig");
+pub const fbx = @import("fbx.zig");
+
+pub const GltfLoader = gltf.GltfLoader;
+pub const GltfAsset = gltf.GltfAsset;
+pub const ObjLoader = obj.ObjLoader;
+pub const ObjAsset = obj.ObjAsset;
+pub const FbxLoader = fbx.FbxLoader;
+pub const FbxAsset = fbx.FbxAsset;
+
+// ============================================================================
+// Shadow Mapping
+// ============================================================================
+
+pub const shadow = @import("shadow.zig");
+
+pub const ShadowMap = shadow.ShadowMap;
+pub const ShadowManager = shadow.ShadowManager;
+pub const CascadedShadowMap = shadow.CascadedShadowMap;
+pub const PointShadowMap = shadow.PointShadowMap;
+pub const SpotShadowMap = shadow.SpotShadowMap;
+pub const ShadowQuality = shadow.ShadowQuality;
+pub const ShadowFilter = shadow.ShadowFilter;
+pub const ShadowUniforms = shadow.ShadowUniforms;
+
+// ============================================================================
+// Post-Processing
+// ============================================================================
+
+pub const postprocess = @import("postprocess.zig");
+
+pub const PostProcessPipeline = postprocess.PostProcessPipeline;
+pub const PostProcessPass = postprocess.PostProcessPass;
+pub const PostProcessPreset = postprocess.PostProcessPreset;
+pub const EffectType = postprocess.EffectType;
+pub const ToneMapper = postprocess.ToneMapper;
+pub const RenderTarget = postprocess.RenderTarget;
+pub const RenderTargetFormat = postprocess.RenderTargetFormat;
+
+// Effect Settings
+pub const ToneMappingSettings = postprocess.ToneMappingSettings;
+pub const BloomSettings = postprocess.BloomSettings;
+pub const SSAOSettings = postprocess.SSAOSettings;
+pub const MotionBlurSettings = postprocess.MotionBlurSettings;
+pub const DepthOfFieldSettings = postprocess.DepthOfFieldSettings;
+pub const ColorGradingSettings = postprocess.ColorGradingSettings;
+pub const FXAASettings = postprocess.FXAASettings;
+pub const TAASettings = postprocess.TAASettings;
+pub const VignetteSettings = postprocess.VignetteSettings;
+pub const FilmGrainSettings = postprocess.FilmGrainSettings;
+pub const ChromaticAberrationSettings = postprocess.ChromaticAberrationSettings;
+pub const SharpeningSettings = postprocess.SharpeningSettings;
+pub const FogSettings = postprocess.FogSettings;
+pub const OutlineSettings = postprocess.OutlineSettings;
+
+// ============================================================================
+// Platform Backends
+// ============================================================================
+
+pub const backend_metal = @import("backend_metal.zig");
+
+// Metal Backend (iOS/macOS)
+pub const MetalBackend = backend_metal.MetalBackend;
+pub const MetalPixelFormat = backend_metal.PixelFormat;
+pub const MetalPrimitiveType = backend_metal.PrimitiveType;
+pub const MetalTextureDescriptor = backend_metal.TextureDescriptor;
+pub const MetalSamplerDescriptor = backend_metal.SamplerDescriptor;
+pub const MetalRenderPassDescriptor = backend_metal.RenderPassDescriptor;
+pub const MetalVertexDescriptor = backend_metal.VertexDescriptor;
+pub const MetalRenderPipelineDescriptor = backend_metal.RenderPipelineDescriptor;
+pub const MetalDepthStencilDescriptor = backend_metal.DepthStencilDescriptor;
+
+pub const backend_web = @import("backend_web.zig");
+
+// Web Backend (WebGL2/WebGPU)
+pub const WebBackend = backend_web.WebBackend;
+pub const WebBackendAPI = backend_web.BackendAPI;
+pub const WebDrawMode = backend_web.DrawMode;
+pub const WebBufferTarget = backend_web.BufferTarget;
+pub const WebTextureFormat = backend_web.TextureFormat;
+pub const WebTextureDescriptor = backend_web.TextureDescriptor;
+pub const WebSamplerDescriptor = backend_web.SamplerDescriptor;
+pub const WebFramebufferDescriptor = backend_web.FramebufferDescriptor;
+pub const WebBlendState = backend_web.BlendState;
+pub const WebDepthState = backend_web.DepthState;
+
+// ============================================================================
 // Version & Info
 // ============================================================================
 
@@ -175,6 +266,13 @@ pub fn getInfo() struct {
             "Material System",
             "Frustum Culling",
             "Multiple Backends",
+            "glTF 2.0 Loader",
+            "OBJ/MTL Loader",
+            "FBX Loader",
+            "Shadow Mapping (CSM, Point, Spot)",
+            "Post-Processing (HDR, Bloom, SSAO, DoF)",
+            "Metal Backend (iOS/macOS)",
+            "WebGL2/WebGPU Backend (Web)",
         },
     };
 }
@@ -192,6 +290,13 @@ test "graphics3d module exports" {
     _ = material;
     _ = scene;
     _ = renderer;
+    _ = gltf;
+    _ = obj;
+    _ = fbx;
+    _ = shadow;
+    _ = postprocess;
+    _ = backend_metal;
+    _ = backend_web;
 }
 
 test "graphics3d types accessible" {
