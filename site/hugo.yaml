@@ -232,9 +232,9 @@ params:
     layoutBackgroundHeaderSpace: true
     showBreadcrumbs: true
     showDraftLabel: true
-    showEdit: true
+    showEdit: false
     editURL: https://github.com/kotsutsumi/zylix/edit/main/site/content/
-    editAppendPath: true
+    editAppendPath: false
     seriesOpened: false
     showHeadingAnchors: true
     showPagination: true
