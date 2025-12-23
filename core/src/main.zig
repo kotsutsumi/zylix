@@ -10,6 +10,7 @@ pub const events = @import("events.zig");
 pub const abi = @import("abi.zig");
 pub const ai = @import("ai/ai.zig");
 pub const animation = @import("animation/animation.zig");
+pub const graphics3d = @import("graphics3d/graphics3d.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -21,6 +22,13 @@ pub const EventType = events.EventType;
 pub const ModelType = ai.ModelType;
 pub const ModelConfig = ai.ModelConfig;
 pub const ModelFormat = ai.ModelFormat;
+
+// Re-export Graphics3D types
+pub const Vec3 = graphics3d.Vec3;
+pub const Mat4 = graphics3d.Mat4;
+pub const Camera = graphics3d.Camera;
+pub const Scene = graphics3d.Scene;
+pub const Mesh = graphics3d.Mesh;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
