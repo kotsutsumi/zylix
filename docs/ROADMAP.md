@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-24
-> **Current Version**: v0.12.0
+> **Current Version**: v0.14.0
 
 ---
 
@@ -25,8 +25,8 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.10.0 | Phase 12 | Device Features & Gestures | ✅ Complete | 2025-12-24 |
 | v0.11.0 | Phase 13 | Animation (Lottie, Live2D) | ✅ Complete | 2025-12-24 |
 | v0.12.0 | Phase 14 | 3D Graphics (Three.js-style) | ✅ Complete | 2025-12-24 |
-| v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | 🚧 In Progress | 2025-12-24 |
-| v0.14.0 | Phase 16 | Database Support (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ⏳ Planned | 2025-Q4 |
+| v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ✅ Complete | 2025-12-24 |
+| v0.14.0 | Phase 16 | Database Support (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ✅ Complete | 2025-12-24 |
 | v0.15.0 | Phase 17 | App Integration APIs (IAP, Ads, KeyValueStore, Lifecycle) | ⏳ Planned | 2025-Q4 |
 | v0.16.0 | Phase 18 | Developer Tooling (CLI, Scaffolding, Build, Templates) | ⏳ Planned | 2026-Q1 |
 | v0.17.0 | Phase 19 | Node-based UI (React Flow-style) | ⏳ Planned | 2026-Q1 |
@@ -1143,13 +1143,13 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 
 ---
 
-## Phase 16: Database Support (v0.14.0)
+## Phase 16: Database Support (v0.14.0) ✅ Complete
 
 ### Overview
 
 Comprehensive database connectivity layer supporting SQLite, MySQL, PostgreSQL, and Turso (libSQL). Provides a unified API for database operations across all platforms, including WASM.
 
-### Planned Features
+### Implemented Features
 
 #### 16.1 SQLite Support
 - Embedded SQLite engine
