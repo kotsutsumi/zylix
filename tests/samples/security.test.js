@@ -153,10 +153,12 @@ describe('Sample Applications Security', () => {
 describe('Sample Applications Structure', () => {
     // WASM samples use a different structure (zylix.js instead of src/main.js)
     const wasmSamples = ['counter-wasm', 'todo-wasm', 'component-showcase'];
+    // test-demos is a platform-specific test suite, not a standard web app
+    const excludedSamples = [...wasmSamples, 'test-demos'];
 
     const sampleApps = readdirSync(samplesDir, { withFileTypes: true })
         .filter(d => d.isDirectory() && !d.name.startsWith('.'))
-        .filter(d => !wasmSamples.includes(d.name))
+        .filter(d => !excludedSamples.includes(d.name))
         .map(d => d.name);
 
     for (const app of sampleApps) {
