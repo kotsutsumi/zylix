@@ -187,7 +187,7 @@ pub const CameraManager = struct {
     /// Deinitialize and cleanup
     pub fn deinit(self: *Self) void {
         self.stopPreview();
-        self.stopRecording();
+        _ = self.stopRecording();
         self.platform_handle = null;
     }
 

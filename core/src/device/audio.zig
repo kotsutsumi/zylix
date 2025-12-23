@@ -101,7 +101,7 @@ pub const PlayerState = enum(u8) {
     playing = 3,
     paused = 4,
     stopped = 5,
-    error = 6,
+    failed = 6,
 };
 
 /// Audio player configuration
@@ -138,7 +138,7 @@ pub const PlayerEvent = union(enum) {
     state_changed: PlayerState,
     progress: Progress,
     finished: void,
-    error: Result,
+    @"error": Result,
     buffering: f32, // 0.0 - 1.0
     metadata: Metadata,
 
@@ -319,7 +319,7 @@ pub const RecorderState = enum(u8) {
     recording = 3,
     paused = 4,
     stopped = 5,
-    error = 6,
+    failed = 6,
 };
 
 /// Recording callback
@@ -331,7 +331,7 @@ pub const RecorderEvent = union(enum) {
     level: f32, // Audio level (0.0 - 1.0)
     duration: f64, // Recording duration in seconds
     finished: types.StringBuffer(1024), // File path
-    error: Result,
+    @"error": Result,
 };
 
 /// Audio recorder
@@ -358,7 +358,7 @@ pub const AudioRecorder = struct {
     }
 
     pub fn deinit(self: *Self) void {
-        self.stop();
+        _ = self.stop();
         self.platform_handle = null;
     }
 
