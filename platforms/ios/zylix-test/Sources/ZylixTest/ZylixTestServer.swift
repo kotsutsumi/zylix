@@ -458,21 +458,18 @@ public final class ZylixTestServer {
 
         switch action {
         case "press":
-            let duration = body?["duration"] as? Int ?? 0
-
             #if os(watchOS)
+            let duration = body?["duration"] as? Int ?? 0
             if duration > 0 {
                 XCUIDevice.shared.press(.sideButton, forDuration: TimeInterval(duration) / 1000.0)
             } else {
                 XCUIDevice.shared.press(.sideButton)
             }
-            #else
-            // On iOS simulator, simulate by pressing home button equivalent
-            // watchOS side button usually triggers app switcher or Siri
-            XCUIDevice.shared.press(.home)
-            #endif
-
             return CommandResult(success: true)
+            #else
+            // Side button is only available on watchOS devices
+            return CommandResult(error: "Side Button press requires watchOS device")
+            #endif
 
         case "doublePress":
             #if os(watchOS)
@@ -480,14 +477,11 @@ public final class ZylixTestServer {
             XCUIDevice.shared.press(.sideButton)
             Thread.sleep(forTimeInterval: 0.15)
             XCUIDevice.shared.press(.sideButton)
-            #else
-            // Simulate on iOS
-            XCUIDevice.shared.press(.home)
-            Thread.sleep(forTimeInterval: 0.15)
-            XCUIDevice.shared.press(.home)
-            #endif
-
             return CommandResult(success: true)
+            #else
+            // Side button is only available on watchOS devices
+            return CommandResult(error: "Side Button double press requires watchOS device")
+            #endif
 
         default:
             return CommandResult(error: "Unknown Side Button action: \(action)")
