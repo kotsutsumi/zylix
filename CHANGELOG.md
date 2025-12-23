@@ -89,6 +89,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data Types**: Text, URL, file, image, custom data
 - **Drop Operations**: Copy, move, link operations
 
+#### iOS Platform Implementation
+- **ZylixDevice.swift**: Native device features using iOS frameworks
+  - CoreLocation for GPS/location services
+  - AVFoundation for camera and audio
+  - CoreMotion for sensors (accelerometer, gyroscope)
+  - UserNotifications for local/push notifications
+  - CoreHaptics for haptic feedback
+- **ZylixGesture.swift**: UIKit gesture recognizers with SwiftUI modifiers
+  - All gesture types (Tap, LongPress, Pan, Swipe, Pinch, Rotation, EdgePan)
+  - ZylixGestureManager singleton for centralized management
+  - SwiftUI View extensions (zylixOnTap, zylixOnLongPress, etc.)
+- **DeviceTestView.swift**: Interactive test UI for device features
+
+#### Android Platform Implementation
+- **ZylixDevice.kt**: Native device features using Android frameworks
+  - LocationManager for GPS services
+  - CameraX for camera access
+  - SensorManager for motion sensors
+  - NotificationManager for notifications
+  - Vibrator/VibratorManager for haptics
+  - MediaRecorder for audio recording
+- **ZylixGesture.kt**: Jetpack Compose gesture support
+  - Complete gesture type system matching Zig core
+  - Compose Modifier extensions for all gesture types
+  - StateFlow-based gesture state tracking
+- **DeviceTestScreen.kt**: Compose-based test UI
+
+#### Web Platform Implementation
+- **zylix-device.js**: Web APIs for device features
+  - Geolocation API for location services
+  - Vibration API for haptic feedback
+  - Generic Sensor API for accelerometer/gyroscope
+  - Notification API for web notifications
+  - MediaDevices API for camera/microphone
+- **zylix-gesture.js**: Pointer Events API integration
+  - Touch tracking with multi-finger support
+  - All recognizer types with event callbacks
+  - ZylixGestureManager and convenience functions
+- **device-test.html**: Interactive test page for device features
+- **gesture-test.html**: Interactive test page for gesture recognition
+
 ### Changed
 - Module version updated to v0.10.0
 - Device module follows same patterns as AI module
