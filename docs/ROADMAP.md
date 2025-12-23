@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-24
-> **Current Version**: v0.11.0
+> **Current Version**: v0.12.0
 
 ---
 
@@ -24,16 +24,20 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.9.0 | Phase 11b | Embedded AI (Zylix AI) | ✅ Complete | 2025-12-24 |
 | v0.10.0 | Phase 12 | Device Features & Gestures | ✅ Complete | 2025-12-24 |
 | v0.11.0 | Phase 13 | Animation (Lottie, Live2D) | ✅ Complete | 2025-12-24 |
-| v0.12.0 | Phase 14 | 3D Graphics (Three.js-style) | 🚧 In Progress | 2025-12-24 |
-| v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ⏳ Planned | 2025-Q3 |
-| v0.14.0 | Phase 16 | Node-based UI (React Flow-style) | ⏳ Planned | 2025-Q4 |
-| v0.15.0 | Phase 17 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2026-Q1 |
-| v0.16.0 | Phase 18 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2026-Q2 |
-| v0.17.0 | Phase 19 | Database Support (PostgreSQL, MySQL, SQLite, libSQL) | ⏳ Planned | 2026-Q3 |
-| v0.18.0 | Phase 20 | Server Runtime (Zylix Server) | ⏳ Planned | 2026-Q4 |
-| v0.19.0 | Phase 21 | Edge Adapters (Cloudflare, Vercel, AWS) | ⏳ Planned | 2027-Q1 |
-| v0.20.0 | Phase 22 | Performance & Optimization | ⏳ Planned | 2027-Q2 |
-| v0.21.0 | Phase 23 | Documentation Excellence | ⏳ Planned | 2027-Q3 |
+| v0.12.0 | Phase 14 | 3D Graphics (Three.js-style) | ✅ Complete | 2025-12-24 |
+| v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | 🚧 In Progress | 2025-12-24 |
+| v0.14.0 | Phase 16 | Database Support (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ⏳ Planned | 2025-Q4 |
+| v0.15.0 | Phase 17 | App Integration APIs (IAP, Ads, KeyValueStore, Lifecycle) | ⏳ Planned | 2025-Q4 |
+| v0.16.0 | Phase 18 | Developer Tooling (CLI, Scaffolding, Build, Templates) | ⏳ Planned | 2026-Q1 |
+| v0.17.0 | Phase 19 | Node-based UI (React Flow-style) | ⏳ Planned | 2026-Q1 |
+| v0.18.0 | Phase 20 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2026-Q2 |
+| v0.19.0 | Phase 21 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2026-Q2 |
+| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ Planned | 2026-Q3 |
+| v0.21.0 | Phase 23 | Server Runtime (Zylix Server) | ⏳ Planned | 2026-Q4 |
+| v0.22.0 | Phase 24 | Edge Adapters (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ Planned | 2027-Q1 |
+| v0.23.0 | Phase 25 | Performance & Optimization | ⏳ Planned | 2027-Q2 |
+| v0.24.0 | Phase 26 | Documentation Excellence | ⏳ Planned | 2027-Q3 |
+| v0.25.0 | Phase 27 | Official Sample Projects (23+ Samples) | ⏳ Planned | 2027-Q4 |
 
 ---
 
@@ -1068,7 +1072,7 @@ Hardware-accelerated 3D graphics engine inspired by [Three.js](https://github.co
 
 ---
 
-## Phase 15: Game Development Platform (v0.13.0)
+## Phase 15: Game Development Platform (v0.13.0) 🚧 In Progress
 
 ### Overview
 
@@ -1139,7 +1143,393 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 
 ---
 
-## Phase 16: Node-based UI (v0.14.0)
+## Phase 16: Database Support (v0.14.0)
+
+### Overview
+
+Comprehensive database connectivity layer supporting SQLite, MySQL, PostgreSQL, and Turso (libSQL). Provides a unified API for database operations across all platforms, including WASM.
+
+### Planned Features
+
+#### 16.1 SQLite Support
+- Embedded SQLite engine
+- In-memory databases
+- File-based databases
+- WAL mode support
+- User-defined functions
+- Virtual tables
+- Full-text search (FTS5)
+- JSON1 extension
+
+#### 16.2 MySQL Support
+- MySQL protocol implementation
+- Prepared statements
+- Multiple result sets
+- Binary protocol
+- Connection compression
+- SSL/TLS support
+- Stored procedures
+- Transactions
+
+#### 16.3 PostgreSQL Support
+- Full protocol implementation
+- All data types support
+- LISTEN/NOTIFY
+- COPY operations
+- Array types
+- JSON/JSONB operations
+- Full-text search
+- Prepared statements
+
+#### 16.4 Turso / libSQL Support
+- [Turso](https://turso.tech/) cloud database
+- [libSQL](https://github.com/tursodatabase/libsql) embedded mode
+- Edge-optimized queries
+- Embedded replicas
+- HTTP API support
+- SQLite compatibility
+- Global distribution
+- Automatic scaling
+
+#### 16.5 Connection Management
+- Connection pooling
+- Connection string parsing
+- SSL/TLS support
+- Automatic reconnection
+- Transaction management
+- Prepared statements
+
+#### 16.6 Query Builder
+- Type-safe query construction
+- Comptime SQL validation
+- Parameter binding
+- Result mapping
+- Migration support
+
+### Platform Implementation
+
+| Platform | SQLite | MySQL | PostgreSQL | Turso/libSQL |
+|----------|--------|-------|------------|--------------|
+| Native (iOS, Android, macOS, Linux, Windows) | Embedded | TCP | TCP | Embedded/HTTP |
+| Web/WASM | OPFS/IndexedDB | HTTP Proxy | HTTP Proxy | HTTP |
+| Edge (Cloudflare, Vercel) | D1 | - | TCP (Hyperdrive) | HTTP |
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  Zylix Database (Zig Core)                  │
+├─────────────────────────────────────────────────────────────┤
+│  Connection Pool │  Query Builder  │  Transaction Manager  │
+│  - Max connections│  - Type-safe    │  - ACID compliance   │
+│  - Health check  │  - Comptime SQL │  - Savepoints        │
+│  - Auto-reconnect│  - Migrations   │  - Rollback          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                         C ABI Layer
+                              │
+     ┌────────────┬───────────┼───────────┬────────────┐
+     ▼            ▼           ▼           ▼            ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ SQLite  │ │  MySQL  │ │PostgreSQL│ │ Turso  │ │  WASM   │
+│Embedded │ │  TCP    │ │   TCP   │ │  HTTP  │ │  Proxy  │
+└─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘
+```
+
+### Success Criteria
+
+- [ ] All four databases connectable
+- [ ] Type-safe query builder
+- [ ] Transaction support
+- [ ] Connection pooling working
+- [ ] WASM database access via proxy
+- [ ] Migration system functional
+- [ ] Comprehensive database sample app
+
+---
+
+## Phase 17: App Integration APIs (v0.15.0)
+
+### Overview
+
+Unified APIs for common app integration needs: in-app purchases, advertising, persistent storage, app lifecycle management, and enhanced camera/audio capabilities for real-time processing.
+
+### Planned Features
+
+#### 17.1 In-App Purchase (IAP) Abstraction
+- Unified purchase flow across platforms
+- Product catalog query
+- Purchase and restore functionality
+- Entitlement verification
+- Receipt validation
+
+```zig
+pub const Store = struct {
+    pub fn getProducts(product_ids: []const []const u8) *Future([]Product);
+    pub fn purchase(product_id: []const u8) *Future(PurchaseResult);
+    pub fn restore() *Future(RestoreResult);
+    pub fn hasEntitlement(product_id: []const u8) bool;
+};
+```
+
+#### 17.2 Ads Abstraction
+- Banner ads (show/hide by placement)
+- Interstitial ads
+- Rewarded video ads
+- GDPR/privacy compliance helpers
+
+```zig
+pub const Ads = struct {
+    pub fn showBanner(placement_id: []const u8) void;
+    pub fn hideBanner(placement_id: []const u8) void;
+    pub fn showInterstitial(placement_id: []const u8) *Future(AdResult);
+    pub fn showRewarded(placement_id: []const u8) *Future(RewardResult);
+};
+```
+
+#### 17.3 KeyValueStore
+- Persistent key-value storage
+- Type-safe accessors (bool, int, float, string)
+- Default value support
+- Async batch operations
+
+```zig
+pub const KeyValueStore = struct {
+    pub fn getBool(key: []const u8, default: bool) bool;
+    pub fn getFloat(key: []const u8, default: f32) f32;
+    pub fn getString(key: []const u8, default: []const u8) []const u8;
+    pub fn putBool(key: []const u8, value: bool) void;
+    pub fn putFloat(key: []const u8, value: f32) void;
+    pub fn putString(key: []const u8, value: []const u8) void;
+};
+```
+
+#### 17.4 App Lifecycle Hooks
+- Foreground/background state callbacks
+- Termination handlers
+- Memory warning notifications
+- State restoration support
+
+```zig
+pub const AppLifecycle = struct {
+    pub fn onForeground(callback: *const fn () void) void;
+    pub fn onBackground(callback: *const fn () void) void;
+    pub fn onTerminate(callback: *const fn () void) void;
+    pub fn onMemoryWarning(callback: *const fn () void) void;
+};
+```
+
+#### 17.5 Motion Frame Provider
+- Low-resolution camera frames for motion tracking
+- No preview required (background processing)
+- Configurable frame rate and resolution
+- Motion centroid detection support
+
+```zig
+pub const MotionFrameProvider = struct {
+    pub fn start(config: MotionFrameConfig, on_frame: *const fn (MotionFrame) void) void;
+    pub fn stop() void;
+};
+
+pub const MotionFrameConfig = struct {
+    target_fps: u8 = 15,
+    resolution: Resolution = .low,
+    pixel_format: PixelFormat = .grayscale,
+};
+```
+
+#### 17.6 Low-Latency Audio Clip Player
+- Short audio clip playback with minimal latency
+- Preloading support for instant playback
+- Volume control per clip
+- Multiple simultaneous playback
+
+```zig
+pub const AudioClipPlayer = struct {
+    pub fn preload(clips: []const AudioClip) *Future(void);
+    pub fn play(clip_id: []const u8, volume: f32) void;
+    pub fn stop(clip_id: []const u8) void;
+    pub fn stopAll() void;
+};
+```
+
+### Platform Implementation
+
+| Feature | iOS | Android | Web | Desktop |
+|---------|-----|---------|-----|---------|
+| IAP | StoreKit 2 | Play Billing | - | - |
+| Ads | AdMob/AppLovin | AdMob/AppLovin | - | - |
+| KeyValueStore | UserDefaults | SharedPreferences | localStorage | File-based |
+| Lifecycle | UIApplication | Activity/Lifecycle | visibilitychange | Native events |
+| Motion Frames | AVFoundation | CameraX ImageAnalysis | getUserMedia | Platform cameras |
+| Audio Clips | AVAudioEngine | AudioTrack/Oboe | Web Audio API | miniaudio |
+
+### Success Criteria
+
+- [ ] IAP purchase and restore working on iOS and Android
+- [ ] Banner ads display correctly
+- [ ] KeyValueStore persists across app restarts
+- [ ] Lifecycle hooks trigger within 1s of state change
+- [ ] Motion frames stable at 15 fps
+- [ ] Audio clip latency < 150ms
+
+---
+
+## Phase 18: Developer Tooling (v0.16.0)
+
+### Overview
+
+Comprehensive developer tooling for Zylix applications: CLI for project management, scaffolding system, build orchestration, template catalog, and live preview capabilities.
+
+### Planned Features
+
+#### 18.1 Project Scaffolding API
+- Create project layouts for all 7 platforms
+- Template-based initialization
+- Configuration generation
+- Dependency resolution
+
+```zig
+pub const Project = struct {
+    pub fn create(template_id: []const u8, targets: []const Target, output_dir: []const u8) *Future(ProjectId);
+    pub fn validate(project_id: ProjectId) *Future(ValidationResult);
+    pub fn getInfo(project_id: ProjectId) ProjectInfo;
+};
+```
+
+#### 18.2 Build Orchestration API
+- Multi-target build execution
+- Build configuration management
+- Progress and log streaming
+- Parallel build support
+
+```zig
+pub const Build = struct {
+    pub fn start(project_id: ProjectId, target: Target, config: BuildConfig) *Future(BuildId);
+    pub fn cancel(build_id: BuildId) void;
+    pub fn getStatus(build_id: BuildId) BuildStatus;
+    pub fn onProgress(build_id: BuildId, callback: *const fn (BuildProgress) void) void;
+    pub fn onLog(build_id: BuildId, callback: *const fn (LogEntry) void) void;
+};
+```
+
+#### 18.3 Build Artifact Query API
+- Artifact path retrieval
+- Metadata access (size, hash, timestamp)
+- Signing status information
+- Export and packaging
+
+```zig
+pub const Artifacts = struct {
+    pub fn getArtifacts(build_id: BuildId) *Future([]Artifact);
+    pub fn getMetadata(artifact_path: []const u8) ArtifactMetadata;
+    pub fn export(artifact_path: []const u8, destination: []const u8) *Future(void);
+};
+```
+
+#### 18.4 Target Capability Matrix API
+- Query supported features per target
+- Runtime capability detection
+- Feature compatibility validation
+- Dynamic UI field configuration
+
+```zig
+pub const Targets = struct {
+    pub fn getCapabilities() CapabilityMatrix;
+    pub fn supportsFeature(target: Target, feature: Feature) bool;
+    pub fn getRequiredInputs(target: Target) []InputSpec;
+};
+```
+
+#### 18.5 Template Catalog API
+- List available project templates
+- Template metadata and requirements
+- Custom template registration
+- Template versioning
+
+```zig
+pub const Templates = struct {
+    pub fn list() []Template;
+    pub fn getDetails(template_id: []const u8) TemplateDetails;
+    pub fn register(template: CustomTemplate) *Future(void);
+};
+```
+
+#### 18.6 File Watcher API
+- Real-time file system monitoring
+- Configurable filters and patterns
+- Debounced change events
+- Recursive directory watching
+
+```zig
+pub const FileWatcher = struct {
+    pub fn watch(path: []const u8, filters: WatchFilters) WatchId;
+    pub fn unwatch(watch_id: WatchId) void;
+    pub fn onChange(watch_id: WatchId, callback: *const fn (FileChange) void) void;
+};
+```
+
+#### 18.7 Component Tree Export API
+- Extract component hierarchy from projects
+- JSON/structured format export
+- Property and binding information
+- Visual preview support
+
+```zig
+pub const UI = struct {
+    pub fn exportTree(project_id: ProjectId) *Future(ComponentTree);
+    pub fn getComponentInfo(component_id: ComponentId) ComponentInfo;
+};
+```
+
+#### 18.8 Live Preview Bridge API
+- Launch preview sessions
+- Hot reload integration
+- Multi-device preview
+- Debug overlay support
+
+```zig
+pub const Preview = struct {
+    pub fn open(project_id: ProjectId, target: Target) *Future(PreviewId);
+    pub fn close(preview_id: PreviewId) void;
+    pub fn refresh(preview_id: PreviewId) void;
+    pub fn setDebugOverlay(preview_id: PreviewId, enabled: bool) void;
+};
+```
+
+### CLI Commands
+
+```bash
+# Project scaffolding
+zylix new my-app --template=app --targets=ios,android,web
+
+# Build commands
+zylix build --target=ios --config=release
+zylix build --all --parallel
+
+# Development
+zylix dev --target=web --port=3000
+zylix preview --target=ios-sim
+
+# Template management
+zylix templates list
+zylix templates add ./my-template
+```
+
+### Success Criteria
+
+- [ ] Project creation for all 7 platforms with single command
+- [ ] Build start/completion events emitted with logs
+- [ ] Artifact paths and metadata queryable
+- [ ] Target capabilities queryable without hardcoding
+- [ ] Template catalog accessible via API
+- [ ] File changes reflected in editor reliably
+- [ ] Component tree exportable without manual parsing
+- [ ] Preview launchable with single action
+
+---
+
+## Phase 19: Node-based UI (v0.17.0)
 
 ### Overview
 
@@ -1192,7 +1582,7 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 
 ---
 
-## Phase 17: PDF Support (v0.15.0)
+## Phase 20: PDF Support (v0.18.0)
 
 ### Overview
 
@@ -1266,7 +1656,7 @@ Comprehensive PDF document handling inspired by [pdf-nano](https://github.com/Gr
 
 ---
 
-## Phase 18: Excel Support (v0.16.0)
+## Phase 21: Excel Support (v0.19.0)
 
 ### Overview
 
@@ -1336,78 +1726,159 @@ Excel spreadsheet (xlsx) file support based on [libxlsxwriter](https://github.co
 
 ---
 
-## Phase 19: Database Support (v0.17.0)
+## Phase 22: mBaaS Support (v0.20.0)
 
 ### Overview
 
-Comprehensive database connectivity layer supporting PostgreSQL, MySQL, SQLite, and libSQL (Turso). Provides a unified API for database operations across all platforms, including WASM.
+Integration with major mBaaS (mobile Backend as a Service) platforms including Firebase, Supabase, and AWS Amplify. Provides unified APIs for backend features such as authentication, databases, storage, and push notifications.
 
 ### Planned Features
 
-#### 19.1 Connection Management
-- Connection pooling
-- Connection string parsing
-- SSL/TLS support
-- Automatic reconnection
-- Transaction management
-- Prepared statements
+#### 20.1 Firebase Integration
 
-#### 19.2 PostgreSQL Support
-- Full protocol implementation
-- All data types support
-- LISTEN/NOTIFY
-- COPY operations
-- Array types
-- JSON/JSONB operations
+- **Firebase Authentication**
+  - Email/password authentication
+  - Social login (Google, Apple, Facebook, Twitter)
+  - Phone number authentication
+  - Anonymous authentication
+  - Custom token authentication
 
-#### 19.3 MySQL Support
-- MySQL protocol implementation
-- Prepared statements
-- Multiple result sets
-- Binary protocol
-- Connection compression
+- **Cloud Firestore**
+  - Real-time data synchronization
+  - Document/collection operations
+  - Queries and filtering
+  - Offline support
+  - Transactions
 
-#### 19.4 SQLite Support
-- Embedded SQLite
-- In-memory databases
-- File-based databases
-- WAL mode support
-- User-defined functions
-- Virtual tables
+- **Firebase Storage**
+  - File upload/download
+  - Progress monitoring
+  - Metadata management
+  - Security rules
 
-#### 19.5 libSQL / Turso Support
-- libSQL embedded mode
-- Turso cloud connection
-- Edge-optimized queries
-- Embedded replicas
-- HTTP API support
+- **Firebase Cloud Messaging (FCM)**
+  - Push notification send/receive
+  - Topic subscriptions
+  - Notification payload handling
 
-#### 19.6 Query Builder
-- Type-safe query construction
-- Comptime SQL validation
-- Parameter binding
-- Result mapping
-- Migration support
+- **Additional Services**
+  - Firebase Analytics
+  - Firebase Crashlytics
+  - Firebase Remote Config
+  - Firebase App Check
+
+#### 20.2 Supabase Integration
+
+- **Supabase Auth**
+  - Email/password authentication
+  - Magic link
+  - Social login (OAuth providers)
+  - Row Level Security (RLS) integration
+
+- **Supabase Database (PostgreSQL)**
+  - Real-time subscriptions
+  - CRUD operations
+  - SQL queries
+  - Stored procedures
+  - PostgREST API integration
+
+- **Supabase Storage**
+  - File upload/download
+  - Signed URLs
+  - Bucket management
+  - Image transformations (resize, optimize)
+
+- **Supabase Edge Functions**
+  - Serverless function invocation
+  - Custom logic execution
+
+- **Supabase Realtime**
+  - Broadcast channels
+  - Presence feature
+  - Database change listeners
+
+#### 20.3 AWS Amplify Integration
+
+- **Amplify Auth (Cognito)**
+  - User pool management
+  - Federated identities
+  - MFA support
+  - OAuth/OIDC providers
+
+- **Amplify DataStore**
+  - Offline-first data synchronization
+  - GraphQL API (AppSync)
+  - Real-time subscriptions
+  - Conflict resolution
+
+- **Amplify Storage (S3)**
+  - File operations
+  - Access level management (public, protected, private)
+  - Signed URLs
+
+- **Amplify Push Notifications**
+  - Amazon Pinpoint integration
+  - Segment delivery
+  - Analytics and tracking
+
+- **Additional Services**
+  - Amplify Analytics
+  - Amplify Predictions (AI/ML)
+  - Amplify Geo (Location)
+
+### Unified API Design
+
+```zig
+// Unified mBaaS authentication API
+pub const Auth = struct {
+    pub fn signInWithEmail(email: []const u8, password: []const u8) *Future(User);
+    pub fn signInWithProvider(provider: AuthProvider) *Future(User);
+    pub fn signOut() *Future(void);
+    pub fn getCurrentUser() ?User;
+    pub fn onAuthStateChange(callback: *const fn (?User) void) Subscription;
+};
+
+// Unified database API
+pub const Database = struct {
+    pub fn collection(name: []const u8) Collection;
+    pub fn doc(path: []const u8) Document;
+    pub fn query(collection: Collection, filters: []const Filter) *Future([]Document);
+    pub fn subscribe(query: Query, callback: DataCallback) Subscription;
+};
+
+// Unified storage API
+pub const Storage = struct {
+    pub fn upload(path: []const u8, data: []const u8) *Future(UploadResult);
+    pub fn download(path: []const u8) *Future([]const u8);
+    pub fn getUrl(path: []const u8) *Future([]const u8);
+    pub fn delete(path: []const u8) *Future(void);
+};
+```
 
 ### Platform Implementation
 
-| Platform | PostgreSQL | MySQL | SQLite | libSQL |
-|----------|------------|-------|--------|--------|
-| Native (iOS, Android, macOS, Linux, Windows) | TCP | TCP | Embedded | Embedded/HTTP |
-| Web/WASM | HTTP Proxy | HTTP Proxy | OPFS | HTTP |
-| Edge (Cloudflare, Vercel) | TCP (Hyperdrive) | - | D1 | HTTP |
+| Platform | Firebase | Supabase | AWS Amplify |
+|----------|----------|----------|-------------|
+| iOS | Firebase iOS SDK | supabase-swift | Amplify iOS |
+| Android | Firebase Android SDK | supabase-kt | Amplify Android |
+| Web | Firebase JS SDK | supabase-js | Amplify JS |
+| macOS | Firebase iOS SDK | supabase-swift | Amplify iOS |
+| Windows | Firebase C++ SDK | REST API | REST API |
+| Linux | Firebase C++ SDK | REST API | REST API |
 
 ### Success Criteria
 
-- [ ] All four databases connectable
-- [ ] Type-safe query builder
-- [ ] Transaction support
-- [ ] Connection pooling working
-- [ ] WASM database access via proxy
+- [ ] Firebase Authentication/Firestore/Storage integration
+- [ ] Supabase Auth/Database/Storage integration
+- [ ] AWS Amplify Auth/DataStore/Storage integration
+- [ ] Unified API abstraction layer
+- [ ] Real-time sync across all platforms
+- [ ] Offline support and data persistence
+- [ ] mBaaS sample application
 
 ---
 
-## Phase 20: Server Runtime (v0.18.0)
+## Phase 23: Server Runtime (v0.21.0)
 
 ### Overview
 
@@ -1501,15 +1972,15 @@ pub const API = struct {
 
 ---
 
-## Phase 21: Edge Adapters (v0.19.0)
+## Phase 24: Edge Adapters (v0.22.0)
 
 ### Overview
 
-Deploy Zylix Server to edge computing platforms. Compile Zig server code to WASM for edge runtimes, with platform-specific adapters for Cloudflare Workers, Vercel Edge Functions, AWS Lambda, and Deno Deploy.
+Deploy Zylix Server to edge computing platforms. Compile Zig server code to WASM for edge runtimes, with platform-specific adapters for 7 major edge platforms.
 
 ### Planned Features
 
-#### 21.1 Cloudflare Workers
+#### 22.1 Cloudflare Workers
 - WASM target compilation
 - Workers API bindings
 - KV storage integration
@@ -1530,79 +2001,177 @@ pub fn fetch(req: cf.Request, env: cf.Env) !cf.Response {
 }
 ```
 
-#### 21.2 Vercel Edge Functions
+#### 22.2 Vercel Edge Functions
 - Edge Runtime target
 - Vercel KV integration
 - Vercel Postgres (via Neon)
 - Blob storage
 - Edge Config
+- ISR (Incremental Static Regeneration)
 
-#### 21.3 AWS Lambda
+#### 22.3 AWS Lambda
 - Lambda custom runtime
 - Lambda@Edge support
 - API Gateway integration
 - DynamoDB bindings
 - S3 integration
 - SQS/SNS support
+- EventBridge integration
 
-#### 21.4 Deno Deploy
+#### 22.4 Azure Functions
+- Azure Functions custom handler
+- HTTP triggers
+- Azure Cosmos DB integration
+- Azure Blob Storage
+- Azure Service Bus
+- Azure Event Grid
+- Durable Functions
+
+```zig
+// azure/function.zig
+const zylix = @import("zylix-server");
+const azure = @import("zylix-azure");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(azure.adapter());
+    try azure.serve(app);
+}
+```
+
+#### 22.5 Deno Deploy
 - Deno WASM support
 - Deno KV integration
 - BroadcastChannel
 - Cron triggers
+- Fresh framework compatibility
 
-#### 21.5 Unified API
+#### 22.6 Google Cloud Run
+- Container-based deployment
+- Cloud Firestore integration
+- Cloud Storage
+- Pub/Sub integration
+- Cloud Tasks
+- Auto-scaling
+- VPC connector
+
+```zig
+// gcp/cloudrun.zig
+const zylix = @import("zylix-server");
+const gcp = @import("zylix-gcp");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(gcp.adapter());
+    const port = gcp.getPort() orelse 8080;
+    try app.listen(port);
+}
+```
+
+#### 22.7 Fastly Compute@Edge
+- Fastly WASM runtime
+- Config Store integration
+- KV Store
+- Secret Store
+- Fanout (real-time)
+- Image Optimizer integration
+- Edge dictionaries
+
+```zig
+// fastly/compute.zig
+const zylix = @import("zylix-server");
+const fastly = @import("zylix-fastly");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(fastly.adapter());
+    try fastly.serve(app);
+}
+```
+
+#### 22.8 Unified API
 - Platform-agnostic code
 - Environment detection
 - Feature detection
 - Graceful fallbacks
+- Provider switching
 
 ```zig
 // Unified API - runs on any platform
 const store = try zylix.kv.connect();
 try store.put("key", value);
 const data = try store.get("key");
+
+// Environment detection
+const platform = zylix.edge.detectPlatform();
+switch (platform) {
+    .cloudflare => // Cloudflare-specific handling,
+    .vercel => // Vercel-specific handling,
+    .aws_lambda => // AWS Lambda-specific handling,
+    .azure => // Azure Functions-specific handling,
+    .deno => // Deno Deploy-specific handling,
+    .gcp => // Google Cloud Run-specific handling,
+    .fastly => // Fastly-specific handling,
+    else => // Generic handling,
+}
 ```
 
-#### 21.6 Build Tools
+#### 22.9 Build Tools
 - Platform-specific bundling
 - WASM optimization
 - Tree shaking
 - Source maps
 - Deployment CLI
+- Multi-platform simultaneous deployment
 
 ```bash
-# Build for all platforms
+# Build for each platform
 zylix build --target=cloudflare
 zylix build --target=vercel
 zylix build --target=aws-lambda
+zylix build --target=azure
+zylix build --target=deno
+zylix build --target=gcp
+zylix build --target=fastly
 
 # Deploy
 zylix deploy --platform=cloudflare
+zylix deploy --platform=azure
+zylix deploy --platform=gcp
+
+# Multi-platform simultaneous deployment
+zylix deploy --platforms=cloudflare,vercel,aws-lambda
 ```
 
 ### Platform Comparison
 
-| Feature | Cloudflare | Vercel | AWS Lambda | Deno |
-|---------|------------|--------|------------|------|
-| Runtime | V8 Isolates | V8 Edge | Custom/WASM | V8 |
-| Cold Start | ~0ms | ~0ms | 100-500ms | ~0ms |
-| CPU Limit | 10-50ms | 25ms | 15min | 50ms |
-| Memory | 128MB | 128MB | 10GB | 512MB |
-| KV Store | Workers KV | Vercel KV | DynamoDB | Deno KV |
-| SQL | D1 | Postgres | RDS/Aurora | - |
+| Feature | Cloudflare | Vercel | AWS Lambda | Azure | Deno | GCP | Fastly |
+|---------|------------|--------|------------|-------|------|-----|--------|
+| Runtime | V8 Isolates | V8 Edge | Custom/WASM | Custom | V8 | Container | WASM |
+| Cold Start | ~0ms | ~0ms | 100-500ms | 100-500ms | ~0ms | 100-300ms | ~0ms |
+| CPU Limit | 10-50ms | 25ms | 15min | 10min | 50ms | 60min | 50ms |
+| Memory | 128MB | 128MB | 10GB | 1.5GB | 512MB | 32GB | 128MB |
+| KV Store | Workers KV | Vercel KV | DynamoDB | Cosmos DB | Deno KV | Firestore | KV Store |
+| SQL | D1 | Postgres | RDS/Aurora | SQL DB | - | Cloud SQL | - |
+| Global Edge | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| WebSocket | ✅ | - | ✅ | ✅ | ✅ | ✅ | Fanout |
 
 ### Success Criteria
 
 - [ ] Cloudflare Workers deployment
 - [ ] Vercel Edge deployment
 - [ ] AWS Lambda deployment
+- [ ] Azure Functions deployment
+- [ ] Deno Deploy deployment
+- [ ] Google Cloud Run deployment
+- [ ] Fastly Compute@Edge deployment
 - [ ] Unified KV/DB API
 - [ ] CLI deployment tools
+- [ ] Multi-platform simultaneous deployment
 
 ---
 
-## Phase 22: Performance & Optimization (v0.20.0)
+## Phase 25: Performance & Optimization (v0.23.0)
 
 ### Overview
 
@@ -1646,7 +2215,7 @@ Optimize performance, reduce bundle sizes, and prepare the framework for product
 
 ---
 
-## Phase 23: Documentation Excellence (v0.21.0)
+## Phase 26: Documentation Excellence (v0.24.0)
 
 ### Overview
 
@@ -1684,6 +2253,397 @@ Comprehensive documentation, tutorials, and learning resources to make Zylix acc
 - [ ] Interactive playground operational
 - [ ] Video tutorial series
 - [ ] Community showcase gallery
+
+---
+
+## Phase 27: Official Sample Projects (v0.25.0)
+
+### Overview
+
+Comprehensive collection of production-quality sample projects that showcase Zylix's full capabilities. Each sample demonstrates best practices, includes thorough documentation, and serves as both learning material and practical starter templates.
+
+### Sample Categories
+
+#### 27.1 Starter Templates (4 samples)
+
+Entry-point templates for new projects:
+
+| Template | Description | Features |
+|----------|-------------|----------|
+| **Blank App** | Minimal project structure | Basic setup, routing scaffold |
+| **Tab Navigation** | Tab-based navigation app | TabBar, multiple screens, state preservation |
+| **Drawer Navigation** | Side menu navigation app | Drawer, hamburger menu, nested navigation |
+| **Dashboard Layout** | Business dashboard structure | Header, sidebar, content area, responsive |
+
+#### 27.2 Feature Showcase (7 samples)
+
+Complete demonstrations of Zylix features:
+
+**Component Gallery**
+- All 40+ UI components with interactive examples
+- Live property editors for each component
+- Accessibility testing panel
+- Platform-specific rendering comparison
+
+**Animation Studio**
+- Lottie animation player and controls
+- Live2D character showcase with expression/motion
+- Custom animation timeline editor
+- Transition effect gallery
+
+**3D Viewer**
+- glTF/OBJ/FBX model loader
+- Camera controls (orbit, pan, zoom)
+- Lighting and material editor
+- Post-processing effects demo
+
+**Game Arcade**
+- 3 mini-games demonstrating physics, sprites, audio
+- Game state management patterns
+- Touch/keyboard input handling
+- Leaderboard integration
+
+**AI Playground**
+- Whisper speech-to-text demo
+- LLM chat interface with streaming
+- VLM image understanding
+- On-device vs cloud comparison
+
+**Device Lab**
+- Camera capture and filters
+- Sensor visualization (accelerometer, gyroscope, compass)
+- GPS location and geofencing
+- Haptic feedback patterns
+- Push notification testing
+
+**Database Workshop**
+- SQLite, PostgreSQL, Turso connection demos
+- CRUD operations with type-safe queries
+- Offline-first sync patterns
+- Migration examples
+
+#### 27.3 Real-World Applications (8 samples)
+
+Production-ready application templates:
+
+**TaskMaster** - Advanced Task Management
+```
+Features:
+├── Categories and tags
+├── Due dates with notifications
+├── Priority levels and sorting
+├── Search and filters
+├── Cloud sync (Firebase/Supabase)
+├── Offline support
+├── Dark/Light theme
+└── watchOS companion
+```
+
+**ShopDemo** - E-commerce Application
+```
+Features:
+├── Product catalog with search
+├── Category navigation
+├── Shopping cart
+├── In-app purchase integration
+├── Order history
+├── User authentication
+├── Wishlist
+└── Product reviews
+```
+
+**ChatSpace** - Real-time Messaging
+```
+Features:
+├── Real-time messaging (Supabase Realtime)
+├── User presence indicators
+├── Message history with pagination
+├── File attachments (images, files)
+├── Push notifications
+├── Typing indicators
+├── Read receipts
+└── Group conversations
+```
+
+**Analytics Pro** - Business Dashboard
+```
+Features:
+├── Real-time data visualization
+├── Multiple chart types (bar, line, pie, scatter)
+├── Data tables with sorting/filtering
+├── PDF report export
+├── Excel data export
+├── Date range selectors
+├── Custom dashboards
+└── Node-based workflow editor
+```
+
+**MediaBox** - Media Player
+```
+Features:
+├── Audio playback with controls
+├── Video player with subtitles
+├── Playlist management
+├── Background audio
+├── Media controls (lock screen, notification)
+├── Equalizer visualization
+├── Streaming support
+└── Offline downloads
+```
+
+**NoteFlow** - Notes & Documents
+```
+Features:
+├── Rich text editing
+├── Markdown support
+├── Folder organization
+├── Full-text search
+├── Cloud sync
+├── PDF export
+├── Image embedding
+└── Tags and linking
+```
+
+**FitTrack** - Health & Fitness
+```
+Features:
+├── Workout tracking
+├── Health data visualization
+├── Goal setting
+├── Progress charts
+├── Sensor integration (heart rate, steps)
+├── watchOS workout app
+├── Apple Health / Google Fit integration
+└── Social sharing
+```
+
+**QuizMaster** - Educational Quiz
+```
+Features:
+├── Quiz creation and editing
+├── Multiple question types
+├── Timed quizzes
+├── Score tracking
+├── Leaderboards
+├── Achievement system
+├── Offline mode
+└── Analytics and insights
+```
+
+#### 27.4 Platform-Specific Showcases (5 samples)
+
+Demonstrations of platform-exclusive features:
+
+**iOS Exclusive**
+- Home Screen Widgets (WidgetKit)
+- App Clips
+- Siri Shortcuts integration
+- SharePlay support
+- Focus mode filters
+
+**Android Exclusive**
+- Home Screen Widgets
+- Tiles (Quick Settings)
+- Dynamic shortcuts
+- Notification channels
+- Picture-in-Picture
+
+**Web PWA**
+- Progressive Web App features
+- Service Worker caching
+- Push notifications
+- Installability
+- Responsive design
+- SEO optimization
+
+**Desktop Native**
+- Native menu bar integration
+- System tray with context menu
+- File system access
+- Drag and drop from desktop
+- Keyboard shortcuts
+- Multi-window support
+
+**watchOS Companion**
+- Complications for watch faces
+- Workout session management
+- Health data sync
+- Digital Crown interactions
+- Independent app functionality
+
+#### 27.5 Game Samples (4 samples)
+
+Complete game implementations:
+
+**Platformer Adventure**
+```
+Features:
+├── Physics-based movement
+├── Sprite animation system
+├── Tile map levels
+├── Enemy AI
+├── Collectibles and power-ups
+├── Sound effects and BGM
+├── Save/load system
+└── Multiple levels
+```
+
+**Puzzle World**
+```
+Features:
+├── Drag and drop mechanics
+├── Match-3 style puzzles
+├── Level progression
+├── Hint system
+├── Animations and particles
+├── Score system
+└── Daily challenges
+```
+
+**Space Shooter**
+```
+Features:
+├── Fast-paced action
+├── Particle effects
+├── Power-up system
+├── Boss battles
+├── High score leaderboard
+├── Multiple ships
+└── Procedural levels
+```
+
+**VTuber Demo**
+```
+Features:
+├── Live2D character rendering
+├── Expression control
+├── Lip sync with audio
+├── Motion tracking (camera)
+├── Background replacement
+├── Recording support
+└── Stream overlay mode
+```
+
+#### 27.6 Full-Stack Integration (3 samples)
+
+End-to-end application examples:
+
+**Social Network**
+```
+Stack: Zylix + Zylix Server + Supabase
+├── User authentication
+├── Profile management
+├── Post creation with images
+├── Like and comment system
+├── Follow/unfollow
+├── Real-time feed updates
+├── Notifications
+└── Direct messaging
+```
+
+**Project Board**
+```
+Stack: Zylix + Zylix Server + PostgreSQL
+├── Kanban board interface
+├── Real-time collaboration
+├── Drag and drop cards
+├── Team management
+├── Comments and attachments
+├── Activity history
+├── Role-based permissions
+└── Email notifications
+```
+
+**API Server Demo**
+```
+Stack: Zylix Server + Edge Deployment
+├── RESTful API design
+├── Type-safe RPC
+├── JWT authentication
+├── Rate limiting
+├── Cloudflare Workers deployment
+├── Vercel Edge deployment
+├── API documentation (OpenAPI)
+└── Monitoring dashboard
+```
+
+### Quality Standards
+
+All official samples must meet:
+
+| Criteria | Requirement |
+|----------|-------------|
+| **Functionality** | Works on all target platforms without errors |
+| **Design** | Follows Zylix design guidelines, visually polished |
+| **Code Quality** | Best practices, well-structured, maintainable |
+| **Testing** | Unit tests, E2E tests, visual regression tests |
+| **Documentation** | README, code comments, tutorial walkthrough |
+| **Accessibility** | WCAG 2.1 AA compliance |
+| **Performance** | Meets platform-specific performance budgets |
+| **License** | MIT license, clear attribution |
+
+### Sample Project Structure
+
+```
+samples/
+├── templates/
+│   ├── blank-app/
+│   ├── tab-navigation/
+│   ├── drawer-navigation/
+│   └── dashboard-layout/
+├── showcase/
+│   ├── component-gallery/
+│   ├── animation-studio/
+│   ├── 3d-viewer/
+│   ├── game-arcade/
+│   ├── ai-playground/
+│   ├── device-lab/
+│   └── database-workshop/
+├── apps/
+│   ├── taskmaster/
+│   ├── shop-demo/
+│   ├── chat-space/
+│   ├── analytics-pro/
+│   ├── media-box/
+│   ├── note-flow/
+│   ├── fit-track/
+│   └── quiz-master/
+├── platform/
+│   ├── ios-exclusive/
+│   ├── android-exclusive/
+│   ├── web-pwa/
+│   ├── desktop-native/
+│   └── watchos-companion/
+├── games/
+│   ├── platformer/
+│   ├── puzzle-world/
+│   ├── space-shooter/
+│   └── vtuber-demo/
+└── fullstack/
+    ├── social-network/
+    ├── project-board/
+    └── api-server/
+```
+
+### Release Strategy
+
+| Priority | Samples | Release |
+|----------|---------|---------|
+| **P0 (Core)** | Component Gallery, Animation Studio, TaskMaster, ChatSpace, Game Arcade, AI Playground, 3D Viewer, Device Lab, ShopDemo, Analytics Pro | v0.25.0 |
+| **P1 (Extended)** | NoteFlow, MediaBox, FitTrack, Database Workshop, Platformer, VTuber Demo, Social Network, Project Board | v0.25.1 |
+| **P2 (Platform)** | iOS Exclusive, Android Exclusive, Web PWA, Desktop Native, watchOS Companion | v0.25.2 |
+| **Templates** | Blank App, Tab Navigation, Drawer Navigation, Dashboard Layout | All versions |
+
+### Success Criteria
+
+- [ ] 23+ sample projects completed and published
+- [ ] All samples work on target platforms
+- [ ] Each sample has comprehensive documentation
+- [ ] Step-by-step tutorials for all P0 samples
+- [ ] Video walkthroughs for complex samples
+- [ ] Community feedback integration
+- [ ] Regular updates for new Zylix features
+- [ ] Sample project gallery on documentation site
 
 ---
 
@@ -1813,54 +2773,89 @@ Comprehensive documentation, tutorials, and learning resources to make Zylix acc
 - Complete audio system (SFX, BGM)
 - Entity-Component-System architecture
 
-#### v0.14.0 - Node-based UI
+#### v0.14.0 - Database Support
+- SQLite, MySQL, PostgreSQL, Turso/libSQL connectivity
+- Type-safe query builder
+- Connection pooling and transactions
+- Cross-platform database access (including WASM)
+
+#### v0.15.0 - App Integration APIs
+- In-App Purchase (StoreKit 2, Play Billing)
+- Ads abstraction (banner, interstitial, rewarded)
+- KeyValueStore (persistent storage)
+- App lifecycle hooks
+- Motion frame provider (camera-based motion tracking)
+- Low-latency audio clip player
+
+#### v0.16.0 - Developer Tooling
+- Project scaffolding CLI
+- Build orchestration API
+- Template catalog system
+- File watcher with hot reload
+- Component tree export
+- Live preview bridge
+
+#### v0.17.0 - Node-based UI
 - React Flow-style node components
 - Visual workflow editors
 - Interactive canvas with pan/zoom
 - Customizable node and edge types
 
-#### v0.15.0 - PDF Support
+#### v0.18.0 - PDF Support
 - PDF generation and reading
 - Text, image, and graphics embedding
 - PDF editing and merging
 - Form field support
 
-#### v0.16.0 - Excel Support
+#### v0.19.0 - Excel Support
 - xlsx file creation and reading
 - Cell formatting and formulas
 - Charts and data visualization
 - Multiple worksheet support
 
-#### v0.17.0 - Database Support
-- PostgreSQL, MySQL, SQLite, libSQL connectivity
-- Type-safe query builder
-- Connection pooling and transactions
-- Cross-platform database access (including WASM)
+#### v0.20.0 - mBaaS Support
+- Firebase (Authentication, Firestore, Storage, FCM)
+- Supabase (Auth, Database, Storage, Realtime)
+- AWS Amplify (Auth, DataStore, Storage)
+- Unified API abstraction layer for mBaaS
+- Real-time sync and offline support
 
-#### v0.18.0 - Server Runtime (Zylix Server)
+#### v0.21.0 - Server Runtime (Zylix Server)
 - Hono.js-inspired HTTP server in Zig
 - Type-safe RPC (client ↔ server)
 - Middleware system
 - Server-side rendering
 
-#### v0.19.0 - Edge Adapters
+#### v0.22.0 - Edge Adapters
 - Cloudflare Workers deployment
 - Vercel Edge Functions
 - AWS Lambda support
+- Azure Functions support
+- Deno Deploy support
+- Google Cloud Run support
+- Fastly Compute@Edge support
 - Unified platform API
+- Multi-platform simultaneous deployment
 
-#### v0.20.0 - Performance & Optimization
+#### v0.23.0 - Performance & Optimization
 - Performance profiling and optimization
 - Bundle size reduction
 - Memory usage optimization
 - Lazy loading and code splitting
 
-#### v0.21.0 - Documentation Excellence
+#### v0.24.0 - Documentation Excellence
 - Complete API documentation
 - Comprehensive tutorials
 - Real-world sample applications
 - Interactive playground
 - Video tutorials
+
+#### v0.25.0 - Official Sample Projects
+- 23+ production-quality sample projects
+- Starter templates (4), Feature showcases (7), Real-world apps (8)
+- Platform-specific samples (5), Game samples (4), Full-stack (3)
+- Comprehensive documentation and tutorials for each sample
+- All samples meet quality standards (testing, accessibility, performance)
 
 ### Quality Philosophy
 

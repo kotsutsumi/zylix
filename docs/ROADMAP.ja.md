@@ -1,7 +1,7 @@
 # Zylix ロードマップ
 
 > **最終更新**: 2025-12-24
-> **現在のバージョン**: v0.10.0
+> **現在のバージョン**: v0.12.0
 
 ---
 
@@ -23,17 +23,21 @@
 | v0.8.1 | Phase 11a | watchOS対応, 言語バインディング, CI/CD, E2Eテスト | ✅ 完了 | 2025-12-23 |
 | v0.9.0 | Phase 11b | 組み込みAI (Zylix AI) | ✅ 完了 | 2025-12-24 |
 | v0.10.0 | Phase 12 | デバイス機能 & ジェスチャー | ✅ 完了 | 2025-12-24 |
-| v0.11.0 | Phase 13 | アニメーション (Lottie, Live2D) | ⏳ 計画中 | 2025年Q1 |
-| v0.12.0 | Phase 14 | 3Dグラフィックス (Three.js風) | ⏳ 計画中 | 2025年Q2 |
-| v0.13.0 | Phase 15 | ゲーム開発 (PIXI.js風, 物理エンジン, オーディオ) | ⏳ 計画中 | 2025年Q3 |
-| v0.14.0 | Phase 16 | ノードベースUI (React Flow風) | ⏳ 計画中 | 2025年Q4 |
-| v0.15.0 | Phase 17 | PDFサポート (生成・読み込み・編集) | ⏳ 計画中 | 2026年Q1 |
-| v0.16.0 | Phase 18 | Excelサポート (xlsx読み書き) | ⏳ 計画中 | 2026年Q2 |
-| v0.17.0 | Phase 19 | データベース (PostgreSQL, MySQL, SQLite, libSQL) | ⏳ 計画中 | 2026年Q3 |
-| v0.18.0 | Phase 20 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2026年Q4 |
-| v0.19.0 | Phase 21 | エッジアダプター (Cloudflare, Vercel, AWS) | ⏳ 計画中 | 2027年Q1 |
-| v0.20.0 | Phase 22 | パフォーマンス & 最適化 | ⏳ 計画中 | 2027年Q2 |
-| v0.21.0 | Phase 23 | ドキュメント充実 | ⏳ 計画中 | 2027年Q3 |
+| v0.11.0 | Phase 13 | アニメーション (Lottie, Live2D) | ✅ 完了 | 2025-12-24 |
+| v0.12.0 | Phase 14 | 3Dグラフィックス (Three.js風) | ✅ 完了 | 2025-12-24 |
+| v0.13.0 | Phase 15 | ゲーム開発 (PIXI.js風, 物理エンジン, オーディオ) | 🚧 進行中 | 2025-12-24 |
+| v0.14.0 | Phase 16 | データベース (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ⏳ 計画中 | 2025年Q4 |
+| v0.15.0 | Phase 17 | アプリ統合API (IAP, 広告, KeyValueStore, ライフサイクル) | ⏳ 計画中 | 2025年Q4 |
+| v0.16.0 | Phase 18 | 開発者ツール (CLI, スキャフォールディング, ビルド, テンプレート) | ⏳ 計画中 | 2026年Q1 |
+| v0.17.0 | Phase 19 | ノードベースUI (React Flow風) | ⏳ 計画中 | 2026年Q1 |
+| v0.18.0 | Phase 20 | PDFサポート (生成・読み込み・編集) | ⏳ 計画中 | 2026年Q2 |
+| v0.19.0 | Phase 21 | Excelサポート (xlsx読み書き) | ⏳ 計画中 | 2026年Q2 |
+| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ 計画中 | 2026年Q3 |
+| v0.21.0 | Phase 23 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2026年Q4 |
+| v0.22.0 | Phase 24 | エッジアダプター (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ 計画中 | 2027年Q1 |
+| v0.23.0 | Phase 25 | パフォーマンス & 最適化 | ⏳ 計画中 | 2027年Q2 |
+| v0.24.0 | Phase 26 | ドキュメント充実 | ⏳ 計画中 | 2027年Q3 |
+| v0.25.0 | Phase 27 | 公式サンプルプロジェクト (23種類以上) | ⏳ 計画中 | 2027年Q4 |
 
 ---
 
@@ -597,7 +601,7 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 13: アニメーションシステム (v0.11.0)
+## Phase 13: アニメーションシステム (v0.11.0) ✅ 完了
 
 ### 概要
 
@@ -649,7 +653,7 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 14: 3Dグラフィックスエンジン (v0.12.0)
+## Phase 14: 3Dグラフィックスエンジン (v0.12.0) ✅ 完了
 
 ### 概要
 
@@ -703,7 +707,7 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 15: ゲーム開発プラットフォーム (v0.13.0)
+## Phase 15: ゲーム開発プラットフォーム (v0.13.0) 🚧 進行中
 
 ### 概要
 
@@ -774,7 +778,393 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 16: ノードベースUI (v0.14.0)
+## Phase 16: データベースサポート (v0.14.0)
+
+### 概要
+
+SQLite、MySQL、PostgreSQL、Turso (libSQL) をサポートする包括的なデータベース接続レイヤー。WASM を含むすべてのプラットフォームで統一された API を提供します。
+
+### 計画機能
+
+#### 16.1 SQLite サポート
+- 組み込み SQLite エンジン
+- インメモリデータベース
+- ファイルベースデータベース
+- WAL モードサポート
+- ユーザー定義関数
+- 仮想テーブル
+- 全文検索 (FTS5)
+- JSON1 拡張
+
+#### 16.2 MySQL サポート
+- MySQL プロトコル実装
+- プリペアドステートメント
+- 複数結果セット
+- バイナリプロトコル
+- 接続圧縮
+- SSL/TLS サポート
+- ストアドプロシージャ
+- トランザクション
+
+#### 16.3 PostgreSQL サポート
+- 完全なプロトコル実装
+- 全データ型サポート
+- LISTEN/NOTIFY
+- COPY 操作
+- 配列型
+- JSON/JSONB 操作
+- 全文検索
+- プリペアドステートメント
+
+#### 16.4 Turso / libSQL サポート
+- [Turso](https://turso.tech/) クラウドデータベース
+- [libSQL](https://github.com/tursodatabase/libsql) 組み込みモード
+- エッジ最適化クエリ
+- 組み込みレプリカ
+- HTTP API サポート
+- SQLite 互換性
+- グローバル分散
+- 自動スケーリング
+
+#### 16.5 接続管理
+- コネクションプーリング
+- 接続文字列パース
+- SSL/TLS サポート
+- 自動再接続
+- トランザクション管理
+- プリペアドステートメント
+
+#### 16.6 クエリビルダー
+- 型安全なクエリ構築
+- コンパイル時 SQL 検証
+- パラメータバインディング
+- 結果マッピング
+- マイグレーションサポート
+
+### プラットフォーム実装
+
+| プラットフォーム | SQLite | MySQL | PostgreSQL | Turso/libSQL |
+|----------------|--------|-------|------------|--------------|
+| ネイティブ (iOS, Android, macOS, Linux, Windows) | 組み込み | TCP | TCP | 組み込み/HTTP |
+| Web/WASM | OPFS/IndexedDB | HTTP プロキシ | HTTP プロキシ | HTTP |
+| エッジ (Cloudflare, Vercel) | D1 | - | TCP (Hyperdrive) | HTTP |
+
+### アーキテクチャ
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  Zylix Database (Zig Core)                  │
+├─────────────────────────────────────────────────────────────┤
+│  コネクションプール│  クエリビルダー  │  トランザクション管理 │
+│  - 最大接続数     │  - 型安全       │  - ACID 準拠        │
+│  - ヘルスチェック │  - コンパイル時SQL│  - セーブポイント   │
+│  - 自動再接続    │  - マイグレーション│  - ロールバック     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                         C ABI レイヤー
+                              │
+     ┌────────────┬───────────┼───────────┬────────────┐
+     ▼            ▼           ▼           ▼            ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ SQLite  │ │  MySQL  │ │PostgreSQL│ │ Turso  │ │  WASM   │
+│  組込み  │ │  TCP    │ │   TCP   │ │  HTTP  │ │ プロキシ │
+└─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘
+```
+
+### 成功基準
+
+- [ ] 4つのデータベースすべてに接続可能
+- [ ] 型安全なクエリビルダー
+- [ ] トランザクションサポート
+- [ ] コネクションプーリング動作
+- [ ] WASM でのデータベースアクセス（プロキシ経由）
+- [ ] マイグレーションシステム機能
+- [ ] データベースサンプルアプリケーション
+
+---
+
+## Phase 17: アプリ統合API (v0.15.0)
+
+### 概要
+
+一般的なアプリ統合ニーズのための統一API：アプリ内課金、広告、永続ストレージ、アプリライフサイクル管理、リアルタイム処理向けの拡張カメラ/オーディオ機能。
+
+### 計画機能
+
+#### 17.1 アプリ内課金 (IAP) 抽象化
+- プラットフォーム横断の統一購入フロー
+- 商品カタログクエリ
+- 購入と復元機能
+- エンタイトルメント検証
+- レシート検証
+
+```zig
+pub const Store = struct {
+    pub fn getProducts(product_ids: []const []const u8) *Future([]Product);
+    pub fn purchase(product_id: []const u8) *Future(PurchaseResult);
+    pub fn restore() *Future(RestoreResult);
+    pub fn hasEntitlement(product_id: []const u8) bool;
+};
+```
+
+#### 17.2 広告抽象化
+- バナー広告（プレースメントによる表示/非表示）
+- インタースティシャル広告
+- リワード動画広告
+- GDPR/プライバシー準拠ヘルパー
+
+```zig
+pub const Ads = struct {
+    pub fn showBanner(placement_id: []const u8) void;
+    pub fn hideBanner(placement_id: []const u8) void;
+    pub fn showInterstitial(placement_id: []const u8) *Future(AdResult);
+    pub fn showRewarded(placement_id: []const u8) *Future(RewardResult);
+};
+```
+
+#### 17.3 KeyValueStore
+- 永続的なキーバリューストレージ
+- 型安全なアクセサー（bool、int、float、string）
+- デフォルト値サポート
+- 非同期バッチ操作
+
+```zig
+pub const KeyValueStore = struct {
+    pub fn getBool(key: []const u8, default: bool) bool;
+    pub fn getFloat(key: []const u8, default: f32) f32;
+    pub fn getString(key: []const u8, default: []const u8) []const u8;
+    pub fn putBool(key: []const u8, value: bool) void;
+    pub fn putFloat(key: []const u8, value: f32) void;
+    pub fn putString(key: []const u8, value: []const u8) void;
+};
+```
+
+#### 17.4 アプリライフサイクルフック
+- フォアグラウンド/バックグラウンド状態コールバック
+- 終了ハンドラー
+- メモリ警告通知
+- 状態復元サポート
+
+```zig
+pub const AppLifecycle = struct {
+    pub fn onForeground(callback: *const fn () void) void;
+    pub fn onBackground(callback: *const fn () void) void;
+    pub fn onTerminate(callback: *const fn () void) void;
+    pub fn onMemoryWarning(callback: *const fn () void) void;
+};
+```
+
+#### 17.5 モーションフレームプロバイダー
+- モーショントラッキング用の低解像度カメラフレーム
+- プレビュー不要（バックグラウンド処理）
+- 設定可能なフレームレートと解像度
+- モーション重心検出サポート
+
+```zig
+pub const MotionFrameProvider = struct {
+    pub fn start(config: MotionFrameConfig, on_frame: *const fn (MotionFrame) void) void;
+    pub fn stop() void;
+};
+
+pub const MotionFrameConfig = struct {
+    target_fps: u8 = 15,
+    resolution: Resolution = .low,
+    pixel_format: PixelFormat = .grayscale,
+};
+```
+
+#### 17.6 低レイテンシオーディオクリッププレイヤー
+- 最小レイテンシでの短いオーディオクリップ再生
+- 即時再生のためのプリロードサポート
+- クリップごとのボリューム制御
+- 複数同時再生
+
+```zig
+pub const AudioClipPlayer = struct {
+    pub fn preload(clips: []const AudioClip) *Future(void);
+    pub fn play(clip_id: []const u8, volume: f32) void;
+    pub fn stop(clip_id: []const u8) void;
+    pub fn stopAll() void;
+};
+```
+
+### プラットフォーム実装
+
+| 機能 | iOS | Android | Web | Desktop |
+|-----|-----|---------|-----|---------|
+| IAP | StoreKit 2 | Play Billing | - | - |
+| 広告 | AdMob/AppLovin | AdMob/AppLovin | - | - |
+| KeyValueStore | UserDefaults | SharedPreferences | localStorage | ファイルベース |
+| ライフサイクル | UIApplication | Activity/Lifecycle | visibilitychange | ネイティブイベント |
+| モーションフレーム | AVFoundation | CameraX ImageAnalysis | getUserMedia | プラットフォームカメラ |
+| オーディオクリップ | AVAudioEngine | AudioTrack/Oboe | Web Audio API | miniaudio |
+
+### 成功基準
+
+- [ ] iOSとAndroidでIAP購入・復元が動作
+- [ ] バナー広告が正しく表示
+- [ ] KeyValueStoreがアプリ再起動後も永続化
+- [ ] ライフサイクルフックが状態変更から1秒以内にトリガー
+- [ ] モーションフレームが15fpsで安定動作
+- [ ] オーディオクリップのレイテンシが150ms未満
+
+---
+
+## Phase 18: 開発者ツール (v0.16.0)
+
+### 概要
+
+Zylixアプリケーション向けの包括的な開発者ツール：プロジェクト管理CLI、スキャフォールディングシステム、ビルドオーケストレーション、テンプレートカタログ、ライブプレビュー機能。
+
+### 計画機能
+
+#### 18.1 プロジェクトスキャフォールディングAPI
+- 7プラットフォームすべてのプロジェクトレイアウト作成
+- テンプレートベースの初期化
+- 設定生成
+- 依存関係解決
+
+```zig
+pub const Project = struct {
+    pub fn create(template_id: []const u8, targets: []const Target, output_dir: []const u8) *Future(ProjectId);
+    pub fn validate(project_id: ProjectId) *Future(ValidationResult);
+    pub fn getInfo(project_id: ProjectId) ProjectInfo;
+};
+```
+
+#### 18.2 ビルドオーケストレーションAPI
+- マルチターゲットビルド実行
+- ビルド設定管理
+- 進捗とログストリーミング
+- 並列ビルドサポート
+
+```zig
+pub const Build = struct {
+    pub fn start(project_id: ProjectId, target: Target, config: BuildConfig) *Future(BuildId);
+    pub fn cancel(build_id: BuildId) void;
+    pub fn getStatus(build_id: BuildId) BuildStatus;
+    pub fn onProgress(build_id: BuildId, callback: *const fn (BuildProgress) void) void;
+    pub fn onLog(build_id: BuildId, callback: *const fn (LogEntry) void) void;
+};
+```
+
+#### 18.3 ビルドアーティファクトクエリAPI
+- アーティファクトパス取得
+- メタデータアクセス（サイズ、ハッシュ、タイムスタンプ）
+- 署名ステータス情報
+- エクスポートとパッケージング
+
+```zig
+pub const Artifacts = struct {
+    pub fn getArtifacts(build_id: BuildId) *Future([]Artifact);
+    pub fn getMetadata(artifact_path: []const u8) ArtifactMetadata;
+    pub fn export(artifact_path: []const u8, destination: []const u8) *Future(void);
+};
+```
+
+#### 18.4 ターゲット機能マトリックスAPI
+- ターゲットごとのサポート機能クエリ
+- ランタイム機能検出
+- 機能互換性検証
+- 動的UIフィールド設定
+
+```zig
+pub const Targets = struct {
+    pub fn getCapabilities() CapabilityMatrix;
+    pub fn supportsFeature(target: Target, feature: Feature) bool;
+    pub fn getRequiredInputs(target: Target) []InputSpec;
+};
+```
+
+#### 18.5 テンプレートカタログAPI
+- 利用可能なプロジェクトテンプレート一覧
+- テンプレートメタデータと要件
+- カスタムテンプレート登録
+- テンプレートバージョニング
+
+```zig
+pub const Templates = struct {
+    pub fn list() []Template;
+    pub fn getDetails(template_id: []const u8) TemplateDetails;
+    pub fn register(template: CustomTemplate) *Future(void);
+};
+```
+
+#### 18.6 ファイルウォッチャーAPI
+- リアルタイムファイルシステム監視
+- 設定可能なフィルターとパターン
+- デバウンス付き変更イベント
+- 再帰的ディレクトリ監視
+
+```zig
+pub const FileWatcher = struct {
+    pub fn watch(path: []const u8, filters: WatchFilters) WatchId;
+    pub fn unwatch(watch_id: WatchId) void;
+    pub fn onChange(watch_id: WatchId, callback: *const fn (FileChange) void) void;
+};
+```
+
+#### 18.7 コンポーネントツリーエクスポートAPI
+- プロジェクトからコンポーネント階層を抽出
+- JSON/構造化フォーマットエクスポート
+- プロパティとバインディング情報
+- ビジュアルプレビューサポート
+
+```zig
+pub const UI = struct {
+    pub fn exportTree(project_id: ProjectId) *Future(ComponentTree);
+    pub fn getComponentInfo(component_id: ComponentId) ComponentInfo;
+};
+```
+
+#### 18.8 ライブプレビューブリッジAPI
+- プレビューセッション起動
+- ホットリロード統合
+- マルチデバイスプレビュー
+- デバッグオーバーレイサポート
+
+```zig
+pub const Preview = struct {
+    pub fn open(project_id: ProjectId, target: Target) *Future(PreviewId);
+    pub fn close(preview_id: PreviewId) void;
+    pub fn refresh(preview_id: PreviewId) void;
+    pub fn setDebugOverlay(preview_id: PreviewId, enabled: bool) void;
+};
+```
+
+### CLIコマンド
+
+```bash
+# プロジェクトスキャフォールディング
+zylix new my-app --template=app --targets=ios,android,web
+
+# ビルドコマンド
+zylix build --target=ios --config=release
+zylix build --all --parallel
+
+# 開発
+zylix dev --target=web --port=3000
+zylix preview --target=ios-sim
+
+# テンプレート管理
+zylix templates list
+zylix templates add ./my-template
+```
+
+### 成功基準
+
+- [ ] 7プラットフォームすべてで単一コマンドでプロジェクト作成
+- [ ] ビルド開始/完了イベントがログ付きで発行
+- [ ] アーティファクトパスとメタデータがクエリ可能
+- [ ] ターゲット機能がハードコードなしでクエリ可能
+- [ ] テンプレートカタログがAPI経由でアクセス可能
+- [ ] ファイル変更がエディタに確実に反映
+- [ ] コンポーネントツリーが手動パースなしでエクスポート可能
+- [ ] プレビューが単一アクションで起動可能
+
+---
+
+## Phase 19: ノードベースUI (v0.17.0)
 
 ### 概要
 
@@ -782,7 +1172,7 @@ zylix dev --all --port 3000
 
 ### 計画機能
 
-#### 16.1 コアノードシステム
+#### 19.1 コアノードシステム
 - ノードコンポーネント
   - カスタマイズ可能なノード形状
   - 入力/出力ハンドル（ポート）
@@ -794,7 +1184,7 @@ zylix dev --all --port 3000
   - カスタムラベルとスタイル
   - エッジの動的生成
 
-#### 16.2 キャンバス機能
+#### 19.2 キャンバス機能
 - インタラクティブキャンバス
   - パン（ドラッグでスクロール）
   - ズーム（ピンチ/スクロール）
@@ -806,7 +1196,7 @@ zylix dev --all --port 3000
   - 元に戻す/やり直し
   - キーボードショートカット
 
-#### 16.3 データフロー
+#### 19.3 データフロー
 - ノード間データ転送
 - 計算グラフの実行
 - リアクティブな更新伝播
@@ -821,7 +1211,7 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 17: PDFサポート (v0.15.0)
+## Phase 20: PDFサポート (v0.18.0)
 
 ### 概要
 
@@ -829,7 +1219,7 @@ zylix dev --all --port 3000
 
 ### 計画機能
 
-#### 17.1 PDF生成
+#### 20.1 PDF生成
 - 文書構造
   - ページ追加と管理
   - ページサイズと向き設定
@@ -844,7 +1234,7 @@ zylix dev --all --port 3000
   - TrueType/OpenTypeフォント埋め込み
   - 日本語フォント対応
 
-#### 17.2 PDF読み込み
+#### 20.2 PDF読み込み
 - PDF解析
   - テキスト抽出
   - 画像抽出
@@ -855,7 +1245,7 @@ zylix dev --all --port 3000
   - フォーム フィールド読み込み
   - 注釈の取得
 
-#### 17.3 PDF編集
+#### 20.3 PDF編集
 - ページ操作
   - ページの追加/削除/並べ替え
   - PDF結合/分割
@@ -874,7 +1264,7 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 18: Excelサポート (v0.16.0)
+## Phase 21: Excelサポート (v0.19.0)
 
 ### 概要
 
@@ -882,7 +1272,7 @@ zylix dev --all --port 3000
 
 ### 計画機能
 
-#### 18.1 xlsx生成
+#### 21.1 xlsx生成
 - ワークブック/ワークシート
   - 複数シート対応
   - シート名とタブ色
@@ -899,7 +1289,7 @@ zylix dev --all --port 3000
   - 数値フォーマット
   - 条件付き書式
 
-#### 18.2 xlsx読み込み
+#### 21.2 xlsx読み込み
 - ファイル解析
   - シート一覧取得
   - セル値の読み取り
@@ -910,7 +1300,7 @@ zylix dev --all --port 3000
   - 名前付き範囲のサポート
   - テーブルデータの抽出
 
-#### 18.3 高度な機能
+#### 21.3 高度な機能
 - グラフ
   - 棒グラフ、折れ線グラフ、円グラフ
   - 散布図、エリアチャート
@@ -931,78 +1321,159 @@ zylix dev --all --port 3000
 
 ---
 
-## Phase 19: データベースサポート (v0.17.0)
+## Phase 22: mBaaSサポート (v0.20.0)
 
 ### 概要
 
-PostgreSQL、MySQL、SQLite、libSQL (Turso) をサポートする包括的なデータベース接続レイヤー。WASM を含むすべてのプラットフォームで統一された API を提供します。
+Firebase、Supabase、AWS Amplify などの主要な mBaaS (mobile Backend as a Service) プラットフォームとの統合を提供します。認証、データベース、ストレージ、プッシュ通知などのバックエンド機能を統一APIで利用可能にします。
 
 ### 計画機能
 
-#### 19.1 接続管理
-- コネクションプーリング
-- 接続文字列パース
-- SSL/TLS サポート
-- 自動再接続
-- トランザクション管理
-- プリペアドステートメント
+#### 22.1 Firebase 統合
 
-#### 19.2 PostgreSQL サポート
-- 完全なプロトコル実装
-- 全データ型サポート
-- LISTEN/NOTIFY
-- COPY 操作
-- 配列型
-- JSON/JSONB 操作
+- **Firebase Authentication**
+  - メール/パスワード認証
+  - ソーシャルログイン (Google, Apple, Facebook, Twitter)
+  - 電話番号認証
+  - 匿名認証
+  - カスタムトークン認証
 
-#### 19.3 MySQL サポート
-- MySQL プロトコル実装
-- プリペアドステートメント
-- 複数結果セット
-- バイナリプロトコル
-- 接続圧縮
+- **Cloud Firestore**
+  - リアルタイムデータ同期
+  - ドキュメント/コレクション操作
+  - クエリとフィルタリング
+  - オフラインサポート
+  - トランザクション
 
-#### 19.4 SQLite サポート
-- 組み込み SQLite
-- インメモリデータベース
-- ファイルベースデータベース
-- WAL モードサポート
-- ユーザー定義関数
-- 仮想テーブル
+- **Firebase Storage**
+  - ファイルアップロード/ダウンロード
+  - 進捗監視
+  - メタデータ管理
+  - セキュリティルール
 
-#### 19.5 libSQL / Turso サポート
-- libSQL 組み込みモード
-- Turso クラウド接続
-- エッジ最適化クエリ
-- 組み込みレプリカ
-- HTTP API サポート
+- **Firebase Cloud Messaging (FCM)**
+  - プッシュ通知送受信
+  - トピックサブスクリプション
+  - 通知ペイロード処理
 
-#### 19.6 クエリビルダー
-- 型安全なクエリ構築
-- コンパイル時 SQL 検証
-- パラメータバインディング
-- 結果マッピング
-- マイグレーションサポート
+- **その他のサービス**
+  - Firebase Analytics
+  - Firebase Crashlytics
+  - Firebase Remote Config
+  - Firebase App Check
+
+#### 22.2 Supabase 統合
+
+- **Supabase Auth**
+  - メール/パスワード認証
+  - マジックリンク
+  - ソーシャルログイン (OAuth プロバイダー)
+  - Row Level Security (RLS) 連携
+
+- **Supabase Database (PostgreSQL)**
+  - リアルタイムサブスクリプション
+  - CRUD 操作
+  - SQL クエリ
+  - ストアドプロシージャ
+  - PostgREST API 統合
+
+- **Supabase Storage**
+  - ファイルアップロード/ダウンロード
+  - 署名付き URL
+  - バケット管理
+  - 画像変換 (リサイズ、最適化)
+
+- **Supabase Edge Functions**
+  - サーバーレス関数呼び出し
+  - カスタムロジック実行
+
+- **Supabase Realtime**
+  - Broadcast チャンネル
+  - Presence 機能
+  - データベース変更リスナー
+
+#### 22.3 AWS Amplify 統合
+
+- **Amplify Auth (Cognito)**
+  - ユーザープール管理
+  - フェデレーテッドアイデンティティ
+  - MFA サポート
+  - OAuth/OIDC プロバイダー
+
+- **Amplify DataStore**
+  - オフラインファーストデータ同期
+  - GraphQL API (AppSync)
+  - リアルタイムサブスクリプション
+  - 競合解決
+
+- **Amplify Storage (S3)**
+  - ファイル操作
+  - アクセスレベル管理 (public, protected, private)
+  - 署名付き URL
+
+- **Amplify Push Notifications**
+  - Amazon Pinpoint 統合
+  - セグメント配信
+  - 分析と追跡
+
+- **その他のサービス**
+  - Amplify Analytics
+  - Amplify Predictions (AI/ML)
+  - Amplify Geo (位置情報)
+
+### 統一 API 設計
+
+```zig
+// 統一された mBaaS 認証 API
+pub const Auth = struct {
+    pub fn signInWithEmail(email: []const u8, password: []const u8) *Future(User);
+    pub fn signInWithProvider(provider: AuthProvider) *Future(User);
+    pub fn signOut() *Future(void);
+    pub fn getCurrentUser() ?User;
+    pub fn onAuthStateChange(callback: *const fn (?User) void) Subscription;
+};
+
+// 統一されたデータベース API
+pub const Database = struct {
+    pub fn collection(name: []const u8) Collection;
+    pub fn doc(path: []const u8) Document;
+    pub fn query(collection: Collection, filters: []const Filter) *Future([]Document);
+    pub fn subscribe(query: Query, callback: DataCallback) Subscription;
+};
+
+// 統一されたストレージ API
+pub const Storage = struct {
+    pub fn upload(path: []const u8, data: []const u8) *Future(UploadResult);
+    pub fn download(path: []const u8) *Future([]const u8);
+    pub fn getUrl(path: []const u8) *Future([]const u8);
+    pub fn delete(path: []const u8) *Future(void);
+};
+```
 
 ### プラットフォーム実装
 
-| プラットフォーム | PostgreSQL | MySQL | SQLite | libSQL |
-|----------------|------------|-------|--------|--------|
-| ネイティブ (iOS, Android, macOS, Linux, Windows) | TCP | TCP | 組み込み | 組み込み/HTTP |
-| Web/WASM | HTTP プロキシ | HTTP プロキシ | OPFS | HTTP |
-| エッジ (Cloudflare, Vercel) | TCP (Hyperdrive) | - | D1 | HTTP |
+| プラットフォーム | Firebase | Supabase | AWS Amplify |
+|----------------|----------|----------|-------------|
+| iOS | Firebase iOS SDK | supabase-swift | Amplify iOS |
+| Android | Firebase Android SDK | supabase-kt | Amplify Android |
+| Web | Firebase JS SDK | supabase-js | Amplify JS |
+| macOS | Firebase iOS SDK | supabase-swift | Amplify iOS |
+| Windows | Firebase C++ SDK | REST API | REST API |
+| Linux | Firebase C++ SDK | REST API | REST API |
 
 ### 成功基準
 
-- [ ] 4つのデータベースすべてに接続可能
-- [ ] 型安全なクエリビルダー
-- [ ] トランザクションサポート
-- [ ] コネクションプーリング動作
-- [ ] WASM でのデータベースアクセス（プロキシ経由）
+- [ ] Firebase Authentication/Firestore/Storage 統合
+- [ ] Supabase Auth/Database/Storage 統合
+- [ ] AWS Amplify Auth/DataStore/Storage 統合
+- [ ] 統一 API による抽象化レイヤー
+- [ ] 全プラットフォームでのリアルタイム同期
+- [ ] オフライン対応とデータ永続化
+- [ ] mBaaS サンプルアプリケーション
 
 ---
 
-## Phase 20: サーバーランタイム (v0.18.0)
+## Phase 23: サーバーランタイム - Zylix Server (v0.21.0)
 
 ### 概要
 
@@ -1010,7 +1481,7 @@ Zylix Server - Zig で API とフルスタックアプリケーションを構�
 
 ### 計画機能
 
-#### 20.1 HTTP サーバー
+#### 23.1 HTTP サーバー
 - 高性能 HTTP/1.1 と HTTP/2
 - リクエスト/レスポンス処理
 - ミドルウェアサポート
@@ -1018,7 +1489,7 @@ Zylix Server - Zig で API とフルスタックアプリケーションを構�
 - WebSocket サポート
 - Server-Sent Events
 
-#### 20.2 ルーティング
+#### 23.2 ルーティング
 - パスベースルーティング
 - ルートパラメータ
 - クエリ文字列パース
@@ -1035,7 +1506,7 @@ app.post("/users", handlers.createUser);
 app.group("/api/v1", apiRoutes);
 ```
 
-#### 20.3 型安全な RPC
+#### 23.3 型安全な RPC
 - 共有型定義（クライアント ↔ サーバー）
 - TypeScript 自動生成
 - コンパイル時ルート検証
@@ -1052,7 +1523,7 @@ pub const API = struct {
 // サーバー: router.handle(API.getUsers, handlers.getUsers);
 ```
 
-#### 20.4 ミドルウェア
+#### 23.4 ミドルウェア
 - リクエストログ
 - CORS 処理
 - 認証（JWT、セッション）
@@ -1060,13 +1531,13 @@ pub const API = struct {
 - 圧縮
 - エラーハンドリング
 
-#### 20.5 サーバーサイドレンダリング
+#### 23.5 サーバーサイドレンダリング
 - コンポーネントの HTML レンダリング
 - ハイドレーションサポート
 - ストリーミングレスポンス
 - テンプレートサポート
 
-#### 20.6 開発ツール
+#### 23.6 開発ツール
 - サーバーコードのホットリロード
 - リクエストインスペクター
 - API ドキュメント生成
@@ -1096,15 +1567,15 @@ pub const API = struct {
 
 ---
 
-## Phase 21: エッジアダプター (v0.19.0)
+## Phase 24: エッジアダプター (v0.22.0)
 
 ### 概要
 
-Zylix Server をエッジコンピューティングプラットフォームにデプロイ。Zig サーバーコードをエッジランタイム向け WASM にコンパイルし、Cloudflare Workers、Vercel Edge Functions、AWS Lambda、Deno Deploy 用のプラットフォーム固有アダプターを提供します。
+Zylix Server をエッジコンピューティングプラットフォームにデプロイ。Zig サーバーコードをエッジランタイム向け WASM にコンパイルし、7つの主要エッジプラットフォーム用のアダプターを提供します。
 
 ### 計画機能
 
-#### 21.1 Cloudflare Workers
+#### 24.1 Cloudflare Workers
 - WASM ターゲットコンパイル
 - Workers API バインディング
 - KV ストレージ統合
@@ -1125,79 +1596,177 @@ pub fn fetch(req: cf.Request, env: cf.Env) !cf.Response {
 }
 ```
 
-#### 21.2 Vercel Edge Functions
+#### 24.2 Vercel Edge Functions
 - Edge Runtime ターゲット
 - Vercel KV 統合
 - Vercel Postgres (Neon 経由)
 - Blob ストレージ
 - Edge Config
+- ISR (Incremental Static Regeneration)
 
-#### 21.3 AWS Lambda
+#### 24.3 AWS Lambda
 - Lambda カスタムランタイム
 - Lambda@Edge サポート
 - API Gateway 統合
 - DynamoDB バインディング
 - S3 統合
 - SQS/SNS サポート
+- EventBridge 統合
 
-#### 21.4 Deno Deploy
+#### 24.4 Azure Functions
+- Azure Functions カスタムハンドラー
+- HTTP トリガー
+- Azure Cosmos DB 統合
+- Azure Blob Storage
+- Azure Service Bus
+- Azure Event Grid
+- Durable Functions
+
+```zig
+// azure/function.zig
+const zylix = @import("zylix-server");
+const azure = @import("zylix-azure");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(azure.adapter());
+    try azure.serve(app);
+}
+```
+
+#### 24.5 Deno Deploy
 - Deno WASM サポート
 - Deno KV 統合
 - BroadcastChannel
 - Cron トリガー
+- Fresh フレームワーク互換
 
-#### 21.5 統一 API
+#### 24.6 Google Cloud Run
+- コンテナベースデプロイ
+- Cloud Firestore 統合
+- Cloud Storage
+- Pub/Sub 統合
+- Cloud Tasks
+- 自動スケーリング
+- VPC コネクタ
+
+```zig
+// gcp/cloudrun.zig
+const zylix = @import("zylix-server");
+const gcp = @import("zylix-gcp");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(gcp.adapter());
+    const port = gcp.getPort() orelse 8080;
+    try app.listen(port);
+}
+```
+
+#### 24.7 Fastly Compute@Edge
+- Fastly WASM ランタイム
+- Config Store 統合
+- KV Store
+- Secret Store
+- Fanout (リアルタイム)
+- Image Optimizer 統合
+- エッジ辞書
+
+```zig
+// fastly/compute.zig
+const zylix = @import("zylix-server");
+const fastly = @import("zylix-fastly");
+
+pub fn main() !void {
+    var app = zylix.server();
+    app.use(fastly.adapter());
+    try fastly.serve(app);
+}
+```
+
+#### 24.8 統一 API
 - プラットフォーム非依存コード
 - 環境検出
 - 機能検出
 - グレースフルフォールバック
+- プロバイダー切り替え
 
 ```zig
 // 統一 API - どのプラットフォームでも動作
 const store = try zylix.kv.connect();
 try store.put("key", value);
 const data = try store.get("key");
+
+// 環境検出
+const platform = zylix.edge.detectPlatform();
+switch (platform) {
+    .cloudflare => // Cloudflare 固有の処理,
+    .vercel => // Vercel 固有の処理,
+    .aws_lambda => // AWS Lambda 固有の処理,
+    .azure => // Azure Functions 固有の処理,
+    .deno => // Deno Deploy 固有の処理,
+    .gcp => // Google Cloud Run 固有の処理,
+    .fastly => // Fastly 固有の処理,
+    else => // 汎用処理,
+}
 ```
 
-#### 21.6 ビルドツール
+#### 24.9 ビルドツール
 - プラットフォーム固有バンドル
 - WASM 最適化
 - Tree shaking
 - ソースマップ
 - デプロイ CLI
+- マルチプラットフォーム同時デプロイ
 
 ```bash
 # 各プラットフォーム向けビルド
 zylix build --target=cloudflare
 zylix build --target=vercel
 zylix build --target=aws-lambda
+zylix build --target=azure
+zylix build --target=deno
+zylix build --target=gcp
+zylix build --target=fastly
 
 # デプロイ
 zylix deploy --platform=cloudflare
+zylix deploy --platform=azure
+zylix deploy --platform=gcp
+
+# 複数プラットフォーム同時デプロイ
+zylix deploy --platforms=cloudflare,vercel,aws-lambda
 ```
 
 ### プラットフォーム比較
 
-| 機能 | Cloudflare | Vercel | AWS Lambda | Deno |
-|------|------------|--------|------------|------|
-| ランタイム | V8 Isolates | V8 Edge | Custom/WASM | V8 |
-| コールドスタート | ~0ms | ~0ms | 100-500ms | ~0ms |
-| CPU 制限 | 10-50ms | 25ms | 15分 | 50ms |
-| メモリ | 128MB | 128MB | 10GB | 512MB |
-| KV ストア | Workers KV | Vercel KV | DynamoDB | Deno KV |
-| SQL | D1 | Postgres | RDS/Aurora | - |
+| 機能 | Cloudflare | Vercel | AWS Lambda | Azure | Deno | GCP | Fastly |
+|------|------------|--------|------------|-------|------|-----|--------|
+| ランタイム | V8 Isolates | V8 Edge | Custom/WASM | Custom | V8 | Container | WASM |
+| コールドスタート | ~0ms | ~0ms | 100-500ms | 100-500ms | ~0ms | 100-300ms | ~0ms |
+| CPU 制限 | 10-50ms | 25ms | 15分 | 10分 | 50ms | 60分 | 50ms |
+| メモリ | 128MB | 128MB | 10GB | 1.5GB | 512MB | 32GB | 128MB |
+| KV ストア | Workers KV | Vercel KV | DynamoDB | Cosmos DB | Deno KV | Firestore | KV Store |
+| SQL | D1 | Postgres | RDS/Aurora | SQL DB | - | Cloud SQL | - |
+| グローバルエッジ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| WebSocket | ✅ | - | ✅ | ✅ | ✅ | ✅ | Fanout |
 
 ### 成功基準
 
 - [ ] Cloudflare Workers デプロイ
 - [ ] Vercel Edge デプロイ
 - [ ] AWS Lambda デプロイ
+- [ ] Azure Functions デプロイ
+- [ ] Deno Deploy デプロイ
+- [ ] Google Cloud Run デプロイ
+- [ ] Fastly Compute@Edge デプロイ
 - [ ] 統一 KV/DB API
 - [ ] CLI デプロイツール
+- [ ] マルチプラットフォーム同時デプロイ
 
 ---
 
-## Phase 22: パフォーマンス & 最適化 (v0.20.0)
+## Phase 25: パフォーマンス & 最適化 (v0.23.0)
 
 ### 概要
 
@@ -1205,26 +1774,26 @@ zylix deploy --platform=cloudflare
 
 ### 計画機能
 
-#### 22.1 パフォーマンス最適化
+#### 25.1 パフォーマンス最適化
 - Virtual DOM差分アルゴリズムの最適化
 - メモリ割り当ての改善
 - 遅延読み込みとコード分割
 - 未使用コンポーネントのツリーシェイキング
 - レンダリングバッチングとスケジューリング
 
-#### 22.2 バンドルサイズ削減
+#### 25.2 バンドルサイズ削減
 - WASMバイナリの最適化
 - プラットフォーム固有のデッドコード削除
 - アセット圧縮と最適化
 - コード圧縮と最小化
 
-#### 22.3 本番機能
+#### 25.3 本番機能
 - エラーバウンダリコンポーネント
 - クラッシュレポート統合
 - アナリティクスフック
 - A/Bテストサポート
 
-#### 22.4 開発者体験
+#### 25.4 開発者体験
 - CLI改善
 - プロジェクトスキャフォールディングテンプレート
 - IDEプラグイン（VSCode、IntelliJ）
@@ -1241,7 +1810,7 @@ zylix deploy --platform=cloudflare
 
 ---
 
-## Phase 23: ドキュメント充実 (v0.21.0)
+## Phase 26: ドキュメント充実 (v0.24.0)
 
 ### 概要
 
@@ -1249,24 +1818,24 @@ zylix deploy --platform=cloudflare
 
 ### 計画機能
 
-#### 23.1 APIドキュメント
+#### 26.1 APIドキュメント
 - 全モジュールの完全なAPIリファレンス
 - 各コンポーネントのインタラクティブな例
 - TypeScript/JavaScript APIドキュメント
 - プラットフォーム固有のAPIガイド
 
-#### 23.2 チュートリアル & ガイド
+#### 26.2 チュートリアル & ガイド
 - 各プラットフォームの入門チュートリアル
 - ステップバイステップのプロジェクトチュートリアル
 - ベストプラクティスガイド
 - 他フレームワークからの移行ガイド
 
-#### 23.3 サンプルアプリケーション
+#### 26.3 サンプルアプリケーション
 - 実用的なサンプルアプリケーション
 - 業界別テンプレート（EC、ソーシャル、生産性）
 - コードウォークスルーと解説
 
-#### 23.4 インタラクティブ学習
+#### 26.4 インタラクティブ学習
 - インタラクティブなプレイグラウンド/サンドボックス
 - 即時プレビュー付きライブコード編集
 - ビデオチュートリアルとスクリーンキャスト
@@ -1279,6 +1848,397 @@ zylix deploy --platform=cloudflare
 - [ ] インタラクティブプレイグラウンド稼働
 - [ ] ビデオチュートリアルシリーズ
 - [ ] コミュニティショーケースギャラリー
+
+---
+
+## Phase 27: 公式サンプルプロジェクト (v0.25.0)
+
+### 概要
+
+Zylixの全機能を活用した本格的なサンプルプロジェクト集。各サンプルはベストプラクティスを示し、学習教材および実用的なスターターテンプレートとして機能します。
+
+### サンプルカテゴリ
+
+#### 27.1 スターターテンプレート（4種類）
+
+新規プロジェクト用のエントリーポイントテンプレート：
+
+| テンプレート | 説明 | 機能 |
+|------------|------|------|
+| **Blank App** | 最小限のプロジェクト構造 | 基本セットアップ、ルーティングスキャフォールド |
+| **Tab Navigation** | タブベースナビゲーションアプリ | TabBar、複数画面、状態保持 |
+| **Drawer Navigation** | サイドメニューナビゲーションアプリ | ドロワー、ハンバーガーメニュー、ネストナビゲーション |
+| **Dashboard Layout** | ビジネスダッシュボード構造 | ヘッダー、サイドバー、コンテンツエリア、レスポンシブ |
+
+#### 27.2 機能ショーケース（7種類）
+
+Zylix機能の完全なデモンストレーション：
+
+**Component Gallery（コンポーネントギャラリー）**
+- 40種類以上の全UIコンポーネントのインタラクティブな例
+- 各コンポーネントのライブプロパティエディタ
+- アクセシビリティテストパネル
+- プラットフォーム別レンダリング比較
+
+**Animation Studio（アニメーションスタジオ）**
+- Lottieアニメーションプレーヤーとコントロール
+- Live2Dキャラクターショーケース（表情・モーション）
+- カスタムアニメーションタイムラインエディタ
+- トランジションエフェクトギャラリー
+
+**3D Viewer（3Dビューアー）**
+- glTF/OBJ/FBXモデルローダー
+- カメラコントロール（オービット、パン、ズーム）
+- ライティングとマテリアルエディタ
+- ポストプロセシングエフェクトデモ
+
+**Game Arcade（ゲームアーケード）**
+- 物理、スプライト、オーディオを示す3つのミニゲーム
+- ゲーム状態管理パターン
+- タッチ/キーボード入力処理
+- リーダーボード連携
+
+**AI Playground（AIプレイグラウンド）**
+- Whisper音声認識デモ
+- ストリーミング対応LLMチャットインターフェース
+- VLM画像理解
+- オンデバイス vs クラウド比較
+
+**Device Lab（デバイスラボ）**
+- カメラキャプチャとフィルター
+- センサー可視化（加速度計、ジャイロスコープ、コンパス）
+- GPS位置情報とジオフェンシング
+- ハプティックフィードバックパターン
+- プッシュ通知テスト
+
+**Database Workshop（データベースワークショップ）**
+- SQLite、PostgreSQL、Turso接続デモ
+- 型安全なクエリによるCRUD操作
+- オフラインファースト同期パターン
+- マイグレーション例
+
+#### 27.3 実用アプリケーション（8種類）
+
+プロダクション対応アプリケーションテンプレート：
+
+**TaskMaster** - 高度なタスク管理
+```
+機能:
+├── カテゴリとタグ
+├── 通知付き期日設定
+├── 優先度とソート
+├── 検索とフィルター
+├── クラウド同期 (Firebase/Supabase)
+├── オフラインサポート
+├── ダーク/ライトテーマ
+└── watchOSコンパニオン
+```
+
+**ShopDemo** - ECアプリケーション
+```
+機能:
+├── 検索付き商品カタログ
+├── カテゴリナビゲーション
+├── ショッピングカート
+├── アプリ内課金連携
+├── 注文履歴
+├── ユーザー認証
+├── お気に入りリスト
+└── 商品レビュー
+```
+
+**ChatSpace** - リアルタイムメッセージング
+```
+機能:
+├── リアルタイムメッセージング (Supabase Realtime)
+├── ユーザープレゼンス表示
+├── ページネーション付きメッセージ履歴
+├── ファイル添付（画像、ファイル）
+├── プッシュ通知
+├── 入力中インジケーター
+├── 既読表示
+└── グループ会話
+```
+
+**Analytics Pro** - ビジネスダッシュボード
+```
+機能:
+├── リアルタイムデータ可視化
+├── 複数のグラフタイプ（棒、折れ線、円、散布図）
+├── ソート/フィルター付きデータテーブル
+├── PDFレポートエクスポート
+├── Excelデータエクスポート
+├── 日付範囲セレクター
+├── カスタムダッシュボード
+└── ノードベースワークフローエディタ
+```
+
+**MediaBox** - メディアプレーヤー
+```
+機能:
+├── コントロール付きオーディオ再生
+├── 字幕付きビデオプレーヤー
+├── プレイリスト管理
+├── バックグラウンドオーディオ
+├── メディアコントロール（ロック画面、通知）
+├── イコライザー可視化
+├── ストリーミングサポート
+└── オフラインダウンロード
+```
+
+**NoteFlow** - メモ & ドキュメント
+```
+機能:
+├── リッチテキスト編集
+├── Markdownサポート
+├── フォルダ整理
+├── 全文検索
+├── クラウド同期
+├── PDFエクスポート
+├── 画像埋め込み
+└── タグとリンク
+```
+
+**FitTrack** - ヘルス & フィットネス
+```
+機能:
+├── ワークアウト記録
+├── ヘルスデータ可視化
+├── 目標設定
+├── 進捗グラフ
+├── センサー連携（心拍数、歩数）
+├── watchOSワークアウトアプリ
+├── Apple Health / Google Fit連携
+└── ソーシャル共有
+```
+
+**QuizMaster** - 教育クイズ
+```
+機能:
+├── クイズ作成・編集
+├── 複数の問題タイプ
+├── タイマー付きクイズ
+├── スコア記録
+├── リーダーボード
+├── 実績システム
+├── オフラインモード
+└── 分析とインサイト
+```
+
+#### 27.4 プラットフォーム固有ショーケース（5種類）
+
+プラットフォーム専用機能のデモンストレーション：
+
+**iOS Exclusive**
+- ホームスクリーンウィジェット (WidgetKit)
+- App Clips
+- Siriショートカット連携
+- SharePlayサポート
+- 集中モードフィルター
+
+**Android Exclusive**
+- ホームスクリーンウィジェット
+- タイル（クイック設定）
+- ダイナミックショートカット
+- 通知チャンネル
+- ピクチャーインピクチャー
+
+**Web PWA**
+- Progressive Web App機能
+- Service Workerキャッシュ
+- プッシュ通知
+- インストール可能性
+- レスポンシブデザイン
+- SEO最適化
+
+**Desktop Native**
+- ネイティブメニューバー連携
+- コンテキストメニュー付きシステムトレイ
+- ファイルシステムアクセス
+- デスクトップからのドラッグ&ドロップ
+- キーボードショートカット
+- マルチウィンドウサポート
+
+**watchOS Companion**
+- ウォッチフェイス用コンプリケーション
+- ワークアウトセッション管理
+- ヘルスデータ同期
+- Digital Crown操作
+- 独立アプリ機能
+
+#### 27.5 ゲームサンプル（4種類）
+
+完全なゲーム実装：
+
+**Platformer Adventure（プラットフォーマー）**
+```
+機能:
+├── 物理ベースの移動
+├── スプライトアニメーションシステム
+├── タイルマップレベル
+├── 敵AI
+├── コレクティブルとパワーアップ
+├── 効果音とBGM
+├── セーブ/ロードシステム
+└── 複数レベル
+```
+
+**Puzzle World（パズル）**
+```
+機能:
+├── ドラッグ&ドロップ操作
+├── マッチ3スタイルパズル
+├── レベル進行
+├── ヒントシステム
+├── アニメーションとパーティクル
+├── スコアシステム
+└── デイリーチャレンジ
+```
+
+**Space Shooter（シューティング）**
+```
+機能:
+├── 高速アクション
+├── パーティクルエフェクト
+├── パワーアップシステム
+├── ボスバトル
+├── ハイスコアリーダーボード
+├── 複数の機体
+└── 手続き生成レベル
+```
+
+**VTuber Demo（VTuberデモ）**
+```
+機能:
+├── Live2Dキャラクターレンダリング
+├── 表情コントロール
+├── オーディオ連動リップシンク
+├── モーショントラッキング（カメラ）
+├── 背景置換
+├── 録画サポート
+└── 配信オーバーレイモード
+```
+
+#### 27.6 フルスタック連携（3種類）
+
+エンドツーエンドアプリケーション例：
+
+**Social Network（ソーシャルネットワーク）**
+```
+スタック: Zylix + Zylix Server + Supabase
+├── ユーザー認証
+├── プロフィール管理
+├── 画像付き投稿作成
+├── いいね・コメントシステム
+├── フォロー/アンフォロー
+├── リアルタイムフィード更新
+├── 通知
+└── ダイレクトメッセージ
+```
+
+**Project Board（プロジェクトボード）**
+```
+スタック: Zylix + Zylix Server + PostgreSQL
+├── カンバンボードインターフェース
+├── リアルタイムコラボレーション
+├── カードのドラッグ&ドロップ
+├── チーム管理
+├── コメントと添付ファイル
+├── アクティビティ履歴
+├── ロールベース権限
+└── メール通知
+```
+
+**API Server Demo（APIサーバーデモ）**
+```
+スタック: Zylix Server + エッジデプロイメント
+├── RESTful API設計
+├── 型安全なRPC
+├── JWT認証
+├── レート制限
+├── Cloudflare Workersデプロイ
+├── Vercel Edgeデプロイ
+├── APIドキュメント (OpenAPI)
+└── モニタリングダッシュボード
+```
+
+### 品質基準
+
+全公式サンプルは以下の基準を満たす必要があります：
+
+| 基準 | 要件 |
+|------|------|
+| **機能性** | 全ターゲットプラットフォームでエラーなく動作 |
+| **デザイン** | Zylixデザインガイドラインに準拠、視覚的に洗練 |
+| **コード品質** | ベストプラクティス、構造化、保守性 |
+| **テスト** | ユニットテスト、E2Eテスト、ビジュアルリグレッションテスト |
+| **ドキュメント** | README、コードコメント、チュートリアルウォークスルー |
+| **アクセシビリティ** | WCAG 2.1 AA準拠 |
+| **パフォーマンス** | プラットフォーム固有のパフォーマンス基準を満たす |
+| **ライセンス** | MITライセンス、明確な帰属表示 |
+
+### サンプルプロジェクト構造
+
+```
+samples/
+├── templates/
+│   ├── blank-app/
+│   ├── tab-navigation/
+│   ├── drawer-navigation/
+│   └── dashboard-layout/
+├── showcase/
+│   ├── component-gallery/
+│   ├── animation-studio/
+│   ├── 3d-viewer/
+│   ├── game-arcade/
+│   ├── ai-playground/
+│   ├── device-lab/
+│   └── database-workshop/
+├── apps/
+│   ├── taskmaster/
+│   ├── shop-demo/
+│   ├── chat-space/
+│   ├── analytics-pro/
+│   ├── media-box/
+│   ├── note-flow/
+│   ├── fit-track/
+│   └── quiz-master/
+├── platform/
+│   ├── ios-exclusive/
+│   ├── android-exclusive/
+│   ├── web-pwa/
+│   ├── desktop-native/
+│   └── watchos-companion/
+├── games/
+│   ├── platformer/
+│   ├── puzzle-world/
+│   ├── space-shooter/
+│   └── vtuber-demo/
+└── fullstack/
+    ├── social-network/
+    ├── project-board/
+    └── api-server/
+```
+
+### リリース戦略
+
+| 優先度 | サンプル | リリース |
+|--------|---------|---------|
+| **P0 (コア)** | Component Gallery, Animation Studio, TaskMaster, ChatSpace, Game Arcade, AI Playground, 3D Viewer, Device Lab, ShopDemo, Analytics Pro | v0.25.0 |
+| **P1 (拡張)** | NoteFlow, MediaBox, FitTrack, Database Workshop, Platformer, VTuber Demo, Social Network, Project Board | v0.25.1 |
+| **P2 (プラットフォーム)** | iOS Exclusive, Android Exclusive, Web PWA, Desktop Native, watchOS Companion | v0.25.2 |
+| **テンプレート** | Blank App, Tab Navigation, Drawer Navigation, Dashboard Layout | 全バージョン |
+
+### 成功基準
+
+- [ ] 23種類以上のサンプルプロジェクトを完成・公開
+- [ ] 全サンプルがターゲットプラットフォームで動作
+- [ ] 各サンプルに包括的なドキュメント
+- [ ] 全P0サンプルにステップバイステップチュートリアル
+- [ ] 複雑なサンプルには動画ウォークスルー
+- [ ] コミュニティフィードバックの反映
+- [ ] 新しいZylix機能に合わせた定期更新
+- [ ] ドキュメントサイトにサンプルプロジェクトギャラリー
 
 ---
 
@@ -1361,72 +2321,107 @@ zylix deploy --platform=cloudflare
 
 ### 計画中のバージョン
 
-#### v0.11.0 - アニメーションシステム
+#### v0.11.0 - アニメーションシステム ✅ 完了 (2025-12-24)
 - Lottie ベクターアニメーションサポート
 - Live2D Cubism SDK 統合
 - アニメーション制御API
 - タイムラインベースのシーケンス
 
-#### v0.12.0 - 3Dグラフィックスエンジン
+#### v0.12.0 - 3Dグラフィックスエンジン ✅ 完了 (2025-12-24)
 - Three.js/Babylon.js インスパイア3Dエンジン
 - プラットフォームネイティブレンダリング（Metal、Vulkan、DirectX、WebGL/WebGPU）
 - 3Dモデル読み込み（glTF、OBJ、FBX）
 - ライティング、シャドウ、ポストプロセス
 
-#### v0.13.0 - ゲーム開発プラットフォーム
+#### v0.13.0 - ゲーム開発プラットフォーム 🚧 進行中
 - PIXI.js インスパイア2Dゲームエンジン
 - Matter.js ベース物理エンジン
 - 完全なオーディオシステム（効果音、BGM）
 - Entity-Component-System アーキテクチャ
 
-#### v0.14.0 - ノードベースUI
+#### v0.14.0 - データベースサポート
+- SQLite、MySQL、PostgreSQL、Turso/libSQL 接続
+- 型安全なクエリビルダー
+- コネクションプーリングとトランザクション
+- クロスプラットフォームDB アクセス（WASM含む）
+
+#### v0.15.0 - アプリ統合API
+- アプリ内課金 (StoreKit 2, Play Billing)
+- 広告抽象化 (バナー、インタースティシャル、リワード)
+- KeyValueStore (永続ストレージ)
+- アプリライフサイクルフック
+- モーションフレームプロバイダー (カメラベースのモーショントラッキング)
+- 低レイテンシオーディオクリッププレイヤー
+
+#### v0.16.0 - 開発者ツール
+- プロジェクトスキャフォールディングCLI
+- ビルドオーケストレーションAPI
+- テンプレートカタログシステム
+- ファイルウォッチャーとホットリロード
+- コンポーネントツリーエクスポート
+- ライブプレビューブリッジ
+
+#### v0.17.0 - ノードベースUI
 - React Flow スタイルのノードコンポーネント
 - ビジュアルワークフローエディタ
 - パン/ズーム対応インタラクティブキャンバス
 - カスタマイズ可能なノード/エッジタイプ
 
-#### v0.15.0 - PDFサポート
+#### v0.18.0 - PDFサポート
 - PDF生成と読み込み
 - テキスト、画像、グラフィックス埋め込み
 - PDF編集と結合
 - フォームフィールドサポート
 
-#### v0.16.0 - Excelサポート
+#### v0.19.0 - Excelサポート
 - xlsxファイルの作成と読み込み
 - セルの書式設定と数式
 - グラフとデータ可視化
 - 複数ワークシート対応
 
-#### v0.17.0 - データベースサポート
-- PostgreSQL、MySQL、SQLite、libSQL 接続
-- 型安全なクエリビルダー
-- コネクションプーリングとトランザクション
-- クロスプラットフォームDB アクセス（WASM含む）
+#### v0.20.0 - mBaaSサポート
+- Firebase (Authentication, Firestore, Storage, FCM)
+- Supabase (Auth, Database, Storage, Realtime)
+- AWS Amplify (Auth, DataStore, Storage)
+- 統一APIによるmBaaS抽象化レイヤー
+- リアルタイム同期とオフライン対応
 
-#### v0.18.0 - サーバーランタイム (Zylix Server)
+#### v0.21.0 - サーバーランタイム (Zylix Server)
 - Hono.js インスパイア HTTP サーバー (Zig)
 - 型安全な RPC（クライアント ↔ サーバー）
 - ミドルウェアシステム
 - サーバーサイドレンダリング
 
-#### v0.19.0 - エッジアダプター
+#### v0.22.0 - エッジアダプター
 - Cloudflare Workers デプロイ
 - Vercel Edge Functions
 - AWS Lambda サポート
+- Azure Functions サポート
+- Deno Deploy サポート
+- Google Cloud Run サポート
+- Fastly Compute@Edge サポート
 - 統一プラットフォーム API
+- マルチプラットフォーム同時デプロイ
 
-#### v0.20.0 - パフォーマンス & 最適化
+#### v0.23.0 - パフォーマンス & 最適化
 - パフォーマンスプロファイリングと最適化
 - バンドルサイズ削減
 - メモリ使用量の最適化
 - 遅延読み込みとコード分割
 
-#### v0.21.0 - ドキュメント充実
+#### v0.24.0 - ドキュメント充実
 - 完全なAPIドキュメント
 - 包括的なチュートリアル
 - 実用的なサンプルアプリケーション
 - インタラクティブなプレイグラウンド
 - ビデオチュートリアル
+
+#### v0.25.0 - 公式サンプルプロジェクト
+- 23種類以上の本格的なサンプルプロジェクト
+- スターターテンプレート(4)、機能ショーケース(7)、実用アプリ(8)
+- プラットフォーム固有サンプル(5)、ゲームサンプル(4)、フルスタック(3)
+- 各サンプルに包括的なドキュメントとチュートリアル
+- 全サンプルが品質基準を満たす（テスト、アクセシビリティ、パフォーマンス）
 
 ### 品質哲学
 
