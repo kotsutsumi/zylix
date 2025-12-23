@@ -1,6 +1,5 @@
 using System;
 using Microsoft.UI.Xaml;
-using Windows.UI.Text;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
@@ -15,7 +14,7 @@ public class StrikethroughConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return (bool)value ? TextDecorations.Strikethrough : TextDecorations.None;
+        return (bool)value ? Windows.UI.Text.TextDecorations.Strikethrough : Windows.UI.Text.TextDecorations.None;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
