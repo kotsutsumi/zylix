@@ -501,6 +501,117 @@
   height: 8rem;
 }
 
+/* ============================================
+   LIGHT MODE OVERRIDES
+   Better contrast for readability
+   ============================================ */
+
+/* Light mode text colors - more readable */
+:root:not(.dark) .zylix-subtitle,
+:root:not(.dark) .zylix-section-subtitle,
+:root:not(.dark) .zylix-card-text,
+:root:not(.dark) .zylix-list li,
+:root:not(.dark) .zylix-contribute-desc {
+  color: #4b5563;  /* gray-600 - much better contrast */
+}
+
+:root:not(.dark) .zylix-note {
+  color: #6b7280;  /* gray-500 */
+}
+
+/* Light mode sponsor section */
+:root:not(.dark) .zylix-sponsor-desc {
+  color: #4b5563;  /* gray-600 - readable on light pink background */
+}
+
+/* Light mode table styling */
+:root:not(.dark) .zylix-table .zylix-col {
+  color: #2563eb;  /* blue-600 - darker blue for better visibility */
+}
+
+:root:not(.dark) .zylix-table th {
+  background: rgba(0,0,0,0.08);  /* lighter background for light mode */
+  color: #1f2937;  /* gray-800 */
+}
+
+:root:not(.dark) .zylix-table td {
+  color: #374151;  /* gray-700 */
+  border-top-color: rgba(0,0,0,0.1);
+}
+
+:root:not(.dark) .zylix-table-wrapper {
+  border-color: rgba(0,0,0,0.15);
+}
+
+/* Light mode cards */
+:root:not(.dark) .zylix-card,
+:root:not(.dark) .zylix-why-card {
+  border-color: rgba(0,0,0,0.1);
+}
+
+:root:not(.dark) .zylix-card-white {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.1);
+}
+
+:root:not(.dark) .zylix-card-gradient {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.08));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Light mode section alt background */
+:root:not(.dark) .zylix-section-alt {
+  background: rgba(0,0,0,0.04);
+}
+
+/* Light mode badge */
+:root:not(.dark) .zylix-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+:root:not(.dark) .zylix-badge:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+/* Light mode buttons */
+:root:not(.dark) .zylix-btn-secondary {
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+:root:not(.dark) .zylix-contribute-btn-outline {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.15);
+  color: #374151;
+}
+
+:root:not(.dark) .zylix-contribute-btn-outline:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* Light mode info box */
+:root:not(.dark) .zylix-info {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+  color: #374151;
+}
+
+/* Light mode sponsor section */
+:root:not(.dark) .zylix-sponsor {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08));
+  border-color: rgba(236, 72, 153, 0.2);
+}
+
+/* Light mode platform cards */
+:root:not(.dark) .zylix-platform {
+  color: #1f2937;
+}
+
+:root:not(.dark) .zylix-card-title {
+  color: #1f2937;
+}
+
 /* Sponsor Section */
 .zylix-sponsor {
   text-align: center;
