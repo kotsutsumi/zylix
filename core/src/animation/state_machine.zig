@@ -134,23 +134,25 @@ pub const Transition = struct {
     to_state: []const u8,
     conditions: std.ArrayList(Condition),
     config: TransitionConfig,
+    allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator, from: []const u8, to: []const u8) Transition {
         return Transition{
             .from_state = from,
             .to_state = to,
-            .conditions = std.ArrayList(Condition).init(allocator),
+            .conditions = .{},
             .config = TransitionConfig{},
+            .allocator = allocator,
         };
     }
 
     pub fn deinit(self: *Transition) void {
-        self.conditions.deinit();
+        self.conditions.deinit(self.allocator);
     }
 
     /// Add a condition to this transition
     pub fn addCondition(self: *Transition, condition: Condition) *Transition {
-        self.conditions.append(condition) catch {};
+        self.conditions.append(self.allocator, condition) catch {};
         return self;
     }
 
@@ -217,7 +219,7 @@ pub const StateMachine = struct {
         return Self{
             .allocator = allocator,
             .states = std.StringHashMap(State).init(allocator),
-            .transitions = std.ArrayList(Transition).init(allocator),
+            .transitions = .{},
             .parameters = std.StringHashMap(ParameterValue).init(allocator),
             .current_state = null,
             .previous_state = null,
@@ -225,7 +227,7 @@ pub const StateMachine = struct {
             .transition_progress = 0,
             .active_transition = null,
             .transition_start_time = 0,
-            .any_state_transitions = std.ArrayList(Transition).init(allocator),
+            .any_state_transitions = .{},
             .on_state_changed = null,
             .on_transition_started = null,
             .on_transition_completed = null,
@@ -237,11 +239,11 @@ pub const StateMachine = struct {
         for (self.transitions.items) |*t| {
             t.deinit();
         }
-        self.transitions.deinit();
+        self.transitions.deinit(self.allocator);
         for (self.any_state_transitions.items) |*t| {
             t.deinit();
         }
-        self.any_state_transitions.deinit();
+        self.any_state_transitions.deinit(self.allocator);
         self.parameters.deinit();
     }
 
@@ -280,15 +282,15 @@ pub const StateMachine = struct {
 
     /// Add a transition between states
     pub fn addTransition(self: *Self, from: []const u8, to: []const u8) *Transition {
-        var transition = Transition.init(self.allocator, from, to);
-        self.transitions.append(transition) catch {};
+        const transition = Transition.init(self.allocator, from, to);
+        self.transitions.append(self.allocator, transition) catch {};
         return &self.transitions.items[self.transitions.items.len - 1];
     }
 
     /// Add a transition from any state
     pub fn addAnyStateTransition(self: *Self, to: []const u8) *Transition {
-        var transition = Transition.init(self.allocator, "*", to);
-        self.any_state_transitions.append(transition) catch {};
+        const transition = Transition.init(self.allocator, "*", to);
+        self.any_state_transitions.append(self.allocator, transition) catch {};
         return &self.any_state_transitions.items[self.any_state_transitions.items.len - 1];
     }
 
@@ -604,7 +606,7 @@ pub const AnimationController = struct {
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
             .allocator = allocator,
-            .layers = std.ArrayList(AnimationLayer).init(allocator),
+            .layers = .{},
         };
     }
 
@@ -612,7 +614,7 @@ pub const AnimationController = struct {
         for (self.layers.items) |*layer| {
             layer.state_machine.deinit();
         }
-        self.layers.deinit();
+        self.layers.deinit(self.allocator);
     }
 
     /// Add a layer
@@ -621,7 +623,7 @@ pub const AnimationController = struct {
             .name = name,
             .state_machine = StateMachine.init(self.allocator),
         };
-        self.layers.append(layer) catch {};
+        self.layers.append(self.allocator, layer) catch {};
         return &self.layers.items[self.layers.items.len - 1];
     }
 

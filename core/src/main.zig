@@ -9,6 +9,7 @@ pub const state = @import("state.zig");
 pub const events = @import("events.zig");
 pub const abi = @import("abi.zig");
 pub const ai = @import("ai/ai.zig");
+pub const animation = @import("animation/animation.zig");
 
 // Re-export types for internal use
 pub const State = state.State;

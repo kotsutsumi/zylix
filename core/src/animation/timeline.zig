@@ -56,29 +56,29 @@ pub fn PropertyTrack(comptime T: type) type {
 
         pub fn init(allocator: std.mem.Allocator, name: []const u8, initial_value: T) Self {
             var track = Self{
-                .keyframes = std.ArrayList(Keyframe).init(allocator),
+                .keyframes = .{},
                 .name = name,
                 .current_value = initial_value,
                 .allocator = allocator,
             };
             // Add initial keyframe at time 0
-            track.keyframes.append(.{ .time = 0, .value = initial_value }) catch {};
+            track.keyframes.append(allocator, .{ .time = 0, .value = initial_value }) catch {};
             return track;
         }
 
         pub fn deinit(self: *Self) void {
-            self.keyframes.deinit();
+            self.keyframes.deinit(self.allocator);
         }
 
         /// Add a keyframe at specified time
         pub fn addKeyframe(self: *Self, time: TimeMs, value: T) *Self {
-            self.keyframes.append(.{ .time = time, .value = value }) catch {};
+            self.keyframes.append(self.allocator, .{ .time = time, .value = value }) catch {};
             return self;
         }
 
         /// Add a keyframe with custom easing
         pub fn addKeyframeWithEasing(self: *Self, time: TimeMs, value: T, easing_fn: *const fn (f32) f32) *Self {
-            self.keyframes.append(.{
+            self.keyframes.append(self.allocator, .{
                 .time = time,
                 .value = value,
                 .easing_fn = easing_fn,
@@ -199,8 +199,8 @@ pub const Timeline = struct {
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
             .allocator = allocator,
-            .tracks = std.ArrayList(TrackRef).init(allocator),
-            .markers = std.ArrayList(Marker).init(allocator),
+            .tracks = .{},
+            .markers = .{},
             .state = .stopped,
             .current_time = 0,
             .previous_time = 0,
@@ -211,7 +211,7 @@ pub const Timeline = struct {
             .current_loop = 0,
             .direction = .forward,
             .start_time = null,
-            .callbacks = std.ArrayList(*const fn (AnimationEvent) void).init(allocator),
+            .callbacks = .{},
         };
     }
 
@@ -219,9 +219,9 @@ pub const Timeline = struct {
         for (self.tracks.items) |track| {
             track.deinit_fn(track.ptr);
         }
-        self.tracks.deinit();
-        self.markers.deinit();
-        self.callbacks.deinit();
+        self.tracks.deinit(self.allocator);
+        self.markers.deinit(self.allocator);
+        self.callbacks.deinit(self.allocator);
     }
 
     /// Add a property track to the timeline
@@ -247,12 +247,14 @@ pub const Timeline = struct {
             .deinit_fn = struct {
                 fn deinitTrack(ptr: *anyopaque) void {
                     const t: *PropertyTrack(T) = @ptrCast(@alignCast(ptr));
+                    const allocator = t.allocator;
                     t.deinit();
+                    allocator.destroy(t);
                 }
             }.deinitTrack,
         };
 
-        self.tracks.append(ref) catch {
+        self.tracks.append(self.allocator, ref) catch {
             track.deinit();
             self.allocator.destroy(track);
             return null;
@@ -263,13 +265,13 @@ pub const Timeline = struct {
 
     /// Add a marker at specified time
     pub fn addMarker(self: *Self, name: []const u8, time: TimeMs) *Self {
-        self.markers.append(.{ .name = name, .time = time }) catch {};
+        self.markers.append(self.allocator, .{ .name = name, .time = time }) catch {};
         return self;
     }
 
     /// Add a marker with callback
     pub fn addMarkerWithCallback(self: *Self, name: []const u8, time: TimeMs, callback: *const fn () void) *Self {
-        self.markers.append(.{ .name = name, .time = time, .callback = callback }) catch {};
+        self.markers.append(self.allocator, .{ .name = name, .time = time, .callback = callback }) catch {};
         return self;
     }
 
@@ -323,7 +325,8 @@ pub const Timeline = struct {
 
     /// Seek to specific time
     pub fn seek(self: *Self, time: TimeMs) void {
-        self.current_time = @max(0, @min(time, self.duration));
+        const duration = self.getDuration();
+        self.current_time = @max(0, @min(time, duration));
         self.updateTracks();
     }
 
@@ -356,33 +359,36 @@ pub const Timeline = struct {
         // Check markers (using previous_time to current_time range)
         self.checkMarkers();
 
+        // Get duration dynamically from tracks
+        const duration = self.getDuration();
+
         // Handle end of timeline
-        if (self.current_time >= self.duration) {
+        if (self.current_time >= duration) {
             switch (self.loop_mode) {
                 .none => {
-                    self.current_time = self.duration;
+                    self.current_time = duration;
                     self.state = .finished;
                     self.emitEvent(.completed);
                 },
                 .loop => {
-                    self.current_time = @mod(self.current_time, self.duration);
+                    self.current_time = @mod(self.current_time, duration);
                     self.current_loop += 1;
                     self.emitEvent(.loop_completed);
                 },
                 .ping_pong => {
                     self.direction = if (self.direction == .forward) .reverse else .forward;
-                    self.current_time = self.duration;
+                    self.current_time = duration;
                     self.current_loop += 1;
                     self.emitEvent(.loop_completed);
                 },
                 .loop_count => {
                     self.current_loop += 1;
                     if (self.current_loop >= self.loop_count) {
-                        self.current_time = self.duration;
+                        self.current_time = duration;
                         self.state = .finished;
                         self.emitEvent(.completed);
                     } else {
-                        self.current_time = @mod(self.current_time, self.duration);
+                        self.current_time = @mod(self.current_time, duration);
                         self.emitEvent(.loop_completed);
                     }
                 },
@@ -403,7 +409,7 @@ pub const Timeline = struct {
     /// Register event callback
     /// Returns error if allocation fails
     pub fn onEvent(self: *Self, callback: *const fn (AnimationEvent) void) !void {
-        try self.callbacks.append(callback);
+        try self.callbacks.append(self.allocator, callback);
     }
 
     // === Private Methods ===
@@ -478,12 +484,21 @@ pub const Timeline = struct {
     }
 
     pub fn getDuration(self: *const Self) TimeMs {
-        return self.duration;
+        // Calculate duration dynamically from tracks
+        var max_duration: TimeMs = 0;
+        for (self.tracks.items) |track| {
+            const track_duration = track.get_duration_fn(track.ptr);
+            if (track_duration > max_duration) {
+                max_duration = track_duration;
+            }
+        }
+        return max_duration;
     }
 
     pub fn getProgress(self: *const Self) f32 {
-        if (self.duration == 0) return 0;
-        return @as(f32, @floatFromInt(self.current_time)) / @as(f32, @floatFromInt(self.duration));
+        const duration = self.getDuration();
+        if (duration == 0) return 0;
+        return @as(f32, @floatFromInt(self.current_time)) / @as(f32, @floatFromInt(duration));
     }
 
     pub fn isPlaying(self: *const Self) bool {
@@ -541,7 +556,7 @@ pub const ParallelGroup = struct {
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
-            .timelines = std.ArrayList(*Timeline).init(allocator),
+            .timelines = .{},
             .allocator = allocator,
             .state = .stopped,
         };
@@ -552,12 +567,12 @@ pub const ParallelGroup = struct {
             tl.deinit();
             self.allocator.destroy(tl);
         }
-        self.timelines.deinit();
+        self.timelines.deinit(self.allocator);
     }
 
     /// Add a timeline to the group
     pub fn add(self: *Self, timeline: *Timeline) *Self {
-        self.timelines.append(timeline) catch {};
+        self.timelines.append(self.allocator, timeline) catch {};
         return self;
     }
 
