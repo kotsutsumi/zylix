@@ -5,6 +5,7 @@ prev: architecture
 next: platforms
 sidebar:
   open: true
+summary: Virtual DOM、状態管理、コンポーネント、イベントシステムなど、Zylix の技術的な基盤を理解するためのコア概念を解説します。
 ---
 
 Zylix の技術的な基盤を理解するためのコア概念を解説します。

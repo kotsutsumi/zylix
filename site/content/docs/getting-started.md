@@ -3,6 +3,7 @@ title: Getting Started
 weight: 1
 prev: /docs
 next: core-concepts
+summary: Set up Zylix and build your first cross-platform application with this step-by-step guide.
 ---
 
 This guide walks you through setting up Zylix and building your first cross-platform application. By the end, you'll have a working Todo app running on your chosen platform.

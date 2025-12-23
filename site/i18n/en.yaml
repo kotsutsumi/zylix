@@ -71,7 +71,7 @@ status_dev: "In Development"
 # Get Started
 getstarted_title: "Get Started in Minutes"
 prerequisites: "Prerequisites"
-prereq_text: "Zig 0.13+ and a modern web browser. See the"
+prereq_text: "Zig 0.15+ and a modern web browser. See the"
 getting_started: "Getting Started"
 prereq_guide: "guide for detailed instructions."
 

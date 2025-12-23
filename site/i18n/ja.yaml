@@ -71,7 +71,7 @@ status_dev: "開発中"
 # Get Started
 getstarted_title: "数分ではじめる"
 prerequisites: "前提条件"
-prereq_text: "Zig 0.13+とモダンなWebブラウザ。詳細は"
+prereq_text: "Zig 0.15+とモダンなWebブラウザ。詳細は"
 getting_started: "はじめる"
 prereq_guide: "ガイドをご覧ください。"
 

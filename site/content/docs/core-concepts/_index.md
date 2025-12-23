@@ -5,6 +5,7 @@ prev: getting-started
 next: architecture
 sidebar:
   open: true
+summary: Understanding Zylix's core concepts - Virtual DOM, state management, components, and events - essential for building efficient cross-platform applications.
 ---
 
 Understanding Zylix's core concepts is essential for building efficient cross-platform applications. This section covers the fundamental building blocks that power every Zylix app.

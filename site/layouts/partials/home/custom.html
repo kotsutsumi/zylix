@@ -370,13 +370,22 @@
   overflow-x: auto;
   border-radius: 1rem;
   border: 1px solid rgba(255,255,255,0.1);
-  max-width: 56rem;
   margin: 3rem auto 0;
+  width: 100%;
 }
 .zylix-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9375rem;
+  table-layout: fixed;
+}
+.zylix-table th,
+.zylix-table td {
+  width: 20%;
+}
+.zylix-table th:first-child,
+.zylix-table td:first-child {
+  width: 20%;
 }
 .zylix-table th {
   padding: 1rem 1.25rem;
@@ -437,6 +446,14 @@
   border-radius: 0.75rem;
   overflow: hidden;
   margin-bottom: 1.5rem;
+}
+.zylix-code pre {
+  padding: 1.25rem 1.5rem !important;
+  margin: 0 !important;
+}
+.zylix-code code {
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 .zylix-info {
   padding: 1.25rem;
@@ -929,7 +946,7 @@ python3 -m http.server 8080
 
         <div class="zylix-info">
           <strong>{{ i18n "prerequisites" | default "Prerequisites" }}:</strong>
-          {{ i18n "prereq_text" | default "Zig 0.13+ and a modern web browser. See the" }}
+          {{ i18n "prereq_text" | default "Zig 0.15+ and a modern web browser. See the" }}
           <a href="{{ "docs/getting-started/" | relLangURL }}">{{ i18n "getting_started" | default "Getting Started" }}</a>
           {{ i18n "prereq_guide" | default "guide for detailed instructions." }}
         </div>

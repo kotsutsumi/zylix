@@ -4,6 +4,7 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
+summary: Web、iOS、Android、macOS、Linux、Windows の 6 プラットフォームでのセットアップ、統合パターン、ベストプラクティスを説明します。
 ---
 
 Zylix は 6 つのプラットフォームで動作し、それぞれネイティブ UI フレームワークを使用して本物のユーザー体験を提供します。このセクションでは、プラットフォーム固有のセットアップ、統合パターン、およびベストプラクティスを説明します。
