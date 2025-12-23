@@ -13,7 +13,7 @@ Before you begin, ensure you have:
 - **Visual Studio 2022** with:
   - .NET Desktop Development workload
   - Windows App SDK
-- **Zig** 0.11.0 or later
+- **Zig** 0.15.0 or later
 - **.NET 8** SDK or later
 - Basic knowledge of C# and XAML
 

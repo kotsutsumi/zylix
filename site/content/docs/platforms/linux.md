@@ -10,7 +10,7 @@ Build native Linux applications with Zylix using GTK4. This guide covers develop
 Before you begin, ensure you have:
 
 - **Linux** distribution (Ubuntu 22.04+, Fedora 38+, or similar)
-- **Zig** 0.11.0 or later
+- **Zig** 0.15.0 or later
 - **GTK4** development libraries
 - **pkg-config** and build tools
 - Basic knowledge of C and GTK

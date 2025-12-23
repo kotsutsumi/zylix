@@ -1,6 +1,6 @@
 {
   "name": "zylix",
-  "version": "0.7.0",
+  "version": "0.8.1",
   "description": "Cross-platform UI framework with Zig core and JavaScript/WebAssembly bridge",
   "main": "src/index.js",
   "module": "src/index.js",

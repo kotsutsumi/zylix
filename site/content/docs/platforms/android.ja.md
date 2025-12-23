@@ -11,7 +11,7 @@ Jetpack Compose を使用して Zylix でネイティブ Android アプリケー
 
 - **Android Studio** Hedgehog (2023.1.1) 以降
 - **Android NDK** r25 以降
-- **Zig** 0.11.0 以降
+- **Zig** 0.15.0 以降
 - **JDK** 17 以降
 - Kotlin と Jetpack Compose の基本知識
 

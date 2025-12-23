@@ -13,7 +13,7 @@ WinUI 3 を使用して Zylix でネイティブ Windows アプリケーショ�
 - **Visual Studio 2022** with:
   - .NET デスクトップ開発ワークロード
   - Windows App SDK
-- **Zig** 0.11.0 以降
+- **Zig** 0.15.0 以降
 - **.NET 8** SDK 以降
 - C# と XAML の基本知識
 

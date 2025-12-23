@@ -9,7 +9,7 @@ Build and deploy Zylix applications to the web using WebAssembly. This guide cov
 
 Before you begin, ensure you have:
 
-- **Zig** 0.11.0 or later installed
+- **Zig** 0.15.0 or later installed
 - **Node.js** 18+ (for development server)
 - A modern web browser with WASM support
 - Basic knowledge of JavaScript and HTML

@@ -11,7 +11,7 @@ Before you begin, ensure you have:
 
 - **macOS** 13.0 (Ventura) or later
 - **Xcode** 15.0 or later
-- **Zig** 0.11.0 or later
+- **Zig** 0.15.0 or later
 - Apple Developer account (for distribution)
 - Basic knowledge of Swift and SwiftUI
 

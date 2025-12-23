@@ -11,7 +11,7 @@ SwiftUI を使用して Zylix でネイティブ iOS アプリケーションを
 
 - **macOS** 13.0 以降
 - **Xcode** 15.0 以降
-- **Zig** 0.11.0 以降
+- **Zig** 0.15.0 以降
 - Apple Developer アカウント（デバイステストとデプロイ用）
 - Swift と SwiftUI の基本知識
 
