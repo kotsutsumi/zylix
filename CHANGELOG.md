@@ -7,6 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-12-24 (In Progress)
+
+### Added
+
+#### Zylix Graphics3D - Cross-Platform 3D Graphics Engine
+- **Core Module**: `core/src/graphics3d/graphics3d.zig` - Unified 3D graphics API
+- **Inspired by**: Three.js and Babylon.js for familiar developer experience
+- **Multi-Backend**: Support for Metal, Vulkan, DirectX12, WebGL2, WebGPU
+
+#### 3D Math Types (`types.zig`)
+- **Vectors**: Vec2, Vec3, Vec4 with full math operations (add, sub, scale, dot, cross, normalize, lerp)
+- **Quaternion**: Rotation representation with axis-angle, euler, slerp support
+- **Mat4**: 4x4 matrix for transforms, projections, view matrices, lookAt
+- **Color**: RGBA color with preset colors (red, green, blue, white, black, etc.)
+- **Transform**: Position, rotation, scale with matrix conversion
+- **Bounding Volumes**: AABB, BoundingSphere for culling
+- **Ray**: Ray casting with AABB, sphere, plane intersection tests
+- **Frustum**: View frustum with 6 planes for culling
+
+#### Camera System (`camera.zig`)
+- **Camera**: Perspective and orthographic projection support
+- **View Matrix**: Position, target, up vector configuration
+- **Frustum Culling**: Built-in frustum extraction for visibility testing
+- **Screen-to-World**: Ray casting from screen coordinates
+- **Controllers**:
+  - OrbitController: Orbit around target with zoom
+  - FirstPersonController: FPS-style camera control
+  - FlyController: Free-fly camera movement
+- **CameraManager**: Multiple camera management
+
+#### Lighting System (`lighting.zig`)
+- **LightBase**: Common light properties (color, intensity, shadows, layers)
+- **DirectionalLight**: Sun-like light with cascade shadow maps
+- **PointLight**: Point source with attenuation (constant, linear, quadratic)
+- **SpotLight**: Cone-shaped light with inner/outer angles
+- **AreaLight**: Rectangle/disc soft shadows
+- **AmbientLight**: Global illumination with optional sky gradient
+- **LightManager**: Light management with shadow caster tracking
+
+#### Mesh & Geometry (`mesh.zig`)
+- **Vertex Formats**:
+  - Vertex: position, normal, uv, color
+  - VertexTangent: with tangent for normal mapping
+  - VertexSkinned: with bone weights for skeletal animation
+  - VertexColored: position and color only
+- **Mesh**: Vertices, indices, submeshes, bounds calculation
+- **Primitive Types**: Points, lines, line_strip, triangles, triangle_strip, triangle_fan
+- **Procedural Geometry**:
+  - Cube, Sphere, Cylinder, Plane, Cone, Torus
+  - Configurable segments and dimensions
+
+#### Material System (`material.zig`)
+- **Texture2D**: 2D textures with filtering and wrapping
+- **TextureCube**: Cubemap for skybox and environment mapping
+- **TextureFormat**: r8, rg8, rgb8, rgba8, r16f, depth formats
+- **Shader**: Vertex/fragment shaders with uniform definitions
+- **Material**: PBR material with:
+  - Albedo (color + texture)
+  - Metallic, Roughness (value + texture)
+  - Normal mapping with scale
+  - Ambient occlusion
+  - Emission (color + texture + strength)
+  - Height/parallax mapping
+- **Blend Modes**: opaque, alpha_blend, additive, multiply, premultiplied
+- **MaterialLibrary**: Preset materials (metal, plastic, rubber, glass, wood, gold, silver, copper, etc.)
+
+#### Scene Graph (`scene.zig`)
+- **SceneNode**: Hierarchical scene node with:
+  - Parent/child relationships
+  - Local and world transforms
+  - Transform propagation with dirty flag optimization
+  - Mesh, material, camera, light references
+  - Layer mask for selective rendering
+  - Frustum culling support
+- **Scene**: Root node with:
+  - Camera and light managers
+  - Environment settings (ambient, fog, skybox)
+  - Scene statistics
+  - Frustum culling helpers
+
+#### Renderer (`renderer.zig`)
+- **BackendType**: metal, vulkan, directx12, webgl2, webgpu, opengl, software
+- **RenderCapabilities**: Feature detection per backend
+- **RenderState**: Viewport, depth, blend, cull, scissor state
+- **RenderQueue**: Material-sorted rendering (opaque front-to-back, transparent back-to-front)
+- **RenderStats**: Draw calls, triangles, vertices tracking
+- **RenderPass**: Multi-pass rendering (shadow, geometry, post-process, UI)
+- **DebugDraw**: Debug drawing utilities (line, box, sphere)
+
+### Fixed
+- **Core**: Fixed Zig 0.15 `opaque` keyword conflict in BlendMode enum (use `@"opaque"`)
+- **Core**: Fixed variable shadowing with Zig primitive type `i0` in mesh.zig
+- **Core**: Fixed unused parameter warning in renderer.zig endFrame()
+
 ## [0.11.0] - 2025-12-24
 
 ### Added
