@@ -248,6 +248,27 @@
   }
 }
 
+.zylix-grid-7 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 640px) {
+  .zylix-grid-7 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .zylix-grid-7 {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1.5rem;
+  }
+}
+
 /* Cards */
 .zylix-card {
   padding: 1.5rem;
@@ -717,7 +738,7 @@
             </tr>
             <tr>
               <td>{{ i18n "table_platforms" | default "Platforms" }}</td>
-              <td class="highlight">6</td>
+              <td class="highlight">7</td>
               <td>2</td>
               <td>6</td>
               <td>3</td>
@@ -734,7 +755,7 @@
   <div class="zylix-section-inner">
     <h2 class="zylix-section-title">{{ i18n "platform_title" | default "Platform Support" }}</h2>
 
-    <div class="zylix-grid-6">
+    <div class="zylix-grid-7">
       <div class="zylix-platform zylix-card-blue">
         <span class="zylix-platform-icon">🌐</span>
         <div class="zylix-platform-name">Web/WASM</div>
@@ -743,6 +764,11 @@
       <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🍎</span>
         <div class="zylix-platform-name">iOS</div>
+        <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-amber">
+        <span class="zylix-platform-icon">⌚</span>
+        <div class="zylix-platform-name">watchOS</div>
         <div class="zylix-platform-status zylix-status-alpha">{{ i18n "status_alpha" | default "Alpha" }}</div>
       </div>
       <div class="zylix-platform zylix-card-amber">
