@@ -1650,6 +1650,38 @@ Documented as future scope, not active for MVP.
 - If introduced, must be non-tracking and local-only.
 - All variants must pass the same privacy and ad rules.
 
+## Store Review Risk Checklist
+Quick scan for common rejection risks.
+
+### SR1. Privacy
+- Camera usage is clearly explained in-app and in store listing.
+- No face recognition or biometric claims.
+- No data collection without disclosure.
+
+### SR2. Ads and IAP
+- Ads are not primary function and do not block core use.
+- Remove-ads IAP works and restores correctly.
+- No misleading UI around purchases.
+
+### SR3. Content and UX
+- App delivers a consistent experience even offline.
+- No hidden/locked core features without purchase.
+- Crash-free in basic flows.
+
+## Permission Prompt UX Flow
+Describe how permission requests are presented.
+
+### PP1. First launch
+- Show an in-app explanation screen before OS prompt.
+- If user agrees, trigger OS camera permission.
+
+### PP2. Denial path
+- Show a one-time hint: "Enable camera in Settings to enable tracking."
+- Provide a Settings button.
+
+### PP3. Subsequent launches
+- Do not auto-prompt; rely on Settings toggle.
+
 ## Voice Clip Inventory Template
 Use to track bundled audio clips.
 
