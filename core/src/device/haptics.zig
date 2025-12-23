@@ -23,7 +23,7 @@ pub const ImpactStyle = enum(u8) {
 pub const NotificationType = enum(u8) {
     success = 0,
     warning = 1,
-    error = 2,
+    @"error" = 2,
 };
 
 /// Selection feedback (single tick)
@@ -236,7 +236,7 @@ pub fn warningNotification() Result {
 
 /// Error notification
 pub fn errorNotification() Result {
-    return getEngine().notification(.error);
+    return getEngine().notification(.@"error");
 }
 
 /// Selection changed
