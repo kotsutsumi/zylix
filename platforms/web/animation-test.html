@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zylix Animation Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #00d4ff;
+            margin-bottom: 16px;
+            font-size: 18px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 8px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .demo-card {
+            background: #0f3460;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .demo-card h4 {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .demo-target {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .demo-btn {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .demo-btn:hover {
+            background: #00a8cc;
+        }
+
+        .demo-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .timeline-container {
+            background: #0f3460;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .timeline-track {
+            height: 60px;
+            background: #16213e;
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            width: 3px;
+            height: 100%;
+            background: #e94560;
+            top: 0;
+            transition: left 0.05s linear;
+        }
+
+        .timeline-target {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            top: 5px;
+            left: 10px;
+            transition: none;
+        }
+
+        .timeline-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .timeline-controls button {
+            background: #0f3460;
+            color: white;
+            border: 1px solid #00d4ff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .timeline-controls button:hover {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .timeline-controls button.active {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .timeline-info {
+            margin-left: auto;
+            font-family: monospace;
+            color: #00d4ff;
+        }
+
+        .easing-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .easing-item {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .easing-item:hover {
+            transform: scale(1.05);
+            background: #1a4f8f;
+        }
+
+        .easing-item.selected {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .easing-item .name {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .easing-ball {
+            width: 20px;
+            height: 20px;
+            background: #e94560;
+            border-radius: 50%;
+            margin: 0 auto;
+        }
+
+        .state-machine-container {
+            background: #0f3460;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .state-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .state-node {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            border: 3px solid #0f3460;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .state-node.idle {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .state-node.walk {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .state-node.run {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .state-node.jump {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+
+        .state-node.active {
+            border-color: #00d4ff;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .state-arrow {
+            color: #555;
+            font-size: 24px;
+        }
+
+        .state-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .state-btn {
+            background: #16213e;
+            color: white;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .state-btn:hover {
+            border-color: #00d4ff;
+        }
+
+        .state-btn.can-transition {
+            border-color: #43e97b;
+            background: rgba(67, 233, 123, 0.1);
+        }
+
+        .character-preview {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to bottom, #2d3436, #636e72);
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character {
+            width: 60px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px 30px 10px 10px;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        .character .eyes {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+        }
+
+        .character .eye {
+            width: 10px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .character .mouth {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            background: #1a1a2e;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .log-section {
+            background: #0f0f23;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .log-entry.timeline { background: rgba(0, 212, 255, 0.2); }
+        .log-entry.easing { background: rgba(78, 205, 196, 0.2); }
+        .log-entry.state { background: rgba(168, 230, 207, 0.2); }
+        .log-entry.info { background: rgba(255, 230, 109, 0.2); }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-card {
+            background: #0f3460;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-card h4 {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .info-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .version-badge {
+            background: #0f3460;
+            color: #00d4ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zylix Animation Test</h1>
+        <div style="text-align: center;">
+            <span class="version-badge" id="versionBadge">v0.11.0</span>
+        </div>
+
+        <!-- Easing Functions Demo -->
+        <div class="section">
+            <h2>Easing Functions</h2>
+            <p style="margin-bottom: 16px; color: #888;">Click on an easing function to preview the animation curve.</p>
+            <div class="easing-preview" id="easingPreview">
+                <!-- Filled by JS -->
+            </div>
+            <div style="margin-top: 20px;">
+                <div class="demo-card" style="max-width: 400px; margin: 0 auto;">
+                    <h4>Easing Preview</h4>
+                    <div style="height: 100px; background: #16213e; border-radius: 8px; position: relative; overflow: hidden;">
+                        <div id="easingBall" style="position: absolute; width: 30px; height: 30px; background: linear-gradient(135deg, #e94560, #ff6b6b); border-radius: 50%; top: 35px; left: 10px;"></div>
+                    </div>
+                    <p style="margin-top: 8px; color: #888; font-size: 12px;">Selected: <span id="selectedEasing">linear</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Demo -->
+        <div class="section">
+            <h2>Timeline Animation</h2>
+            <div class="timeline-container">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>Time</h4>
+                        <div class="value" id="timelineTime">0ms</div>
+                    </div>
+                    <div class="info-card">
+                        <h4>Progress</h4>
+                        <div class="value" id="timelineProgress">0%</div>
+                    </div>
+                    <div class="info-card">
+                        <h4>State</h4>
+                        <div class="value" id="timelineState">Stopped</div>
+                    </div>
+                    <div class="info-card">
+                        <h4>Loop</h4>
+                        <div class="value" id="timelineLoop">0</div>
+                    </div>
+                </div>
+                <div class="timeline-track" id="timelineTrack">
+                    <div class="timeline-target" id="timelineTarget"></div>
+                    <div class="timeline-marker" id="timelineMarker" style="left: 0%;"></div>
+                </div>
+                <div class="timeline-controls">
+                    <button id="playBtn">Play</button>
+                    <button id="pauseBtn">Pause</button>
+                    <button id="stopBtn">Stop</button>
+                    <button id="reverseBtn">Reverse</button>
+                    <button id="loopBtn">Loop: Off</button>
+                    <select id="easingSelect" style="padding: 8px; border-radius: 6px; background: #0f3460; color: white; border: 1px solid #00d4ff;">
+                        <option value="linear">Linear</option>
+                        <option value="easeInQuad">Ease In Quad</option>
+                        <option value="easeOutQuad">Ease Out Quad</option>
+                        <option value="easeInOutQuad">Ease In/Out Quad</option>
+                        <option value="easeInCubic">Ease In Cubic</option>
+                        <option value="easeOutCubic">Ease Out Cubic</option>
+                        <option value="easeInOutCubic">Ease In/Out Cubic</option>
+                        <option value="easeInElastic">Ease In Elastic</option>
+                        <option value="easeOutElastic">Ease Out Elastic</option>
+                        <option value="easeOutBounce">Ease Out Bounce</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- State Machine Demo -->
+        <div class="section">
+            <h2>Animation State Machine</h2>
+            <div class="state-machine-container">
+                <div class="character-preview">
+                    <div class="character" id="character">
+                        <div class="eyes">
+                            <div class="eye"></div>
+                            <div class="eye"></div>
+                        </div>
+                        <div class="mouth"></div>
+                    </div>
+                </div>
+                <div class="state-diagram">
+                    <div class="state-node idle active" id="stateIdle" onclick="transitionTo('idle')">Idle</div>
+                    <span class="state-arrow">&harr;</span>
+                    <div class="state-node walk" id="stateWalk" onclick="transitionTo('walk')">Walk</div>
+                    <span class="state-arrow">&harr;</span>
+                    <div class="state-node run" id="stateRun" onclick="transitionTo('run')">Run</div>
+                    <span class="state-arrow">&harr;</span>
+                    <div class="state-node jump" id="stateJump" onclick="transitionTo('jump')">Jump</div>
+                </div>
+                <div class="state-controls">
+                    <button class="state-btn can-transition" onclick="transitionTo('idle')">Idle</button>
+                    <button class="state-btn" onclick="transitionTo('walk')">Walk</button>
+                    <button class="state-btn" onclick="transitionTo('run')">Run</button>
+                    <button class="state-btn" onclick="transitionTo('jump')">Jump</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simple Animation Demos -->
+        <div class="section">
+            <h2>Simple Animations</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h4>Fade</h4>
+                    <div class="demo-target" id="fadeTarget">Fade</div>
+                    <button class="demo-btn" onclick="runFadeDemo()">Animate</button>
+                </div>
+                <div class="demo-card">
+                    <h4>Scale</h4>
+                    <div class="demo-target" id="scaleTarget">Scale</div>
+                    <button class="demo-btn" onclick="runScaleDemo()">Animate</button>
+                </div>
+                <div class="demo-card">
+                    <h4>Rotate</h4>
+                    <div class="demo-target" id="rotateTarget">Rotate</div>
+                    <button class="demo-btn" onclick="runRotateDemo()">Animate</button>
+                </div>
+                <div class="demo-card">
+                    <h4>Bounce</h4>
+                    <div class="demo-target" id="bounceTarget">Bounce</div>
+                    <button class="demo-btn" onclick="runBounceDemo()">Animate</button>
+                </div>
+                <div class="demo-card">
+                    <h4>Shake</h4>
+                    <div class="demo-target" id="shakeTarget">Shake</div>
+                    <button class="demo-btn" onclick="runShakeDemo()">Animate</button>
+                </div>
+                <div class="demo-card">
+                    <h4>Spring</h4>
+                    <div class="demo-target" id="springTarget">Spring</div>
+                    <button class="demo-btn" onclick="runSpringDemo()">Animate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation Log -->
+        <div class="section">
+            <h2>Animation Log</h2>
+            <div class="log-section" id="animationLog"></div>
+            <button class="demo-btn" style="margin-top: 12px; background: #e94560;" onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="zylix-animation.js"></script>
+    <script>
+        const log = document.getElementById('animationLog');
+
+        // Set version
+        document.getElementById('versionBadge').textContent = `v${ZylixAnimation.VERSION}`;
+
+        function addLog(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${message}`;
+            log.insertBefore(entry, log.firstChild);
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function clearLog() {
+            log.innerHTML = '';
+        }
+
+        // === Easing Functions Demo ===
+        const easingFunctions = [
+            'linear', 'easeInQuad', 'easeOutQuad', 'easeInOutQuad',
+            'easeInCubic', 'easeOutCubic', 'easeInOutCubic',
+            'easeInQuart', 'easeOutQuart', 'easeInOutQuart',
+            'easeInSine', 'easeOutSine', 'easeInOutSine',
+            'easeInExpo', 'easeOutExpo', 'easeInOutExpo',
+            'easeInBack', 'easeOutBack', 'easeInOutBack',
+            'easeInElastic', 'easeOutElastic',
+            'easeInBounce', 'easeOutBounce'
+        ];
+
+        const easingPreview = document.getElementById('easingPreview');
+        const easingBall = document.getElementById('easingBall');
+        const selectedEasingSpan = document.getElementById('selectedEasing');
+        let currentEasing = 'linear';
+
+        easingFunctions.forEach(name => {
+            const item = document.createElement('div');
+            item.className = 'easing-item' + (name === 'linear' ? ' selected' : '');
+            item.innerHTML = `<div class="name">${name.replace('easeIn', 'In ').replace('easeOut', 'Out ').replace('InOut', 'In/Out ')}</div>`;
+            item.onclick = () => selectEasing(name, item);
+            easingPreview.appendChild(item);
+        });
+
+        function selectEasing(name, element) {
+            document.querySelectorAll('.easing-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            currentEasing = name;
+            selectedEasingSpan.textContent = name;
+            previewEasing(name);
+            addLog('easing', `Selected: ${name}`);
+        }
+
+        function previewEasing(name) {
+            const easingFn = ZylixAnimation.Easing[name] || ZylixAnimation.Easing.linear;
+            const startX = 10;
+            const endX = 340;
+            const duration = 1000;
+            const startTime = performance.now();
+
+            function animate(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easingFn(progress);
+                const x = startX + (endX - startX) * easedProgress;
+                easingBall.style.left = x + 'px';
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // === Timeline Demo ===
+        const timeline = new ZylixAnimation.Timeline({ duration: 3000 });
+        const timelineTarget = document.getElementById('timelineTarget');
+        const timelineMarker = document.getElementById('timelineMarker');
+
+        // Add keyframes
+        timeline.addPropertyTrack('left', [
+            { time: 0, value: 10, easing: 'easeInOutCubic' },
+            { time: 1500, value: 300, easing: 'easeOutBounce' },
+            { time: 3000, value: 10 }
+        ]);
+
+        timeline.addPropertyTrack('transform', [
+            { time: 0, value: 'scale(1) rotate(0deg)' },
+            { time: 750, value: 'scale(1.3) rotate(180deg)' },
+            { time: 1500, value: 'scale(1) rotate(360deg)' },
+            { time: 2250, value: 'scale(0.7) rotate(540deg)' },
+            { time: 3000, value: 'scale(1) rotate(720deg)' }
+        ]);
+
+        timeline.addPropertyTrack('background', [
+            { time: 0, value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+            { time: 1000, value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+            { time: 2000, value: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { time: 3000, value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+        ]);
+
+        timeline.onUpdate = (time, progress) => {
+            // Update target styles
+            const tracks = timeline.tracks;
+            tracks.forEach(track => {
+                const value = timeline.getValueAtTime(track.property, time);
+                if (value !== undefined) {
+                    timelineTarget.style[track.property] = typeof value === 'number' ? value + 'px' : value;
+                }
+            });
+
+            // Update UI
+            timelineMarker.style.left = (progress * 100) + '%';
+            document.getElementById('timelineTime').textContent = Math.round(time) + 'ms';
+            document.getElementById('timelineProgress').textContent = Math.round(progress * 100) + '%';
+        };
+
+        timeline.onStateChange = (state) => {
+            document.getElementById('timelineState').textContent = state.charAt(0).toUpperCase() + state.slice(1);
+            addLog('timeline', `State changed to: ${state}`);
+        };
+
+        timeline.onLoop = (count) => {
+            document.getElementById('timelineLoop').textContent = count;
+            addLog('timeline', `Loop count: ${count}`);
+        };
+
+        document.getElementById('playBtn').onclick = () => {
+            timeline.play();
+            addLog('timeline', 'Play');
+        };
+        document.getElementById('pauseBtn').onclick = () => {
+            timeline.pause();
+            addLog('timeline', 'Pause');
+        };
+        document.getElementById('stopBtn').onclick = () => {
+            timeline.stop();
+            timelineTarget.style.left = '10px';
+            timelineTarget.style.transform = 'scale(1) rotate(0deg)';
+            timelineTarget.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            addLog('timeline', 'Stop');
+        };
+        document.getElementById('reverseBtn').onclick = () => {
+            timeline.reverse();
+            addLog('timeline', 'Reverse');
+        };
+
+        let loopEnabled = false;
+        document.getElementById('loopBtn').onclick = function() {
+            loopEnabled = !loopEnabled;
+            timeline.loop = loopEnabled;
+            this.textContent = 'Loop: ' + (loopEnabled ? 'On' : 'Off');
+            this.classList.toggle('active', loopEnabled);
+            addLog('timeline', `Loop: ${loopEnabled ? 'enabled' : 'disabled'}`);
+        };
+
+        // === State Machine Demo ===
+        let currentState = 'idle';
+        const character = document.getElementById('character');
+        let characterAnimation = null;
+        let characterX = 0;
+
+        function transitionTo(state) {
+            if (state === currentState) return;
+
+            // Update state nodes
+            document.querySelectorAll('.state-node').forEach(node => {
+                node.classList.remove('active');
+            });
+            document.getElementById('state' + state.charAt(0).toUpperCase() + state.slice(1)).classList.add('active');
+
+            // Update buttons
+            document.querySelectorAll('.state-btn').forEach(btn => {
+                btn.classList.remove('can-transition');
+            });
+
+            // Update character animation
+            if (characterAnimation) {
+                cancelAnimationFrame(characterAnimation);
+            }
+
+            const prevState = currentState;
+            currentState = state;
+            addLog('state', `Transition: ${prevState} -> ${state}`);
+
+            animateCharacter(state);
+        }
+
+        function animateCharacter(state) {
+            const startTime = performance.now();
+
+            function animate(time) {
+                const elapsed = time - startTime;
+
+                switch (state) {
+                    case 'idle':
+                        // Gentle breathing animation
+                        const breathe = Math.sin(elapsed / 500) * 3;
+                        character.style.transform = `translateY(${breathe}px)`;
+                        break;
+
+                    case 'walk':
+                        // Walking bounce
+                        const walkBounce = Math.abs(Math.sin(elapsed / 150)) * 8;
+                        const walkSway = Math.sin(elapsed / 150) * 3;
+                        characterX += 0.5;
+                        if (characterX > 150) characterX = -150;
+                        character.style.transform = `translateX(${characterX}px) translateY(${-walkBounce}px) rotate(${walkSway}deg)`;
+                        break;
+
+                    case 'run':
+                        // Running animation
+                        const runBounce = Math.abs(Math.sin(elapsed / 80)) * 15;
+                        const runLean = 10;
+                        characterX += 2;
+                        if (characterX > 150) characterX = -150;
+                        character.style.transform = `translateX(${characterX}px) translateY(${-runBounce}px) rotate(${runLean}deg)`;
+                        break;
+
+                    case 'jump':
+                        // Jump arc
+                        const jumpProgress = (elapsed % 1000) / 1000;
+                        const jumpHeight = Math.sin(jumpProgress * Math.PI) * 80;
+                        const squash = jumpProgress < 0.1 ? 0.8 + jumpProgress * 2 :
+                                       jumpProgress > 0.9 ? 1 - (jumpProgress - 0.9) * 2 : 1;
+                        character.style.transform = `translateY(${-jumpHeight}px) scaleY(${squash}) scaleX(${2 - squash})`;
+                        break;
+                }
+
+                characterAnimation = requestAnimationFrame(animate);
+            }
+
+            characterAnimation = requestAnimationFrame(animate);
+        }
+
+        // Start idle animation
+        animateCharacter('idle');
+
+        // === Simple Animation Demos ===
+        function runFadeDemo() {
+            const target = document.getElementById('fadeTarget');
+            ZylixAnimation.animate(target, {
+                opacity: [1, 0, 1]
+            }, { duration: 1000, easing: 'easeInOutQuad' });
+            addLog('info', 'Running fade animation');
+        }
+
+        function runScaleDemo() {
+            const target = document.getElementById('scaleTarget');
+            ZylixAnimation.animate(target, {
+                transform: ['scale(1)', 'scale(1.5)', 'scale(1)']
+            }, { duration: 800, easing: 'easeOutElastic' });
+            addLog('info', 'Running scale animation');
+        }
+
+        function runRotateDemo() {
+            const target = document.getElementById('rotateTarget');
+            ZylixAnimation.animate(target, {
+                transform: ['rotate(0deg)', 'rotate(360deg)']
+            }, { duration: 1000, easing: 'easeInOutCubic' });
+            addLog('info', 'Running rotate animation');
+        }
+
+        function runBounceDemo() {
+            const target = document.getElementById('bounceTarget');
+            ZylixAnimation.animate(target, {
+                transform: ['translateY(0)', 'translateY(-30px)', 'translateY(0)']
+            }, { duration: 600, easing: 'easeOutBounce' });
+            addLog('info', 'Running bounce animation');
+        }
+
+        function runShakeDemo() {
+            const target = document.getElementById('shakeTarget');
+            const keyframes = [];
+            for (let i = 0; i <= 10; i++) {
+                const x = i === 0 || i === 10 ? 0 : (Math.random() - 0.5) * 20;
+                keyframes.push(`translateX(${x}px)`);
+            }
+            ZylixAnimation.animate(target, {
+                transform: keyframes
+            }, { duration: 500, easing: 'linear' });
+            addLog('info', 'Running shake animation');
+        }
+
+        function runSpringDemo() {
+            const target = document.getElementById('springTarget');
+            // Simulate spring physics
+            ZylixAnimation.animate(target, {
+                transform: ['scale(1)', 'scale(1.4)', 'scale(0.9)', 'scale(1.1)', 'scale(0.98)', 'scale(1)']
+            }, { duration: 800, easing: 'linear' });
+            addLog('info', 'Running spring animation');
+        }
+
+        // Initial log
+        addLog('info', `Zylix Animation v${ZylixAnimation.VERSION} initialized`);
+    </script>
+</body>
+</html>
