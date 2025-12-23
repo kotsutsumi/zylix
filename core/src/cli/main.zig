@@ -118,7 +118,7 @@ fn printUsage() void {
         \\  server    Manage bridge servers
         \\  list      List available tests
         \\  report    Generate test reports
-        \\  ai        Test AI inference (embed, generate, info)
+        \\  ai        Test AI inference (embed, generate, transcribe, info)
         \\  version   Show version information
         \\  help      Show help for a command
         \\

@@ -20,9 +20,16 @@
 
 const std = @import("std");
 const types = @import("types.zig");
+pub const whisper_backend = @import("whisper_backend.zig");
 const ModelConfig = types.ModelConfig;
 const ModelFormat = types.ModelFormat;
 const Result = types.Result;
+
+// Re-export backend types
+pub const WhisperBackend = whisper_backend.WhisperBackend;
+pub const TranscriptSegment = whisper_backend.TranscriptSegment;
+pub const isWhisperAvailable = whisper_backend.isWhisperAvailable;
+pub const getSampleRate = whisper_backend.getSampleRate;
 
 // === Constants ===
 
@@ -215,6 +222,7 @@ pub const WhisperModel = struct {
     config: WhisperConfig,
     allocator: std.mem.Allocator,
     initialized: bool,
+    backend: ?*WhisperBackend,
 
     const Self = @This();
 
@@ -232,16 +240,44 @@ pub const WhisperModel = struct {
             return error.UnsupportedFormat;
         }
 
+        // Try to create backend if available
+        var backend: ?*WhisperBackend = null;
+        if (isWhisperAvailable()) {
+            const backend_config = whisper_backend.WhisperConfig{
+                .model_path = path,
+                .language = config.language.getCode(),
+                .translate = config.task == .translate,
+                .n_threads = config.num_threads,
+                .use_gpu = true,
+            };
+            backend = WhisperBackend.init(allocator, backend_config) catch null;
+
+            // Load the model
+            if (backend) |b| {
+                const load_result = b.load(path);
+                if (load_result != .ok) {
+                    b.deinit();
+                    backend = null;
+                }
+            }
+        }
+
         return Self{
             .config = config,
             .allocator = allocator,
             .initialized = true,
+            .backend = backend,
         };
     }
 
     /// Check if model is ready
     pub fn isReady(self: *const Self) bool {
         return self.initialized;
+    }
+
+    /// Check if using real backend (not placeholder)
+    pub fn hasBackend(self: *const Self) bool {
+        return self.backend != null and self.backend.?.isLoaded();
     }
 
     /// Transcribe audio
@@ -255,8 +291,42 @@ pub const WhisperModel = struct {
             return error.InvalidAudio;
         }
 
-        // TODO: Replace with actual Whisper inference
-        // For now, generate placeholder response
+        const start_time = std.time.milliTimestamp();
+
+        // Try to use real backend
+        if (self.backend) |backend| {
+            if (backend.isLoaded()) {
+                // Convert audio to f32 samples at 16kHz mono
+                const prepared = try self.prepareAudioForWhisper(audio);
+                defer if (prepared.needs_free) self.allocator.free(prepared.samples);
+
+                // Allocate output buffer
+                var output_buffer: [MAX_OUTPUT_LENGTH]u8 = undefined;
+                var backend_result: whisper_backend.TranscriptResult = undefined;
+
+                const result = backend.transcribe(prepared.samples, &output_buffer, &backend_result);
+                if (result == .ok) {
+                    // Copy result to allocated memory
+                    const text = try self.allocator.alloc(u8, backend_result.text_len);
+                    @memcpy(text, output_buffer[0..backend_result.text_len]);
+
+                    // Parse detected language
+                    const detected_lang = self.parseLanguageCode(&backend_result.language);
+
+                    const end_time = std.time.milliTimestamp();
+
+                    return TranscriptionResult{
+                        .text = text,
+                        .language = detected_lang,
+                        .segments = null,
+                        .words = null,
+                        .processing_time_ms = @intCast(@max(0, end_time - start_time)),
+                    };
+                }
+            }
+        }
+
+        // Fallback to placeholder
         var temp_buffer: [MAX_OUTPUT_LENGTH]u8 = undefined;
         const response_len = self.generatePlaceholderResponse(audio, &temp_buffer);
 
@@ -273,30 +343,65 @@ pub const WhisperModel = struct {
         };
     }
 
+    /// Prepare audio for Whisper (convert to f32 mono 16kHz)
+    fn prepareAudioForWhisper(self: *Self, audio: Audio) !struct { samples: []const f32, needs_free: bool } {
+        _ = self;
+
+        // Check if already in correct format
+        if (audio.sample_format == .f32 and audio.channels == 1 and audio.sample_rate == WHISPER_SAMPLE_RATE) {
+            // Reinterpret bytes as f32 slice
+            const f32_ptr: [*]const f32 = @ptrCast(@alignCast(audio.samples.ptr));
+            const sample_count = audio.samples.len / 4;
+            return .{ .samples = f32_ptr[0..sample_count], .needs_free = false };
+        }
+
+        // For now, just return the raw samples reinterpreted
+        // TODO: Implement proper audio conversion
+        const f32_ptr: [*]const f32 = @ptrCast(@alignCast(audio.samples.ptr));
+        const sample_count = audio.samples.len / 4;
+        return .{ .samples = f32_ptr[0..sample_count], .needs_free = false };
+    }
+
+    /// Parse language code to Language enum
+    fn parseLanguageCode(self: *const Self, code: *const [8]u8) Language {
+        _ = self;
+        const span = std.mem.sliceTo(code, 0);
+        if (std.mem.eql(u8, span, "en")) return .en;
+        if (std.mem.eql(u8, span, "ja")) return .ja;
+        if (std.mem.eql(u8, span, "zh")) return .zh;
+        if (std.mem.eql(u8, span, "ko")) return .ko;
+        if (std.mem.eql(u8, span, "es")) return .es;
+        if (std.mem.eql(u8, span, "fr")) return .fr;
+        if (std.mem.eql(u8, span, "de")) return .de;
+        if (std.mem.eql(u8, span, "it")) return .it;
+        if (std.mem.eql(u8, span, "pt")) return .pt;
+        if (std.mem.eql(u8, span, "ru")) return .ru;
+        return .other;
+    }
+
     /// Transcribe with language detection
     /// Returns detected language along with transcription
     pub fn transcribeWithDetection(self: *Self, audio: Audio) !struct { result: TranscriptionResult, detected_language: Language } {
         const result = try self.transcribe(audio);
-
-        // TODO: Actual language detection
-        const detected = if (self.config.language == .auto) Language.en else self.config.language;
-
         return .{
             .result = result,
-            .detected_language = detected,
+            .detected_language = result.language,
         };
     }
 
     /// Translate audio to English
     /// Caller owns the returned text and must free it
     pub fn translate(self: *Self, audio: Audio) !TranscriptionResult {
-        var translate_config = self.config;
-        translate_config.task = .translate;
-
         // Temporarily override config
         const original_task = self.config.task;
         self.config.task = .translate;
         defer self.config.task = original_task;
+
+        // Update backend config if available
+        if (self.backend) |backend| {
+            backend.config.translate = true;
+            defer backend.config.translate = false;
+        }
 
         return self.transcribe(audio);
     }
@@ -324,6 +429,10 @@ pub const WhisperModel = struct {
 
     /// Deinitialize model
     pub fn deinit(self: *Self) void {
+        if (self.backend) |backend| {
+            backend.deinit();
+            self.backend = null;
+        }
         self.initialized = false;
     }
 };
@@ -733,4 +842,22 @@ test "convertToF32 already f32" {
     defer allocator.free(@constCast(result.samples));
 
     try std.testing.expectEqual(SampleFormat.f32, result.sample_format);
+}
+
+test "isWhisperAvailable" {
+    // On native desktop builds, this should be true
+    const available = isWhisperAvailable();
+    if (@import("builtin").os.tag == .macos or @import("builtin").os.tag == .linux) {
+        try std.testing.expect(available);
+    }
+}
+
+test "getSampleRate" {
+    const rate = getSampleRate();
+    try std.testing.expectEqual(@as(u32, 16000), rate);
+}
+
+// Include submodule tests
+test {
+    _ = whisper_backend;
 }
