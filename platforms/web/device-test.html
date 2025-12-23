@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zylix Device Test</title>
+    <style>
+        :root {
+            --primary: #3b5998;
+            --primary-light: #8b9dc3;
+            --success: #28a745;
+            --error: #dc3545;
+            --warning: #ffc107;
+            --bg: #f5f5f5;
+            --card-bg: #e8e8e8;
+            --text: #333;
+            --text-secondary: #666;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .card-header .icon {
+            font-size: 1.2rem;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            font-weight: 500;
+        }
+
+        .status-value.granted { color: var(--success); }
+        .status-value.denied { color: var(--error); }
+        .status-value.available { color: var(--primary); }
+        .status-value.unavailable { color: var(--text-secondary); }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: var(--primary-light);
+        }
+
+        .data-display {
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.05);
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        #statusLog {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        nav a.active {
+            color: var(--primary);
+        }
+
+        nav a .nav-icon {
+            font-size: 1.5rem;
+            display: block;
+        }
+
+        #cameraPreview {
+            width: 100%;
+            max-height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        #cameraPreview.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Device Test</h1>
+    </header>
+
+    <main>
+        <!-- Location Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📍</span>
+                <h2>Location</h2>
+            </div>
+            <div class="status-row">
+                <span>Permission</span>
+                <span id="locationPermission" class="status-value denied">Checking...</span>
+            </div>
+            <div class="status-row">
+                <span>Available</span>
+                <span id="locationAvailable" class="status-value">-</span>
+            </div>
+            <div id="locationData" class="data-display" style="display: none;"></div>
+            <div class="button-row">
+                <button id="btnRequestLocation">Request</button>
+                <button id="btnStartLocation" disabled>Start</button>
+                <button id="btnGetLocation" disabled>Get Once</button>
+            </div>
+        </div>
+
+        <!-- Haptics Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📳</span>
+                <h2>Haptics</h2>
+            </div>
+            <div class="status-row">
+                <span>Available</span>
+                <span id="hapticsAvailable" class="status-value">-</span>
+            </div>
+            <div class="button-row">
+                <button id="btnHapticLight">Light</button>
+                <button id="btnHapticMedium">Medium</button>
+                <button id="btnHapticHeavy">Heavy</button>
+            </div>
+            <div class="button-row">
+                <button id="btnHapticSuccess" class="secondary">Success</button>
+                <button id="btnHapticError" class="secondary">Error</button>
+                <button id="btnHapticTick" class="secondary">Tick</button>
+            </div>
+        </div>
+
+        <!-- Sensors Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📡</span>
+                <h2>Sensors</h2>
+            </div>
+            <div class="status-row">
+                <span>Accelerometer</span>
+                <span id="accelAvailable" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span>Gyroscope</span>
+                <span id="gyroAvailable" class="status-value">-</span>
+            </div>
+            <div id="sensorData" class="data-display" style="display: none;"></div>
+            <div class="button-row">
+                <button id="btnStartAccel">Start Accel</button>
+                <button id="btnStartGyro">Start Gyro</button>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🔔</span>
+                <h2>Notifications</h2>
+            </div>
+            <div class="status-row">
+                <span>Permission</span>
+                <span id="notifPermission" class="status-value denied">Checking...</span>
+            </div>
+            <div class="button-row">
+                <button id="btnRequestNotif">Request Permission</button>
+                <button id="btnShowNotif" disabled>Show Test Notification</button>
+            </div>
+        </div>
+
+        <!-- Camera Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📷</span>
+                <h2>Camera</h2>
+            </div>
+            <div class="status-row">
+                <span>Available</span>
+                <span id="cameraAvailable" class="status-value">-</span>
+            </div>
+            <div class="status-row">
+                <span>Cameras Found</span>
+                <span id="cameraCount" class="status-value">-</span>
+            </div>
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <div class="button-row">
+                <button id="btnStartCamera">Start Camera</button>
+                <button id="btnCapturePhoto" disabled>Capture Photo</button>
+            </div>
+        </div>
+
+        <!-- Audio Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">🎤</span>
+                <h2>Audio</h2>
+            </div>
+            <div class="status-row">
+                <span>Recording Available</span>
+                <span id="audioAvailable" class="status-value">-</span>
+            </div>
+            <div class="button-row">
+                <button id="btnStartRecord">Start Recording</button>
+                <button id="btnStopRecord" disabled>Stop & Play</button>
+            </div>
+        </div>
+
+        <!-- Device Info Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📱</span>
+                <h2>Device Info</h2>
+            </div>
+            <div id="deviceInfo" class="data-display"></div>
+        </div>
+
+        <!-- Status Log Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="icon">📋</span>
+                <h2>Status Log</h2>
+            </div>
+            <div id="statusLog">
+                <div class="log-entry">No status messages yet</div>
+            </div>
+        </div>
+    </main>
+
+    <nav>
+        <a href="index.html">
+            <span class="nav-icon">#</span>
+            Counter
+        </a>
+        <a href="device-test.html" class="active">
+            <span class="nav-icon">📱</span>
+            Device
+        </a>
+    </nav>
+
+    <script src="zylix-device.js"></script>
+    <script>
+        // Status log helper
+        function addStatus(message) {
+            const log = document.getElementById('statusLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${timestamp}] ${message}`;
+
+            if (log.children[0].textContent === 'No status messages yet') {
+                log.innerHTML = '';
+            }
+
+            log.insertBefore(entry, log.firstChild);
+
+            // Keep only last 20 entries
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const device = window.zylixDevice;
+
+            // === Location ===
+            const locationAvailable = document.getElementById('locationAvailable');
+            const locationPermission = document.getElementById('locationPermission');
+            const locationData = document.getElementById('locationData');
+            const btnRequestLocation = document.getElementById('btnRequestLocation');
+            const btnStartLocation = document.getElementById('btnStartLocation');
+            const btnGetLocation = document.getElementById('btnGetLocation');
+
+            locationAvailable.textContent = device.location.isAvailable ? 'Yes' : 'No';
+            locationAvailable.className = 'status-value ' + (device.location.isAvailable ? 'available' : 'unavailable');
+
+            async function updateLocationPermission() {
+                const hasPermission = await device.location.hasPermission();
+                locationPermission.textContent = hasPermission ? 'Granted' : 'Denied';
+                locationPermission.className = 'status-value ' + (hasPermission ? 'granted' : 'denied');
+                btnStartLocation.disabled = !hasPermission;
+                btnGetLocation.disabled = !hasPermission;
+                return hasPermission;
+            }
+            await updateLocationPermission();
+
+            btnRequestLocation.onclick = async () => {
+                try {
+                    await device.location.getCurrentLocation();
+                    await updateLocationPermission();
+                    addStatus('Location permission granted');
+                } catch (e) {
+                    addStatus('Location error: ' + e.message);
+                }
+            };
+
+            let locationUpdating = false;
+            btnStartLocation.onclick = () => {
+                if (locationUpdating) {
+                    device.location.stopUpdating();
+                    btnStartLocation.textContent = 'Start';
+                    locationUpdating = false;
+                    addStatus('Location updates stopped');
+                } else {
+                    device.location.startUpdating();
+                    device.location.subscribe((loc) => {
+                        locationData.style.display = 'block';
+                        locationData.textContent = `Lat: ${loc.latitude.toFixed(4)}\nLon: ${loc.longitude.toFixed(4)}\nAccuracy: ${loc.accuracy?.toFixed(0)}m`;
+                    });
+                    btnStartLocation.textContent = 'Stop';
+                    locationUpdating = true;
+                    addStatus('Location updates started');
+                }
+            };
+
+            btnGetLocation.onclick = async () => {
+                try {
+                    const loc = await device.location.getCurrentLocation();
+                    locationData.style.display = 'block';
+                    locationData.textContent = `Lat: ${loc.latitude.toFixed(4)}\nLon: ${loc.longitude.toFixed(4)}`;
+                    addStatus(`Location: ${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`);
+                } catch (e) {
+                    addStatus('Location error: ' + e.message);
+                }
+            };
+
+            // === Haptics ===
+            const hapticsAvailable = document.getElementById('hapticsAvailable');
+            hapticsAvailable.textContent = device.haptics.isAvailable ? 'Yes' : 'No';
+            hapticsAvailable.className = 'status-value ' + (device.haptics.isAvailable ? 'available' : 'unavailable');
+
+            document.getElementById('btnHapticLight').onclick = () => { device.haptics.impact('light'); addStatus('Light haptic'); };
+            document.getElementById('btnHapticMedium').onclick = () => { device.haptics.impact('medium'); addStatus('Medium haptic'); };
+            document.getElementById('btnHapticHeavy').onclick = () => { device.haptics.impact('heavy'); addStatus('Heavy haptic'); };
+            document.getElementById('btnHapticSuccess').onclick = () => { device.haptics.notification('success'); addStatus('Success notification'); };
+            document.getElementById('btnHapticError').onclick = () => { device.haptics.notification('error'); addStatus('Error notification'); };
+            document.getElementById('btnHapticTick').onclick = () => { device.haptics.selection(); addStatus('Selection tick'); };
+
+            // === Sensors ===
+            const accelAvailable = document.getElementById('accelAvailable');
+            const gyroAvailable = document.getElementById('gyroAvailable');
+            const sensorData = document.getElementById('sensorData');
+            const btnStartAccel = document.getElementById('btnStartAccel');
+            const btnStartGyro = document.getElementById('btnStartGyro');
+
+            // Check for DeviceMotion support as fallback
+            const hasMotionSupport = 'DeviceMotionEvent' in window;
+            accelAvailable.textContent = (device.sensors.isAccelerometerAvailable || hasMotionSupport) ? 'Available' : 'N/A';
+            accelAvailable.className = 'status-value ' + ((device.sensors.isAccelerometerAvailable || hasMotionSupport) ? 'available' : 'unavailable');
+
+            const hasOrientationSupport = 'DeviceOrientationEvent' in window;
+            gyroAvailable.textContent = (device.sensors.isGyroscopeAvailable || hasOrientationSupport) ? 'Available' : 'N/A';
+            gyroAvailable.className = 'status-value ' + ((device.sensors.isGyroscopeAvailable || hasOrientationSupport) ? 'available' : 'unavailable');
+
+            let accelActive = false;
+            btnStartAccel.onclick = async () => {
+                if (accelActive) {
+                    device.sensors.stopAccelerometer();
+                    btnStartAccel.textContent = 'Start Accel';
+                    accelActive = false;
+                    addStatus('Accelerometer stopped');
+                } else {
+                    try {
+                        await device.sensors.startAccelerometer();
+                        device.sensors.subscribeAccelerometer((data) => {
+                            sensorData.style.display = 'block';
+                            sensorData.textContent = `Accel X: ${data.x?.toFixed(2) || 0}\nAccel Y: ${data.y?.toFixed(2) || 0}\nAccel Z: ${data.z?.toFixed(2) || 0}`;
+                        });
+                        btnStartAccel.textContent = 'Stop Accel';
+                        accelActive = true;
+                        addStatus('Accelerometer started');
+                    } catch (e) {
+                        addStatus('Accelerometer error: ' + e.message);
+                    }
+                }
+            };
+
+            let gyroActive = false;
+            btnStartGyro.onclick = async () => {
+                if (gyroActive) {
+                    device.sensors.stopGyroscope();
+                    btnStartGyro.textContent = 'Start Gyro';
+                    gyroActive = false;
+                    addStatus('Gyroscope stopped');
+                } else {
+                    try {
+                        await device.sensors.startGyroscope();
+                        device.sensors.subscribeGyroscope((data) => {
+                            sensorData.style.display = 'block';
+                            if (data.alpha !== undefined) {
+                                sensorData.textContent = `Alpha: ${data.alpha?.toFixed(2) || 0}\nBeta: ${data.beta?.toFixed(2) || 0}\nGamma: ${data.gamma?.toFixed(2) || 0}`;
+                            } else {
+                                sensorData.textContent = `Gyro X: ${data.x?.toFixed(2) || 0}\nGyro Y: ${data.y?.toFixed(2) || 0}\nGyro Z: ${data.z?.toFixed(2) || 0}`;
+                            }
+                        });
+                        btnStartGyro.textContent = 'Stop Gyro';
+                        gyroActive = true;
+                        addStatus('Gyroscope started');
+                    } catch (e) {
+                        addStatus('Gyroscope error: ' + e.message);
+                    }
+                }
+            };
+
+            // === Notifications ===
+            const notifPermission = document.getElementById('notifPermission');
+            const btnRequestNotif = document.getElementById('btnRequestNotif');
+            const btnShowNotif = document.getElementById('btnShowNotif');
+
+            function updateNotifPermission() {
+                const hasPermission = device.notifications.hasPermission();
+                notifPermission.textContent = hasPermission ? 'Granted' : (device.notifications.isAvailable ? 'Denied' : 'N/A');
+                notifPermission.className = 'status-value ' + (hasPermission ? 'granted' : 'denied');
+                btnShowNotif.disabled = !hasPermission;
+            }
+            updateNotifPermission();
+
+            btnRequestNotif.onclick = async () => {
+                const granted = await device.notifications.requestPermission();
+                updateNotifPermission();
+                addStatus('Notification permission: ' + (granted ? 'granted' : 'denied'));
+            };
+
+            btnShowNotif.onclick = () => {
+                device.notifications.show({
+                    title: 'Zylix Test',
+                    body: 'This is a test notification from Zylix Device',
+                });
+                addStatus('Notification shown');
+            };
+
+            // === Camera ===
+            const cameraAvailable = document.getElementById('cameraAvailable');
+            const cameraCount = document.getElementById('cameraCount');
+            const cameraPreview = document.getElementById('cameraPreview');
+            const btnStartCamera = document.getElementById('btnStartCamera');
+            const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+
+            cameraAvailable.textContent = device.camera.isAvailable ? 'Yes' : 'No';
+            cameraAvailable.className = 'status-value ' + (device.camera.isAvailable ? 'available' : 'unavailable');
+
+            const cameras = await device.camera.getAvailableCameras();
+            cameraCount.textContent = cameras.length;
+
+            let cameraActive = false;
+            btnStartCamera.onclick = async () => {
+                if (cameraActive) {
+                    device.camera.stopPreview();
+                    cameraPreview.classList.remove('active');
+                    btnStartCamera.textContent = 'Start Camera';
+                    btnCapturePhoto.disabled = true;
+                    cameraActive = false;
+                    addStatus('Camera stopped');
+                } else {
+                    try {
+                        await device.camera.startPreview(cameraPreview);
+                        cameraPreview.classList.add('active');
+                        btnStartCamera.textContent = 'Stop Camera';
+                        btnCapturePhoto.disabled = false;
+                        cameraActive = true;
+                        addStatus('Camera started');
+                    } catch (e) {
+                        addStatus('Camera error: ' + e.message);
+                    }
+                }
+            };
+
+            btnCapturePhoto.onclick = () => {
+                try {
+                    const dataUrl = device.camera.capturePhoto();
+                    // Open in new tab
+                    const win = window.open();
+                    win.document.write('<img src="' + dataUrl + '">');
+                    addStatus('Photo captured');
+                } catch (e) {
+                    addStatus('Capture error: ' + e.message);
+                }
+            };
+
+            // === Audio ===
+            const audioAvailable = document.getElementById('audioAvailable');
+            const btnStartRecord = document.getElementById('btnStartRecord');
+            const btnStopRecord = document.getElementById('btnStopRecord');
+
+            audioAvailable.textContent = device.audio.isRecordingAvailable ? 'Yes' : 'No';
+            audioAvailable.className = 'status-value ' + (device.audio.isRecordingAvailable ? 'available' : 'unavailable');
+
+            btnStartRecord.onclick = async () => {
+                try {
+                    await device.audio.startRecording();
+                    btnStartRecord.disabled = true;
+                    btnStopRecord.disabled = false;
+                    addStatus('Recording started');
+                } catch (e) {
+                    addStatus('Recording error: ' + e.message);
+                }
+            };
+
+            btnStopRecord.onclick = async () => {
+                try {
+                    const blob = await device.audio.stopRecording();
+                    btnStartRecord.disabled = false;
+                    btnStopRecord.disabled = true;
+                    addStatus('Recording stopped, playing...');
+
+                    // Play the recorded audio
+                    const url = URL.createObjectURL(blob);
+                    const audio = new Audio(url);
+                    audio.play();
+                } catch (e) {
+                    addStatus('Stop recording error: ' + e.message);
+                }
+            };
+
+            // === Device Info ===
+            const deviceInfo = document.getElementById('deviceInfo');
+            const info = device.getDeviceInfo();
+            deviceInfo.innerHTML = `
+Platform: ${info.platform}<br>
+Language: ${info.language}<br>
+Online: ${info.online}<br>
+Touch Points: ${info.maxTouchPoints}<br>
+CPU Cores: ${info.hardwareConcurrency || 'N/A'}<br>
+Memory: ${info.deviceMemory ? info.deviceMemory + ' GB' : 'N/A'}<br>
+Connection: ${info.connection?.effectiveType || 'N/A'}
+            `.trim();
+
+            addStatus('Device initialized');
+        });
+    </script>
+</body>
+</html>
