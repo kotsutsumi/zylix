@@ -31,10 +31,16 @@ pub fn build(b: *std.Build) void {
     // Add llama.cpp include paths to AI module
     ai_mod.addIncludePath(b.path("deps/llama.cpp/include"));
     ai_mod.addIncludePath(b.path("deps/llama.cpp/ggml/include"));
+    // Add mtmd (multi-modal) include path for VLM support
+    ai_mod.addIncludePath(b.path("deps/llama.cpp/tools/mtmd"));
 
     // Add whisper.cpp include paths to AI module
     ai_mod.addIncludePath(b.path("deps/whisper.cpp/include"));
     ai_mod.addIncludePath(b.path("deps/whisper.cpp/ggml/include"));
+    // Add miniaudio include path for audio decoding (MP3, FLAC support)
+    ai_mod.addIncludePath(b.path("deps/whisper.cpp/examples"));
+    // Add src/ai include path for miniaudio wrapper header
+    ai_mod.addIncludePath(b.path("src/ai"));
 
     // === CLI Executable ===
     const cli_exe = b.addExecutable(.{
@@ -49,9 +55,10 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Add llama.cpp and whisper.cpp support for CLI
+    // Add llama.cpp, whisper.cpp, and Core ML support for CLI
     addLlamaCppSupport(cli_exe, b);
     addWhisperCppSupport(cli_exe, b);
+    addCoreMLSupport(cli_exe, b);
 
     b.installArtifact(cli_exe);
 
@@ -73,9 +80,10 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Add llama.cpp and whisper.cpp support for tests
+    // Add llama.cpp, whisper.cpp, and Core ML support for tests
     addLlamaCppSupport(unit_tests, b);
     addWhisperCppSupport(unit_tests, b);
+    addCoreMLSupport(unit_tests, b);
 
     // Create CLI test module (reuses ai_mod defined above)
     const cli_root_mod = b.createModule(.{
@@ -91,9 +99,10 @@ pub fn build(b: *std.Build) void {
         .root_module = cli_root_mod,
     });
 
-    // Add llama.cpp and whisper.cpp support for CLI tests
+    // Add llama.cpp, whisper.cpp, and Core ML support for CLI tests
     addLlamaCppSupport(cli_tests, b);
     addWhisperCppSupport(cli_tests, b);
+    addCoreMLSupport(cli_tests, b);
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const run_cli_tests = b.addRunArtifact(cli_tests);
@@ -375,12 +384,17 @@ fn addLlamaCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
     // Add include paths for llama.cpp headers
     compile.root_module.addIncludePath(b.path("deps/llama.cpp/include"));
     compile.root_module.addIncludePath(b.path("deps/llama.cpp/ggml/include"));
+    // Add mtmd (multi-modal) include path for VLM support
+    compile.root_module.addIncludePath(b.path("deps/llama.cpp/tools/mtmd"));
 
     // Link against llama.cpp static libraries
     compile.addObjectFile(b.path("deps/llama.cpp/build/src/libllama.a"));
     compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml.a"));
     compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml-base.a"));
     compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml-cpu.a"));
+    // Add mtmd (multi-modal) library for VLM support
+    compile.addObjectFile(b.path("deps/llama.cpp/build/tools/mtmd/libmtmd.a"));
+    compile.addObjectFile(b.path("deps/llama.cpp/build/common/libcommon.a"));
 
     // Platform-specific libraries
     if (target.os.tag == .macos) {
@@ -418,6 +432,21 @@ fn addWhisperCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
     // Add include paths for whisper.cpp headers
     compile.root_module.addIncludePath(b.path("deps/whisper.cpp/include"));
     compile.root_module.addIncludePath(b.path("deps/whisper.cpp/ggml/include"));
+    // Add miniaudio include path for audio decoding (MP3, FLAC support)
+    compile.root_module.addIncludePath(b.path("deps/whisper.cpp/examples"));
+    // Add src/ai include path for miniaudio wrapper header
+    compile.root_module.addIncludePath(b.path("src/ai"));
+
+    // Compile miniaudio wrapper for audio decoding
+    compile.addCSourceFile(.{
+        .file = b.path("src/ai/miniaudio_wrapper.c"),
+        .flags = &.{
+            "-std=c11",
+            "-O2",
+            "-DNDEBUG",
+            "-fno-sanitize=undefined", // Disable UBSan for miniaudio
+        },
+    });
 
     // Link against whisper.cpp static libraries
     compile.addObjectFile(b.path("deps/whisper.cpp/build/src/libwhisper.a"));
@@ -445,4 +474,40 @@ fn addWhisperCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
         compile.root_module.linkSystemLibrary("m", .{});
         compile.root_module.linkSystemLibrary("pthread", .{});
     }
+}
+
+fn addCoreMLSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
+    const target = compile.root_module.resolved_target.?.result;
+
+    // Only add Core ML support for Apple platforms
+    const is_apple = target.os.tag == .macos or target.os.tag == .ios or
+        target.os.tag == .tvos or target.os.tag == .watchos;
+
+    if (!is_apple) {
+        return;
+    }
+
+    // Add include path for Core ML wrapper
+    compile.root_module.addIncludePath(b.path("src/ai"));
+
+    // Compile Core ML Objective-C wrapper
+    compile.addCSourceFile(.{
+        .file = b.path("src/ai/coreml_wrapper.m"),
+        .flags = &.{
+            "-fobjc-arc", // Enable Automatic Reference Counting
+            "-fno-modules", // Disable Clang modules (compatibility)
+            "-O2",
+            "-DNDEBUG",
+            "-Wno-deprecated-declarations",
+        },
+    });
+
+    // Link Core ML framework
+    compile.root_module.linkFramework("CoreML", .{});
+
+    // Additional frameworks needed for Core ML
+    compile.root_module.linkFramework("Foundation", .{});
+
+    // Link Objective-C runtime
+    compile.root_module.linkSystemLibrary("objc", .{});
 }

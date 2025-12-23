@@ -14,6 +14,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 const types = @import("types.zig");
 const llama = @import("llama_cpp.zig");
+const coreml = @import("coreml.zig");
+const metal = @import("metal.zig");
 const ModelConfig = types.ModelConfig;
 const ModelFormat = types.ModelFormat;
 const ModelType = types.ModelType;
@@ -701,7 +703,211 @@ pub const GGMLBackend = struct {
     };
 };
 
+// === Core ML Backend ===
+
+/// Core ML backend for Apple platforms
+pub const CoreMLBackend = struct {
+    status: BackendStatus,
+    model: ?*coreml.Model,
+    model_path: [types.MAX_PATH_LEN]u8,
+    model_path_len: usize,
+    allocator: std.mem.Allocator,
+    config: BackendConfig,
+    embedding_dim: i32,
+
+    const Self = @This();
+
+    /// Initialize Core ML backend
+    pub fn init(allocator: std.mem.Allocator, config: BackendConfig) !*Self {
+        const self = try allocator.create(Self);
+        self.* = Self{
+            .status = .uninitialized,
+            .model = null,
+            .model_path = undefined,
+            .model_path_len = 0,
+            .allocator = allocator,
+            .config = config,
+            .embedding_dim = 0,
+        };
+
+        if (coreml.isAvailable()) {
+            self.status = .ready;
+        } else {
+            self.status = .@"error";
+            allocator.destroy(self);
+            return error.BackendNotAvailable;
+        }
+
+        return self;
+    }
+
+    /// Get as Backend interface
+    pub fn backend(self: *Self) Backend {
+        return .{
+            .ptr = self,
+            .vtable = &vtable,
+        };
+    }
+
+    fn getTypeImpl(ptr: *anyopaque) BackendType {
+        _ = ptr;
+        return .coreml;
+    }
+
+    fn getCapabilitiesImpl(ptr: *anyopaque) BackendCapabilities {
+        _ = ptr;
+        return .{
+            .gpu_acceleration = metal.isAvailable(),
+            .batch_inference = true,
+            .streaming = false, // Core ML doesn't support streaming
+            .quantization = false, // Core ML uses its own quantization
+            .mmap = false,
+            .max_context_length = 4096,
+            .max_batch_size = 32,
+        };
+    }
+
+    fn getStatusImpl(ptr: *anyopaque) BackendStatus {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        return self.status;
+    }
+
+    fn loadImpl(ptr: *anyopaque, path: []const u8) Result {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+
+        if (path.len == 0) {
+            return .invalid_arg;
+        }
+
+        if (path.len > types.MAX_PATH_LEN) {
+            return .invalid_arg;
+        }
+
+        // Unload previous model if any
+        if (self.model != null) {
+            self.unloadInternal();
+        }
+
+        self.status = .loading;
+
+        // Copy path
+        @memcpy(self.model_path[0..path.len], path);
+        self.model_path[path.len] = 0;
+        self.model_path_len = path.len;
+
+        // Configure Core ML
+        var coreml_config = coreml.getDefaultConfig();
+        if (self.config.use_gpu) {
+            coreml_config.compute_units = .all;
+        } else {
+            coreml_config.compute_units = .cpu_only;
+        }
+
+        // Load the model
+        const model = coreml.Model.load(
+            self.allocator,
+            path,
+            coreml_config,
+        ) catch |err| {
+            self.status = .@"error";
+            return switch (err) {
+                error.ModelNotFound => .file_not_found,
+                error.CoreMLNotAvailable => .gpu_not_available,
+                error.OutOfMemory => .out_of_memory,
+                else => .init_failed,
+            };
+        };
+
+        self.model = model;
+        self.status = .ready;
+        return .ok;
+    }
+
+    fn unloadInternal(self: *Self) void {
+        if (self.model) |model| {
+            model.deinit();
+            self.model = null;
+        }
+        self.embedding_dim = 0;
+        self.model_path_len = 0;
+    }
+
+    fn unloadImpl(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        self.unloadInternal();
+    }
+
+    fn isLoadedImpl(ptr: *anyopaque) bool {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        return self.model != null;
+    }
+
+    fn runEmbeddingImpl(ptr: *anyopaque, text: []const u8, output: []f32) Result {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+
+        if (self.model == null) {
+            return .model_not_loaded;
+        }
+
+        if (text.len == 0) {
+            return .invalid_arg;
+        }
+
+        // For Core ML embedding models, we need to tokenize first
+        // This is a simplified implementation - real usage would need proper tokenization
+        var tokens: [512]i32 = undefined;
+        const token_count = @min(text.len, 512);
+
+        // Simple byte-level tokenization (real implementation would use proper tokenizer)
+        for (0..token_count) |i| {
+            tokens[i] = @intCast(text[i]);
+        }
+
+        self.model.?.generateEmbeddings(
+            tokens[0..token_count],
+            output,
+        ) catch {
+            return .inference_failed;
+        };
+
+        return .ok;
+    }
+
+    fn runGenerateImpl(ptr: *anyopaque, prompt: []const u8, output: []u8) Result {
+        _ = ptr;
+        _ = prompt;
+        _ = output;
+        // Core ML backend doesn't support text generation directly
+        // Text generation models should use GGML backend
+        return .unsupported_model;
+    }
+
+    fn deinitImpl(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        self.unloadInternal();
+        self.status = .shutdown;
+        self.allocator.destroy(self);
+    }
+
+    const vtable = Backend.VTable{
+        .getType = getTypeImpl,
+        .getCapabilities = getCapabilitiesImpl,
+        .getStatus = getStatusImpl,
+        .load = loadImpl,
+        .unload = unloadImpl,
+        .isLoaded = isLoadedImpl,
+        .runEmbedding = runEmbeddingImpl,
+        .runGenerate = runGenerateImpl,
+        .deinit = deinitImpl,
+    };
+};
+
 // === Backend Factory ===
+
+/// Check if Core ML backend is available
+fn isCoreMLAvailable() bool {
+    return coreml.isAvailable();
+}
 
 /// Check if GGML backend is available (native builds with llama.cpp)
 fn isGGMLAvailable() bool {
@@ -732,8 +938,15 @@ pub fn createBackend(config: BackendConfig, allocator: std.mem.Allocator) !Backe
             const ggml = try GGMLBackend.init(allocator, config);
             break :blk ggml.backend();
         },
+        .coreml => blk: {
+            if (!isCoreMLAvailable()) {
+                return error.BackendNotAvailable;
+            }
+            const coreml_backend = try CoreMLBackend.init(allocator, config);
+            break :blk coreml_backend.backend();
+        },
         // Other backends will be implemented as needed
-        .onnx, .coreml, .tflite, .webgpu => error.BackendNotImplemented,
+        .onnx, .tflite, .webgpu => error.BackendNotImplemented,
     };
 }
 
@@ -755,9 +968,25 @@ pub fn isBackendAvailable(backend_type: BackendType) bool {
     return switch (backend_type) {
         .mock => true, // Always available
         .ggml => isGGMLAvailable(), // GGML via llama.cpp
+        .coreml => isCoreMLAvailable(), // Core ML on Apple platforms
         // Other backends depend on platform and build configuration
-        .onnx, .coreml, .tflite, .webgpu => false, // Not yet implemented
+        .onnx, .tflite, .webgpu => false, // Not yet implemented
     };
+}
+
+/// Get GPU/Metal information
+pub fn getGPUInfo() metal.DeviceInfo {
+    return metal.getDefaultDeviceInfo();
+}
+
+/// Check if GPU acceleration is available
+pub fn hasGPUAcceleration() bool {
+    return metal.isAvailable();
+}
+
+/// Get recommended Metal configuration
+pub fn getMetalConfig() metal.MetalConfig {
+    return metal.getDefaultConfig();
 }
 
 // === Tests ===

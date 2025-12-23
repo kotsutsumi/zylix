@@ -69,10 +69,13 @@ pub const ChatRole = llm.ChatRole;
 
 // Re-export VLM module
 pub const vlm = @import("vlm.zig");
+pub const vlm_backend = @import("vlm_backend.zig");
+pub const mtmd_cpp = @import("mtmd_cpp.zig");
 pub const VLMModel = vlm.VLMModel;
 pub const VLMConfig = vlm.VLMConfig;
 pub const Image = vlm.Image;
 pub const ImageFormat = vlm.ImageFormat;
+pub const VLMBackend = vlm_backend.VLMBackend;
 
 // Re-export Whisper module
 pub const whisper = @import("whisper.zig");
@@ -81,6 +84,33 @@ pub const WhisperModel = whisper.WhisperModel;
 pub const WhisperConfig = whisper.WhisperConfig;
 pub const Audio = whisper.Audio;
 pub const Language = whisper.Language;
+
+// Re-export Audio Decoder module (MP3, FLAC, OGG, WAV support)
+pub const audio_decoder = @import("audio_decoder.zig");
+pub const miniaudio = @import("miniaudio.zig");
+pub const AudioFormat = audio_decoder.AudioFormat;
+pub const AudioInfo = audio_decoder.AudioInfo;
+pub const DecodeResult = audio_decoder.DecodeResult;
+
+// Re-export Whisper Streaming module (real-time transcription)
+pub const whisper_stream = @import("whisper_stream.zig");
+pub const StreamingContext = whisper_stream.StreamingContext;
+pub const StreamConfig = whisper_stream.StreamConfig;
+pub const StreamSegment = whisper_stream.StreamSegment;
+pub const StreamState = whisper_stream.StreamState;
+
+// Re-export Metal/GPU module (Apple platform acceleration)
+pub const metal = @import("metal.zig");
+pub const MetalConfig = metal.MetalConfig;
+pub const MetalStatus = metal.MetalStatus;
+pub const DeviceInfo = metal.DeviceInfo;
+pub const DeviceCapabilities = metal.DeviceCapabilities;
+
+// Re-export Core ML module (Apple ML framework)
+pub const coreml = @import("coreml.zig");
+pub const CoreMLModel = coreml.Model;
+pub const CoreMLConfig = coreml.Config;
+pub const CoreMLComputeUnits = coreml.ComputeUnits;
 
 // === Constants ===
 
@@ -325,4 +355,8 @@ test {
     _ = llm;
     _ = vlm;
     _ = whisper;
+    _ = whisper_stream;
+    _ = audio_decoder;
+    _ = metal;
+    _ = coreml;
 }
