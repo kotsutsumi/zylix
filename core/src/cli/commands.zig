@@ -1,10 +1,14 @@
 //! Command implementations for Zylix Test CLI
 //!
-//! Contains handlers for all CLI commands: run, init, server, list, report.
+//! Contains handlers for all CLI commands: run, init, server, list, report, ai.
 
 const std = @import("std");
 const config = @import("config.zig");
 const output = @import("output.zig");
+
+// AI module imports (provided by build system)
+const ai = @import("ai");
+const backend = ai.backend;
 
 const ExitCode = @import("main.zig").ExitCode;
 const Platform = config.Platform;
@@ -581,6 +585,261 @@ pub fn generateReport(allocator: std.mem.Allocator, args: []const []const u8) Ex
         output.printInfo("Opening report in browser...", .{});
         // TODO: Actually open browser
     }
+
+    return ExitCode.success;
+}
+
+// ============================================================================
+// AI Command
+// ============================================================================
+
+/// Test AI inference with a model
+pub fn aiCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    if (args.len == 0) {
+        output.printError("Missing action. Use: embed, generate, info", .{});
+        return ExitCode.invalid_args;
+    }
+
+    const action = args[0];
+    const action_args = if (args.len > 1) args[1..] else args[0..0];
+
+    if (std.mem.eql(u8, action, "embed")) {
+        return aiEmbed(allocator, action_args);
+    } else if (std.mem.eql(u8, action, "generate")) {
+        return aiGenerate(allocator, action_args);
+    } else if (std.mem.eql(u8, action, "info")) {
+        return aiInfo(allocator, action_args);
+    } else {
+        output.printError("Unknown action: {s}", .{action});
+        output.print("Use: embed, generate, info\n", .{});
+        return ExitCode.invalid_args;
+    }
+}
+
+fn aiEmbed(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var model_path: ?[]const u8 = null;
+    var text: ?[]const u8 = null;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--model") or std.mem.eql(u8, arg, "-m")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                model_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--text") or std.mem.eql(u8, arg, "-t")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                text = args[i];
+            }
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (model_path == null) {
+                model_path = arg;
+            } else if (text == null) {
+                text = arg;
+            }
+        }
+    }
+
+    if (model_path == null) {
+        output.printError("Missing model path. Use: --model <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    if (text == null) {
+        output.printError("Missing text. Use: --text <text>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    output.printHeader("Zylix AI - Embedding Inference");
+    output.print("Model: {s}\n", .{model_path.?});
+    output.print("Text: {s}\n\n", .{text.?});
+
+    // Check if GGML backend is available
+    if (!backend.isBackendAvailable(.ggml)) {
+        output.printError("GGML backend not available on this platform", .{});
+        return ExitCode.runtime_error;
+    }
+
+    // Create GGML backend
+    const cfg = backend.BackendConfig{
+        .backend_type = .ggml,
+        .num_threads = 4,
+        .use_gpu = true,
+    };
+
+    const ggml_backend = backend.createBackend(cfg, allocator) catch |err| {
+        output.printError("Failed to create GGML backend: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer ggml_backend.deinit();
+
+    output.print("Loading model...\n", .{});
+    const load_result = ggml_backend.load(model_path.?);
+    if (load_result != .ok) {
+        output.printError("Failed to load model: {s}", .{@tagName(load_result)});
+        return ExitCode.runtime_error;
+    }
+
+    output.printSuccess("Model loaded", .{});
+
+    // Run embedding
+    output.print("Running embedding inference...\n", .{});
+    var embedding: [4096]f32 = undefined; // Max embedding size
+    const embed_result = ggml_backend.runEmbedding(text.?, &embedding);
+
+    if (embed_result != .ok) {
+        output.printError("Embedding failed: {s}", .{@tagName(embed_result)});
+        return ExitCode.runtime_error;
+    }
+
+    output.printSuccess("Embedding generated successfully!", .{});
+    output.print("\nFirst 10 dimensions: [", .{});
+    for (embedding[0..10], 0..) |val, idx| {
+        if (idx > 0) output.print(", ", .{});
+        output.print("{d:.4}", .{val});
+    }
+    output.print(", ...]\n", .{});
+
+    // Calculate L2 norm
+    var norm: f32 = 0.0;
+    for (embedding[0..384]) |v| {
+        norm += v * v;
+    }
+    norm = @sqrt(norm);
+    output.print("L2 Norm: {d:.6}\n", .{norm});
+
+    return ExitCode.success;
+}
+
+fn aiGenerate(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var model_path: ?[]const u8 = null;
+    var prompt: ?[]const u8 = null;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--model") or std.mem.eql(u8, arg, "-m")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                model_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--prompt") or std.mem.eql(u8, arg, "-p")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                prompt = args[i];
+            }
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (model_path == null) {
+                model_path = arg;
+            } else if (prompt == null) {
+                prompt = arg;
+            }
+        }
+    }
+
+    if (model_path == null) {
+        output.printError("Missing model path. Use: --model <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    if (prompt == null) {
+        output.printError("Missing prompt. Use: --prompt <text>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    output.printHeader("Zylix AI - Text Generation");
+    output.print("Model: {s}\n", .{model_path.?});
+    output.print("Prompt: {s}\n\n", .{prompt.?});
+
+    // Check if GGML backend is available
+    if (!backend.isBackendAvailable(.ggml)) {
+        output.printError("GGML backend not available on this platform", .{});
+        return ExitCode.runtime_error;
+    }
+
+    // Create GGML backend
+    const cfg = backend.BackendConfig{
+        .backend_type = .ggml,
+        .num_threads = 4,
+        .use_gpu = true,
+    };
+
+    const ggml_backend = backend.createBackend(cfg, allocator) catch |err| {
+        output.printError("Failed to create GGML backend: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer ggml_backend.deinit();
+
+    output.print("Loading model...\n", .{});
+    const load_result = ggml_backend.load(model_path.?);
+    if (load_result != .ok) {
+        output.printError("Failed to load model: {s}", .{@tagName(load_result)});
+        return ExitCode.runtime_error;
+    }
+
+    output.printSuccess("Model loaded", .{});
+
+    // Run generation
+    output.print("Generating text...\n", .{});
+    var generated: [1024]u8 = undefined;
+    const gen_result = ggml_backend.runGenerate(prompt.?, &generated);
+
+    if (gen_result != .ok) {
+        output.printError("Generation failed: {s}", .{@tagName(gen_result)});
+        return ExitCode.runtime_error;
+    }
+
+    // Find end of generated text
+    var len: usize = 0;
+    for (generated, 0..) |c, idx| {
+        if (c == 0) {
+            len = idx;
+            break;
+        }
+        len = idx + 1;
+    }
+
+    output.printSuccess("Text generated successfully!", .{});
+    output.print("\nGenerated:\n{s}\n", .{generated[0..len]});
+
+    return ExitCode.success;
+}
+
+fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    _ = allocator;
+
+    output.printHeader("Zylix AI - System Info");
+
+    // Check backend availability
+    output.print("\nBackend Availability:\n", .{});
+    output.print("  GGML (llama.cpp): {s}\n", .{if (backend.isBackendAvailable(.ggml)) "Available" else "Not available"});
+    output.print("  ONNX Runtime:     {s}\n", .{if (backend.isBackendAvailable(.onnx)) "Available" else "Not available"});
+    output.print("  Core ML:          {s}\n", .{if (backend.isBackendAvailable(.coreml)) "Available" else "Not available"});
+    output.print("  TensorFlow Lite:  {s}\n", .{if (backend.isBackendAvailable(.tflite)) "Available" else "Not available"});
+    output.print("  WebGPU:           {s}\n", .{if (backend.isBackendAvailable(.webgpu)) "Available" else "Not available"});
+
+    // Check model path
+    if (args.len > 0) {
+        const model_path = args[0];
+        output.print("\nModel: {s}\n", .{model_path});
+
+        const validation = ai.validateModelPath(model_path);
+        output.print("  Format: {s}\n", .{@tagName(validation.format)});
+        output.print("  Valid: {s}\n", .{if (validation.isValid()) "Yes" else "No"});
+        if (validation.file_size > 0) {
+            var buf: [32]u8 = undefined;
+            output.print("  Size: {s}\n", .{ai.formatFileSize(validation.file_size, &buf)});
+        }
+    }
+
+    output.print("\nUsage:\n", .{});
+    output.print("  zylix-test ai embed --model <model.gguf> --text \"Hello world\"\n", .{});
+    output.print("  zylix-test ai generate --model <model.gguf> --prompt \"What is AI?\"\n", .{});
+    output.print("  zylix-test ai info <model.gguf>\n", .{});
 
     return ExitCode.success;
 }

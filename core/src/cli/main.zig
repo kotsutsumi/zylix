@@ -90,6 +90,8 @@ fn run(allocator: std.mem.Allocator) !ExitCode {
     } else if (std.mem.eql(u8, command, "version")) {
         printVersion();
         return ExitCode.success;
+    } else if (std.mem.eql(u8, command, "ai")) {
+        return commands.aiCommand(allocator, command_args);
     } else if (std.mem.eql(u8, command, "help")) {
         if (command_args.len > 0) {
             printCommandHelp(command_args[0]);
@@ -116,6 +118,7 @@ fn printUsage() void {
         \\  server    Manage bridge servers
         \\  list      List available tests
         \\  report    Generate test reports
+        \\  ai        Test AI inference (embed, generate, info)
         \\  version   Show version information
         \\  help      Show help for a command
         \\
@@ -128,6 +131,7 @@ fn printUsage() void {
         \\  zylix-test run --platform web      Run web tests only
         \\  zylix-test init my-project         Create new test project
         \\  zylix-test server start --web      Start web bridge server
+        \\  zylix-test ai info                 Show AI backend info
         \\
         \\For more information: https://zylix.dev/docs/testing
         \\

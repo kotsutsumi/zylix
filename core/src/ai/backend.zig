@@ -11,7 +11,9 @@
 //! This abstraction allows the same API to work across all platforms.
 
 const std = @import("std");
+const builtin = @import("builtin");
 const types = @import("types.zig");
+const llama = @import("llama_cpp.zig");
 const ModelConfig = types.ModelConfig;
 const ModelFormat = types.ModelFormat;
 const ModelType = types.ModelType;
@@ -330,7 +332,391 @@ pub const MockBackend = struct {
     };
 };
 
+// === GGML Backend (llama.cpp) ===
+
+/// GGML backend using llama.cpp for actual inference
+pub const GGMLBackend = struct {
+    status: BackendStatus,
+    model: ?*llama.llama_model,
+    context: ?*llama.llama_context,
+    model_path: [types.MAX_PATH_LEN]u8,
+    model_path_len: usize,
+    allocator: std.mem.Allocator,
+    config: BackendConfig,
+    embedding_dim: i32,
+    vocab: ?*const llama.c.llama_vocab,
+
+    const Self = @This();
+
+    /// Initialize GGML backend
+    pub fn init(allocator: std.mem.Allocator, config: BackendConfig) !*Self {
+        const self = try allocator.create(Self);
+        self.* = Self{
+            .status = .uninitialized,
+            .model = null,
+            .context = null,
+            .model_path = undefined,
+            .model_path_len = 0,
+            .allocator = allocator,
+            .config = config,
+            .embedding_dim = 0,
+            .vocab = null,
+        };
+
+        // Initialize llama.cpp backend
+        llama.backendInit();
+
+        self.status = .ready;
+        return self;
+    }
+
+    /// Get as Backend interface
+    pub fn backend(self: *Self) Backend {
+        return .{
+            .ptr = self,
+            .vtable = &vtable,
+        };
+    }
+
+    fn getTypeImpl(ptr: *anyopaque) BackendType {
+        _ = ptr;
+        return .ggml;
+    }
+
+    fn getCapabilitiesImpl(ptr: *anyopaque) BackendCapabilities {
+        _ = ptr;
+        return .{
+            .gpu_acceleration = llama.supportsGpuOffload(),
+            .batch_inference = true,
+            .streaming = true,
+            .quantization = true,
+            .mmap = llama.supportsMmap(),
+            .max_context_length = 8192,
+            .max_batch_size = 512,
+        };
+    }
+
+    fn getStatusImpl(ptr: *anyopaque) BackendStatus {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        return self.status;
+    }
+
+    fn loadImpl(ptr: *anyopaque, path: []const u8) Result {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+
+        if (path.len == 0) {
+            return .invalid_arg;
+        }
+
+        if (path.len > types.MAX_PATH_LEN) {
+            return .invalid_arg;
+        }
+
+        // Unload previous model if any
+        if (self.model != null) {
+            self.unloadInternal();
+        }
+
+        self.status = .loading;
+
+        // Copy path and ensure null termination
+        @memcpy(self.model_path[0..path.len], path);
+        self.model_path[path.len] = 0;
+        self.model_path_len = path.len;
+
+        // Set up model parameters
+        var model_params = llama.modelDefaultParams();
+        model_params.n_gpu_layers = if (self.config.use_gpu) 99 else 0;
+
+        // Load the model
+        const model = llama.modelLoadFromFile(
+            @ptrCast(self.model_path[0 .. path.len + 1]),
+            model_params,
+        );
+
+        if (model == null) {
+            self.status = .@"error";
+            return .file_not_found;
+        }
+
+        self.model = model;
+
+        // Get model info
+        self.embedding_dim = llama.modelNEmbd(model.?);
+        self.vocab = llama.modelGetVocab(model.?) orelse {
+            llama.modelFree(model.?);
+            self.model = null;
+            self.status = .@"error";
+            return .init_failed;
+        };
+
+        // Create context
+        var ctx_params = llama.contextDefaultParams();
+        ctx_params.n_ctx = self.config.model.context_length;
+        ctx_params.n_batch = @intCast(self.config.model.batch_size);
+        ctx_params.n_threads = self.config.num_threads;
+        ctx_params.embeddings = true; // Enable embeddings mode
+
+        const context = llama.initFromModel(model.?, ctx_params);
+        if (context == null) {
+            llama.modelFree(model.?);
+            self.model = null;
+            self.status = .@"error";
+            return .init_failed;
+        }
+
+        self.context = context;
+        self.status = .ready;
+        return .ok;
+    }
+
+    fn unloadInternal(self: *Self) void {
+        if (self.context) |ctx| {
+            llama.free(ctx);
+            self.context = null;
+        }
+        if (self.model) |model| {
+            llama.modelFree(model);
+            self.model = null;
+        }
+        self.vocab = null;
+        self.embedding_dim = 0;
+        self.model_path_len = 0;
+    }
+
+    fn unloadImpl(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        self.unloadInternal();
+    }
+
+    fn isLoadedImpl(ptr: *anyopaque) bool {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        return self.model != null and self.context != null;
+    }
+
+    fn runEmbeddingImpl(ptr: *anyopaque, text: []const u8, output: []f32) Result {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+
+        if (self.model == null or self.context == null) {
+            return .model_not_loaded;
+        }
+
+        if (text.len == 0) {
+            return .invalid_arg;
+        }
+
+        const ctx = self.context.?;
+        const vocab = self.vocab.?;
+
+        // Allocate token buffer
+        const max_tokens: usize = 512;
+        var tokens: [512]llama.llama_token = undefined;
+
+        // Tokenize input text
+        const n_tokens = llama.tokenize(
+            vocab,
+            text.ptr,
+            @intCast(text.len),
+            &tokens,
+            @intCast(max_tokens),
+            true, // add_special (BOS)
+            false, // parse_special
+        );
+
+        if (n_tokens < 0) {
+            return .tokenize_failed;
+        }
+
+        // Clear memory
+        const mem = llama.getMemory(ctx);
+        llama.memoryClear(mem, true);
+
+        // Enable embeddings mode
+        llama.setEmbeddings(ctx, true);
+
+        // Create batch
+        const batch = llama.batchGetOne(&tokens, n_tokens);
+
+        // Run inference (encode for embeddings)
+        const decode_result = llama.decode(ctx, batch);
+        if (decode_result != 0) {
+            return .inference_failed;
+        }
+
+        // Get embeddings
+        const embd_dim: usize = @intCast(self.embedding_dim);
+        const embeddings = llama.getEmbeddingsSeq(ctx, 0);
+
+        if (embeddings == null) {
+            return .inference_failed;
+        }
+
+        // Copy embeddings to output
+        const copy_len = @min(embd_dim, output.len);
+        @memcpy(output[0..copy_len], embeddings.?[0..copy_len]);
+
+        // Normalize embeddings (L2 normalization)
+        var norm: f32 = 0.0;
+        for (output[0..copy_len]) |v| {
+            norm += v * v;
+        }
+        norm = @sqrt(norm);
+        if (norm > 0.0) {
+            for (output[0..copy_len]) |*v| {
+                v.* /= norm;
+            }
+        }
+
+        return .ok;
+    }
+
+    fn runGenerateImpl(ptr: *anyopaque, prompt: []const u8, output: []u8) Result {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+
+        if (self.model == null or self.context == null) {
+            return .model_not_loaded;
+        }
+
+        if (prompt.len == 0) {
+            return .invalid_arg;
+        }
+
+        const ctx = self.context.?;
+        const vocab = self.vocab.?;
+        _ = self.model; // Model is used indirectly through context
+
+        // Tokenize prompt
+        const max_tokens: usize = 512;
+        var tokens: [512]llama.llama_token = undefined;
+
+        const n_prompt_tokens = llama.tokenize(
+            vocab,
+            prompt.ptr,
+            @intCast(prompt.len),
+            &tokens,
+            @intCast(max_tokens),
+            true,
+            false,
+        );
+
+        if (n_prompt_tokens < 0) {
+            return .tokenize_failed;
+        }
+
+        // Disable embeddings mode for generation
+        llama.setEmbeddings(ctx, false);
+
+        // Clear memory
+        const mem = llama.getMemory(ctx);
+        llama.memoryClear(mem, true);
+
+        // Process prompt tokens
+        const batch = llama.batchGetOne(&tokens, n_prompt_tokens);
+        if (llama.decode(ctx, batch) != 0) {
+            return .inference_failed;
+        }
+
+        // Create sampler chain
+        const sampler_params = llama.samplerChainDefaultParams();
+        const sampler = llama.samplerChainInit(sampler_params) orelse return .init_failed;
+        defer llama.samplerFree(sampler);
+
+        // Add temperature and greedy samplers
+        if (llama.samplerInitTemp(0.8)) |temp| {
+            llama.samplerChainAdd(sampler, temp);
+        }
+        if (llama.samplerInitGreedy()) |greedy| {
+            llama.samplerChainAdd(sampler, greedy);
+        }
+
+        // Get special tokens
+        const eos_token = llama.vocabEos(vocab);
+        const eot_token = llama.vocabEot(vocab);
+
+        // Generate tokens
+        var output_pos: usize = 0;
+        var n_cur: i32 = n_prompt_tokens;
+        const n_ctx = llama.nCtx(ctx);
+        const max_gen_tokens: usize = @min(256, output.len);
+
+        while (output_pos < max_gen_tokens) {
+            // Sample next token
+            const new_token = llama.samplerSample(sampler, ctx, -1);
+
+            // Check for end tokens
+            if (new_token == eos_token or new_token == eot_token) {
+                break;
+            }
+
+            // Check context limit
+            if (n_cur >= @as(i32, @intCast(n_ctx))) {
+                break;
+            }
+
+            // Convert token to text
+            var piece: [64]u8 = undefined;
+            const piece_len = llama.tokenToPiece(vocab, new_token, &piece, 64, 0, false);
+
+            if (piece_len > 0) {
+                const copy_len = @min(@as(usize, @intCast(piece_len)), max_gen_tokens - output_pos);
+                @memcpy(output[output_pos .. output_pos + copy_len], piece[0..copy_len]);
+                output_pos += copy_len;
+            }
+
+            // Prepare next batch with the new token
+            var next_tokens: [1]llama.llama_token = .{new_token};
+            const next_batch = llama.batchGetOne(&next_tokens, 1);
+
+            if (llama.decode(ctx, next_batch) != 0) {
+                break;
+            }
+
+            n_cur += 1;
+        }
+
+        return .ok;
+    }
+
+    fn deinitImpl(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
+        self.unloadInternal();
+        self.status = .shutdown;
+
+        // Free llama.cpp backend
+        llama.backendFree();
+
+        self.allocator.destroy(self);
+    }
+
+    const vtable = Backend.VTable{
+        .getType = getTypeImpl,
+        .getCapabilities = getCapabilitiesImpl,
+        .getStatus = getStatusImpl,
+        .load = loadImpl,
+        .unload = unloadImpl,
+        .isLoaded = isLoadedImpl,
+        .runEmbedding = runEmbeddingImpl,
+        .runGenerate = runGenerateImpl,
+        .deinit = deinitImpl,
+    };
+};
+
 // === Backend Factory ===
+
+/// Check if GGML backend is available (native builds with llama.cpp)
+fn isGGMLAvailable() bool {
+    // GGML is only available for native desktop builds
+    const target_os = builtin.os.tag;
+    const target_arch = builtin.cpu.arch;
+
+    return switch (target_os) {
+        .macos, .linux, .windows => switch (target_arch) {
+            .x86_64, .aarch64 => true,
+            else => false,
+        },
+        else => false,
+    };
+}
 
 /// Create a backend based on configuration
 pub fn createBackend(config: BackendConfig, allocator: std.mem.Allocator) !Backend {
@@ -339,8 +725,15 @@ pub fn createBackend(config: BackendConfig, allocator: std.mem.Allocator) !Backe
             const mock = try MockBackend.init(allocator, config);
             break :blk mock.backend();
         },
+        .ggml => blk: {
+            if (!isGGMLAvailable()) {
+                return error.BackendNotAvailable;
+            }
+            const ggml = try GGMLBackend.init(allocator, config);
+            break :blk ggml.backend();
+        },
         // Other backends will be implemented as needed
-        .ggml, .onnx, .coreml, .tflite, .webgpu => error.BackendNotImplemented,
+        .onnx, .coreml, .tflite, .webgpu => error.BackendNotImplemented,
     };
 }
 
@@ -361,8 +754,9 @@ pub fn getRecommendedBackend(format: ModelFormat) BackendType {
 pub fn isBackendAvailable(backend_type: BackendType) bool {
     return switch (backend_type) {
         .mock => true, // Always available
+        .ggml => isGGMLAvailable(), // GGML via llama.cpp
         // Other backends depend on platform and build configuration
-        .ggml, .onnx, .coreml, .tflite, .webgpu => false, // Not yet implemented
+        .onnx, .coreml, .tflite, .webgpu => false, // Not yet implemented
     };
 }
 
@@ -531,5 +925,6 @@ test "getRecommendedBackend" {
 
 test "isBackendAvailable" {
     try std.testing.expect(isBackendAvailable(.mock));
-    try std.testing.expect(!isBackendAvailable(.ggml)); // Not yet implemented
+    // GGML is now available on supported platforms
+    try std.testing.expectEqual(isGGMLAvailable(), isBackendAvailable(.ggml));
 }
