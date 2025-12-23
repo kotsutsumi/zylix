@@ -11,27 +11,39 @@ struct ContentView: View {
     @EnvironmentObject var bridge: ZylixBridge
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 40) {
-                // Header
-                headerSection
+        TabView {
+            // Counter Tab
+            NavigationStack {
+                VStack(spacing: 40) {
+                    // Header
+                    headerSection
 
-                Spacer()
+                    Spacer()
 
-                // Counter Display
-                counterSection
+                    // Counter Display
+                    counterSection
 
-                Spacer()
+                    Spacer()
 
-                // Control Buttons
-                controlSection
+                    // Control Buttons
+                    controlSection
 
-                // State Info (Debug)
-                stateInfoSection
+                    // State Info (Debug)
+                    stateInfoSection
+                }
+                .padding()
+                .navigationTitle("Zylix Counter")
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .padding()
-            .navigationTitle("Zylix Counter")
-            .navigationBarTitleDisplayMode(.inline)
+            .tabItem {
+                Label("Counter", systemImage: "number")
+            }
+
+            // Device Test Tab
+            DeviceTestView()
+                .tabItem {
+                    Label("Device", systemImage: "iphone.gen3")
+                }
         }
     }
 
