@@ -79,7 +79,7 @@ pub const ModelConfig = extern struct {
     context_length: u32 = 2048,
 
     /// Batch size for inference
-    batch_size: u32 = 1,
+    batch_size: u32 = 512,
 
     /// Number of CPU threads
     num_threads: u8 = 4,
@@ -203,6 +203,10 @@ pub const Result = enum(i32) {
     context_exceeded = 10,
     /// Operation cancelled
     cancelled = 11,
+    /// Tokenization failed
+    tokenize_failed = 12,
+    /// Initialization failed
+    init_failed = 13,
     /// Unknown error
     unknown = -1,
 };

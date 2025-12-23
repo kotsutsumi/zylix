@@ -16,7 +16,21 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // Add llama.cpp support for native builds
+    addLlamaCppSupport(lib, b);
+
     b.installArtifact(lib);
+
+    // === AI Module (shared between CLI and tests) ===
+    const ai_mod = b.createModule(.{
+        .root_source_file = b.path("src/ai/ai.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Add llama.cpp include paths to AI module
+    ai_mod.addIncludePath(b.path("deps/llama.cpp/include"));
+    ai_mod.addIncludePath(b.path("deps/llama.cpp/ggml/include"));
 
     // === CLI Executable ===
     const cli_exe = b.addExecutable(.{
@@ -25,8 +39,14 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/cli/main.zig"),
             .target = target,
             .optimize = optimize,
+            .imports = &.{
+                .{ .name = "ai", .module = ai_mod },
+            },
         }),
     });
+
+    // Add llama.cpp support for CLI
+    addLlamaCppSupport(cli_exe, b);
 
     b.installArtifact(cli_exe);
 
@@ -48,13 +68,25 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const cli_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/cli/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
+    // Add llama.cpp support for tests
+    addLlamaCppSupport(unit_tests, b);
+
+    // Create CLI test module (reuses ai_mod defined above)
+    const cli_root_mod = b.createModule(.{
+        .root_source_file = b.path("src/cli/main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "ai", .module = ai_mod },
+        },
     });
+
+    const cli_tests = b.addTest(.{
+        .root_module = cli_root_mod,
+    });
+
+    // Add llama.cpp support for CLI tests
+    addLlamaCppSupport(cli_tests, b);
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const run_cli_tests = b.addRunArtifact(cli_tests);
@@ -319,4 +351,48 @@ fn buildAndroidShared(
     });
 
     return lib;
+}
+
+fn addLlamaCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
+    const target = compile.root_module.resolved_target.?.result;
+
+    // Only add llama.cpp support for native builds (not cross-compilation)
+    // llama.cpp requires platform-specific builds
+    const is_native = target.os.tag == @import("builtin").os.tag and
+        target.cpu.arch == @import("builtin").cpu.arch;
+
+    if (!is_native) {
+        return;
+    }
+
+    // Add include paths for llama.cpp headers
+    compile.root_module.addIncludePath(b.path("deps/llama.cpp/include"));
+    compile.root_module.addIncludePath(b.path("deps/llama.cpp/ggml/include"));
+
+    // Link against llama.cpp static libraries
+    compile.addObjectFile(b.path("deps/llama.cpp/build/src/libllama.a"));
+    compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml.a"));
+    compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml-base.a"));
+    compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/libggml-cpu.a"));
+
+    // Platform-specific libraries
+    if (target.os.tag == .macos) {
+        // macOS: Metal and Accelerate support
+        compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/ggml-metal/libggml-metal.a"));
+        compile.addObjectFile(b.path("deps/llama.cpp/build/ggml/src/ggml-blas/libggml-blas.a"));
+
+        // Link macOS frameworks
+        compile.root_module.linkFramework("Metal", .{});
+        compile.root_module.linkFramework("MetalKit", .{});
+        compile.root_module.linkFramework("Accelerate", .{});
+        compile.root_module.linkFramework("Foundation", .{});
+
+        // Link C++ standard library
+        compile.root_module.linkSystemLibrary("c++", .{});
+    } else if (target.os.tag == .linux) {
+        // Linux: CPU-only for now
+        compile.root_module.linkSystemLibrary("stdc++", .{});
+        compile.root_module.linkSystemLibrary("m", .{});
+        compile.root_module.linkSystemLibrary("pthread", .{});
+    }
 }

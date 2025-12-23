@@ -85,3 +85,4 @@ npm-debug.log*
 *.tmp
 *.temp
 .vercel
+core/models/
