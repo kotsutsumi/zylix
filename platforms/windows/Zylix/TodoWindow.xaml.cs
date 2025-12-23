@@ -1,4 +1,5 @@
 using System;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
@@ -14,7 +15,7 @@ public class StrikethroughConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return (bool)value ? Windows.UI.Text.TextDecorations.Strikethrough : Windows.UI.Text.TextDecorations.None;
+        return (bool)value ? TextDecorations.Strikethrough : TextDecorations.None;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -68,7 +69,7 @@ public sealed partial class TodoWindow : Window
         Title = "Zylix Todo";
 
         // Set up resources for converters
-        var resources = this.Content.Resources;
+        var resources = ((FrameworkElement)this.Content).Resources;
         resources["StrikethroughConverter"] = new StrikethroughConverter();
         resources["CompletedOpacityConverter"] = new CompletedOpacityConverter();
         resources["BoolToVisibilityConverter"] = new BoolToVisibilityConverter();
