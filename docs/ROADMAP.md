@@ -24,7 +24,7 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.9.0 | Phase 11b | Embedded AI (Zylix AI) | ✅ Complete | 2025-12-24 |
 | v0.10.0 | Phase 12 | Device Features & Gestures | ✅ Complete | 2025-12-24 |
 | v0.11.0 | Phase 13 | Animation (Lottie, Live2D) | ✅ Complete | 2025-12-24 |
-| v0.12.0 | Phase 14 | 3D Graphics (Three.js-style) | ⏳ Planned | 2025-Q2 |
+| v0.12.0 | Phase 14 | 3D Graphics (Three.js-style) | 🚧 In Progress | 2025-12-24 |
 | v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ⏳ Planned | 2025-Q3 |
 | v0.14.0 | Phase 16 | Node-based UI (React Flow-style) | ⏳ Planned | 2025-Q4 |
 | v0.15.0 | Phase 17 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2026-Q1 |
