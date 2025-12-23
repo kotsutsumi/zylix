@@ -7,6 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-12-24
+
+### Added
+
+#### Zylix Device - Cross-Platform Device Features Module
+- **Core Module**: `core/src/device/device.zig` - Unified device features API
+- **Privacy Aware**: Platform-specific permission handling
+- **Cross-Platform**: Same API across iOS, Android, macOS, Windows, Linux, Web
+
+#### Location Services
+- **GPS/Location**: `location.zig` - Location updates and tracking
+- **Geofencing**: Region monitoring with enter/exit events
+- **Geocoding**: Address to coordinate conversion
+- **Accuracy Levels**: Best, navigation, 10m, 100m, 1km, 3km
+
+#### Camera Access
+- **Photo Capture**: `camera.zig` - Camera preview and photo capture
+- **Video Recording**: Video recording with quality settings
+- **Camera Selection**: Front/back camera switching
+- **Flash Control**: Auto, on, off, torch modes
+- **Focus Modes**: Auto, continuous, locked
+
+#### Sensor Integration
+- **Motion Sensors**: `sensors.zig` - Accelerometer, gyroscope, magnetometer
+- **Device Motion**: Combined sensor data with attitude (pitch, roll, yaw)
+- **Barometer**: Atmospheric pressure and altitude
+- **Pedometer**: Step counting and distance
+- **Heart Rate**: Health sensor support (watchOS)
+- **Compass**: Heading/direction data
+
+#### Notification System
+- **Local Notifications**: `notifications.zig` - Scheduled notifications
+- **Push Support**: Token-based push notification registration
+- **Triggers**: Immediate, interval, calendar, location-based
+- **Actions**: Interactive notification actions and categories
+- **Sound Support**: Custom notification sounds
+
+#### Audio System
+- **Audio Playback**: `audio.zig` - Audio file playback
+- **Audio Recording**: Voice and sound recording
+- **Session Management**: Audio session categories
+- **Background Audio**: Background playback support
+
+#### Background Processing
+- **Background Tasks**: `background.zig` - Background task scheduling
+- **Background Fetch**: Periodic background data fetching
+- **Background Sync**: Data synchronization in background
+- **Transfer Tasks**: Background upload/download support
+- **Task Constraints**: Network, charging, battery, idle constraints
+
+#### Haptic Feedback
+- **Haptics Engine**: `haptics.zig` - Haptic feedback generation
+- **Impact Styles**: Light, medium, heavy, soft, rigid
+- **Notification Types**: Success, warning, error haptics
+- **Custom Patterns**: Transient, continuous, pause elements
+
+#### Permission Handling
+- **Permission Manager**: `permissions.zig` - Unified permission API
+- **Permission Types**: Camera, microphone, location, photos, notifications, etc.
+- **Status Tracking**: Authorized, denied, restricted, not determined
+- **Rationale Support**: Android-style permission rationale
+
+#### Zylix Gesture - Advanced Gesture Recognition Module
+- **Core Module**: `core/src/gesture/gesture.zig` - Unified gesture API
+- **Platform Optimized**: Native feel on each platform
+- **Composable**: Multiple gestures can work simultaneously
+
+#### Gesture Recognizers
+- **Tap Recognizer**: `recognizers.zig` - Single and multi-tap detection
+- **Long Press**: Long press with configurable duration
+- **Pan Gesture**: Dragging/panning with velocity tracking
+- **Swipe Gesture**: Directional swipes (up, down, left, right)
+- **Pinch Gesture**: Two-finger pinch for zooming
+- **Rotation Gesture**: Two-finger rotation detection
+
+#### Drag and Drop
+- **Drag Manager**: `drag_drop.zig` - Cross-platform drag and drop
+- **Platform Aware**: Long-press on mobile, direct drag on desktop
+- **Drop Targets**: Configurable drop target registration
+- **Data Types**: Text, URL, file, image, custom data
+- **Drop Operations**: Copy, move, link operations
+
+### Changed
+- Module version updated to v0.10.0
+- Device module follows same patterns as AI module
+
 ## [0.9.0] - 2025-12-24
 
 ### Added
@@ -314,7 +400,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/kotsutsumi/zylix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kotsutsumi/zylix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/kotsutsumi/zylix/compare/v0.8.0...v0.8.1
 [0.7.0]: https://github.com/kotsutsumi/zylix/compare/v0.6.2...v0.7.0
