@@ -449,7 +449,7 @@ pub const BatchOperation = struct {
             switch (op) {
                 .put_bool => |o| self.store.putBool(o.key, o.value),
                 .put_int => |o| self.store.putInt(o.key, o.value),
-                .put_float => |o| self.store.putFloat(o.key, o.value),
+                .put_float => |o| self.store.putDouble(o.key, o.value),
                 .put_string => |o| self.store.putString(o.key, o.value),
                 .remove => |key| _ = self.store.remove(key),
             }

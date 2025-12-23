@@ -391,6 +391,7 @@ test "Store initialization" {
     defer store.deinit();
 
     const future = store.initialize();
+    defer allocator.destroy(future);
     try std.testing.expect(future.isCompleted());
     try std.testing.expect(store.initialized);
 }
