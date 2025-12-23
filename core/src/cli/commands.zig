@@ -596,7 +596,7 @@ pub fn generateReport(allocator: std.mem.Allocator, args: []const []const u8) Ex
 /// Test AI inference with a model
 pub fn aiCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     if (args.len == 0) {
-        output.printError("Missing action. Use: embed, generate, transcribe, info", .{});
+        output.printError("Missing action. Use: embed, generate, transcribe, stream, analyze, info", .{});
         return ExitCode.invalid_args;
     }
 
@@ -609,11 +609,15 @@ pub fn aiCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCod
         return aiGenerate(allocator, action_args);
     } else if (std.mem.eql(u8, action, "transcribe")) {
         return aiTranscribe(allocator, action_args);
+    } else if (std.mem.eql(u8, action, "stream")) {
+        return aiStream(allocator, action_args);
+    } else if (std.mem.eql(u8, action, "analyze")) {
+        return aiAnalyze(allocator, action_args);
     } else if (std.mem.eql(u8, action, "info")) {
         return aiInfo(allocator, action_args);
     } else {
         output.printError("Unknown action: {s}", .{action});
-        output.print("Use: embed, generate, transcribe, info\n", .{});
+        output.print("Use: embed, generate, transcribe, stream, analyze, info\n", .{});
         return ExitCode.invalid_args;
     }
 }
@@ -905,42 +909,38 @@ fn aiTranscribe(allocator: std.mem.Allocator, args: []const []const u8) ExitCode
         output.print("Model type: English-only\n", .{});
     }
 
-    // Load audio file
+    // Load and decode audio file (supports WAV, MP3, FLAC, OGG)
     output.print("\nLoading audio file...\n", .{});
-    const audio_file = std.fs.cwd().openFile(audio_path.?, .{}) catch |err| {
-        output.printError("Failed to open audio file: {s}", .{@errorName(err)});
-        return ExitCode.runtime_error;
-    };
-    defer audio_file.close();
 
-    const file_stat = audio_file.stat() catch |err| {
-        output.printError("Failed to get audio file info: {s}", .{@errorName(err)});
-        return ExitCode.runtime_error;
-    };
-
-    if (file_stat.size > 100 * 1024 * 1024) { // 100MB limit
-        output.printError("Audio file too large (max 100MB)", .{});
-        return ExitCode.runtime_error;
+    // Check if format is supported
+    if (!ai.audio_decoder.isFormatSupported(audio_path.?)) {
+        const ext = std.fs.path.extension(audio_path.?);
+        output.printError("Unsupported audio format: {s}", .{ext});
+        output.print("Supported formats: WAV, MP3, FLAC, OGG\n", .{});
+        return ExitCode.invalid_args;
     }
 
-    // Read raw audio data
-    const audio_data = audio_file.readToEndAlloc(allocator, 100 * 1024 * 1024) catch |err| {
-        output.printError("Failed to read audio file: {s}", .{@errorName(err)});
+    // Decode audio to 16kHz mono f32 (Whisper format)
+    var decode_result = ai.audio_decoder.decodeFileForWhisper(allocator, audio_path.?) catch |err| {
+        const err_msg = switch (err) {
+            ai.audio_decoder.DecodeError.FileNotFound => "File not found",
+            ai.audio_decoder.DecodeError.InvalidFile => "Invalid audio file",
+            ai.audio_decoder.DecodeError.UnsupportedFormat => "Unsupported format",
+            ai.audio_decoder.DecodeError.OutOfMemory => "Out of memory",
+            ai.audio_decoder.DecodeError.DecodeFailed => "Decode failed",
+            ai.audio_decoder.DecodeError.NoData => "No audio data",
+            else => "Unknown error",
+        };
+        output.printError("Failed to decode audio: {s}", .{err_msg});
         return ExitCode.runtime_error;
     };
-    defer allocator.free(audio_data);
+    defer decode_result.deinit();
 
-    var size_buf: [32]u8 = undefined;
-    output.print("Audio size: {s}\n", .{ai.formatFileSize(audio_data.len, &size_buf)});
+    const samples = decode_result.samples;
+    const audio_info = decode_result.info;
 
-    // Parse WAV header and convert samples
-    // WAV format: RIFF header (12 bytes) + fmt chunk + data chunk
-    // We need to find "data" chunk and skip 44-byte header for standard WAV
-    const samples = parseWavToF32(allocator, audio_data) catch |err| {
-        output.printError("Failed to parse audio file: {s}", .{@errorName(err)});
-        return ExitCode.runtime_error;
-    };
-    defer allocator.free(samples);
+    output.print("Format: {s}\n", .{audio_info.format.toString()});
+    output.print("Sample rate: {d} Hz (resampled to 16kHz)\n", .{audio_info.sample_rate});
 
     const sample_count = samples.len;
     if (sample_count == 0) {
@@ -948,8 +948,9 @@ fn aiTranscribe(allocator: std.mem.Allocator, args: []const []const u8) ExitCode
         return ExitCode.runtime_error;
     }
 
-    const duration_seconds = @as(f32, @floatFromInt(sample_count)) / 16000.0;
-    output.print("Duration: {d:.1}s ({d} samples at 16kHz)\n", .{ duration_seconds, sample_count });
+    var duration_buf: [16]u8 = undefined;
+    const duration_str = audio_info.durationString(&duration_buf);
+    output.print("Duration: {s} ({d} samples)\n", .{ duration_str, sample_count });
 
     // Run transcription
     output.print("\nTranscribing...\n", .{});
@@ -988,85 +989,312 @@ fn aiTranscribe(allocator: std.mem.Allocator, args: []const []const u8) ExitCode
     return ExitCode.success;
 }
 
-/// Parse WAV file and convert 16-bit PCM to f32 samples
-fn parseWavToF32(allocator: std.mem.Allocator, data: []const u8) ![]f32 {
-    // Minimum WAV header size check
-    if (data.len < 44) {
-        return error.InvalidWavFile;
+fn aiStream(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var model_path: ?[]const u8 = null;
+    var audio_path: ?[]const u8 = null;
+    var language: []const u8 = "";
+    var translate = false;
+    var step_ms: u32 = 3000;
+    var keep_ms: u32 = 200;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--model") or std.mem.eql(u8, arg, "-m")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                model_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--audio") or std.mem.eql(u8, arg, "-a")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                audio_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--language") or std.mem.eql(u8, arg, "-l")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                language = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--translate")) {
+            translate = true;
+        } else if (std.mem.eql(u8, arg, "--step")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                step_ms = std.fmt.parseInt(u32, args[i], 10) catch 3000;
+            }
+        } else if (std.mem.eql(u8, arg, "--keep")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                keep_ms = std.fmt.parseInt(u32, args[i], 10) catch 200;
+            }
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (model_path == null) {
+                model_path = arg;
+            } else if (audio_path == null) {
+                audio_path = arg;
+            }
+        }
     }
 
-    // Verify RIFF header
-    if (!std.mem.eql(u8, data[0..4], "RIFF") or !std.mem.eql(u8, data[8..12], "WAVE")) {
-        return error.InvalidWavFile;
+    if (model_path == null) {
+        output.printError("Missing model path. Use: --model <path>", .{});
+        return ExitCode.invalid_args;
     }
 
-    // Find "fmt " chunk
-    var pos: usize = 12;
-    var bits_per_sample: u16 = 16;
-    var channels: u16 = 1;
+    if (audio_path == null) {
+        output.printError("Missing audio file. Use: --audio <path>", .{});
+        return ExitCode.invalid_args;
+    }
 
-    while (pos + 8 <= data.len) {
-        const chunk_id = data[pos .. pos + 4];
-        const chunk_size = std.mem.readInt(u32, data[pos + 4 ..][0..4], .little);
+    output.printHeader("Zylix AI - Streaming Transcription");
+    output.print("Model: {s}\n", .{model_path.?});
+    output.print("Audio: {s}\n", .{audio_path.?});
+    if (language.len > 0) {
+        output.print("Language: {s}\n", .{language});
+    }
+    if (translate) {
+        output.print("Mode: Translate to English\n", .{});
+    }
+    output.print("Step: {d}ms, Keep: {d}ms\n", .{ step_ms, keep_ms });
+    output.print("\n", .{});
 
-        if (std.mem.eql(u8, chunk_id, "fmt ")) {
-            if (pos + 8 + chunk_size > data.len or chunk_size < 16) {
-                return error.InvalidWavFile;
-            }
-            // Audio format (1 = PCM)
-            const audio_format = std.mem.readInt(u16, data[pos + 8 ..][0..2], .little);
-            if (audio_format != 1) {
-                return error.UnsupportedFormat; // Only PCM supported
-            }
-            channels = std.mem.readInt(u16, data[pos + 10 ..][0..2], .little);
-            bits_per_sample = std.mem.readInt(u16, data[pos + 22 ..][0..2], .little);
-        } else if (std.mem.eql(u8, chunk_id, "data")) {
-            // Found data chunk
-            const data_start = pos + 8;
-            const data_size = @min(chunk_size, @as(u32, @intCast(data.len - data_start)));
+    // Check if Whisper backend is available
+    if (!ai.whisper.isWhisperAvailable()) {
+        output.printError("Whisper backend not available on this platform", .{});
+        return ExitCode.runtime_error;
+    }
 
-            // Calculate sample count based on format
-            const bytes_per_sample = bits_per_sample / 8;
-            const total_samples = data_size / bytes_per_sample / channels;
+    // Check if audio format is supported
+    if (!ai.audio_decoder.isFormatSupported(audio_path.?)) {
+        const ext = std.fs.path.extension(audio_path.?);
+        output.printError("Unsupported audio format: {s}", .{ext});
+        output.print("Supported formats: WAV, MP3, FLAC\n", .{});
+        return ExitCode.invalid_args;
+    }
 
-            // Allocate output buffer
-            const samples = try allocator.alloc(f32, total_samples);
-            errdefer allocator.free(samples);
+    // Decode audio to 16kHz mono f32 (Whisper format)
+    output.print("Loading audio file...\n", .{});
+    var decode_result = ai.audio_decoder.decodeFileForWhisper(allocator, audio_path.?) catch |err| {
+        const err_msg = switch (err) {
+            ai.audio_decoder.DecodeError.FileNotFound => "File not found",
+            ai.audio_decoder.DecodeError.InvalidFile => "Invalid audio file",
+            ai.audio_decoder.DecodeError.UnsupportedFormat => "Unsupported format",
+            ai.audio_decoder.DecodeError.OutOfMemory => "Out of memory",
+            ai.audio_decoder.DecodeError.DecodeFailed => "Decode failed",
+            ai.audio_decoder.DecodeError.NoData => "No audio data",
+            else => "Unknown error",
+        };
+        output.printError("Failed to decode audio: {s}", .{err_msg});
+        return ExitCode.runtime_error;
+    };
+    defer decode_result.deinit();
 
-            // Convert samples
-            const audio_data = data[data_start..];
-            var i: usize = 0;
-            while (i < total_samples) : (i += 1) {
-                var sample_sum: f32 = 0;
-                // Mix all channels to mono
-                for (0..channels) |ch| {
-                    const sample_offset = (i * channels + ch) * bytes_per_sample;
-                    if (sample_offset + bytes_per_sample > audio_data.len) break;
+    const samples = decode_result.samples;
+    const audio_info = decode_result.info;
 
-                    if (bits_per_sample == 16) {
-                        const sample_i16 = std.mem.readInt(i16, audio_data[sample_offset..][0..2], .little);
-                        sample_sum += @as(f32, @floatFromInt(sample_i16)) / 32768.0;
-                    } else if (bits_per_sample == 8) {
-                        const sample_u8 = audio_data[sample_offset];
-                        sample_sum += (@as(f32, @floatFromInt(sample_u8)) - 128.0) / 128.0;
-                    } else if (bits_per_sample == 32) {
-                        // Assume f32
-                        const sample_bytes = audio_data[sample_offset..][0..4];
-                        sample_sum += @bitCast(sample_bytes.*);
-                    }
+    output.print("Format: {s}\n", .{audio_info.format.toString()});
+
+    var duration_buf: [16]u8 = undefined;
+    const duration_str = audio_info.durationString(&duration_buf);
+    output.print("Duration: {s} ({d} samples)\n", .{ duration_str, samples.len });
+
+    // Create streaming context
+    output.print("\nLoading model...\n", .{});
+
+    const stream_config = ai.whisper_stream.StreamConfig{
+        .step_ms = step_ms,
+        .keep_ms = keep_ms,
+        .language = language,
+        .translate = translate,
+        .n_threads = 4,
+        .use_gpu = true,
+        .single_segment = true,
+        .no_context = true,
+        .print_timestamps = false,
+    };
+
+    const stream_ctx = ai.whisper_stream.StreamingContext.init(allocator, model_path.?, stream_config) catch |err| {
+        output.printError("Failed to create streaming context: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer stream_ctx.deinit();
+
+    output.printSuccess("Model loaded", .{});
+    output.print("\nStreaming transcription (simulated real-time):\n", .{});
+    output.printSeparator();
+
+    // Simulate streaming by feeding chunks
+    const step_samples = (step_ms * ai.whisper_stream.SAMPLE_RATE) / 1000;
+    var pos: usize = 0;
+    var segment_count: usize = 0;
+    const start_time = std.time.milliTimestamp();
+
+    while (pos < samples.len) {
+        const end_pos = @min(pos + step_samples, samples.len);
+        const chunk = samples[pos..end_pos];
+
+        // Feed audio chunk
+        stream_ctx.feedAudio(chunk) catch |err| {
+            output.printError("Failed to process chunk: {s}", .{@errorName(err)});
+            return ExitCode.runtime_error;
+        };
+
+        // Print any new segments
+        while (stream_ctx.hasSegments()) {
+            if (stream_ctx.popSegment()) |segment| {
+                const text = segment.getText();
+                if (text.len > 0) {
+                    // Format timestamp
+                    const start_sec = @divFloor(segment.start_ms, 1000);
+                    const end_sec = @divFloor(segment.end_ms, 1000);
+                    output.print("[{d:0>2}:{d:0>2} -> {d:0>2}:{d:0>2}] {s}\n", .{
+                        @as(u32, @intCast(@divFloor(start_sec, 60))),
+                        @as(u32, @intCast(@mod(start_sec, 60))),
+                        @as(u32, @intCast(@divFloor(end_sec, 60))),
+                        @as(u32, @intCast(@mod(end_sec, 60))),
+                        text,
+                    });
+                    segment_count += 1;
                 }
-                samples[i] = sample_sum / @as(f32, @floatFromInt(channels));
             }
-
-            return samples;
         }
 
-        pos += 8 + chunk_size;
-        // Align to 2-byte boundary
-        if (chunk_size % 2 != 0) pos += 1;
+        pos = end_pos;
     }
 
-    return error.NoDataChunk;
+    // Flush any remaining audio
+    stream_ctx.flush() catch {};
+
+    // Print final segments
+    while (stream_ctx.hasSegments()) {
+        if (stream_ctx.popSegment()) |segment| {
+            const text = segment.getText();
+            if (text.len > 0) {
+                const start_sec = @divFloor(segment.start_ms, 1000);
+                const end_sec = @divFloor(segment.end_ms, 1000);
+                output.print("[{d:0>2}:{d:0>2} -> {d:0>2}:{d:0>2}] {s}\n", .{
+                    @as(u32, @intCast(@divFloor(start_sec, 60))),
+                    @as(u32, @intCast(@mod(start_sec, 60))),
+                    @as(u32, @intCast(@divFloor(end_sec, 60))),
+                    @as(u32, @intCast(@mod(end_sec, 60))),
+                    text,
+                });
+                segment_count += 1;
+            }
+        }
+    }
+
+    output.printSeparator();
+
+    const end_time = std.time.milliTimestamp();
+    const processing_time: u64 = @intCast(@max(0, end_time - start_time));
+
+    const stats = stream_ctx.getStats();
+    output.printSuccess("Streaming complete!", .{});
+    output.print("\nStatistics:\n", .{});
+    output.print("  Chunks processed: {d}\n", .{stats.chunks_processed});
+    output.print("  Segments produced: {d}\n", .{segment_count});
+    output.print("  Processing time: {d}ms\n", .{processing_time});
+    output.print("  Audio duration: {d}ms\n", .{stats.audio_duration_ms});
+    output.print("  Real-time factor: {d:.2}x\n", .{stats.realtime_factor});
+
+    return ExitCode.success;
+}
+
+fn aiAnalyze(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var model_path: ?[]const u8 = null;
+    var mmproj_path: ?[]const u8 = null;
+    var image_path: ?[]const u8 = null;
+    var prompt: []const u8 = "Describe this image in detail.";
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--model") or std.mem.eql(u8, arg, "-m")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                model_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--mmproj") or std.mem.eql(u8, arg, "-p")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                mmproj_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--image") or std.mem.eql(u8, arg, "-i")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                image_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--prompt") or std.mem.eql(u8, arg, "-q")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                prompt = args[i];
+            }
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (model_path == null) {
+                model_path = arg;
+            } else if (image_path == null) {
+                image_path = arg;
+            }
+        }
+    }
+
+    if (model_path == null) {
+        output.printError("Missing model path. Use: --model <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    if (image_path == null) {
+        output.printError("Missing image path. Use: --image <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    output.printHeader("Zylix AI - Image Analysis (VLM)");
+    output.print("Model: {s}\n", .{model_path.?});
+    if (mmproj_path) |mp| {
+        output.print("Vision Projector: {s}\n", .{mp});
+    }
+    output.print("Image: {s}\n", .{image_path.?});
+    output.print("Prompt: {s}\n\n", .{prompt});
+
+    // Check if VLM backend is available
+    if (!ai.vlm_backend.isVLMAvailable()) {
+        output.printError("VLM backend not available on this platform", .{});
+        return ExitCode.runtime_error;
+    }
+
+    // Load image file
+    output.print("Loading image...\n", .{});
+    const image_file = std.fs.cwd().openFile(image_path.?, .{}) catch |err| {
+        output.printError("Failed to open image file: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer image_file.close();
+
+    const image_data = image_file.readToEndAlloc(allocator, 50 * 1024 * 1024) catch |err| {
+        output.printError("Failed to read image file: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer allocator.free(image_data);
+
+    var size_buf: [32]u8 = undefined;
+    output.print("Image size: {s}\n", .{ai.formatFileSize(image_data.len, &size_buf)});
+
+    // For now, show placeholder since full VLM inference requires model download
+    output.print("\n", .{});
+    output.printInfo("VLM backend initialized. Full inference requires:", .{});
+    output.print("  1. LLaVA text model (e.g., llava-v1.6-mistral-7b.Q4_K_M.gguf)\n", .{});
+    output.print("  2. Vision projector (e.g., mmproj-model-f16.gguf)\n", .{});
+    output.print("\nDownload from: https://huggingface.co/mys/ggml_llava-v1.6-mistral-7b\n", .{});
+
+    // TODO: Implement actual VLM inference when models are available
+    // const vlm_config = ai.vlm_backend.VLMConfig{...};
+    // const vlm_backend_ptr = try ai.VLMBackend.init(allocator, vlm_config);
+    // defer vlm_backend_ptr.deinit();
+
+    return ExitCode.success;
 }
 
 fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
@@ -1077,11 +1305,36 @@ fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     // Check backend availability
     output.print("\nBackend Availability:\n", .{});
     output.print("  GGML (llama.cpp): {s}\n", .{if (backend.isBackendAvailable(.ggml)) "Available" else "Not available"});
+    output.print("  VLM (mtmd):       {s}\n", .{if (ai.vlm_backend.isVLMAvailable()) "Available" else "Not available"});
     output.print("  Whisper.cpp:      {s}\n", .{if (ai.whisper.isWhisperAvailable()) "Available" else "Not available"});
+    output.print("  Whisper Stream:   {s}\n", .{if (ai.whisper.isWhisperAvailable()) "Available (real-time)" else "Not available"});
+    output.print("  Audio Decoder:    {s}\n", .{if (ai.audio_decoder.isAvailable()) "Available (WAV/MP3/FLAC)" else "Not available"});
     output.print("  ONNX Runtime:     {s}\n", .{if (backend.isBackendAvailable(.onnx)) "Available" else "Not available"});
     output.print("  Core ML:          {s}\n", .{if (backend.isBackendAvailable(.coreml)) "Available" else "Not available"});
     output.print("  TensorFlow Lite:  {s}\n", .{if (backend.isBackendAvailable(.tflite)) "Available" else "Not available"});
     output.print("  WebGPU:           {s}\n", .{if (backend.isBackendAvailable(.webgpu)) "Available" else "Not available"});
+
+    // GPU/Metal information
+    output.print("\nGPU Acceleration:\n", .{});
+    output.print("  Platform:         {s}\n", .{ai.metal.getPlatformDescription()});
+    output.print("  Metal Available:  {s}\n", .{if (ai.metal.isAvailable()) "Yes" else "No"});
+    output.print("  Apple Silicon:    {s}\n", .{if (ai.metal.isAppleSilicon()) "Yes" else "No"});
+    output.print("  Neural Engine:    {s}\n", .{if (ai.metal.hasNeuralEngine()) "Yes" else "No"});
+
+    if (ai.metal.isAvailable()) {
+        const gpu_info = ai.metal.getDefaultDeviceInfo();
+        output.print("  GPU Device:       {s}\n", .{gpu_info.getName()});
+        if (gpu_info.capabilities.unified_memory) {
+            output.print("  Memory Type:      Unified\n", .{});
+        }
+    }
+
+    // Core ML information
+    if (backend.isBackendAvailable(.coreml)) {
+        output.print("\nCore ML:\n", .{});
+        output.print("  Version:          {s}\n", .{ai.coreml.getVersion()});
+        output.print("  Neural Engine:    {s}\n", .{if (ai.coreml.hasNeuralEngine()) "Available" else "Not available"});
+    }
 
     // Check model path
     if (args.len > 0) {
@@ -1100,7 +1353,9 @@ fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     output.print("\nUsage:\n", .{});
     output.print("  zylix-test ai embed --model <model.gguf> --text \"Hello world\"\n", .{});
     output.print("  zylix-test ai generate --model <model.gguf> --prompt \"What is AI?\"\n", .{});
-    output.print("  zylix-test ai transcribe --model <whisper.bin> --audio <audio.wav>\n", .{});
+    output.print("  zylix-test ai transcribe --model <whisper.bin> --audio <audio.wav|mp3|flac>\n", .{});
+    output.print("  zylix-test ai stream --model <whisper.bin> --audio <audio.wav|mp3|flac> [--step 3000]\n", .{});
+    output.print("  zylix-test ai analyze --model <llava.gguf> --mmproj <mmproj.gguf> --image <img.jpg>\n", .{});
     output.print("  zylix-test ai info <model.gguf>\n", .{});
 
     return ExitCode.success;

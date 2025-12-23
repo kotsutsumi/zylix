@@ -241,6 +241,68 @@ pub fn setMaxTokensPerSegment(params: *whisper_full_params, max_tokens: c_int) v
     params.max_tokens = max_tokens;
 }
 
+/// Set single segment mode (for streaming)
+pub fn setSingleSegment(params: *whisper_full_params, enable: bool) void {
+    params.single_segment = enable;
+}
+
+/// Set no context mode (for streaming without context carryover)
+pub fn setNoContext(params: *whisper_full_params, enable: bool) void {
+    params.no_context = enable;
+}
+
+/// Set audio context size (0 = all)
+pub fn setAudioCtx(params: *whisper_full_params, audio_ctx: c_int) void {
+    params.audio_ctx = audio_ctx;
+}
+
+/// Reset timings (for streaming)
+pub fn resetTimings(ctx: *whisper_context) void {
+    c.whisper_reset_timings(ctx);
+}
+
+/// Print performance timings
+pub fn printTimings(ctx: *whisper_context) void {
+    c.whisper_print_timings(ctx);
+}
+
+// === Callback Types ===
+
+/// New segment callback type
+pub const NewSegmentCallback = *const fn (ctx: *whisper_context, state: *whisper_state, n_new: c_int, user_data: ?*anyopaque) callconv(.C) void;
+
+/// Progress callback type
+pub const ProgressCallback = *const fn (ctx: *whisper_context, state: *whisper_state, progress: c_int, user_data: ?*anyopaque) callconv(.C) void;
+
+/// Set new segment callback
+pub fn setNewSegmentCallback(params: *whisper_full_params, callback: ?NewSegmentCallback, user_data: ?*anyopaque) void {
+    params.new_segment_callback = @ptrCast(callback);
+    params.new_segment_callback_user_data = user_data;
+}
+
+/// Set progress callback
+pub fn setProgressCallback(params: *whisper_full_params, callback: ?ProgressCallback, user_data: ?*anyopaque) void {
+    params.progress_callback = @ptrCast(callback);
+    params.progress_callback_user_data = user_data;
+}
+
+// === State-based result functions ===
+
+/// Get detected language id from state
+pub fn fullLangIdFromState(state: *whisper_state) c_int {
+    return c.whisper_full_lang_id_from_state(state);
+}
+
+/// Get segment start time from state (in centiseconds)
+pub fn fullGetSegmentT0FromState(state: *whisper_state, i_segment: c_int) i64 {
+    return c.whisper_full_get_segment_t0_from_state(state, i_segment);
+}
+
+/// Get segment end time from state (in centiseconds)
+pub fn fullGetSegmentT1FromState(state: *whisper_state, i_segment: c_int) i64 {
+    return c.whisper_full_get_segment_t1_from_state(state, i_segment);
+}
+
 // === Tests ===
 
 test "whisper version" {
