@@ -46,5 +46,16 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <!-- Device Feature Permissions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Zylix needs access to your location for location-based features.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Zylix needs access to your location for background location features.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Zylix needs access to your camera for photo and video capture.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Zylix needs access to your microphone for audio recording.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Zylix needs access to motion sensors for fitness and motion tracking.</string>
 </dict>
 </plist>

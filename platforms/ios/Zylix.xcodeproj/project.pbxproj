@@ -13,6 +13,8 @@
 		A1B2C3D4E5F60001 /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002 /* TodoView.swift */; };
 		A1B2C3D4E5F60003 /* TodoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004 /* TodoViewModel.swift */; };
 		B1C2D3E4F5A60001 /* TodoViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60002 /* TodoViewModelTests.swift */; };
+		C1D2E3F4A5B60001 /* ZylixDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60002 /* ZylixDevice.swift */; };
+		D1E2F3A4B5C60001 /* DeviceTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A4B5C60002 /* DeviceTestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,7 +36,9 @@
 		A1B2C3D4E5F60004 /* TodoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModel.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5A60002 /* TodoViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModelTests.swift; sourceTree = "<group>"; };
 		B1C2D3E4F5A60004 /* ZylixTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ZylixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1D2E3F4A5B60002 /* ZylixDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZylixDevice.swift; sourceTree = "<group>"; };
 		C2DBDAFD8620743799661F03 /* Zylix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zylix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1E2F3A4B5C60002 /* DeviceTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceTestView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -59,11 +63,13 @@
 			isa = PBXGroup;
 			children = (
 				37DFAA0407D4DF41AD2F392F /* ContentView.swift */,
+				D1E2F3A4B5C60002 /* DeviceTestView.swift */,
 				A1B2C3D4E5F60002 /* TodoView.swift */,
 				A1B2C3D4E5F60004 /* TodoViewModel.swift */,
 				68D5815EF6AC3E7752F3CE5C /* Zylix-Bridging-Header.h */,
 				4CEE39EB5949C7C7C404455F /* ZylixApp.swift */,
 				11F4569C303AADD68BECCDB1 /* ZylixBridge.swift */,
+				C1D2E3F4A5B60002 /* ZylixDevice.swift */,
 			);
 			name = Sources;
 			path = Zylix/Sources;
@@ -185,10 +191,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E318BF58825F9A67D483247 /* ContentView.swift in Sources */,
+				D1E2F3A4B5C60001 /* DeviceTestView.swift in Sources */,
 				A1B2C3D4E5F60001 /* TodoView.swift in Sources */,
 				A1B2C3D4E5F60003 /* TodoViewModel.swift in Sources */,
 				5D18D9E84F88144FF85CCEFD /* ZylixApp.swift in Sources */,
 				9D9C92F8B2710FFE33BC9A48 /* ZylixBridge.swift in Sources */,
+				C1D2E3F4A5B60001 /* ZylixDevice.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
