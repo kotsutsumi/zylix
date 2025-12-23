@@ -33,9 +33,11 @@ Feature suggestions are welcome! Please include:
 
 ## Development Setup
 
+> **Compatibility Reference**: For detailed version requirements, see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+
 ### Prerequisites
 
-- [Zig](https://ziglang.org/download/) 0.11.0 or later
+- [Zig](https://ziglang.org/download/) 0.15.0 or later
 - Platform-specific requirements:
   - **iOS/macOS**: Xcode 15+
   - **Android**: Android Studio with NDK

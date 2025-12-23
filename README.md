@@ -137,6 +137,14 @@ Zylix uses a layered architecture:
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
+## Support
+
+If you find Zylix useful, consider supporting the project! Your support helps maintain and improve Zylix.
+
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/kotsutsumi)
+
+Feel free to buy me a coffee! Every bit of support is greatly appreciated.
+
 ## License
 
 Zylix is licensed under the [Apache License 2.0](LICENSE.md).

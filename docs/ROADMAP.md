@@ -28,6 +28,12 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.13.0 | Phase 13 | Animation (Lottie, Live2D) | ⏳ Planned | 2027-Q1 |
 | v0.14.0 | Phase 14 | 3D Graphics (Three.js-style) | ⏳ Planned | 2027-Q2 |
 | v0.15.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ⏳ Planned | 2027-Q3 |
+| v0.16.0 | Phase 16 | Node-based UI (React Flow-style) | ⏳ Planned | 2027-Q4 |
+| v0.17.0 | Phase 17 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2028-Q1 |
+| v0.18.0 | Phase 18 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2028-Q2 |
+| v0.19.0 | Phase 19 | Database Support (PostgreSQL, MySQL, SQLite, libSQL) | ⏳ Planned | 2028-Q3 |
+| v0.20.0 | Phase 20 | Server Runtime (Zylix Server) | ⏳ Planned | 2028-Q4 |
+| v0.21.0 | Phase 21 | Edge Adapters (Cloudflare, Vercel, AWS) | ⏳ Planned | 2029-Q1 |
 
 ---
 
@@ -913,6 +919,8 @@ Comprehensive animation system supporting vector animations (Lottie) and Live2D 
   - Windows: DirectX/OpenGL renderer
   - Web: WebGL renderer
 
+> **Licensing Requirements**: Live2D Cubism SDK is subject to [Live2D Proprietary Software License](https://www.live2d.com/en/terms/live2d-proprietary-software-license-agreement/) with redistribution restrictions. Commercial release of content built with Cubism SDK requires entering the [SDK Publication License Agreement](https://www.live2d.com/en/terms/publication-license-agreement/) with associated payment. Contact [Live2D](https://www.live2d.com/en/contact/) for licensing inquiries before distribution.
+
 #### 13.3 Animation Utilities
 - Timeline-based animation sequencing
 - Easing functions library
@@ -1055,6 +1063,469 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 
 ---
 
+## Phase 16: Node-based UI (v0.16.0)
+
+### Overview
+
+[React Flow](https://reactflow.dev/) style node-based UI component for building visual programming interfaces, workflow editors, and diagram tools.
+
+### Planned Features
+
+#### 16.1 Core Node System
+- Node component with customizable content
+- Edge/connection rendering (straight, bezier, step)
+- Interactive canvas with pan and zoom
+- Drag-and-drop node placement
+- Node selection (single and multi-select)
+- Undo/redo support
+
+#### 16.2 Connection System
+- Visual connection creation by dragging
+- Connection validation rules
+- Custom handle positions (top, bottom, left, right)
+- Multiple input/output ports per node
+- Edge labels and markers
+
+#### 16.3 Layout & Styling
+- Auto-layout algorithms (dagre, elkjs-style)
+- Minimap component
+- Background patterns (dots, lines, cross)
+- Custom node and edge renderers
+- Theme support (light/dark)
+
+#### 16.4 Interaction Features
+- Node context menus
+- Edge context menus
+- Keyboard shortcuts
+- Touch support for mobile
+- Snap-to-grid
+
+#### 16.5 Data & Events
+- Serialization/deserialization (JSON)
+- Change event callbacks
+- Viewport state management
+- History management
+
+### Success Criteria
+
+- [ ] Smooth 60fps canvas interaction with 1000+ nodes
+- [ ] All connection types working (bezier, step, smooth)
+- [ ] Auto-layout functional
+- [ ] Touch support for mobile platforms
+- [ ] Complete TypeScript API documentation
+
+---
+
+## Phase 17: PDF Support (v0.17.0)
+
+### Overview
+
+Comprehensive PDF document handling inspired by [pdf-nano](https://github.com/GregorBudweiser/pdf-nano), enabling PDF generation, reading, and editing capabilities across all platforms.
+
+### Planned Features
+
+#### 17.1 PDF Generation
+- Create PDF documents from scratch
+- Text rendering with custom fonts
+- Image embedding (JPEG, PNG)
+- Vector graphics (lines, rectangles, circles, paths)
+- Page management (add, remove, reorder)
+- Page size and orientation settings
+
+#### 17.2 Text & Typography
+- TrueType/OpenType font embedding
+- Text positioning and alignment
+- Font size, color, and style
+- Line spacing and paragraph formatting
+- Unicode support (including CJK characters)
+- Text wrapping
+
+#### 17.3 Graphics
+- Drawing primitives (line, rect, ellipse, polygon)
+- Fill and stroke styles
+- Gradients (linear, radial)
+- Transparency/opacity
+- Clipping paths
+- Transformations (translate, rotate, scale)
+
+#### 17.4 PDF Reading
+- Parse existing PDF documents
+- Extract text content
+- Extract embedded images
+- Read document metadata
+- Page count and dimensions
+
+#### 17.5 PDF Editing
+- Modify existing PDFs
+- Add/remove pages
+- Merge multiple PDFs
+- Split PDFs
+- Add watermarks and stamps
+- Form field filling
+
+#### 17.6 Advanced Features
+- PDF/A compliance for archiving
+- Document encryption
+- Digital signatures
+- Bookmarks and outlines
+- Hyperlinks
+- Annotations
+
+### Platform Backends
+
+| Platform | Backend |
+|----------|---------|
+| All platforms | Zig native implementation (pdf-nano inspired) |
+| iOS/macOS | Core Graphics fallback for rendering |
+| Android | Android Graphics fallback |
+| Web | Canvas 2D / PDF.js for preview |
+
+### Success Criteria
+
+- [ ] Generate valid PDF 1.7 documents
+- [ ] Read and extract content from existing PDFs
+- [ ] Unicode and CJK character support
+- [ ] Image embedding functional
+- [ ] File size optimization
+
+---
+
+## Phase 18: Excel Support (v0.18.0)
+
+### Overview
+
+Excel spreadsheet (xlsx) file support based on [libxlsxwriter](https://github.com/jmcnamara/libxlsxwriter) and [zig-xlsxwriter](https://github.com/kassane/zig-xlsxwriter), enabling spreadsheet creation and manipulation.
+
+### Planned Features
+
+#### 18.1 Workbook & Worksheet
+- Create new Excel workbooks
+- Multiple worksheet support
+- Worksheet naming and ordering
+- Row and column operations
+- Freeze panes
+- Split panes
+
+#### 18.2 Cell Operations
+- Write cell values (string, number, boolean, date)
+- Read cell values from existing files
+- Cell formatting (font, color, border, fill)
+- Number formats (currency, percentage, date)
+- Cell merging
+- Data validation
+
+#### 18.3 Formulas
+- Formula support (SUM, AVERAGE, etc.)
+- Cell references (A1, $A$1)
+- Range references (A1:B10)
+- Cross-sheet references
+- Array formulas
+
+#### 18.4 Styling
+- Font formatting (name, size, bold, italic)
+- Cell borders (style, color)
+- Background colors and patterns
+- Conditional formatting
+- Cell alignment
+- Text wrapping
+
+#### 18.5 Advanced Features
+- Charts (bar, line, pie, scatter)
+- Images in worksheets
+- Hyperlinks
+- Comments
+- Print settings
+- Header and footer
+
+#### 18.6 Reading & Editing
+- Parse existing xlsx files
+- Read cell values and formulas
+- Preserve formatting on edit
+- Modify existing workbooks
+
+### Platform Implementation
+
+| Platform | Backend |
+|----------|---------|
+| All platforms | Zig native (libxlsxwriter port) |
+| Fallback | Pure Zig xlsx parser/writer |
+
+### Success Criteria
+
+- [ ] Create valid xlsx files openable in Excel/LibreOffice
+- [ ] Read existing xlsx files
+- [ ] Formula support functional
+- [ ] Charts and images working
+- [ ] Large file support (100k+ rows)
+
+---
+
+## Phase 19: Database Support (v0.19.0)
+
+### Overview
+
+Comprehensive database connectivity layer supporting PostgreSQL, MySQL, SQLite, and libSQL (Turso). Provides a unified API for database operations across all platforms, including WASM.
+
+### Planned Features
+
+#### 19.1 Connection Management
+- Connection pooling
+- Connection string parsing
+- SSL/TLS support
+- Automatic reconnection
+- Transaction management
+- Prepared statements
+
+#### 19.2 PostgreSQL Support
+- Full protocol implementation
+- All data types support
+- LISTEN/NOTIFY
+- COPY operations
+- Array types
+- JSON/JSONB operations
+
+#### 19.3 MySQL Support
+- MySQL protocol implementation
+- Prepared statements
+- Multiple result sets
+- Binary protocol
+- Connection compression
+
+#### 19.4 SQLite Support
+- Embedded SQLite
+- In-memory databases
+- File-based databases
+- WAL mode support
+- User-defined functions
+- Virtual tables
+
+#### 19.5 libSQL / Turso Support
+- libSQL embedded mode
+- Turso cloud connection
+- Edge-optimized queries
+- Embedded replicas
+- HTTP API support
+
+#### 19.6 Query Builder
+- Type-safe query construction
+- Comptime SQL validation
+- Parameter binding
+- Result mapping
+- Migration support
+
+### Platform Implementation
+
+| Platform | PostgreSQL | MySQL | SQLite | libSQL |
+|----------|------------|-------|--------|--------|
+| Native (iOS, Android, macOS, Linux, Windows) | TCP | TCP | Embedded | Embedded/HTTP |
+| Web/WASM | HTTP Proxy | HTTP Proxy | OPFS | HTTP |
+| Edge (Cloudflare, Vercel) | TCP (Hyperdrive) | - | D1 | HTTP |
+
+### Success Criteria
+
+- [ ] All four databases connectable
+- [ ] Type-safe query builder
+- [ ] Transaction support
+- [ ] Connection pooling working
+- [ ] WASM database access via proxy
+
+---
+
+## Phase 20: Server Runtime (v0.20.0)
+
+### Overview
+
+Zylix Server - A server-side runtime for building APIs and full-stack applications in Zig. Inspired by Hono.js, providing type-safe RPC between client and server with shared Zig code.
+
+### Planned Features
+
+#### 20.1 HTTP Server
+- High-performance HTTP/1.1 and HTTP/2
+- Request/Response handling
+- Middleware support
+- Static file serving
+- WebSocket support
+- Server-Sent Events
+
+#### 20.2 Routing
+- Path-based routing
+- Route parameters
+- Query string parsing
+- Route groups
+- Middleware chains
+- Error handling
+
+```zig
+const app = zylix.server();
+
+app.get("/users", handlers.listUsers);
+app.get("/users/:id", handlers.getUser);
+app.post("/users", handlers.createUser);
+app.group("/api/v1", apiRoutes);
+```
+
+#### 20.3 Type-Safe RPC
+- Shared type definitions (client ↔ server)
+- Automatic TypeScript generation
+- Comptime route validation
+- Request/Response serialization
+
+```zig
+// shared/api.zig
+pub const API = struct {
+    pub const getUsers = zylix.endpoint(.GET, "/users", void, []User);
+    pub const createUser = zylix.endpoint(.POST, "/users", CreateUserReq, User);
+};
+
+// client: const users = try client.call(API.getUsers, {});
+// server: router.handle(API.getUsers, handlers.getUsers);
+```
+
+#### 20.4 Middleware
+- Request logging
+- CORS handling
+- Authentication (JWT, sessions)
+- Rate limiting
+- Compression
+- Error handling
+
+#### 20.5 Server-Side Rendering
+- Component rendering to HTML
+- Hydration support
+- Streaming responses
+- Template support
+
+#### 20.6 Development Tools
+- Hot reload for server code
+- Request inspector
+- API documentation generation
+- OpenAPI/Swagger support
+
+### Architecture
+
+```
+┌─────────────────────────────────────────┐
+│           Zylix Application             │
+├─────────────────────────────────────────┤
+│  Client (WASM)  │  Server (Zig Native)  │
+├─────────────────┴───────────────────────┤
+│         Shared Types (api.zig)          │
+├─────────────────────────────────────────┤
+│              RPC Layer                  │
+└─────────────────────────────────────────┘
+```
+
+### Success Criteria
+
+- [ ] HTTP server with routing
+- [ ] Type-safe RPC working
+- [ ] Middleware system
+- [ ] Database integration
+- [ ] Full-stack sample application
+
+---
+
+## Phase 21: Edge Adapters (v0.21.0)
+
+### Overview
+
+Deploy Zylix Server to edge computing platforms. Compile Zig server code to WASM for edge runtimes, with platform-specific adapters for Cloudflare Workers, Vercel Edge Functions, AWS Lambda, and Deno Deploy.
+
+### Planned Features
+
+#### 21.1 Cloudflare Workers
+- WASM target compilation
+- Workers API bindings
+- KV storage integration
+- D1 database support
+- Durable Objects
+- R2 storage
+- Queues
+
+```zig
+// cloudflare/worker.zig
+const zylix = @import("zylix-server");
+const cf = @import("zylix-cloudflare");
+
+pub fn fetch(req: cf.Request, env: cf.Env) !cf.Response {
+    var app = zylix.server();
+    app.use(cf.adapter(env));
+    return app.handle(req);
+}
+```
+
+#### 21.2 Vercel Edge Functions
+- Edge Runtime target
+- Vercel KV integration
+- Vercel Postgres (via Neon)
+- Blob storage
+- Edge Config
+
+#### 21.3 AWS Lambda
+- Lambda custom runtime
+- Lambda@Edge support
+- API Gateway integration
+- DynamoDB bindings
+- S3 integration
+- SQS/SNS support
+
+#### 21.4 Deno Deploy
+- Deno WASM support
+- Deno KV integration
+- BroadcastChannel
+- Cron triggers
+
+#### 21.5 Unified API
+- Platform-agnostic code
+- Environment detection
+- Feature detection
+- Graceful fallbacks
+
+```zig
+// Unified API - runs on any platform
+const store = try zylix.kv.connect();
+try store.put("key", value);
+const data = try store.get("key");
+```
+
+#### 21.6 Build Tools
+- Platform-specific bundling
+- WASM optimization
+- Tree shaking
+- Source maps
+- Deployment CLI
+
+```bash
+# Build for all platforms
+zylix build --target=cloudflare
+zylix build --target=vercel
+zylix build --target=aws-lambda
+
+# Deploy
+zylix deploy --platform=cloudflare
+```
+
+### Platform Comparison
+
+| Feature | Cloudflare | Vercel | AWS Lambda | Deno |
+|---------|------------|--------|------------|------|
+| Runtime | V8 Isolates | V8 Edge | Custom/WASM | V8 |
+| Cold Start | ~0ms | ~0ms | 100-500ms | ~0ms |
+| CPU Limit | 10-50ms | 25ms | 15min | 50ms |
+| Memory | 128MB | 128MB | 10GB | 512MB |
+| KV Store | Workers KV | Vercel KV | DynamoDB | Deno KV |
+| SQL | D1 | Postgres | RDS/Aurora | - |
+
+### Success Criteria
+
+- [ ] Cloudflare Workers deployment
+- [ ] Vercel Edge deployment
+- [ ] AWS Lambda deployment
+- [ ] Unified KV/DB API
+- [ ] CLI deployment tools
+
+---
+
 ## Version Summary
 
 ### Completed Versions
@@ -1190,6 +1661,42 @@ Comprehensive game development platform inspired by [PIXI.js](https://github.com
 - Matter.js-based physics engine
 - Complete audio system (SFX, BGM)
 - Entity-Component-System architecture
+
+#### v0.16.0 - Node-based UI
+- React Flow-style node components
+- Visual workflow editors
+- Interactive canvas with pan/zoom
+- Customizable node and edge types
+
+#### v0.17.0 - PDF Support
+- PDF generation and reading
+- Text, image, and graphics embedding
+- PDF editing and merging
+- Form field support
+
+#### v0.18.0 - Excel Support
+- xlsx file creation and reading
+- Cell formatting and formulas
+- Charts and data visualization
+- Multiple worksheet support
+
+#### v0.19.0 - Database Support
+- PostgreSQL, MySQL, SQLite, libSQL connectivity
+- Type-safe query builder
+- Connection pooling and transactions
+- Cross-platform database access (including WASM)
+
+#### v0.20.0 - Server Runtime (Zylix Server)
+- Hono.js-inspired HTTP server in Zig
+- Type-safe RPC (client ↔ server)
+- Middleware system
+- Server-side rendering
+
+#### v0.21.0 - Edge Adapters
+- Cloudflare Workers deployment
+- Vercel Edge Functions
+- AWS Lambda support
+- Unified platform API
 
 ### Quality Philosophy
 

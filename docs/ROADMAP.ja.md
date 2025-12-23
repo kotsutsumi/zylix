@@ -18,7 +18,7 @@
 | v0.6.0 | Phase 7-10 | Router, Async, Hot Reload, サンプル | ✅ 完了 | 2025-12-21 |
 | v0.6.1 | - | サンプルアプリのセキュリティ修正 | ✅ 完了 | 2025-12-21 |
 | v0.6.2 | - | プラットフォームセキュリティ & 並行処理修正 | ✅ 完了 | 2025-12-21 |
-| v0.6.3 | - | npm パッケージ同期 | ✅ 完了 | 2025-12-21 |
+| v0.6.3 | - | プラットフォームデモ (iOS, Android) | ✅ 完了 | 2025-12-22 |
 | v0.7.0 | Phase 6 | コンポーネントライブラリの拡充 | ✅ 完了 | 2025-12-22 |
 | v0.8.1 | Phase 11a | watchOS対応, 言語バインディング, CI/CD, E2Eテスト | ✅ 完了 | 2025-12-23 |
 | v0.9.0 | Phase 11b | 組み込みAI (Zylix AI) | ⏳ 計画中 | 2026年Q1 |
@@ -28,6 +28,12 @@
 | v0.13.0 | Phase 13 | アニメーション (Lottie, Live2D) | ⏳ 計画中 | 2027年Q1 |
 | v0.14.0 | Phase 14 | 3Dグラフィックス (Three.js風) | ⏳ 計画中 | 2027年Q2 |
 | v0.15.0 | Phase 15 | ゲーム開発 (PIXI.js風, 物理エンジン, オーディオ) | ⏳ 計画中 | 2027年Q3 |
+| v0.16.0 | Phase 16 | ノードベースUI (React Flow風) | ⏳ 計画中 | 2027年Q4 |
+| v0.17.0 | Phase 17 | PDFサポート (生成・読み込み・編集) | ⏳ 計画中 | 2028年Q1 |
+| v0.18.0 | Phase 18 | Excelサポート (xlsx読み書き) | ⏳ 計画中 | 2028年Q2 |
+| v0.19.0 | Phase 19 | データベース (PostgreSQL, MySQL, SQLite, libSQL) | ⏳ 計画中 | 2028年Q3 |
+| v0.20.0 | Phase 20 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2028年Q4 |
+| v0.21.0 | Phase 21 | エッジアダプター (Cloudflare, Vercel, AWS) | ⏳ 計画中 | 2029年Q1 |
 
 ---
 
@@ -578,6 +584,8 @@ zylix dev --all --port 3000
   - Windows: DirectX/OpenGL レンダラー
   - Web: WebGL レンダラー
 
+> **ライセンス要件**: Live2D Cubism SDKは[Live2D Proprietary Software License](https://www.live2d.com/terms/live2d-proprietary-software-license-agreement/)に基づき、再配布に制限があります。Cubism SDKを使用したコンテンツの商用リリースには、[SDK出版許諾契約](https://www.live2d.com/terms/publication-license-agreement/)への同意と関連する支払いが必要です。配布前のライセンスに関するお問い合わせは[Live2D](https://www.live2d.com/contact/)までご連絡ください。
+
 #### 13.3 アニメーションユーティリティ
 - タイムラインベースのアニメーションシーケンス
 - イージング関数ライブラリ
@@ -720,6 +728,429 @@ zylix dev --all --port 3000
 
 ---
 
+## Phase 16: ノードベースUI (v0.16.0)
+
+### 概要
+
+[React Flow](https://reactflow.dev/) にインスパイアされたノードベースUIコンポーネント。ビジュアルワークフローエディタ、マインドマップ、データフロー図などを構築できます。
+
+### 計画機能
+
+#### 16.1 コアノードシステム
+- ノードコンポーネント
+  - カスタマイズ可能なノード形状
+  - 入力/出力ハンドル（ポート）
+  - ドラッグ＆ドロップ配置
+  - ノードリサイズとグループ化
+- エッジ（接続線）
+  - 直線、ベジェ曲線、ステップ接続
+  - アニメーション付きエッジ
+  - カスタムラベルとスタイル
+  - エッジの動的生成
+
+#### 16.2 キャンバス機能
+- インタラクティブキャンバス
+  - パン（ドラッグでスクロール）
+  - ズーム（ピンチ/スクロール）
+  - ミニマップ表示
+  - グリッドスナップ
+- 選択と操作
+  - 複数選択（矩形選択、Shift+クリック）
+  - カット/コピー/ペースト
+  - 元に戻す/やり直し
+  - キーボードショートカット
+
+#### 16.3 データフロー
+- ノード間データ転送
+- 計算グラフの実行
+- リアクティブな更新伝播
+- カスタムノードタイプ定義
+
+### 成功基準
+
+- [ ] 滑らかなパン/ズーム操作（60fps）
+- [ ] 1000ノード以上のスケーラビリティ
+- [ ] 直感的なノード接続体験
+- [ ] ワークフローエディタのサンプルアプリ
+
+---
+
+## Phase 17: PDFサポート (v0.17.0)
+
+### 概要
+
+[pdf-nano](https://github.com/GregorBudweiser/pdf-nano) にインスパイアされたPDF処理機能。PDF生成、読み込み、編集をサポートします。
+
+### 計画機能
+
+#### 17.1 PDF生成
+- 文書構造
+  - ページ追加と管理
+  - ページサイズと向き設定
+  - 余白とレイアウト
+- コンテンツ埋め込み
+  - テキスト（フォント、サイズ、色）
+  - 画像（JPEG、PNG、SVG）
+  - 図形（線、矩形、円、パス）
+  - テーブルとリスト
+- フォント対応
+  - 標準14フォント
+  - TrueType/OpenTypeフォント埋め込み
+  - 日本語フォント対応
+
+#### 17.2 PDF読み込み
+- PDF解析
+  - テキスト抽出
+  - 画像抽出
+  - メタデータ取得
+  - ページ情報取得
+- コンテンツアクセス
+  - ページごとのコンテンツストリーム
+  - フォーム フィールド読み込み
+  - 注釈の取得
+
+#### 17.3 PDF編集
+- ページ操作
+  - ページの追加/削除/並べ替え
+  - PDF結合/分割
+  - ページの回転
+- コンテンツ変更
+  - テキスト注釈追加
+  - スタンプ/ウォーターマーク
+  - フォームフィールド入力
+
+### 成功基準
+
+- [ ] 高品質なPDF出力
+- [ ] 全プラットフォームでの読み書き動作
+- [ ] 日本語テキストの正確な表示
+- [ ] PDFビューア/エディタのサンプルアプリ
+
+---
+
+## Phase 18: Excelサポート (v0.18.0)
+
+### 概要
+
+[libxlsxwriter](https://github.com/jmcnamara/libxlsxwriter) / [zig-xlsxwriter](https://github.com/kassane/zig-xlsxwriter) にインスパイアされたExcelファイル（xlsx）処理機能。
+
+### 計画機能
+
+#### 18.1 xlsx生成
+- ワークブック/ワークシート
+  - 複数シート対応
+  - シート名とタブ色
+  - 表示/非表示設定
+- セル操作
+  - 文字列、数値、日付、真偽値
+  - 数式（計算式）
+  - ハイパーリンク
+  - セル結合
+- 書式設定
+  - フォント（サイズ、色、スタイル）
+  - 塗りつぶし（パターン、グラデーション）
+  - 罫線（スタイル、色）
+  - 数値フォーマット
+  - 条件付き書式
+
+#### 18.2 xlsx読み込み
+- ファイル解析
+  - シート一覧取得
+  - セル値の読み取り
+  - 数式の取得
+  - 書式情報の取得
+- データ抽出
+  - 範囲指定での一括取得
+  - 名前付き範囲のサポート
+  - テーブルデータの抽出
+
+#### 18.3 高度な機能
+- グラフ
+  - 棒グラフ、折れ線グラフ、円グラフ
+  - 散布図、エリアチャート
+  - グラフのカスタマイズ
+- 画像
+  - 画像の挿入
+  - 位置とサイズ調整
+- データ検証
+  - 入力規則（リスト、数値範囲）
+  - エラーメッセージ
+
+### 成功基準
+
+- [ ] Microsoft Excelとの互換性
+- [ ] 大量データの効率的な処理
+- [ ] 日本語テキストの正確な表示
+- [ ] スプレッドシートエディタのサンプルアプリ
+
+---
+
+## Phase 19: データベースサポート (v0.19.0)
+
+### 概要
+
+PostgreSQL、MySQL、SQLite、libSQL (Turso) をサポートする包括的なデータベース接続レイヤー。WASM を含むすべてのプラットフォームで統一された API を提供します。
+
+### 計画機能
+
+#### 19.1 接続管理
+- コネクションプーリング
+- 接続文字列パース
+- SSL/TLS サポート
+- 自動再接続
+- トランザクション管理
+- プリペアドステートメント
+
+#### 19.2 PostgreSQL サポート
+- 完全なプロトコル実装
+- 全データ型サポート
+- LISTEN/NOTIFY
+- COPY 操作
+- 配列型
+- JSON/JSONB 操作
+
+#### 19.3 MySQL サポート
+- MySQL プロトコル実装
+- プリペアドステートメント
+- 複数結果セット
+- バイナリプロトコル
+- 接続圧縮
+
+#### 19.4 SQLite サポート
+- 組み込み SQLite
+- インメモリデータベース
+- ファイルベースデータベース
+- WAL モードサポート
+- ユーザー定義関数
+- 仮想テーブル
+
+#### 19.5 libSQL / Turso サポート
+- libSQL 組み込みモード
+- Turso クラウド接続
+- エッジ最適化クエリ
+- 組み込みレプリカ
+- HTTP API サポート
+
+#### 19.6 クエリビルダー
+- 型安全なクエリ構築
+- コンパイル時 SQL 検証
+- パラメータバインディング
+- 結果マッピング
+- マイグレーションサポート
+
+### プラットフォーム実装
+
+| プラットフォーム | PostgreSQL | MySQL | SQLite | libSQL |
+|----------------|------------|-------|--------|--------|
+| ネイティブ (iOS, Android, macOS, Linux, Windows) | TCP | TCP | 組み込み | 組み込み/HTTP |
+| Web/WASM | HTTP プロキシ | HTTP プロキシ | OPFS | HTTP |
+| エッジ (Cloudflare, Vercel) | TCP (Hyperdrive) | - | D1 | HTTP |
+
+### 成功基準
+
+- [ ] 4つのデータベースすべてに接続可能
+- [ ] 型安全なクエリビルダー
+- [ ] トランザクションサポート
+- [ ] コネクションプーリング動作
+- [ ] WASM でのデータベースアクセス（プロキシ経由）
+
+---
+
+## Phase 20: サーバーランタイム (v0.20.0)
+
+### 概要
+
+Zylix Server - Zig で API とフルスタックアプリケーションを構築するためのサーバーサイドランタイム。Hono.js にインスパイアされ、共有 Zig コードによるクライアント・サーバー間の型安全な RPC を提供します。
+
+### 計画機能
+
+#### 20.1 HTTP サーバー
+- 高性能 HTTP/1.1 と HTTP/2
+- リクエスト/レスポンス処理
+- ミドルウェアサポート
+- 静的ファイル配信
+- WebSocket サポート
+- Server-Sent Events
+
+#### 20.2 ルーティング
+- パスベースルーティング
+- ルートパラメータ
+- クエリ文字列パース
+- ルートグループ
+- ミドルウェアチェーン
+- エラーハンドリング
+
+```zig
+const app = zylix.server();
+
+app.get("/users", handlers.listUsers);
+app.get("/users/:id", handlers.getUser);
+app.post("/users", handlers.createUser);
+app.group("/api/v1", apiRoutes);
+```
+
+#### 20.3 型安全な RPC
+- 共有型定義（クライアント ↔ サーバー）
+- TypeScript 自動生成
+- コンパイル時ルート検証
+- リクエスト/レスポンスのシリアライズ
+
+```zig
+// shared/api.zig
+pub const API = struct {
+    pub const getUsers = zylix.endpoint(.GET, "/users", void, []User);
+    pub const createUser = zylix.endpoint(.POST, "/users", CreateUserReq, User);
+};
+
+// クライアント: const users = try client.call(API.getUsers, {});
+// サーバー: router.handle(API.getUsers, handlers.getUsers);
+```
+
+#### 20.4 ミドルウェア
+- リクエストログ
+- CORS 処理
+- 認証（JWT、セッション）
+- レート制限
+- 圧縮
+- エラーハンドリング
+
+#### 20.5 サーバーサイドレンダリング
+- コンポーネントの HTML レンダリング
+- ハイドレーションサポート
+- ストリーミングレスポンス
+- テンプレートサポート
+
+#### 20.6 開発ツール
+- サーバーコードのホットリロード
+- リクエストインスペクター
+- API ドキュメント生成
+- OpenAPI/Swagger サポート
+
+### アーキテクチャ
+
+```
+┌─────────────────────────────────────────┐
+│           Zylix アプリケーション          │
+├─────────────────────────────────────────┤
+│  クライアント (WASM) │ サーバー (Zig Native) │
+├─────────────────┴───────────────────────┤
+│         共有型定義 (api.zig)             │
+├─────────────────────────────────────────┤
+│              RPC レイヤー                │
+└─────────────────────────────────────────┘
+```
+
+### 成功基準
+
+- [ ] ルーティング付き HTTP サーバー
+- [ ] 型安全な RPC 動作
+- [ ] ミドルウェアシステム
+- [ ] データベース統合
+- [ ] フルスタックサンプルアプリケーション
+
+---
+
+## Phase 21: エッジアダプター (v0.21.0)
+
+### 概要
+
+Zylix Server をエッジコンピューティングプラットフォームにデプロイ。Zig サーバーコードをエッジランタイム向け WASM にコンパイルし、Cloudflare Workers、Vercel Edge Functions、AWS Lambda、Deno Deploy 用のプラットフォーム固有アダプターを提供します。
+
+### 計画機能
+
+#### 21.1 Cloudflare Workers
+- WASM ターゲットコンパイル
+- Workers API バインディング
+- KV ストレージ統合
+- D1 データベースサポート
+- Durable Objects
+- R2 ストレージ
+- Queues
+
+```zig
+// cloudflare/worker.zig
+const zylix = @import("zylix-server");
+const cf = @import("zylix-cloudflare");
+
+pub fn fetch(req: cf.Request, env: cf.Env) !cf.Response {
+    var app = zylix.server();
+    app.use(cf.adapter(env));
+    return app.handle(req);
+}
+```
+
+#### 21.2 Vercel Edge Functions
+- Edge Runtime ターゲット
+- Vercel KV 統合
+- Vercel Postgres (Neon 経由)
+- Blob ストレージ
+- Edge Config
+
+#### 21.3 AWS Lambda
+- Lambda カスタムランタイム
+- Lambda@Edge サポート
+- API Gateway 統合
+- DynamoDB バインディング
+- S3 統合
+- SQS/SNS サポート
+
+#### 21.4 Deno Deploy
+- Deno WASM サポート
+- Deno KV 統合
+- BroadcastChannel
+- Cron トリガー
+
+#### 21.5 統一 API
+- プラットフォーム非依存コード
+- 環境検出
+- 機能検出
+- グレースフルフォールバック
+
+```zig
+// 統一 API - どのプラットフォームでも動作
+const store = try zylix.kv.connect();
+try store.put("key", value);
+const data = try store.get("key");
+```
+
+#### 21.6 ビルドツール
+- プラットフォーム固有バンドル
+- WASM 最適化
+- Tree shaking
+- ソースマップ
+- デプロイ CLI
+
+```bash
+# 各プラットフォーム向けビルド
+zylix build --target=cloudflare
+zylix build --target=vercel
+zylix build --target=aws-lambda
+
+# デプロイ
+zylix deploy --platform=cloudflare
+```
+
+### プラットフォーム比較
+
+| 機能 | Cloudflare | Vercel | AWS Lambda | Deno |
+|------|------------|--------|------------|------|
+| ランタイム | V8 Isolates | V8 Edge | Custom/WASM | V8 |
+| コールドスタート | ~0ms | ~0ms | 100-500ms | ~0ms |
+| CPU 制限 | 10-50ms | 25ms | 15分 | 50ms |
+| メモリ | 128MB | 128MB | 10GB | 512MB |
+| KV ストア | Workers KV | Vercel KV | DynamoDB | Deno KV |
+| SQL | D1 | Postgres | RDS/Aurora | - |
+
+### 成功基準
+
+- [ ] Cloudflare Workers デプロイ
+- [ ] Vercel Edge デプロイ
+- [ ] AWS Lambda デプロイ
+- [ ] 統一 KV/DB API
+- [ ] CLI デプロイツール
+
+---
+
 ## バージョン概要
 
 ### 完了したバージョン
@@ -838,6 +1269,42 @@ zylix dev --all --port 3000
 - Matter.js ベース物理エンジン
 - 完全なオーディオシステム（効果音、BGM）
 - Entity-Component-System アーキテクチャ
+
+#### v0.16.0 - ノードベースUI
+- React Flow スタイルのノードコンポーネント
+- ビジュアルワークフローエディタ
+- パン/ズーム対応インタラクティブキャンバス
+- カスタマイズ可能なノード/エッジタイプ
+
+#### v0.17.0 - PDFサポート
+- PDF生成と読み込み
+- テキスト、画像、グラフィックス埋め込み
+- PDF編集と結合
+- フォームフィールドサポート
+
+#### v0.18.0 - Excelサポート
+- xlsxファイルの作成と読み込み
+- セルの書式設定と数式
+- グラフとデータ可視化
+- 複数ワークシート対応
+
+#### v0.19.0 - データベースサポート
+- PostgreSQL、MySQL、SQLite、libSQL 接続
+- 型安全なクエリビルダー
+- コネクションプーリングとトランザクション
+- クロスプラットフォームDB アクセス（WASM含む）
+
+#### v0.20.0 - サーバーランタイム (Zylix Server)
+- Hono.js インスパイア HTTP サーバー (Zig)
+- 型安全な RPC（クライアント ↔ サーバー）
+- ミドルウェアシステム
+- サーバーサイドレンダリング
+
+#### v0.21.0 - エッジアダプター
+- Cloudflare Workers デプロイ
+- Vercel Edge Functions
+- AWS Lambda サポート
+- 統一プラットフォーム API
 
 ### 品質哲学
 

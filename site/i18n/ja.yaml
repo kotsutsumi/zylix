@@ -82,3 +82,8 @@ discussions: "ディスカッション"
 good_first_issues: "Good First Issues"
 contributing_guide: "コントリビュートガイド"
 star_github: "GitHubでスター"
+
+# Sponsor
+sponsor_title: "Zylixをサポート"
+sponsor_desc: "Zylixが役に立ったら、コーヒーでも奢ってください！あなたのサポートがプロジェクトの維持・改善に役立ちます。"
+sponsor_btn: "スポンサーになる"

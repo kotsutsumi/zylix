@@ -73,12 +73,14 @@ flowchart TB
 
 | Platform | UI Framework | Binding | Min Version | Status |
 |----------|-------------|---------|-------------|--------|
-| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | 🔵 Beta |
-| **iOS** | SwiftUI | C ABI | iOS 15+ | 🟡 Alpha |
-| **Android** | Jetpack Compose | JNI | API 26+ | 🟡 Alpha |
-| **macOS** | SwiftUI | C ABI | macOS 12+ | 🟡 Alpha |
-| **Linux** | GTK4 | C ABI | GTK 4.0+ | 🟡 Alpha |
-| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | 🟡 Alpha |
+| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | ✅ Production Ready |
+| **iOS** | SwiftUI | C ABI | iOS 15+ | ✅ Production Ready |
+| **macOS** | SwiftUI | C ABI | macOS 12+ | ✅ Production Ready |
+| **Android** | Jetpack Compose | JNI | API 26+ | 🚧 In Development |
+| **Linux** | GTK4 | C ABI | GTK 4.0+ | 🚧 In Development |
+| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | 🚧 In Development |
+
+> See [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) for detailed platform maturity definitions.
 
 ## Core Features
 
@@ -103,4 +105,4 @@ Seamless integration with platform languages through C ABI (Swift, Kotlin, C#) a
 
 ## Version
 
-This documentation covers **Zylix 0.1.0** (Development Preview).
+This documentation covers **Zylix 0.8.1**. See the [Roadmap](roadmap) for development progress.

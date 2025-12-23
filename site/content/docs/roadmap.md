@@ -4,253 +4,105 @@ weight: 5
 prev: platforms
 ---
 
-This page outlines the development roadmap for Zylix beyond v0.1.0. Each phase introduces new capabilities while maintaining the framework's core principles of performance, simplicity, and native platform integration.
+This page outlines the development roadmap for Zylix. Each phase introduces new capabilities while maintaining the framework's core principles of performance, simplicity, and native platform integration.
+
+> For the complete detailed roadmap, see [ROADMAP.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md).
 
 ## Current Status
 
-**Version 0.1.0** is complete with:
+**Version 0.8.1** is the current release with:
 
-- ✅ Virtual DOM engine with efficient diffing
-- ✅ Type-safe state management
-- ✅ Component system with 9 basic components
-- ✅ CSS utility system (TailwindCSS-like)
-- ✅ Flexbox layout engine
-- ✅ 6-platform support (Web, iOS, Android, macOS, Linux, Windows)
-- ✅ C ABI and WASM bindings
+- Virtual DOM engine with efficient diffing
+- Type-safe state management
+- 40+ UI components (form, layout, navigation, feedback, data display)
+- CSS utility system (TailwindCSS-like)
+- Flexbox layout engine
+- 6-platform support (Web, iOS, Android, macOS, Linux, Windows)
+- 7th platform: watchOS support
+- C ABI (v2) and WASM bindings
+- Event queue with priority system
+- State diff API for efficient updates
+- TypeScript and Python language bindings
+- E2E testing framework
+- CI/CD pipeline
 
 ## Roadmap Overview
 
-```mermaid
-gantt
-    title Zylix Development Roadmap
-    dateFormat  YYYY-MM
-    section Foundation
-    v0.1.0 Complete           :done, v010, 2024-01, 2024-12
-    section Phase 6-10
-    v0.2.0 Components         :v020, 2025-01, 2025-03
-    v0.3.0 Routing            :v030, 2025-04, 2025-05
-    v0.4.0 Async              :v040, 2025-05, 2025-06
-    v0.5.0 Hot Reload         :v050, 2025-07, 2025-08
-    v0.6.0 Sample Apps        :v060, 2025-08, 2025-09
-```
+| Version | Focus | Status |
+|---------|-------|--------|
+| v0.1.0 - v0.6.0 | Foundation & Core Features | Done |
+| v0.7.0 | Component Library (40+ types) | Done |
+| v0.8.1 | Testing, watchOS, Language Bindings | Current |
+| v0.9.0 | Embedded AI (Zylix AI) | Planned |
+| v0.10.0 | Device Features & Gestures | Planned |
+| v0.11.0 | Performance & Optimization | Planned |
+| v0.12.0 | Documentation Excellence | Planned |
+| v0.13.0 | Animation (Lottie, Live2D) | Planned |
+| v0.14.0 | 3D Graphics | Planned |
+| v0.15.0 | Game Development | Planned |
+| v0.16.0 - v0.21.0 | Node UI, PDF, Excel, Database, Server, Edge | Planned |
 
-## Phase 6: Component Library (v0.2.0)
+## Completed Milestones
 
-Expand from 9 basic components to 30+ comprehensive UI components.
+### v0.8.1 - Testing & Language Bindings
 
-### Planned Components
+- watchOS platform support
+- TypeScript bindings (`@zylix/test` npm package)
+- Python bindings (`zylix-test` PyPI package)
+- E2E testing framework for all platforms
+- CI/CD workflows (GitHub Actions)
 
-| Component | Description | Priority |
-|-----------|-------------|----------|
-| `select` | Dropdown/picker | P0 |
-| `checkbox` | Boolean toggle | P0 |
-| `radio` | Single selection | P0 |
-| `textarea` | Multi-line input | P0 |
-| `switch` | Toggle switch | P1 |
-| `slider` | Range input | P1 |
-| `date_picker` | Date selection | P1 |
-| `time_picker` | Time selection | P1 |
-| `form` | Form container | P0 |
+### v0.7.0 - Component Library
 
-| Component | Description | Priority |
-|-----------|-------------|----------|
-| `stack` | V/H stack | P0 |
-| `grid` | CSS Grid layout | P0 |
-| `scroll_view` | Scrollable container | P0 |
-| `spacer` | Flexible space | P0 |
-| `divider` | Visual separator | P1 |
-| `card` | Card container | P1 |
-| `safe_area` | Safe area insets | P1 |
+40+ component types across 5 categories:
 
-| Component | Description | Priority |
-|-----------|-------------|----------|
-| `nav_bar` | Navigation bar | P0 |
-| `tab_bar` | Tab navigation | P0 |
-| `drawer` | Side drawer | P1 |
-| `breadcrumb` | Breadcrumb nav | P2 |
-| `pagination` | Page navigation | P2 |
+- **Form**: select, checkbox, radio, textarea, toggle, slider, form
+- **Layout**: vstack, hstack, zstack, grid, scroll_view, spacer, divider, card
+- **Navigation**: nav_bar, tab_bar
+- **Feedback**: alert, toast, modal, progress, spinner
+- **Data Display**: icon, avatar, tag, badge, accordion
 
-| Component | Description | Priority |
-|-----------|-------------|----------|
-| `alert` | Alert dialog | P0 |
-| `toast` | Toast notification | P0 |
-| `modal` | Modal dialog | P0 |
-| `progress` | Progress indicator | P1 |
-| `spinner` | Loading spinner | P1 |
-| `badge` | Notification badge | P1 |
+### v0.6.x - Core Features
 
-| Component | Description | Priority |
-|-----------|-------------|----------|
-| `table` | Data table | P1 |
-| `avatar` | User avatar | P1 |
-| `icon` | Icon component | P0 |
-| `tag` | Label/tag | P1 |
-| `accordion` | Expandable sections | P1 |
+- Router with navigation guards and deep linking
+- Async utilities (Future/Promise pattern)
+- Hot reload development server
+- Sample applications
+- Platform demos (iOS, Android)
 
-### Implementation
+## Upcoming Features
 
-```zig
-pub const ComponentType = enum(u8) {
-    // Existing (0-9)
-    container = 0, text = 1, button = 2, ...
+### v0.9.0 - Zylix AI
 
-    // Form (10-19)
-    select = 10, checkbox = 11, radio = 12, ...
+AI-powered development assistant with:
 
-    // Layout (20-29)
-    stack = 20, grid = 21, scroll_view = 22, ...
+- Natural language to component generation
+- Intelligent debugging assistance
+- PR review integration
+- Documentation auto-generation
 
-    // Navigation (30-39)
-    nav_bar = 30, tab_bar = 31, drawer = 32, ...
+### v0.10.0 - Device Features
 
-    // Feedback (40-49)
-    alert = 40, toast = 41, modal = 42, ...
-};
-```
+- GPS/Location services
+- Camera access
+- Push notifications (APNs, FCM)
+- Advanced gestures (drag & drop, pinch, swipe)
 
-## Phase 7: Routing System (v0.3.0)
+### v0.13.0+ - Advanced Features
 
-Cross-platform navigation with deep linking support.
-
-### Architecture
-
-```mermaid
-flowchart TB
-    subgraph Router["Zylix Router (Zig Core)"]
-        Routes["Route Definitions"]
-        Matcher["URL Matcher"]
-        History["Navigation History"]
-        Guards["Route Guards"]
-    end
-
-    subgraph Platforms["Platform Integration"]
-        iOS["iOS<br/>NavigationStack"]
-        Android["Android<br/>Navigation Compose"]
-        Web["Web<br/>History API"]
-        Desktop["Desktop<br/>Stack Navigation"]
-    end
-
-    Router --> |C ABI| Platforms
-```
-
-### Features
-
-- **Path patterns**: `/users/:id/posts`
-- **Query parameters**: `?page=1&sort=date`
-- **Route guards**: Authentication, permissions
-- **Deep linking**: Universal Links, App Links
-- **History management**: Back, forward, replace
-
-### API Preview
-
-```zig
-const routes = [_]Route{
-    .{ .path = "/", .component = home_component },
-    .{ .path = "/users/:id", .component = user_component },
-    .{ .path = "/settings", .component = settings_component, .guards = &[_]Guard{auth_guard} },
-};
-
-// Navigation
-router.push("/users/123");
-router.back();
-
-// Access params
-const user_id = router.getParams().get("id");
-```
-
-## Phase 8: Async Processing (v0.4.0)
-
-Async/await patterns for HTTP, file I/O, and background tasks.
-
-### Features
-
-- **Future/Promise**: Chainable async operations
-- **HTTP Client**: GET, POST, PUT, DELETE with JSON support
-- **Background Tasks**: Scheduled and repeating tasks
-- **Cancellation**: Timeout and manual cancellation
-
-### API Preview
-
-```zig
-// HTTP request
-const response = try HttpClient.get("https://api.example.com/users")
-    .then(fn(resp) { return resp.json(User); })
-    .await();
-
-// Background task
-const handle = TaskRunner.schedule(
-    .{ .work_fn = sync_data },
-    Duration.minutes(5),
-);
-```
-
-### Platform Integration
-
-| Platform | Runtime | HTTP | Background |
-|----------|---------|------|------------|
-| iOS | Swift Concurrency | URLSession | Background Tasks |
-| Android | Coroutines | OkHttp | WorkManager |
-| Web | Promise | Fetch API | Web Workers |
-| Desktop | Thread Pool | libcurl/WinHTTP | Native threads |
-
-## Phase 9: Hot Reload (v0.5.0)
-
-Development-time code reloading with state preservation.
-
-### Features
-
-- **File watching**: < 100ms detection
-- **Incremental builds**: < 1s for small changes
-- **State preservation**: Maintain app state across reloads
-- **Error overlay**: Source-mapped error display
-
-### CLI Commands
-
-```bash
-# Start dev server with hot reload
-zylix dev --platform web --port 3000
-
-# iOS Simulator with hot reload
-zylix dev --platform ios-sim --hot
-
-# All platforms
-zylix dev --all
-```
-
-## Phase 10: Sample Applications (v0.6.0)
-
-Comprehensive examples demonstrating real-world patterns.
-
-### Planned Apps
-
-| App | Level | Demonstrates |
-|-----|-------|--------------|
-| **Todo Pro** | Beginner | State, forms, storage |
-| **E-Commerce** | Intermediate | Routing, HTTP, auth |
-| **Dashboard** | Intermediate | Charts, tables, real-time |
-| **Chat** | Advanced | WebSocket, push notifications |
-| **Notes** | Advanced | Rich text, search, sync |
-
-Each app will include:
-- Full source code for all 6 platforms
-- Step-by-step tutorials
-- Architecture documentation
-- Performance benchmarks
+- **Animation**: Lottie, Live2D integration
+- **3D Graphics**: Three.js-inspired engine
+- **Game Development**: 2D engine, physics, audio
+- **Document Support**: PDF, Excel manipulation
+- **Server Runtime**: Full-stack Zig applications
+- **Edge Deployment**: Cloudflare, Vercel, AWS adapters
 
 ## Contributing
 
 We welcome contributions! See our [Contributing Guide](https://github.com/kotsutsumi/zylix/blob/main/CONTRIBUTING.md) for details.
 
-### Priority Areas
+## Detailed Documentation
 
-1. Component implementations (v0.2.0)
-2. Platform shell updates
-3. Documentation improvements
-4. Sample applications
-
-## Detailed Roadmap
-
-For complete implementation details, see the full roadmap documents:
-
-- [ROADMAP.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md) (English)
-- [ROADMAP.ja.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.ja.md) (Japanese)
+- [Full Roadmap (EN)](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md)
+- [Full Roadmap (JA)](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.ja.md)
+- [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md)

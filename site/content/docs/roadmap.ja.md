@@ -4,253 +4,105 @@ weight: 5
 prev: platforms
 ---
 
-このページでは、v0.1.0以降のZylix開発ロードマップを説明します。各フェーズでは、パフォーマンス、シンプルさ、ネイティブプラットフォーム統合というフレームワークの核心原則を維持しながら、新しい機能を導入します。
+このページでは、Zylixの開発ロードマップを説明します。各フェーズでは、パフォーマンス、シンプルさ、ネイティブプラットフォーム統合というフレームワークの核心原則を維持しながら、新しい機能を導入します。
+
+> 完全な詳細ロードマップは[ROADMAP.ja.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.ja.md)をご覧ください。
 
 ## 現在の状況
 
-**バージョン 0.1.0** は以下を完了しています：
+**バージョン 0.8.1** が現在のリリースです：
 
-- ✅ 効率的な差分計算を持つVirtual DOMエンジン
-- ✅ 型安全な状態管理
-- ✅ 9種類の基本コンポーネントを持つコンポーネントシステム
-- ✅ CSSユーティリティシステム（TailwindCSS風）
-- ✅ Flexboxレイアウトエンジン
-- ✅ 6プラットフォーム対応（Web、iOS、Android、macOS、Linux、Windows）
-- ✅ C ABIとWASMバインディング
+- 効率的な差分計算を持つVirtual DOMエンジン
+- 型安全な状態管理
+- 40種類以上のUIコンポーネント（フォーム、レイアウト、ナビゲーション、フィードバック、データ表示）
+- CSSユーティリティシステム（TailwindCSS風）
+- Flexboxレイアウトエンジン
+- 6プラットフォーム対応（Web、iOS、Android、macOS、Linux、Windows）
+- 7番目のプラットフォーム：watchOS対応
+- C ABI (v2) とWASMバインディング
+- 優先度システム付きイベントキュー
+- 効率的な更新のためのState Diff API
+- TypeScriptとPython言語バインディング
+- E2Eテストフレームワーク
+- CI/CDパイプライン
 
 ## ロードマップ概要
 
-```mermaid
-gantt
-    title Zylix 開発ロードマップ
-    dateFormat  YYYY-MM
-    section 基盤
-    v0.1.0 完了               :done, v010, 2024-01, 2024-12
-    section Phase 6-10
-    v0.2.0 コンポーネント     :v020, 2025-01, 2025-03
-    v0.3.0 ルーティング       :v030, 2025-04, 2025-05
-    v0.4.0 非同期処理         :v040, 2025-05, 2025-06
-    v0.5.0 Hot Reload         :v050, 2025-07, 2025-08
-    v0.6.0 サンプルアプリ     :v060, 2025-08, 2025-09
-```
+| バージョン | 主要機能 | 状態 |
+|-----------|---------|------|
+| v0.1.0 - v0.6.0 | 基盤構築 & コア機能 | 完了 |
+| v0.7.0 | コンポーネントライブラリ（40種類以上） | 完了 |
+| v0.8.1 | テスト、watchOS、言語バインディング | 現在 |
+| v0.9.0 | 組み込みAI (Zylix AI) | 計画中 |
+| v0.10.0 | デバイス機能 & ジェスチャー | 計画中 |
+| v0.11.0 | パフォーマンス & 最適化 | 計画中 |
+| v0.12.0 | ドキュメント充実 | 計画中 |
+| v0.13.0 | アニメーション（Lottie、Live2D） | 計画中 |
+| v0.14.0 | 3Dグラフィックス | 計画中 |
+| v0.15.0 | ゲーム開発 | 計画中 |
+| v0.16.0 - v0.21.0 | ノードUI、PDF、Excel、DB、サーバー、エッジ | 計画中 |
 
-## Phase 6: コンポーネントライブラリ (v0.2.0)
+## 完了したマイルストーン
 
-9種類の基本コンポーネントから30種類以上の包括的なUIコンポーネントに拡張します。
+### v0.8.1 - テスト & 言語バインディング
 
-### 追加予定コンポーネント
+- watchOSプラットフォーム対応
+- TypeScriptバインディング（`@zylix/test` npmパッケージ）
+- Pythonバインディング（`zylix-test` PyPIパッケージ）
+- 全プラットフォーム用E2Eテストフレームワーク
+- CI/CDワークフロー（GitHub Actions）
 
-| コンポーネント | 説明 | 優先度 |
-|--------------|------|-------|
-| `select` | ドロップダウン/ピッカー | P0 |
-| `checkbox` | ブール値トグル | P0 |
-| `radio` | 単一選択 | P0 |
-| `textarea` | 複数行入力 | P0 |
-| `switch` | トグルスイッチ | P1 |
-| `slider` | レンジ入力 | P1 |
-| `date_picker` | 日付選択 | P1 |
-| `time_picker` | 時刻選択 | P1 |
-| `form` | フォームコンテナ | P0 |
+### v0.7.0 - コンポーネントライブラリ
 
-| コンポーネント | 説明 | 優先度 |
-|--------------|------|-------|
-| `stack` | 縦/横スタック | P0 |
-| `grid` | CSSグリッドレイアウト | P0 |
-| `scroll_view` | スクロール可能コンテナ | P0 |
-| `spacer` | 柔軟なスペース | P0 |
-| `divider` | 視覚的区切り | P1 |
-| `card` | カードコンテナ | P1 |
-| `safe_area` | セーフエリアインセット | P1 |
+5カテゴリで40種類以上のコンポーネント：
 
-| コンポーネント | 説明 | 優先度 |
-|--------------|------|-------|
-| `nav_bar` | ナビゲーションバー | P0 |
-| `tab_bar` | タブナビゲーション | P0 |
-| `drawer` | サイドドロワー | P1 |
-| `breadcrumb` | パンくずナビ | P2 |
-| `pagination` | ページナビゲーション | P2 |
+- **フォーム**: select、checkbox、radio、textarea、toggle、slider、form
+- **レイアウト**: vstack、hstack、zstack、grid、scroll_view、spacer、divider、card
+- **ナビゲーション**: nav_bar、tab_bar
+- **フィードバック**: alert、toast、modal、progress、spinner
+- **データ表示**: icon、avatar、tag、badge、accordion
 
-| コンポーネント | 説明 | 優先度 |
-|--------------|------|-------|
-| `alert` | アラートダイアログ | P0 |
-| `toast` | トースト通知 | P0 |
-| `modal` | モーダルダイアログ | P0 |
-| `progress` | プログレスインジケーター | P1 |
-| `spinner` | ローディングスピナー | P1 |
-| `badge` | 通知バッジ | P1 |
+### v0.6.x - コア機能
 
-| コンポーネント | 説明 | 優先度 |
-|--------------|------|-------|
-| `table` | データテーブル | P1 |
-| `avatar` | ユーザーアバター | P1 |
-| `icon` | アイコンコンポーネント | P0 |
-| `tag` | ラベル/タグ | P1 |
-| `accordion` | 展開可能セクション | P1 |
+- ナビゲーションガードとディープリンク付きルーター
+- 非同期ユーティリティ（Future/Promiseパターン）
+- Hot Reload開発サーバー
+- サンプルアプリケーション
+- プラットフォームデモ（iOS、Android）
 
-### 実装
+## 今後の機能
 
-```zig
-pub const ComponentType = enum(u8) {
-    // 既存 (0-9)
-    container = 0, text = 1, button = 2, ...
+### v0.9.0 - Zylix AI
 
-    // フォーム (10-19)
-    select = 10, checkbox = 11, radio = 12, ...
+AI搭載の開発アシスタント：
 
-    // レイアウト (20-29)
-    stack = 20, grid = 21, scroll_view = 22, ...
+- 自然言語からコンポーネント生成
+- インテリジェントなデバッグ支援
+- PRレビュー統合
+- ドキュメント自動生成
 
-    // ナビゲーション (30-39)
-    nav_bar = 30, tab_bar = 31, drawer = 32, ...
+### v0.10.0 - デバイス機能
 
-    // フィードバック (40-49)
-    alert = 40, toast = 41, modal = 42, ...
-};
-```
+- GPS/位置情報サービス
+- カメラアクセス
+- プッシュ通知（APNs、FCM）
+- 高度なジェスチャー（ドラッグ&ドロップ、ピンチ、スワイプ）
 
-## Phase 7: ルーティングシステム (v0.3.0)
+### v0.13.0以降 - 高度な機能
 
-ディープリンクサポート付きのクロスプラットフォームナビゲーション。
-
-### アーキテクチャ
-
-```mermaid
-flowchart TB
-    subgraph Router["Zylix Router (Zig Core)"]
-        Routes["ルート定義"]
-        Matcher["URLマッチャー"]
-        History["ナビゲーション履歴"]
-        Guards["ルートガード"]
-    end
-
-    subgraph Platforms["プラットフォーム統合"]
-        iOS["iOS<br/>NavigationStack"]
-        Android["Android<br/>Navigation Compose"]
-        Web["Web<br/>History API"]
-        Desktop["デスクトップ<br/>スタックナビゲーション"]
-    end
-
-    Router --> |C ABI| Platforms
-```
-
-### 機能
-
-- **パスパターン**: `/users/:id/posts`
-- **クエリパラメータ**: `?page=1&sort=date`
-- **ルートガード**: 認証、権限
-- **ディープリンク**: Universal Links、App Links
-- **履歴管理**: 戻る、進む、置換
-
-### APIプレビュー
-
-```zig
-const routes = [_]Route{
-    .{ .path = "/", .component = home_component },
-    .{ .path = "/users/:id", .component = user_component },
-    .{ .path = "/settings", .component = settings_component, .guards = &[_]Guard{auth_guard} },
-};
-
-// ナビゲーション
-router.push("/users/123");
-router.back();
-
-// パラメータアクセス
-const user_id = router.getParams().get("id");
-```
-
-## Phase 8: 非同期処理 (v0.4.0)
-
-HTTP、ファイルI/O、バックグラウンドタスク用のasync/awaitパターン。
-
-### 機能
-
-- **Future/Promise**: チェーン可能な非同期操作
-- **HTTPクライアント**: JSONサポート付きGET、POST、PUT、DELETE
-- **バックグラウンドタスク**: スケジュールおよび繰り返しタスク
-- **キャンセル**: タイムアウトと手動キャンセル
-
-### APIプレビュー
-
-```zig
-// HTTPリクエスト
-const response = try HttpClient.get("https://api.example.com/users")
-    .then(fn(resp) { return resp.json(User); })
-    .await();
-
-// バックグラウンドタスク
-const handle = TaskRunner.schedule(
-    .{ .work_fn = sync_data },
-    Duration.minutes(5),
-);
-```
-
-### プラットフォーム統合
-
-| プラットフォーム | ランタイム | HTTP | バックグラウンド |
-|--------------|---------|------|------------|
-| iOS | Swift Concurrency | URLSession | Background Tasks |
-| Android | Coroutines | OkHttp | WorkManager |
-| Web | Promise | Fetch API | Web Workers |
-| デスクトップ | Thread Pool | libcurl/WinHTTP | ネイティブスレッド |
-
-## Phase 9: Hot Reload (v0.5.0)
-
-状態保持付きの開発時コードリロード。
-
-### 機能
-
-- **ファイル監視**: < 100ms検出
-- **インクリメンタルビルド**: 小さな変更で < 1秒
-- **状態保持**: リロード間でアプリ状態を維持
-- **エラーオーバーレイ**: ソースマップ付きエラー表示
-
-### CLIコマンド
-
-```bash
-# ホットリロード付き開発サーバー起動
-zylix dev --platform web --port 3000
-
-# ホットリロード付きiOSシミュレーター
-zylix dev --platform ios-sim --hot
-
-# 全プラットフォーム
-zylix dev --all
-```
-
-## Phase 10: サンプルアプリケーション (v0.6.0)
-
-実世界のパターンを示す包括的な例。
-
-### 計画中のアプリ
-
-| アプリ | レベル | 実証内容 |
-|-------|-------|---------|
-| **Todo Pro** | 初級 | 状態、フォーム、ストレージ |
-| **ECサイト** | 中級 | ルーティング、HTTP、認証 |
-| **ダッシュボード** | 中級 | チャート、テーブル、リアルタイム |
-| **チャット** | 上級 | WebSocket、プッシュ通知 |
-| **メモ** | 上級 | リッチテキスト、検索、同期 |
-
-各アプリには以下が含まれます：
-- 全6プラットフォーム用の完全なソースコード
-- ステップバイステップのチュートリアル
-- アーキテクチャドキュメント
-- パフォーマンスベンチマーク
+- **アニメーション**: Lottie、Live2D統合
+- **3Dグラフィックス**: Three.js風エンジン
+- **ゲーム開発**: 2Dエンジン、物理、オーディオ
+- **ドキュメント対応**: PDF、Excel操作
+- **サーバーランタイム**: フルスタックZigアプリケーション
+- **エッジ展開**: Cloudflare、Vercel、AWSアダプター
 
 ## コントリビュート
 
 コントリビュートを歓迎します！詳細は[コントリビュートガイド](https://github.com/kotsutsumi/zylix/blob/main/CONTRIBUTING.md)をご覧ください。
 
-### 優先領域
+## 詳細ドキュメント
 
-1. コンポーネント実装（v0.2.0）
-2. プラットフォームシェル更新
-3. ドキュメント改善
-4. サンプルアプリケーション
-
-## 詳細なロードマップ
-
-完全な実装詳細については、以下のロードマップドキュメントをご覧ください：
-
-- [ROADMAP.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md)（英語）
-- [ROADMAP.ja.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.ja.md)（日本語）
+- [完全なロードマップ（英語）](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md)
+- [完全なロードマップ（日本語）](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.ja.md)
+- [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md)

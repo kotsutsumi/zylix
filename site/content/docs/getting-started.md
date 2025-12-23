@@ -13,11 +13,11 @@ Before you begin, ensure you have the following installed:
 
 ### Required
 
-- **[Zig](https://ziglang.org/download/)** 0.13.0 or later
+- **[Zig](https://ziglang.org/download/)** 0.15.0 or later (see [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md))
   ```bash
   # Verify installation
   zig version
-  # Expected: 0.13.0 or higher
+  # Expected: 0.15.0 or higher
   ```
 
 - **Git** for cloning the repository
@@ -388,7 +388,7 @@ Now that you have Zylix running, explore these topics:
 # Check your version
 zig version
 
-# Zylix requires 0.13.0+
+# Zylix requires 0.15.0+
 # Download from https://ziglang.org/download/
 ```
 

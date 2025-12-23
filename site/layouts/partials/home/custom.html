@@ -479,6 +479,50 @@
 .zylix-footer-spacer {
   height: 8rem;
 }
+
+/* Sponsor Section */
+.zylix-sponsor {
+  text-align: center;
+  padding: 3rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(168, 85, 247, 0.1));
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  max-width: 48rem;
+  margin: 0 auto;
+}
+.zylix-sponsor-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+.zylix-sponsor-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+.zylix-sponsor-desc {
+  color: #d1d5db;
+  line-height: 1.625;
+  margin-bottom: 2rem;
+}
+.zylix-sponsor-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  color: white;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.zylix-sponsor-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.4);
+}
 </style>
 
 {{/* Hero Section */}}
@@ -777,6 +821,22 @@ python3 -m http.server 8080
       </a>
       <a href="https://github.com/kotsutsumi/zylix" class="zylix-contribute-btn zylix-contribute-btn-primary">
         ⭐ {{ i18n "star_github" | default "Star on GitHub" }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{{/* Sponsor Section */}}
+<section class="zylix-section">
+  <div class="zylix-section-inner">
+    <div class="zylix-sponsor">
+      <span class="zylix-sponsor-icon">☕</span>
+      <h2 class="zylix-sponsor-title">{{ i18n "sponsor_title" | default "Support Zylix" }}</h2>
+      <p class="zylix-sponsor-desc">
+        {{ i18n "sponsor_desc" | default "If you find Zylix useful, consider buying me a coffee! Your support helps maintain and improve the project." }}
+      </p>
+      <a href="https://github.com/sponsors/kotsutsumi" class="zylix-sponsor-btn">
+        ❤️ {{ i18n "sponsor_btn" | default "Become a Sponsor" }}
       </a>
     </div>
   </div>
