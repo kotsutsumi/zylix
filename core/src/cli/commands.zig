@@ -596,7 +596,7 @@ pub fn generateReport(allocator: std.mem.Allocator, args: []const []const u8) Ex
 /// Test AI inference with a model
 pub fn aiCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     if (args.len == 0) {
-        output.printError("Missing action. Use: embed, generate, info", .{});
+        output.printError("Missing action. Use: embed, generate, transcribe, info", .{});
         return ExitCode.invalid_args;
     }
 
@@ -607,11 +607,13 @@ pub fn aiCommand(allocator: std.mem.Allocator, args: []const []const u8) ExitCod
         return aiEmbed(allocator, action_args);
     } else if (std.mem.eql(u8, action, "generate")) {
         return aiGenerate(allocator, action_args);
+    } else if (std.mem.eql(u8, action, "transcribe")) {
+        return aiTranscribe(allocator, action_args);
     } else if (std.mem.eql(u8, action, "info")) {
         return aiInfo(allocator, action_args);
     } else {
         output.printError("Unknown action: {s}", .{action});
-        output.print("Use: embed, generate, info\n", .{});
+        output.print("Use: embed, generate, transcribe, info\n", .{});
         return ExitCode.invalid_args;
     }
 }
@@ -809,6 +811,264 @@ fn aiGenerate(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     return ExitCode.success;
 }
 
+fn aiTranscribe(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
+    var model_path: ?[]const u8 = null;
+    var audio_path: ?[]const u8 = null;
+    var language: []const u8 = "";
+    var translate = false;
+
+    // Parse arguments
+    var i: usize = 0;
+    while (i < args.len) : (i += 1) {
+        const arg = args[i];
+        if (std.mem.eql(u8, arg, "--model") or std.mem.eql(u8, arg, "-m")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                model_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--audio") or std.mem.eql(u8, arg, "-a")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                audio_path = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--language") or std.mem.eql(u8, arg, "-l")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                language = args[i];
+            }
+        } else if (std.mem.eql(u8, arg, "--translate")) {
+            translate = true;
+        } else if (!std.mem.startsWith(u8, arg, "-")) {
+            if (model_path == null) {
+                model_path = arg;
+            } else if (audio_path == null) {
+                audio_path = arg;
+            }
+        }
+    }
+
+    if (model_path == null) {
+        output.printError("Missing model path. Use: --model <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    if (audio_path == null) {
+        output.printError("Missing audio file. Use: --audio <path>", .{});
+        return ExitCode.invalid_args;
+    }
+
+    output.printHeader("Zylix AI - Speech Transcription");
+    output.print("Model: {s}\n", .{model_path.?});
+    output.print("Audio: {s}\n", .{audio_path.?});
+    if (language.len > 0) {
+        output.print("Language: {s}\n", .{language});
+    }
+    if (translate) {
+        output.print("Mode: Translate to English\n", .{});
+    }
+    output.print("\n", .{});
+
+    // Check if Whisper backend is available
+    if (!ai.whisper.isWhisperAvailable()) {
+        output.printError("Whisper backend not available on this platform", .{});
+        return ExitCode.runtime_error;
+    }
+
+    // Create Whisper backend
+    const whisper_config = ai.whisper.whisper_backend.WhisperConfig{
+        .model_path = model_path.?,
+        .language = language,
+        .translate = translate,
+        .n_threads = 4,
+        .use_gpu = true,
+    };
+
+    const whisper_backend_ptr = ai.whisper.WhisperBackend.init(allocator, whisper_config) catch |err| {
+        output.printError("Failed to create Whisper backend: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer whisper_backend_ptr.deinit();
+
+    output.print("Loading model...\n", .{});
+    const load_result = whisper_backend_ptr.load(model_path.?);
+    if (load_result != .ok) {
+        output.printError("Failed to load model: {s}", .{@tagName(load_result)});
+        return ExitCode.runtime_error;
+    }
+
+    output.printSuccess("Model loaded", .{});
+    output.print("Whisper version: {s}\n", .{ai.whisper.WhisperBackend.getVersion()});
+
+    if (whisper_backend_ptr.isMultilingual()) {
+        output.print("Model type: Multilingual\n", .{});
+    } else {
+        output.print("Model type: English-only\n", .{});
+    }
+
+    // Load audio file
+    output.print("\nLoading audio file...\n", .{});
+    const audio_file = std.fs.cwd().openFile(audio_path.?, .{}) catch |err| {
+        output.printError("Failed to open audio file: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer audio_file.close();
+
+    const file_stat = audio_file.stat() catch |err| {
+        output.printError("Failed to get audio file info: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+
+    if (file_stat.size > 100 * 1024 * 1024) { // 100MB limit
+        output.printError("Audio file too large (max 100MB)", .{});
+        return ExitCode.runtime_error;
+    }
+
+    // Read raw audio data
+    const audio_data = audio_file.readToEndAlloc(allocator, 100 * 1024 * 1024) catch |err| {
+        output.printError("Failed to read audio file: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer allocator.free(audio_data);
+
+    var size_buf: [32]u8 = undefined;
+    output.print("Audio size: {s}\n", .{ai.formatFileSize(audio_data.len, &size_buf)});
+
+    // Parse WAV header and convert samples
+    // WAV format: RIFF header (12 bytes) + fmt chunk + data chunk
+    // We need to find "data" chunk and skip 44-byte header for standard WAV
+    const samples = parseWavToF32(allocator, audio_data) catch |err| {
+        output.printError("Failed to parse audio file: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer allocator.free(samples);
+
+    const sample_count = samples.len;
+    if (sample_count == 0) {
+        output.printError("Audio file contains no samples", .{});
+        return ExitCode.runtime_error;
+    }
+
+    const duration_seconds = @as(f32, @floatFromInt(sample_count)) / 16000.0;
+    output.print("Duration: {d:.1}s ({d} samples at 16kHz)\n", .{ duration_seconds, sample_count });
+
+    // Run transcription
+    output.print("\nTranscribing...\n", .{});
+    const start_time = std.time.milliTimestamp();
+
+    var output_buffer: [32 * 1024]u8 = undefined;
+    var result: ai.whisper.whisper_backend.TranscriptResult = undefined;
+
+    const transcribe_result = whisper_backend_ptr.transcribe(samples, &output_buffer, &result);
+    if (transcribe_result != .ok) {
+        output.printError("Transcription failed: {s}", .{@tagName(transcribe_result)});
+        return ExitCode.runtime_error;
+    }
+
+    const end_time = std.time.milliTimestamp();
+    const processing_time: u64 = @intCast(@max(0, end_time - start_time));
+
+    output.printSuccess("Transcription complete!", .{});
+    output.print("\nProcessing time: {d}ms\n", .{processing_time});
+
+    const lang_str = std.mem.sliceTo(&result.language, 0);
+    if (lang_str.len > 0) {
+        output.print("Detected language: {s}\n", .{lang_str});
+    }
+
+    output.print("Segments: {d}\n", .{result.n_segments});
+    output.print("\nTranscription:\n", .{});
+    output.printSeparator();
+    if (result.text_len > 0) {
+        output.print("{s}\n", .{output_buffer[0..result.text_len]});
+    } else {
+        output.print("(No speech detected)\n", .{});
+    }
+    output.printSeparator();
+
+    return ExitCode.success;
+}
+
+/// Parse WAV file and convert 16-bit PCM to f32 samples
+fn parseWavToF32(allocator: std.mem.Allocator, data: []const u8) ![]f32 {
+    // Minimum WAV header size check
+    if (data.len < 44) {
+        return error.InvalidWavFile;
+    }
+
+    // Verify RIFF header
+    if (!std.mem.eql(u8, data[0..4], "RIFF") or !std.mem.eql(u8, data[8..12], "WAVE")) {
+        return error.InvalidWavFile;
+    }
+
+    // Find "fmt " chunk
+    var pos: usize = 12;
+    var bits_per_sample: u16 = 16;
+    var channels: u16 = 1;
+
+    while (pos + 8 <= data.len) {
+        const chunk_id = data[pos .. pos + 4];
+        const chunk_size = std.mem.readInt(u32, data[pos + 4 ..][0..4], .little);
+
+        if (std.mem.eql(u8, chunk_id, "fmt ")) {
+            if (pos + 8 + chunk_size > data.len or chunk_size < 16) {
+                return error.InvalidWavFile;
+            }
+            // Audio format (1 = PCM)
+            const audio_format = std.mem.readInt(u16, data[pos + 8 ..][0..2], .little);
+            if (audio_format != 1) {
+                return error.UnsupportedFormat; // Only PCM supported
+            }
+            channels = std.mem.readInt(u16, data[pos + 10 ..][0..2], .little);
+            bits_per_sample = std.mem.readInt(u16, data[pos + 22 ..][0..2], .little);
+        } else if (std.mem.eql(u8, chunk_id, "data")) {
+            // Found data chunk
+            const data_start = pos + 8;
+            const data_size = @min(chunk_size, @as(u32, @intCast(data.len - data_start)));
+
+            // Calculate sample count based on format
+            const bytes_per_sample = bits_per_sample / 8;
+            const total_samples = data_size / bytes_per_sample / channels;
+
+            // Allocate output buffer
+            const samples = try allocator.alloc(f32, total_samples);
+            errdefer allocator.free(samples);
+
+            // Convert samples
+            const audio_data = data[data_start..];
+            var i: usize = 0;
+            while (i < total_samples) : (i += 1) {
+                var sample_sum: f32 = 0;
+                // Mix all channels to mono
+                for (0..channels) |ch| {
+                    const sample_offset = (i * channels + ch) * bytes_per_sample;
+                    if (sample_offset + bytes_per_sample > audio_data.len) break;
+
+                    if (bits_per_sample == 16) {
+                        const sample_i16 = std.mem.readInt(i16, audio_data[sample_offset..][0..2], .little);
+                        sample_sum += @as(f32, @floatFromInt(sample_i16)) / 32768.0;
+                    } else if (bits_per_sample == 8) {
+                        const sample_u8 = audio_data[sample_offset];
+                        sample_sum += (@as(f32, @floatFromInt(sample_u8)) - 128.0) / 128.0;
+                    } else if (bits_per_sample == 32) {
+                        // Assume f32
+                        const sample_bytes = audio_data[sample_offset..][0..4];
+                        sample_sum += @bitCast(sample_bytes.*);
+                    }
+                }
+                samples[i] = sample_sum / @as(f32, @floatFromInt(channels));
+            }
+
+            return samples;
+        }
+
+        pos += 8 + chunk_size;
+        // Align to 2-byte boundary
+        if (chunk_size % 2 != 0) pos += 1;
+    }
+
+    return error.NoDataChunk;
+}
+
 fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     _ = allocator;
 
@@ -817,6 +1077,7 @@ fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     // Check backend availability
     output.print("\nBackend Availability:\n", .{});
     output.print("  GGML (llama.cpp): {s}\n", .{if (backend.isBackendAvailable(.ggml)) "Available" else "Not available"});
+    output.print("  Whisper.cpp:      {s}\n", .{if (ai.whisper.isWhisperAvailable()) "Available" else "Not available"});
     output.print("  ONNX Runtime:     {s}\n", .{if (backend.isBackendAvailable(.onnx)) "Available" else "Not available"});
     output.print("  Core ML:          {s}\n", .{if (backend.isBackendAvailable(.coreml)) "Available" else "Not available"});
     output.print("  TensorFlow Lite:  {s}\n", .{if (backend.isBackendAvailable(.tflite)) "Available" else "Not available"});
@@ -839,6 +1100,7 @@ fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     output.print("\nUsage:\n", .{});
     output.print("  zylix-test ai embed --model <model.gguf> --text \"Hello world\"\n", .{});
     output.print("  zylix-test ai generate --model <model.gguf> --prompt \"What is AI?\"\n", .{});
+    output.print("  zylix-test ai transcribe --model <whisper.bin> --audio <audio.wav>\n", .{});
     output.print("  zylix-test ai info <model.gguf>\n", .{});
 
     return ExitCode.success;

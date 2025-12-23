@@ -4,3 +4,6 @@
 [submodule "core/deps/llama.cpp"]
 	path = core/deps/llama.cpp
 	url = https://github.com/ggerganov/llama.cpp.git
+[submodule "core/deps/whisper.cpp"]
+	path = core/deps/whisper.cpp
+	url = https://github.com/ggerganov/whisper.cpp.git

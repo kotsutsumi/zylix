@@ -76,6 +76,7 @@ pub const ImageFormat = vlm.ImageFormat;
 
 // Re-export Whisper module
 pub const whisper = @import("whisper.zig");
+pub const whisper_backend = @import("whisper_backend.zig");
 pub const WhisperModel = whisper.WhisperModel;
 pub const WhisperConfig = whisper.WhisperConfig;
 pub const Audio = whisper.Audio;
