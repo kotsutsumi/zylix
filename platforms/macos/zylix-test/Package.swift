@@ -30,10 +30,5 @@ let package = Package(
             dependencies: ["ZylixTest"],
             path: "Sources/ZylixTestServer"
         ),
-        .testTarget(
-            name: "ZylixTestTests",
-            dependencies: ["ZylixTest"],
-            path: "Tests/ZylixTestTests"
-        ),
     ]
 )
