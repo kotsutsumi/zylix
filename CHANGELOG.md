@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-12-24
+
+### Added
+
+#### Zylix AI - On-Device AI Inference Module
+- **Core Module**: `core/src/ai/ai.zig` - Unified AI inference API
+- **Privacy First**: All processing on-device, no external network calls
+- **Offline Operation**: Full functionality without internet connection
+
+#### Embedding Model Support
+- **Text Embedding**: `embedding.zig` - Text to vector conversion
+- **Semantic Search**: Cosine similarity for vector comparison
+- **RAG Support**: Foundation for retrieval-augmented generation
+
+#### Large Language Model (LLM) Support
+- **Text Generation**: `llm.zig` - Chat and completion
+- **Chat Format**: System/User/Assistant message roles
+- **Streaming**: Real-time token generation support
+- **Context Length**: Configurable up to 32K tokens
+
+#### Vision Language Model (VLM) Support
+- **Image Analysis**: `vlm.zig` - Image understanding
+- **OCR**: Text extraction from images
+- **Visual QA**: Question answering about images
+- **Formats**: RGB, RGBA, Grayscale, BGR, BGRA
+
+#### Whisper Speech-to-Text
+- **Transcription**: `whisper.zig` - Audio to text
+- **Streaming**: `whisper_stream.zig` - Real-time transcription
+- **Multi-language**: Support for multiple languages
+- **Timestamps**: Word-level timing information
+
+#### Audio Processing
+- **Decoder**: `audio_decoder.zig` - Multi-format audio decoding
+- **Formats**: MP3, FLAC, OGG, WAV support via miniaudio
+- **Sample Rates**: Automatic resampling to 16kHz for Whisper
+
+#### Platform-Specific Backends
+- **Apple Metal**: `metal.zig` - GPU acceleration for macOS/iOS
+- **Core ML**: `coreml.zig` - Apple ML framework integration
+- **llama.cpp**: `llama_cpp.zig` - GGUF model support
+- **mtmd.cpp**: `mtmd_cpp.zig` - Multimodal support
+
 ### Changed
 
 #### Website UI/UX
@@ -271,7 +314,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/kotsutsumi/zylix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/kotsutsumi/zylix/compare/v0.8.0...v0.8.1
 [0.7.0]: https://github.com/kotsutsumi/zylix/compare/v0.6.2...v0.7.0
 [0.6.2]: https://github.com/kotsutsumi/zylix/compare/v0.6.1...v0.6.2
