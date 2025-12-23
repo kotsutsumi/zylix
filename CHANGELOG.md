@@ -7,6 +7,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-12-24
+
+### Added
+
+#### Zylix Animation - Cross-Platform Animation System
+- **Core Module**: `core/src/animation/animation.zig` - Unified animation API
+- **Performance**: Optimized for 60fps on all platforms
+- **Composable**: Animations can be combined and layered
+- **Platform Optimized**: Native renderers where beneficial
+
+#### Lottie Vector Animation Support
+- **Lottie Parser**: `lottie.zig` - JSON-based Lottie animation parsing
+- **Layer Types**: Precomp, Solid, Image, Null, Shape, Text, Audio
+- **Shape Elements**: Fill, Stroke, Transform, Group, Path, Rectangle, Ellipse, Star
+- **Bezier Paths**: Full bezier curve support for vector shapes
+- **Animated Values**: Keyframe interpolation with easing
+- **Markers**: Named markers for segment playback
+- **LottieManager**: Centralized animation management
+
+#### Live2D Character Animation Support
+- **Live2D Model**: `live2d.zig` - Cubism SDK integration
+- **Motion System**: Motion playback with blending and priority layers
+- **Expression System**: Facial expression blending
+- **Physics Simulation**: Physics rig for natural hair/cloth movement
+- **Eye Blink**: Automatic eye blink controller
+- **Lip Sync**: Phoneme-based lip synchronization
+- **Standard Parameters**: Common parameter IDs (ParamAngleX, ParamEyeBlink, etc.)
+- **Live2DManager**: Centralized model management
+
+#### Animation Timeline System
+- **Timeline Controller**: `timeline.zig` - Keyframe-based timeline animation
+- **Property Tracks**: Track any property type with keyframes
+- **Sequence Builder**: Chain animations sequentially
+- **Parallel Groups**: Run animations simultaneously
+- **Markers**: Named time points for synchronization
+- **Playback Control**: Play, pause, stop, seek, reverse
+- **Loop Modes**: None, loop, ping-pong, count-based
+
+#### Animation State Machine
+- **State Machine**: `state_machine.zig` - Animation state management
+- **States**: Named states with animation assignments
+- **Transitions**: Automatic and manual state transitions
+- **Conditions**: Parameter-based transition conditions
+- **Comparison Operators**: Equal, not equal, greater, less, etc.
+- **Parameters**: Bool, int, float, trigger types
+- **Animation Layers**: Multi-layer animation blending
+- **Animation Controller**: High-level controller with multiple layers
+
+#### Easing Functions Library
+- **30+ Easing Functions**: `easing.zig` - Comprehensive easing library
+- **Quadratic**: easeInQuad, easeOutQuad, easeInOutQuad
+- **Cubic**: easeInCubic, easeOutCubic, easeInOutCubic
+- **Quartic**: easeInQuart, easeOutQuart, easeInOutQuart
+- **Quintic**: easeInQuint, easeOutQuint, easeInOutQuint
+- **Sinusoidal**: easeInSine, easeOutSine, easeInOutSine
+- **Exponential**: easeInExpo, easeOutExpo, easeInOutExpo
+- **Circular**: easeInCirc, easeOutCirc, easeInOutCirc
+- **Back**: easeInBack, easeOutBack, easeInOutBack
+- **Elastic**: easeInElastic, easeOutElastic, easeInOutElastic
+- **Bounce**: easeInBounce, easeOutBounce, easeInOutBounce
+- **Cubic Bezier**: Custom bezier curves (CSS-style)
+- **Spring Physics**: Spring-based easing with stiffness/damping
+
+#### Common Animation Types
+- **Time Types**: `types.zig` - TimeMs, DurationMs, NormalizedTime, FrameNumber
+- **Geometry**: Point2D, Size2D, Rect2D, Transform2D, Matrix3x3
+- **Color**: RGBA color with alpha
+- **Playback**: PlaybackState, LoopMode, PlayDirection
+- **Blend Modes**: Normal, add, multiply, screen, overlay
+- **Fill Modes**: Forwards, backwards, both, none
+- **Events**: AnimationEvent with callbacks
+
+#### iOS Platform Implementation
+- **ZylixAnimation.swift**: Native iOS animation support
+  - ZylixEasing with all standard easing functions
+  - ZylixTimeline with CADisplayLink updates
+  - ZylixLottieAnimation with JSON loading/playback
+  - ZylixAnimationManager singleton
+  - SwiftUI views (ZylixLottieView, ZylixTimelineView)
+  - View modifiers (zylixAnimatedOpacity, zylixAnimatedScale, etc.)
+
+#### Android Platform Implementation
+- **ZylixAnimation.kt**: Native Android animation support
+  - ZylixEasing object with all easing functions
+  - ZylixTimeline with Choreographer.FrameCallback
+  - ZylixLottieAnimation with JSONObject parsing
+  - ZylixAnimationManager singleton object
+  - Jetpack Compose UI (ZylixLottieView, ZylixTimelineView)
+  - Compose modifiers (zylixAnimatedOpacity, zylixAnimatedScale, etc.)
+
+#### Web Platform Implementation
+- **zylix-animation.js**: Web animation support
+  - Easing object with all standard easing functions
+  - CubicBezier factory for custom bezier curves
+  - Timeline class with requestAnimationFrame
+  - PropertyTrack for keyframe animation
+  - LottieAnimation with JSON loading
+  - AnimationManager singleton
+  - Utility functions (tween, lerp, animateStyle)
+- **animation-test.html**: Interactive demo page
+  - Easing function preview with visual curves
+  - Timeline animation demo with controls
+  - State machine demo with character animation
+  - Simple animation demos (fade, scale, rotate, bounce, shake, spring)
+
+### Changed
+- Module version updated to v0.11.0
+
 ## [0.10.0] - 2025-12-24
 
 ### Added
@@ -441,7 +549,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/kotsutsumi/zylix/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/kotsutsumi/zylix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kotsutsumi/zylix/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/kotsutsumi/zylix/compare/v0.8.0...v0.8.1
