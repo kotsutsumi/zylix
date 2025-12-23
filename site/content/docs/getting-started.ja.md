@@ -13,7 +13,7 @@ next: architecture
 
 | ツール | バージョン | 説明 |
 |--------|-----------|------|
-| [Zig](https://ziglang.org/) | 0.13+ | コアビルドシステム |
+| [Zig](https://ziglang.org/) | 0.15.0+ | コアビルドシステム |
 | Git | 最新版 | ソースコード管理 |
 
 ### プラットフォーム固有の要件
@@ -364,7 +364,7 @@ fn createButton(tree: *vdom.VTree, label: []const u8, callback_id: u32) u32 {
 {{< alert "warning" >}}
 **Zig バージョンエラー**
 
-エラー: `error: expected Zig version 0.13.x, found 0.12.x`
+エラー: `error: expected Zig version 0.15.x, found 0.14.x`
 
 解決策: Zig を最新バージョンにアップデートしてください。
 

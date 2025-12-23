@@ -13,8 +13,8 @@ A clear and concise description of what the bug is.
 ## Environment
 
 - **OS**: [e.g., macOS 14.0, Windows 11, Ubuntu 22.04]
-- **Zig Version**: [e.g., 0.11.0]
-- **Zylix Version**: [e.g., 0.1.0 or commit hash]
+- **Zig Version**: [e.g., 0.15.0]
+- **Zylix Version**: [e.g., 0.8.1 or commit hash]
 - **Platform**: [e.g., Web/WASM, iOS, Android, macOS, Linux, Windows]
 - **Device** (if applicable): [e.g., iPhone 15, Pixel 8]
 

@@ -11,7 +11,7 @@ Before you begin, ensure you have:
 
 - **Android Studio** Hedgehog (2023.1.1) or later
 - **Android NDK** r25 or later
-- **Zig** 0.11.0 or later
+- **Zig** 0.15.0 or later
 - **JDK** 17 or later
 - Basic knowledge of Kotlin and Jetpack Compose
 

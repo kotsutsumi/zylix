@@ -9,7 +9,7 @@ Windows platform shell for Zylix using WinUI 3 and C#.
   - .NET 8.0 SDK
   - Windows App SDK
   - Windows 10 SDK (10.0.19041.0+)
-- Zig 0.13+ (for building core library)
+- Zig 0.15.0+ (for building core library)
 
 ## Build
 

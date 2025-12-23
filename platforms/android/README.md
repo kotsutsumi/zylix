@@ -172,4 +172,4 @@ platforms/android/
 - Android SDK 24+ (Android 7.0+)
 - Android Studio Hedgehog or later
 - Kotlin 1.9+
-- Zig 0.14.0+
+- Zig 0.15.0+
