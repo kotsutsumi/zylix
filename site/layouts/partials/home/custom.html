@@ -376,26 +376,31 @@
   border: 1px solid rgba(255,255,255,0.1);
   margin: 3rem -40px 0;
   width: calc(100% + 80px);
+  max-width: none !important;
 }
 .zylix-table {
-  width: 100%;
+  display: table !important;
+  width: 100% !important;
   border-collapse: collapse;
   font-size: 0.9375rem;
-  table-layout: fixed;
+  table-layout: fixed !important;
 }
 .zylix-table th,
 .zylix-table td {
-  width: 20%;
+  width: 20% !important;
+  white-space: normal !important;
+  box-sizing: border-box;
 }
 .zylix-table th:first-child,
 .zylix-table td:first-child {
-  width: 20%;
+  width: 20% !important;
 }
 .zylix-table th {
   padding: 1rem 1.25rem;
   text-align: center;
   font-weight: 700;
   background: rgba(0,0,0,0.3);
+  white-space: normal !important;
 }
 .zylix-table th:first-child {
   text-align: left;
