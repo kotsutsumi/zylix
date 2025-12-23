@@ -2,6 +2,7 @@
 title: Roadmap
 weight: 5
 prev: platforms
+summary: Development roadmap for Zylix, introducing new capabilities while maintaining performance, simplicity, and native platform integration.
 ---
 
 This page outlines the development roadmap for Zylix. Each phase introduces new capabilities while maintaining the framework's core principles of performance, simplicity, and native platform integration.

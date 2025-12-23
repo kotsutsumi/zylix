@@ -3,6 +3,7 @@ title: Architecture
 weight: 3
 prev: core-concepts
 next: platforms
+summary: Deep dive into Zylix's internal architecture, explaining how the framework achieves cross-platform native performance with a unified codebase.
 ---
 
 This document provides a deep dive into Zylix's internal architecture, explaining how the framework achieves cross-platform native performance with a unified codebase.

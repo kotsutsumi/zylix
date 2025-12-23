@@ -4,6 +4,7 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
+summary: Platform-specific setup, integration patterns, and best practices for Web, iOS, Android, macOS, Linux, and Windows.
 ---
 
 Zylix runs on six platforms, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.

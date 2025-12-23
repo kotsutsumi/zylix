@@ -3,6 +3,7 @@ title: アーキテクチャ
 weight: 2
 prev: getting-started
 next: core-concepts
+summary: Zylix は、関心事の分離とプラットフォーム間でのコード再利用を最大化するレイヤードアーキテクチャを採用しています。
 ---
 
 Zylix は、関心事の分離とプラットフォーム間でのコード再利用を最大化するレイヤードアーキテクチャを採用しています。
