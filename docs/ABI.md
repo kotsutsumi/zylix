@@ -1,9 +1,13 @@
 # Zylix C ABI Specification
 
+> **Compatibility Reference**: For version compatibility and platform maturity, see [COMPATIBILITY.md](./COMPATIBILITY.md).
+
 ## Overview
 
 Zylix Core exposes its functionality through a stable C ABI.
 This document defines the contract between Zylix Core (Zig) and Platform Shells.
+
+**Current ABI Version: 2** (as of v0.8.0)
 
 ---
 
@@ -28,7 +32,7 @@ This document defines the contract between Zylix Core (Zig) and Platform Shells.
 #include <stddef.h>
 
 // Version
-#define ZYLIX_ABI_VERSION 1
+#define ZYLIX_ABI_VERSION 2
 
 // Result codes
 typedef enum {
@@ -135,6 +139,81 @@ zylix_result_t zylix_dispatch(
 );
 ```
 
+### Event Queue (Phase 2, ABI v2+)
+
+```c
+/**
+ * Queue an event for later processing
+ * Supports priority levels for event ordering
+ * Thread-safety: NOT thread-safe
+ *
+ * @param event_type  Event type identifier
+ * @param payload     Event payload (can be NULL)
+ * @param payload_len Payload length in bytes (max 256)
+ * @param priority    Event priority (0=low, 1=normal, 2=high, 3=immediate)
+ * @return ZYLIX_OK on success
+ */
+zylix_result_t zylix_queue_event(
+    zylix_event_type_t event_type,
+    const void* payload,
+    size_t payload_len,
+    uint8_t priority
+);
+
+/**
+ * Process queued events
+ * Events are processed in priority order (highest first)
+ * Thread-safety: NOT thread-safe
+ *
+ * @param max_events  Maximum number of events to process (0 = all)
+ * @return Number of events processed
+ */
+uint32_t zylix_process_events(uint32_t max_events);
+
+/**
+ * Get number of events in queue
+ *
+ * @return Current queue depth
+ */
+uint32_t zylix_queue_depth(void);
+
+/**
+ * Clear all queued events
+ * Thread-safety: NOT thread-safe
+ */
+void zylix_queue_clear(void);
+```
+
+### State Diff (Phase 2, ABI v2+)
+
+```c
+// Diff structure
+typedef struct {
+    uint64_t changed_mask;  // Bitmask of changed fields
+    uint32_t change_count;  // Number of changes since last check
+    uint64_t version;       // State version when diff was captured
+} zylix_diff_t;
+
+/**
+ * Get diff since last state change
+ * Useful for incremental UI updates
+ * Thread-safety: NOT thread-safe
+ *
+ * @return Pointer to diff, NULL if not initialized
+ */
+const zylix_diff_t* zylix_get_diff(void);
+
+/**
+ * Check if a specific field changed
+ * Field IDs are defined per-application
+ * Thread-safety: NOT thread-safe
+ *
+ * @param field_id  Field identifier
+ * @return true if field changed since last check
+ */
+bool zylix_field_changed(uint16_t field_id);
+```
+
 ---
 
 ## Event Types
@@ -220,12 +299,14 @@ state = zylix_get_state();            // get fresh pointer
  * Use when string needs to outlive state snapshot
  *
  * @param src     Source string pointer (from state)
+ * @param src_len Source string length in bytes
  * @param dst     Destination buffer (Shell-owned)
  * @param dst_len Destination buffer size
  * @return Number of bytes written (excluding null terminator)
  */
 size_t zylix_copy_string(
     const char* src,
+    size_t src_len,
     char* dst,
     size_t dst_len
 );
@@ -355,17 +436,27 @@ Recommended pattern:
 
 ---
 
+## ABI Version History
+
+| Version | Zylix Version | Changes |
+|---------|---------------|---------|
+| 2 | v0.8.0+ | Event queue, diff API, priority system, updated zylix_copy_string |
+| 1 | v0.1.0 - v0.7.x | Initial release: lifecycle, state, dispatch |
+
 ## Future Extensions
 
-Reserved for future ABI additions:
+Reserved for future ABI additions (ABI v3+):
 
 ```c
-// Callback registration (future)
+// Callback registration (planned)
 typedef void (*zylix_callback_t)(zylix_event_type_t, const void*, size_t);
 zylix_result_t zylix_register_callback(zylix_callback_t callback);
 
-// Async operation (future)
+// Async operation (planned)
 typedef uint64_t zylix_async_id_t;
 zylix_async_id_t zylix_dispatch_async(zylix_event_type_t, const void*, size_t);
 zylix_result_t zylix_poll_async(zylix_async_id_t);
+
+// Component system (planned)
+zylix_result_t zylix_register_component(const char* name, zylix_component_t* component);
 ```

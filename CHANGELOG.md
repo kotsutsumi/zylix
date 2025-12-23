@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.1] - 2025-12-23
 
+### Breaking Changes
+
+#### ABI v2 Migration
+- **ABI Version**: Bumped from 1 to 2
+- **zylix_copy_string**: Signature changed - added `src_len` parameter
+  - Old: `zylix_copy_string(src, dst, dst_len)`
+  - New: `zylix_copy_string(src, src_len, dst, dst_len)`
+  - **Migration Required**: All platform bindings (Swift, Kotlin, C#) must be updated to pass the source length parameter
+
 ### Added
 
 #### watchOS Support
