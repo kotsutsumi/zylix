@@ -115,6 +115,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Module version updated to v0.11.0
 
+### Fixed
+- **Core**: Migrated all animation module files to Zig 0.15 ArrayList API
+  - `timeline.zig`: PropertyTrack, Timeline, ParallelGroup ArrayList usage
+  - `state_machine.zig`: Transition, StateMachine, AnimationController
+  - `lottie.zig`: BezierPath, AnimatedValue, Layer, Animation
+  - `live2d.zig`: MotionCurve, Motion, PhysicsRig, Model
+- **Core**: Fixed Timeline.getDuration() to calculate dynamically from tracks
+- **Core**: Fixed memory leak in track deinit_fn (added allocator.destroy)
+- **Docs**: Added CLAUDE.md with quality verification checklist
+
 ## [0.10.0] - 2025-12-24
 
 ### Added
