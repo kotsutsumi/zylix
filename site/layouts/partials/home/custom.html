@@ -366,9 +366,9 @@
 }
 
 /* Comparison Table */
-/* Make table section inner full width */
-.zylix-section-inner:has(.zylix-table-wrapper) {
-  max-width: 100%;
+/* Make table section full width */
+.zylix-table-section {
+  max-width: 100% !important;
 }
 .zylix-table-wrapper {
   overflow-x: auto;
@@ -825,7 +825,7 @@
 {{/* Comparison Table */}}
 <section class="zylix-section">
   <div class="zylix-section-alt">
-    <div class="zylix-section-inner">
+    <div class="zylix-section-inner zylix-table-section">
       <h2 class="zylix-section-title">{{ i18n "comparison_title" | default "How It Compares" }}</h2>
 
       <div class="zylix-table-wrapper">
