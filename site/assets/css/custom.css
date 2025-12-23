@@ -1,30 +1,831 @@
 /* ============================================
-   Zylix Design System
+   Zylix Design System v2.0
+   Comprehensive UI/UX Improvements
    ============================================ */
 
-/* Color Palette - CSS Custom Properties */
-:root {
-  /* Primary Brand Colors */
-  --zylix-orange: 251, 146, 60;      /* Zig-inspired orange */
-  --zylix-blue: 59, 130, 246;        /* Platform blue */
-  --zylix-emerald: 16, 185, 129;     /* Performance green */
-  --zylix-purple: 139, 92, 246;      /* Type safety purple */
-  --zylix-cyan: 6, 182, 212;         /* Integration cyan */
-  --zylix-amber: 245, 158, 11;       /* Bundle/size amber */
+/* ============================================
+   UNIFIED DESIGN TOKENS
+   Desktop → Mobile responsive values
+   ============================================ */
 
-  /* Gradient opacity for light mode */
+:root {
+  /* === Primary Brand Colors === */
+  --zylix-orange: 251, 146, 60;
+  --zylix-blue: 59, 130, 246;
+  --zylix-emerald: 16, 185, 129;
+  --zylix-purple: 139, 92, 246;
+  --zylix-cyan: 6, 182, 212;
+  --zylix-amber: 245, 158, 11;
+
+  /* === Type Scale === */
+  --z-text-base: 17px;
+  --z-text-small: 15px;
+  --z-text-xs: 13px;
+  --z-text-h1: 40px;
+  --z-text-h2: 28px;
+  --z-text-h3: 22px;
+  --z-line-body: 1.7;
+  --z-line-heading: 1.2;
+  --z-letter-jp: 0.01em;
+
+  /* === Spacing === */
+  --z-page-pad-x: 24px;
+  --z-section-gap: 36px;
+  --z-paragraph-gap: 18px;
+  --z-list-gap: 10px;
+  --z-card-pad: 20px;
+  --z-card-radius: 14px;
+  --z-heading-margin-top: 2rem;
+  --z-heading-margin-bottom: 0.75rem;
+
+  /* === Tap/Controls === */
+  --z-tap-min: 44px;
+  --z-btn-height: 44px;
+  --z-btn-radius: 12px;
+  --z-icon-size: 20px;
+  --z-icon-gap: 10px;
+
+  /* === Surfaces === */
+  --z-divider: 1px solid rgba(255, 255, 255, 0.08);
+  --z-card-bg: rgba(255, 255, 255, 0.04);
+  --z-card-border: rgba(255, 255, 255, 0.12);
+  --z-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --z-code-bg: #0f172a;
+  --z-code-border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* === Links & Accents === */
+  --z-link: #4A8CFF;
+  --z-link-hover: #6AA3FF;
+  --z-accent-muted: rgba(74, 140, 255, 0.15);
+
+  /* === Sidebar === */
+  --z-sidebar-active-bg: rgba(59, 130, 246, 0.15);
+  --z-sidebar-active-border: #3b82f6;
+
+  /* === Gradient Opacity === */
   --gradient-opacity: 0.15;
   --gradient-opacity-hover: 0.25;
 }
 
-/* Dark mode adjustments */
+/* === Mobile Overrides (≤640px) === */
+@media (max-width: 640px) {
+  :root {
+    --z-text-base: 16px;
+    --z-text-small: 14px;
+    --z-text-xs: 12px;
+    --z-text-h1: 32px;
+    --z-text-h2: 24px;
+    --z-text-h3: 20px;
+    --z-letter-jp: 0.02em;
+    --z-page-pad-x: 18px;
+    --z-section-gap: 28px;
+    --z-paragraph-gap: 16px;
+    --z-list-gap: 8px;
+    --z-card-pad: 18px;
+    --z-card-radius: 14px;
+  }
+}
+
+/* === Dark Mode Adjustments === */
 .dark {
   --gradient-opacity: 0.20;
   --gradient-opacity-hover: 0.30;
 }
 
 /* ============================================
-   Feature Card Gradients
+   HERO SECTION ENHANCEMENTS
+   Badge hierarchy, CTA differentiation
+   ============================================ */
+
+/* Hero badge - reduced prominence */
+.zylix-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s, opacity 0.2s;
+  opacity: 0.85;
+}
+
+.zylix-badge:hover {
+  background: rgba(59, 130, 246, 0.25);
+  opacity: 1;
+}
+
+:root:not(.dark) .zylix-badge {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  opacity: 0.9;
+}
+
+:root:not(.dark) .zylix-badge:hover {
+  background: rgba(59, 130, 246, 0.18);
+  opacity: 1;
+}
+
+/* Hero headline - improved line height */
+.zylix-headline {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .zylix-headline {
+    font-size: 3.5rem;
+    line-height: 1.15;
+  }
+}
+
+@media (min-width: 1024px) {
+  .zylix-headline {
+    font-size: 4rem;
+    line-height: 1.1;
+  }
+}
+
+/* Primary CTA - enhanced visibility */
+.zylix-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.625rem;
+  background: linear-gradient(135deg, #4A8CFF 0%, #3b82f6 100%);
+  color: white;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.zylix-btn-primary:hover {
+  background: linear-gradient(135deg, #5C9AFF 0%, #2563eb 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Secondary CTA - clearly differentiated (outline style) */
+.zylix-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.625rem;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.zylix-btn-secondary:hover {
+  border-color: #3b82f6;
+  color: white;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+:root:not(.dark) .zylix-btn-secondary {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #374151;
+}
+
+:root:not(.dark) .zylix-btn-secondary:hover {
+  border-color: #3b82f6;
+  color: #1f2937;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* ============================================
+   CARD STYLING IMPROVEMENTS
+   Better separation, enhanced shadows
+   ============================================ */
+
+/* Base card - enhanced separation */
+.zylix-card {
+  padding: var(--z-card-pad);
+  border-radius: var(--z-card-radius);
+  border: 1px solid var(--z-card-border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zylix-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--z-card-shadow);
+}
+
+@media (min-width: 768px) {
+  .zylix-card {
+    padding: calc(var(--z-card-pad) + 4px);
+  }
+}
+
+/* Card color variants with enhanced contrast */
+.zylix-card-orange {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.25);
+}
+
+.zylix-card-blue {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.zylix-card-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.zylix-card-amber {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.zylix-card-purple {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.zylix-card-cyan {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.zylix-card-white {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.zylix-card-gradient {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(16, 185, 129, 0.14));
+  border-color: rgba(59, 130, 246, 0.28);
+}
+
+/* Light mode card adjustments */
+:root:not(.dark) .zylix-card,
+:root:not(.dark) .zylix-why-card {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+:root:not(.dark) .zylix-card-white {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root:not(.dark) .zylix-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Use Cases cards - enhanced clickable feel */
+.zylix-usecase {
+  text-align: center;
+  padding: 2rem;
+  cursor: default;
+}
+
+.zylix-card.zylix-usecase:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Card text improvements */
+.zylix-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+}
+
+.zylix-card-text {
+  color: #9ca3af;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+:root:not(.dark) .zylix-card-text {
+  color: #4b5563;
+}
+
+/* ============================================
+   CONTRIBUTE SECTION
+   CTA hierarchy improvement
+   ============================================ */
+
+.zylix-contribute-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Primary contribute button (GitHub) - larger and prominent */
+.zylix-contribute-btn-primary {
+  background: linear-gradient(135deg, #4A8CFF 0%, #3b82f6 100%);
+  color: white;
+  border: 1px solid transparent;
+  padding: 1rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.zylix-contribute-btn-primary:hover {
+  background: linear-gradient(135deg, #5C9AFF 0%, #2563eb 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Secondary contribute buttons - smaller, outline */
+.zylix-contribute-btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.zylix-contribute-btn-outline:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+:root:not(.dark) .zylix-contribute-btn-outline {
+  background: transparent;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #374151;
+}
+
+:root:not(.dark) .zylix-contribute-btn-outline:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* ============================================
+   SIDEBAR NAVIGATION
+   Enhanced current item highlighting
+   ============================================ */
+
+/* Sidebar active state enhancement */
+.hextra-sidebar-container li.active > a,
+.hextra-sidebar-container li > a[aria-current="page"] {
+  background: var(--z-sidebar-active-bg) !important;
+  border-left: 3px solid var(--z-sidebar-active-border) !important;
+  padding-left: calc(0.75rem - 3px) !important;
+  font-weight: 600 !important;
+  color: var(--z-link) !important;
+}
+
+/* Section headings in sidebar - more spacing */
+.hextra-sidebar-container nav > ul > li > span,
+.hextra-sidebar-container nav > ul > li > a {
+  margin-top: 0.5rem;
+}
+
+.hextra-sidebar-container nav > ul > li:first-child > span,
+.hextra-sidebar-container nav > ul > li:first-child > a {
+  margin-top: 0;
+}
+
+/* Sidebar link improvements */
+.hextra-sidebar-container a {
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+}
+
+.hextra-sidebar-container a:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-left-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Docs sidebar margin fix */
+.docs-sidebar {
+  margin-right: 2rem;
+}
+
+/* Reduce header spacer height for docs pages */
+body:has(.docs-sidebar) > div.min-h-\[148px\] {
+  min-height: 100px !important;
+}
+
+/* ============================================
+   TABLE STYLING
+   Better readability and mobile responsiveness
+   ============================================ */
+
+/* Platform table enhancements */
+.platform-table {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.platform-table th {
+  background: rgba(var(--zylix-blue), 0.15);
+  font-weight: 600;
+  font-size: var(--z-text-small);
+  padding: 1rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dark .platform-table th {
+  background: rgba(var(--zylix-blue), 0.2);
+}
+
+.platform-table td {
+  padding: 0.875rem 0.75rem;
+  font-size: var(--z-text-base);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .platform-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.platform-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table responsive wrapper */
+.zylix-table-section,
+.platform-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 calc(-1 * var(--z-page-pad-x));
+  padding: 0 var(--z-page-pad-x);
+}
+
+@media (min-width: 768px) {
+  .zylix-table-section,
+  .platform-table-wrapper {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ============================================
+   CODE BLOCK STYLING
+   Enhanced visibility and boundaries
+   ============================================ */
+
+/* Code block improvements */
+.hextra-code-block,
+pre:not(.hextra-code-block pre) {
+  background: var(--z-code-bg) !important;
+  border: var(--z-code-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.hextra-code-block pre {
+  margin: 0 !important;
+}
+
+/* Inline code */
+code:not(pre code) {
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+:root:not(.dark) code:not(pre code) {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* ============================================
+   CONTENT TYPOGRAPHY
+   Improved hierarchy and readability
+   ============================================ */
+
+/* Heading improvements */
+.content :where(h1):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  font-size: var(--z-text-h1);
+  line-height: var(--z-line-heading);
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  font-size: var(--z-text-h2);
+  line-height: 1.25;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: var(--z-divider);
+}
+
+.content :where(h2):first-child:not(:where([class~=not-prose], [class~=not-prose] *)) {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.content :where(h3):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  font-size: var(--z-text-h3);
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Paragraph spacing */
+.content :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  margin-top: var(--z-paragraph-gap);
+  line-height: var(--z-line-body);
+}
+
+/* List item spacing */
+.content :where(ul, ol):not(:where([class~=not-prose], [class~=not-prose] *)) > li {
+  margin-top: var(--z-list-gap);
+  line-height: var(--z-line-body);
+}
+
+/* Link styling */
+.content a:not(.hextra-card):not([class*="btn"]):not([class*="badge"]) {
+  color: var(--z-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.content a:not(.hextra-card):not([class*="btn"]):not([class*="badge"]):hover {
+  color: var(--z-link-hover);
+}
+
+/* ============================================
+   JAPANESE TYPOGRAPHY
+   Optimized letter-spacing and line-height
+   ============================================ */
+
+html[lang="ja"] .content :where(h1, h2, h3):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  letter-spacing: var(--z-letter-jp);
+}
+
+html[lang="ja"] .content :where(h1):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  line-height: 1.25;
+}
+
+html[lang="ja"] .content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  line-height: 1.3;
+}
+
+html[lang="ja"] .content :where(h3):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  line-height: 1.35;
+}
+
+/* Japanese hero text */
+html[lang="ja"] .zylix-headline {
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+html[lang="ja"] .zylix-subtitle {
+  letter-spacing: 0.01em;
+}
+
+/* Japanese mobile adjustments */
+@media (max-width: 640px) {
+  html[lang="ja"] .zylix-headline {
+    font-size: 1.75rem;
+    line-height: 1.3;
+  }
+
+  html[lang="ja"] .content :where(h1):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: 1.75rem;
+  }
+
+  html[lang="ja"] .content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: 1.375rem;
+  }
+
+  html[lang="ja"] .content :where(h3):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: 1.125rem;
+  }
+}
+
+/* ============================================
+   DEMO PAGE IMPROVEMENTS
+   Alert styling and empty state
+   ============================================ */
+
+/* Preview Mode alert - brand-consistent blue */
+.demo-alert,
+[class*="callout"][class*="warning"],
+.hextra-callout {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Empty state styling */
+.empty-state,
+[class*="no-articles"] {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ============================================
+   BLOG PAGE IMPROVEMENTS
+   Card width and density
+   ============================================ */
+
+/* Blog card enhancements */
+.blog-card,
+.hextra-card[href*="blog"] {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Blog text clamping */
+.blog-card p,
+.hextra-card[href*="blog"] p {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================
+   PRIVACY & TERMS PAGE IMPROVEMENTS
+   Better readability for legal content
+   ============================================ */
+
+/* Legal pages typography */
+.content[data-page-type="privacy"] :where(li),
+.content[data-page-type="terms"] :where(li),
+body[class*="privacy"] .content li,
+body[class*="terms"] .content li {
+  line-height: 1.8;
+  margin-top: 0.625rem;
+}
+
+/* Section dividers for terms/privacy */
+body[class*="terms"] .content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)),
+body[class*="privacy"] .content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  border-top: var(--z-divider);
+  padding-top: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+/* Contact link enhancement */
+.content a[href*="mailto"],
+.content a[href*="contact"] {
+  color: var(--z-link);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+/* ============================================
+   MOBILE-SPECIFIC IMPROVEMENTS
+   Tap targets, spacing, header
+   ============================================ */
+
+@media (max-width: 640px) {
+  /* Body typography */
+  body {
+    font-size: var(--z-text-base);
+    line-height: var(--z-line-body);
+  }
+
+  /* Header improvements - increased opacity */
+  .hextra-nav-container-blur {
+    background-color: rgba(15, 23, 42, 0.95) !important;
+  }
+
+  :root:not(.dark) .hextra-nav-container-blur {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  /* Nav icon tap targets */
+  .hextra-nav-container-blur nav a,
+  .hextra-nav-container-blur nav button {
+    min-height: var(--z-tap-min);
+    min-width: var(--z-tap-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Icon spacing in header */
+  .hextra-nav-container-blur nav > div {
+    gap: var(--z-icon-gap);
+  }
+
+  /* Content headings mobile */
+  .content :where(h1):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: var(--z-text-h1);
+    line-height: 1.2;
+  }
+
+  .content :where(h2):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: var(--z-text-h2);
+    line-height: 1.25;
+    margin-top: 2rem;
+    padding-top: 1rem;
+  }
+
+  .content :where(h3):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    font-size: var(--z-text-h3);
+    line-height: 1.3;
+    margin-top: 1.5rem;
+  }
+
+  /* Card mobile adjustments */
+  .hextra-card {
+    padding: var(--z-card-pad);
+    border-radius: var(--z-card-radius);
+  }
+
+  /* Table mobile - horizontal scroll */
+  .platform-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .platform-table th,
+  .platform-table td {
+    white-space: nowrap;
+    padding: 0.75rem 0.625rem;
+  }
+
+  /* Code block mobile */
+  .hextra-code-block {
+    border-radius: 8px;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+
+  /* Hero mobile adjustments */
+  .zylix-hero {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  .zylix-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Buttons mobile - full width */
+  .zylix-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .zylix-btn-primary,
+  .zylix-btn-secondary {
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Contribute buttons mobile */
+  .zylix-contribute-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .zylix-contribute-btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  /* Footer spacing mobile */
+  .zylix-footer-spacer {
+    height: 4rem;
+  }
+
+  /* SNS icons mobile - better tap targets */
+  footer a[href*="twitter"],
+  footer a[href*="github"],
+  footer a[href*="discord"] {
+    min-height: var(--z-tap-min);
+    min-width: var(--z-tap-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Edit link spacing */
+  .edit-link,
+  a[href*="edit"] {
+    margin-top: 1rem;
+    padding: 0.5rem 0;
+  }
+}
+
+/* ============================================
+   FEATURE CARD GRADIENTS (Preserved)
    ============================================ */
 
 .feature-card-orange {
@@ -87,47 +888,7 @@
 }
 
 /* ============================================
-   Hero Section Enhancements
-   ============================================ */
-
-/* Spacing fix for hero section */
-.hx-mb-12 + .hx-mb-12 {
-  margin-top: 2rem !important;
-}
-
-/* Hero headline gradient text */
-.hero-gradient-text {
-  background: linear-gradient(
-    135deg,
-    rgb(var(--zylix-orange)) 0%,
-    rgb(var(--zylix-blue)) 50%,
-    rgb(var(--zylix-emerald)) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ============================================
-   Platform Status Table
-   ============================================ */
-
-/* Better table styling */
-.platform-table {
-  border-radius: 0.75rem;
-  overflow: hidden;
-}
-
-.platform-table th {
-  background: rgba(var(--zylix-blue), 0.1);
-}
-
-.dark .platform-table th {
-  background: rgba(var(--zylix-blue), 0.2);
-}
-
-/* ============================================
-   Responsive Adjustments
+   RESPONSIVE ADJUSTMENTS
    ============================================ */
 
 @media (max-width: 768px) {
@@ -142,15 +903,125 @@
 }
 
 /* ============================================
-   Docs Layout Fixes
+   HEXTRA CARD IMPROVEMENTS
    ============================================ */
 
-/* Add margin between sidebar and content */
-.docs-sidebar {
-  margin-right: 2rem;
+.hextra-card {
+  position: relative;
+  border: 1px solid var(--z-card-border);
+  transition: all 0.2s ease;
 }
 
-/* Reduce header spacer height for docs pages */
-body:has(.docs-sidebar) > div.min-h-\[148px\] {
-  min-height: 100px !important;
+.hextra-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dark .hextra-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.hextra-card img {
+  user-select: none;
+}
+
+.hextra-card:hover .hextra-card-icon svg {
+  color: currentColor;
+}
+
+.hextra-card .hextra-card-icon svg {
+  width: 1.5rem;
+  color: #00000033;
+  transition: color 0.3s ease;
+}
+
+.hextra-card p {
+  margin-top: 0.5rem;
+  position: relative;
+}
+
+.dark .hextra-card .hextra-card-icon svg {
+  color: #ffffff66;
+}
+
+.dark .hextra-card:hover .hextra-card-icon svg {
+  color: currentColor;
+}
+
+/* ============================================
+   COMPARISON CARDS IMPROVEMENTS
+   ============================================ */
+
+.zylix-compare-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.zylix-compare-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.zylix-compare-featured {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+:root:not(.dark) .zylix-compare-card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root:not(.dark) .zylix-compare-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+:root:not(.dark) .zylix-compare-featured {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.08));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   Focus states and reduced motion
+   ============================================ */
+
+/* Focus visible states */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--z-link);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .hextra-nav-container-blur,
+  .hextra-sidebar-container,
+  .zylix-buttons,
+  .zylix-contribute-buttons,
+  footer {
+    display: none !important;
+  }
+
+  .content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
 }

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+#### Website UI/UX
+- **Design Tokens**: Unified CSS custom properties (:root variables) for consistent styling
+- **Hero Section**: Reduced badge opacity, improved CTA hierarchy with gradient/shadow differentiation
+- **Card Styling**: Enhanced borders (rgba(255,255,255,0.12)) and shadows for visual separation
+- **Sidebar Navigation**: Active state highlighting with left border accent and background
+- **Tables**: Improved styling and mobile responsiveness with horizontal scroll
+- **Japanese Typography**: Adjusted letter-spacing (0.01em) and line-height for readability
+- **Mobile**: 44px minimum tap targets, header backdrop opacity, improved spacing
+- **Accessibility**: Focus states, reduced motion support, semantic improvements
+
 ## [0.8.1] - 2025-12-23
 
 ### Breaking Changes
