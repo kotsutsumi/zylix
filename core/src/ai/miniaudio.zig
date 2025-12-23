@@ -125,9 +125,10 @@ test "isExtensionSupported" {
     try std.testing.expect(isExtensionSupported(".wav"));
     try std.testing.expect(isExtensionSupported(".mp3"));
     try std.testing.expect(isExtensionSupported(".flac"));
-    try std.testing.expect(isExtensionSupported(".ogg"));
     try std.testing.expect(isExtensionSupported(".WAV"));
     try std.testing.expect(isExtensionSupported(".MP3"));
     try std.testing.expect(!isExtensionSupported(".txt"));
     try std.testing.expect(!isExtensionSupported(".aac"));
+    // Note: .ogg requires additional miniaudio configuration, not currently supported
+    try std.testing.expect(!isExtensionSupported(".ogg"));
 }
