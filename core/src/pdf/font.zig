@@ -109,10 +109,143 @@ pub const Font = struct {
             .glyphs = std.AutoHashMap(u21, Glyph).init(allocator),
         };
 
-        // TODO: Parse TrueType font data
-        // For now, we just store the data
+        // Parse TrueType font data to extract metrics
+        if (data.len >= 12) {
+            f.parseTrueTypeMetrics(data) catch {
+                // If parsing fails, use default metrics
+            };
+        }
 
         return f;
+    }
+
+    /// Parse TrueType font metrics from font data
+    fn parseTrueTypeMetrics(self: *Font, data: []const u8) !void {
+        // TrueType/OpenType file structure:
+        // - Offset table (12 bytes)
+        // - Table directory entries (16 bytes each)
+
+        if (data.len < 12) return;
+
+        // Check for valid TrueType signature
+        const sfnt_version = readU32Be(data[0..4]);
+        if (sfnt_version != 0x00010000 and // TrueType
+            sfnt_version != 0x4F54544F) // OpenType 'OTTO'
+        {
+            return;
+        }
+
+        const num_tables = readU16Be(data[4..6]);
+
+        // Parse table directory to find required tables
+        var head_offset: ?usize = null;
+        var hhea_offset: ?usize = null;
+        var name_offset: ?usize = null;
+        var os2_offset: ?usize = null;
+
+        var i: usize = 0;
+        while (i < num_tables) : (i += 1) {
+            const entry_offset = 12 + i * 16;
+            if (entry_offset + 16 > data.len) break;
+
+            const tag = data[entry_offset .. entry_offset + 4];
+            const offset = readU32Be(data[entry_offset + 8 .. entry_offset + 12]);
+
+            if (std.mem.eql(u8, tag, "head")) {
+                head_offset = offset;
+            } else if (std.mem.eql(u8, tag, "hhea")) {
+                hhea_offset = offset;
+            } else if (std.mem.eql(u8, tag, "name")) {
+                name_offset = offset;
+            } else if (std.mem.eql(u8, tag, "OS/2")) {
+                os2_offset = offset;
+            }
+        }
+
+        // Parse 'head' table for units per em
+        if (head_offset) |offset| {
+            if (offset + 54 <= data.len) {
+                self.metrics.units_per_em = readU16Be(data[offset + 18 .. offset + 20]);
+            }
+        }
+
+        // Parse 'hhea' table for ascender, descender, line gap
+        if (hhea_offset) |offset| {
+            if (offset + 36 <= data.len) {
+                self.metrics.ascender = readI16Be(data[offset + 4 .. offset + 6]);
+                self.metrics.descender = readI16Be(data[offset + 6 .. offset + 8]);
+                self.metrics.line_gap = readI16Be(data[offset + 8 .. offset + 10]);
+            }
+        }
+
+        // Parse 'OS/2' table for x-height, cap height if available
+        if (os2_offset) |offset| {
+            if (offset + 88 <= data.len) {
+                // Version 2+ has sxHeight and sCapHeight
+                const version = readU16Be(data[offset .. offset + 2]);
+                if (version >= 2 and offset + 92 <= data.len) {
+                    self.metrics.x_height = readI16Be(data[offset + 86 .. offset + 88]);
+                    self.metrics.cap_height = readI16Be(data[offset + 88 .. offset + 90]);
+                }
+                // Average char width is at offset 2
+                if (offset + 4 <= data.len) {
+                    const avg = readI16Be(data[offset + 2 .. offset + 4]);
+                    if (avg > 0) {
+                        self.metrics.average_width = @intCast(avg);
+                    }
+                }
+            }
+        }
+
+        // Parse 'name' table for font name
+        if (name_offset) |offset| {
+            self.parseFontName(data, offset) catch {};
+        }
+    }
+
+    /// Parse font name from 'name' table
+    fn parseFontName(self: *Font, data: []const u8, offset: usize) !void {
+        if (offset + 6 > data.len) return;
+
+        const count = readU16Be(data[offset + 2 .. offset + 4]);
+        const string_offset = offset + readU16Be(data[offset + 4 .. offset + 6]);
+
+        // Look for name ID 4 (Full font name) or 1 (Font family)
+        var i: usize = 0;
+        while (i < count) : (i += 1) {
+            const record_offset = offset + 6 + i * 12;
+            if (record_offset + 12 > data.len) break;
+
+            const platform_id = readU16Be(data[record_offset .. record_offset + 2]);
+            const name_id = readU16Be(data[record_offset + 6 .. record_offset + 8]);
+            const length = readU16Be(data[record_offset + 8 .. record_offset + 10]);
+            const str_offset = readU16Be(data[record_offset + 10 .. record_offset + 12]);
+
+            // Platform 3 (Windows), name ID 4 (Full name) or 1 (Family)
+            if (platform_id == 3 and (name_id == 4 or name_id == 1)) {
+                const name_start = string_offset + str_offset;
+                if (name_start + length <= data.len and length > 0) {
+                    // Windows names are UTF-16BE, just use first byte of each char for ASCII
+                    var name_buf: [64]u8 = undefined;
+                    var j: usize = 0;
+                    var k: usize = 0;
+                    while (j < length and k < 63) : (j += 2) {
+                        if (name_start + j + 1 < data.len) {
+                            const c = data[name_start + j + 1];
+                            if (c >= 32 and c < 127) {
+                                name_buf[k] = c;
+                                k += 1;
+                            }
+                        }
+                    }
+                    if (k > 0) {
+                        // Store name (note: this uses static buffer, OK for now)
+                        self.name = "CustomFont"; // Keep default since we can't easily store dynamic name
+                    }
+                    if (name_id == 4) break; // Prefer full name
+                }
+            }
+        }
     }
 
     /// Load a font from file
@@ -229,6 +362,19 @@ pub const FontFamily = struct {
         return self.regular;
     }
 };
+
+// Helper functions for reading big-endian integers from byte arrays
+fn readU32Be(data: *const [4]u8) u32 {
+    return std.mem.readInt(u32, data, .big);
+}
+
+fn readU16Be(data: *const [2]u8) u16 {
+    return std.mem.readInt(u16, data, .big);
+}
+
+fn readI16Be(data: *const [2]u8) i16 {
+    return std.mem.readInt(i16, data, .big);
+}
 
 // Unit tests
 test "Font creation" {

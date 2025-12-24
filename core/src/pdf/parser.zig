@@ -59,8 +59,39 @@ pub const Parser = struct {
 
     pub fn deinit(self: *Parser) void {
         self.xref_table.deinit(self.allocator);
-        // TODO: When parseTrailer() is fully implemented to populate self.trailer,
-        // we'll need to recursively free PdfObject contents (arrays, dictionaries, streams)
+        // Free trailer dictionary if present
+        if (self.trailer) |*trailer| {
+            freePdfObject(self.allocator, trailer);
+        }
+    }
+
+    /// Recursively free PdfObject contents
+    fn freePdfObject(allocator: std.mem.Allocator, obj: *PdfObject) void {
+        switch (obj.*) {
+            .array => |*arr| {
+                for (arr.items) |*item| {
+                    freePdfObject(allocator, item);
+                }
+                arr.deinit();
+            },
+            .dictionary => |*dict| {
+                var iter = dict.valueIterator();
+                while (iter.next()) |value| {
+                    var v = value.*;
+                    freePdfObject(allocator, &v);
+                }
+                dict.deinit();
+            },
+            .stream => |*stream| {
+                var iter = stream.dict.valueIterator();
+                while (iter.next()) |value| {
+                    var v = value.*;
+                    freePdfObject(allocator, &v);
+                }
+                stream.dict.deinit();
+            },
+            else => {},
+        }
     }
 
     /// Parse the PDF document
@@ -186,7 +217,255 @@ pub const Parser = struct {
         self.skipWhitespace();
 
         // Parse trailer dictionary
-        // Simplified - just skip for now
+        if (self.pos < self.data.len and self.data[self.pos] == '<' and
+            self.pos + 1 < self.data.len and self.data[self.pos + 1] == '<')
+        {
+            self.trailer = try self.parseDictionary();
+        }
+    }
+
+    /// Parse a PDF dictionary object
+    fn parseDictionary(self: *Parser) !PdfObject {
+        if (self.pos + 2 > self.data.len) return PdfError.InvalidPdf;
+        if (self.data[self.pos] != '<' or self.data[self.pos + 1] != '<') {
+            return PdfError.InvalidPdf;
+        }
+        self.pos += 2; // Skip <<
+
+        var dict = std.StringHashMap(PdfObject).init(self.allocator);
+        errdefer dict.deinit();
+
+        while (self.pos < self.data.len) {
+            self.skipWhitespace();
+
+            // Check for end of dictionary
+            if (self.pos + 1 < self.data.len and self.data[self.pos] == '>' and self.data[self.pos + 1] == '>') {
+                self.pos += 2;
+                break;
+            }
+
+            // Parse name (key)
+            if (self.data[self.pos] != '/') {
+                break; // Invalid dictionary
+            }
+
+            const key = try self.parseName();
+            self.skipWhitespace();
+
+            // Parse value
+            const value = try self.parseObject();
+            try dict.put(key, value);
+        }
+
+        return PdfObject{ .dictionary = dict };
+    }
+
+    /// Parse a PDF name object
+    fn parseName(self: *Parser) ![]const u8 {
+        if (self.pos >= self.data.len or self.data[self.pos] != '/') {
+            return PdfError.InvalidPdf;
+        }
+        self.pos += 1; // Skip /
+
+        const start = self.pos;
+        while (self.pos < self.data.len) {
+            const c = self.data[self.pos];
+            // Name ends at delimiter or whitespace
+            if (c == ' ' or c == '\t' or c == '\r' or c == '\n' or
+                c == '/' or c == '[' or c == ']' or c == '<' or c == '>' or
+                c == '(' or c == ')' or c == '{' or c == '}' or c == '%')
+            {
+                break;
+            }
+            self.pos += 1;
+        }
+
+        return self.data[start..self.pos];
+    }
+
+    /// Parse a PDF object (generic)
+    fn parseObject(self: *Parser) PdfError!PdfObject {
+        self.skipWhitespace();
+
+        if (self.pos >= self.data.len) return PdfError.InvalidPdf;
+
+        const c = self.data[self.pos];
+
+        // Dictionary
+        if (c == '<' and self.pos + 1 < self.data.len and self.data[self.pos + 1] == '<') {
+            return self.parseDictionary();
+        }
+
+        // Hex string
+        if (c == '<') {
+            return self.parseHexString();
+        }
+
+        // Array
+        if (c == '[') {
+            return self.parseArray();
+        }
+
+        // String
+        if (c == '(') {
+            return self.parseString();
+        }
+
+        // Name
+        if (c == '/') {
+            const name = try self.parseName();
+            return PdfObject{ .name = name };
+        }
+
+        // Boolean or null
+        if (std.mem.startsWith(u8, self.data[self.pos..], "true")) {
+            self.pos += 4;
+            return PdfObject{ .boolean = true };
+        }
+        if (std.mem.startsWith(u8, self.data[self.pos..], "false")) {
+            self.pos += 5;
+            return PdfObject{ .boolean = false };
+        }
+        if (std.mem.startsWith(u8, self.data[self.pos..], "null")) {
+            self.pos += 4;
+            return PdfObject.null_obj;
+        }
+
+        // Number (integer or real) or reference
+        if ((c >= '0' and c <= '9') or c == '+' or c == '-' or c == '.') {
+            return self.parseNumber();
+        }
+
+        return PdfError.InvalidPdf;
+    }
+
+    /// Parse a PDF number (integer, real, or reference)
+    fn parseNumber(self: *Parser) !PdfObject {
+        const start = self.pos;
+        var has_dot = false;
+
+        // Handle sign
+        if (self.pos < self.data.len and (self.data[self.pos] == '+' or self.data[self.pos] == '-')) {
+            self.pos += 1;
+        }
+
+        // Parse digits
+        while (self.pos < self.data.len) {
+            const c = self.data[self.pos];
+            if (c >= '0' and c <= '9') {
+                self.pos += 1;
+            } else if (c == '.' and !has_dot) {
+                has_dot = true;
+                self.pos += 1;
+            } else {
+                break;
+            }
+        }
+
+        const num_str = self.data[start..self.pos];
+
+        // Check for object reference (e.g., "10 0 R")
+        self.skipWhitespace();
+        if (self.pos < self.data.len and self.data[self.pos] >= '0' and self.data[self.pos] <= '9') {
+            const gen_start = self.pos;
+            while (self.pos < self.data.len and self.data[self.pos] >= '0' and self.data[self.pos] <= '9') {
+                self.pos += 1;
+            }
+            const gen_str = self.data[gen_start..self.pos];
+
+            self.skipWhitespace();
+            if (self.pos < self.data.len and self.data[self.pos] == 'R') {
+                self.pos += 1;
+                const obj_num = std.fmt.parseInt(u32, num_str, 10) catch return PdfError.InvalidPdf;
+                const gen_num = std.fmt.parseInt(u16, gen_str, 10) catch return PdfError.InvalidPdf;
+                return PdfObject{ .reference = ObjectRef{ .object_number = obj_num, .generation = gen_num } };
+            }
+
+            // Not a reference, backtrack
+            self.pos = gen_start;
+        }
+
+        if (has_dot) {
+            const val = std.fmt.parseFloat(f64, num_str) catch return PdfError.InvalidPdf;
+            return PdfObject{ .real = val };
+        } else {
+            const val = std.fmt.parseInt(i64, num_str, 10) catch return PdfError.InvalidPdf;
+            return PdfObject{ .integer = val };
+        }
+    }
+
+    /// Parse a PDF array
+    fn parseArray(self: *Parser) !PdfObject {
+        if (self.pos >= self.data.len or self.data[self.pos] != '[') {
+            return PdfError.InvalidPdf;
+        }
+        self.pos += 1; // Skip [
+
+        var arr = std.ArrayList(PdfObject).init(self.allocator);
+        errdefer arr.deinit();
+
+        while (self.pos < self.data.len) {
+            self.skipWhitespace();
+
+            if (self.data[self.pos] == ']') {
+                self.pos += 1;
+                break;
+            }
+
+            const obj = try self.parseObject();
+            try arr.append(obj);
+        }
+
+        return PdfObject{ .array = arr };
+    }
+
+    /// Parse a PDF string
+    fn parseString(self: *Parser) !PdfObject {
+        if (self.pos >= self.data.len or self.data[self.pos] != '(') {
+            return PdfError.InvalidPdf;
+        }
+        self.pos += 1; // Skip (
+
+        const start = self.pos;
+        var paren_depth: u32 = 1;
+
+        while (self.pos < self.data.len and paren_depth > 0) {
+            const c = self.data[self.pos];
+            if (c == '\\' and self.pos + 1 < self.data.len) {
+                self.pos += 2; // Skip escape sequence
+            } else if (c == '(') {
+                paren_depth += 1;
+                self.pos += 1;
+            } else if (c == ')') {
+                paren_depth -= 1;
+                if (paren_depth > 0) self.pos += 1;
+            } else {
+                self.pos += 1;
+            }
+        }
+
+        const str = self.data[start..self.pos];
+        self.pos += 1; // Skip closing )
+
+        return PdfObject{ .string = str };
+    }
+
+    /// Parse a PDF hex string
+    fn parseHexString(self: *Parser) !PdfObject {
+        if (self.pos >= self.data.len or self.data[self.pos] != '<') {
+            return PdfError.InvalidPdf;
+        }
+        self.pos += 1; // Skip <
+
+        const start = self.pos;
+        while (self.pos < self.data.len and self.data[self.pos] != '>') {
+            self.pos += 1;
+        }
+
+        const hex_str = self.data[start..self.pos];
+        self.pos += 1; // Skip >
+
+        return PdfObject{ .hex_string = hex_str };
     }
 
     /// Get the PDF version
