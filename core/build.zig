@@ -295,6 +295,13 @@ pub fn build(b: *std.Build) void {
         .dest_dir = .{ .override = .{ .custom = "wasm" } },
     }).step);
 
+    // === WebAssembly (Debug) ===
+    const wasm_debug_step = b.step("wasm-debug", "Build for WebAssembly (debug, larger size)");
+    const wasm_debug_lib = buildWasm(b, .Debug);
+    wasm_debug_step.dependOn(&b.addInstallArtifact(wasm_debug_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "wasm-debug" } },
+    }).step);
+
     // === Build All ===
     const all_step = b.step("all", "Build for all platforms");
     all_step.dependOn(ios_step);
@@ -338,13 +345,21 @@ fn buildWasm(
         .os_tag = .freestanding,
     });
 
+    // For WASM, prefer ReleaseSmall for smallest bundle size
+    // unless explicitly specified otherwise
+    const wasm_optimize = if (optimize == .Debug) optimize else .ReleaseSmall;
+
     // Use addExecutable for WASM to get proper exports
     const wasm = b.addExecutable(.{
         .name = "zylix",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/wasm.zig"),
             .target = resolved_target,
-            .optimize = optimize,
+            .optimize = wasm_optimize,
+            // Performance: single-threaded for WASM (no threading overhead)
+            .single_threaded = true,
+            // Strip debug symbols in release for smaller size
+            .strip = wasm_optimize != .Debug,
         }),
     });
 
@@ -353,6 +368,11 @@ fn buildWasm(
 
     // No entry point for library usage
     wasm.entry = .disabled;
+
+    // Link-time optimization for smaller bundle
+    if (wasm_optimize != .Debug) {
+        wasm.want_lto = true;
+    }
 
     return wasm;
 }

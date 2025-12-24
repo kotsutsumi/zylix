@@ -775,3 +775,354 @@ pub fn getCssLen() usize {
 pub fn getStyleCount() u32 {
     return global_style_count;
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "Color.rgb" {
+    const c = Color.rgb(255, 128, 64);
+    try std.testing.expectEqual(@as(u8, 255), c.r);
+    try std.testing.expectEqual(@as(u8, 128), c.g);
+    try std.testing.expectEqual(@as(u8, 64), c.b);
+    try std.testing.expectEqual(@as(u8, 255), c.a);
+}
+
+test "Color.rgba" {
+    const c = Color.rgba(100, 150, 200, 128);
+    try std.testing.expectEqual(@as(u8, 100), c.r);
+    try std.testing.expectEqual(@as(u8, 150), c.g);
+    try std.testing.expectEqual(@as(u8, 200), c.b);
+    try std.testing.expectEqual(@as(u8, 128), c.a);
+}
+
+test "Color.hex" {
+    const c = Color.hex(0xFF8040);
+    try std.testing.expectEqual(@as(u8, 255), c.r);
+    try std.testing.expectEqual(@as(u8, 128), c.g);
+    try std.testing.expectEqual(@as(u8, 64), c.b);
+    try std.testing.expectEqual(@as(u8, 255), c.a);
+}
+
+test "Color.hex black and white" {
+    const black = Color.hex(0x000000);
+    try std.testing.expectEqual(@as(u8, 0), black.r);
+    try std.testing.expectEqual(@as(u8, 0), black.g);
+    try std.testing.expectEqual(@as(u8, 0), black.b);
+
+    const white = Color.hex(0xFFFFFF);
+    try std.testing.expectEqual(@as(u8, 255), white.r);
+    try std.testing.expectEqual(@as(u8, 255), white.g);
+    try std.testing.expectEqual(@as(u8, 255), white.b);
+}
+
+test "predefined colors" {
+    // Test a few predefined colors
+    try std.testing.expectEqual(@as(u8, 255), colors.white.r);
+    try std.testing.expectEqual(@as(u8, 0), colors.black.r);
+    try std.testing.expectEqual(@as(u8, 0), colors.transparent.a);
+}
+
+test "Spacing.toPixels" {
+    try std.testing.expectEqual(@as(?u16, 0), Spacing.s0.toPixels());
+    try std.testing.expectEqual(@as(?u16, 4), Spacing.s1.toPixels());
+    try std.testing.expectEqual(@as(?u16, 8), Spacing.s2.toPixels());
+    try std.testing.expectEqual(@as(?u16, 16), Spacing.s4.toPixels());
+    try std.testing.expectEqual(@as(?u16, 32), Spacing.s8.toPixels());
+    try std.testing.expectEqual(@as(?u16, 64), Spacing.s16.toPixels());
+    try std.testing.expect(Spacing.auto.toPixels() == null);
+}
+
+test "Display.toCss" {
+    try std.testing.expectEqualStrings("block", Display.block.toCss());
+    try std.testing.expectEqualStrings("flex", Display.flex.toCss());
+    try std.testing.expectEqualStrings("inline-flex", Display.inline_flex.toCss());
+    try std.testing.expectEqualStrings("grid", Display.grid.toCss());
+    try std.testing.expectEqualStrings("none", Display.hidden.toCss());
+}
+
+test "FlexDirection.toCss" {
+    try std.testing.expectEqualStrings("row", FlexDirection.row.toCss());
+    try std.testing.expectEqualStrings("row-reverse", FlexDirection.row_reverse.toCss());
+    try std.testing.expectEqualStrings("column", FlexDirection.col.toCss());
+    try std.testing.expectEqualStrings("column-reverse", FlexDirection.col_reverse.toCss());
+}
+
+test "FlexWrap.toCss" {
+    try std.testing.expectEqualStrings("nowrap", FlexWrap.nowrap.toCss());
+    try std.testing.expectEqualStrings("wrap", FlexWrap.wrap.toCss());
+    try std.testing.expectEqualStrings("wrap-reverse", FlexWrap.wrap_reverse.toCss());
+}
+
+test "JustifyContent.toCss" {
+    try std.testing.expectEqualStrings("flex-start", JustifyContent.start.toCss());
+    try std.testing.expectEqualStrings("flex-end", JustifyContent.end.toCss());
+    try std.testing.expectEqualStrings("center", JustifyContent.center.toCss());
+    try std.testing.expectEqualStrings("space-between", JustifyContent.between.toCss());
+    try std.testing.expectEqualStrings("space-around", JustifyContent.around.toCss());
+    try std.testing.expectEqualStrings("space-evenly", JustifyContent.evenly.toCss());
+}
+
+test "AlignItems.toCss" {
+    try std.testing.expectEqualStrings("flex-start", AlignItems.start.toCss());
+    try std.testing.expectEqualStrings("flex-end", AlignItems.end.toCss());
+    try std.testing.expectEqualStrings("center", AlignItems.center.toCss());
+    try std.testing.expectEqualStrings("baseline", AlignItems.baseline.toCss());
+    try std.testing.expectEqualStrings("stretch", AlignItems.stretch.toCss());
+}
+
+test "FontSize.toPixels" {
+    try std.testing.expectEqual(@as(u8, 12), FontSize.xs.toPixels());
+    try std.testing.expectEqual(@as(u8, 14), FontSize.sm.toPixels());
+    try std.testing.expectEqual(@as(u8, 16), FontSize.base.toPixels());
+    try std.testing.expectEqual(@as(u8, 18), FontSize.lg.toPixels());
+    try std.testing.expectEqual(@as(u8, 20), FontSize.xl.toPixels());
+    try std.testing.expectEqual(@as(u8, 24), FontSize.xl2.toPixels());
+}
+
+test "FontWeight values" {
+    try std.testing.expectEqual(@as(u16, 100), @intFromEnum(FontWeight.thin));
+    try std.testing.expectEqual(@as(u16, 400), @intFromEnum(FontWeight.normal));
+    try std.testing.expectEqual(@as(u16, 700), @intFromEnum(FontWeight.bold));
+    try std.testing.expectEqual(@as(u16, 900), @intFromEnum(FontWeight.black));
+}
+
+test "TextAlign.toCss" {
+    try std.testing.expectEqualStrings("left", TextAlign.left.toCss());
+    try std.testing.expectEqualStrings("center", TextAlign.center.toCss());
+    try std.testing.expectEqualStrings("right", TextAlign.right.toCss());
+    try std.testing.expectEqualStrings("justify", TextAlign.justify.toCss());
+}
+
+test "BorderRadius.toPixels" {
+    try std.testing.expectEqual(@as(?u16, 0), BorderRadius.none.toPixels());
+    try std.testing.expectEqual(@as(?u16, 2), BorderRadius.sm.toPixels());
+    try std.testing.expectEqual(@as(?u16, 4), BorderRadius.base.toPixels());
+    try std.testing.expectEqual(@as(?u16, 8), BorderRadius.lg.toPixels());
+    try std.testing.expect(BorderRadius.full.toPixels() == null);
+}
+
+test "BorderWidth values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(BorderWidth.w0));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(BorderWidth.w1));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(BorderWidth.w2));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(BorderWidth.w4));
+}
+
+test "Shadow.toCss" {
+    try std.testing.expectEqualStrings("none", Shadow.none.toCss());
+    try std.testing.expect(Shadow.sm.toCss().len > 0);
+    try std.testing.expect(Shadow.lg.toCss().len > 0);
+}
+
+test "Style.flex builder" {
+    const s = Style.flex();
+    try std.testing.expectEqual(Display.flex, s.display);
+}
+
+test "Style.flexCol builder" {
+    const s = Style.flexCol();
+    try std.testing.expectEqual(Display.flex, s.display);
+    try std.testing.expectEqual(FlexDirection.col, s.flex_direction);
+}
+
+test "Style.center builder" {
+    const s = Style.center();
+    try std.testing.expectEqual(Display.flex, s.display);
+    try std.testing.expectEqual(JustifyContent.center, s.justify_content);
+    try std.testing.expectEqual(AlignItems.center, s.align_items);
+}
+
+test "Style.p padding helper" {
+    var s = Style{};
+    s = s.p(.s4);
+    try std.testing.expectEqual(Spacing.s4, s.padding_top);
+    try std.testing.expectEqual(Spacing.s4, s.padding_right);
+    try std.testing.expectEqual(Spacing.s4, s.padding_bottom);
+    try std.testing.expectEqual(Spacing.s4, s.padding_left);
+}
+
+test "Style.px horizontal padding" {
+    var s = Style{};
+    s = s.px(.s6);
+    try std.testing.expectEqual(Spacing.s6, s.padding_left);
+    try std.testing.expectEqual(Spacing.s6, s.padding_right);
+    try std.testing.expectEqual(Spacing.s0, s.padding_top);
+}
+
+test "Style.py vertical padding" {
+    var s = Style{};
+    s = s.py(.s8);
+    try std.testing.expectEqual(Spacing.s8, s.padding_top);
+    try std.testing.expectEqual(Spacing.s8, s.padding_bottom);
+    try std.testing.expectEqual(Spacing.s0, s.padding_left);
+}
+
+test "Style.m margin helper" {
+    var s = Style{};
+    s = s.m(.s2);
+    try std.testing.expectEqual(Spacing.s2, s.margin_top);
+    try std.testing.expectEqual(Spacing.s2, s.margin_right);
+    try std.testing.expectEqual(Spacing.s2, s.margin_bottom);
+    try std.testing.expectEqual(Spacing.s2, s.margin_left);
+}
+
+test "Style.withGap helper" {
+    var s = Style{};
+    s = s.withGap(.s4);
+    try std.testing.expectEqual(Spacing.s4, s.gap);
+}
+
+test "Style.bg helper" {
+    var s = Style{};
+    s = s.bg(colors.blue_500);
+    try std.testing.expectEqual(colors.blue_500.r, s.background_color.r);
+    try std.testing.expectEqual(colors.blue_500.g, s.background_color.g);
+    try std.testing.expectEqual(colors.blue_500.b, s.background_color.b);
+}
+
+test "Style.textColor helper" {
+    var s = Style{};
+    s = s.textColor(colors.white);
+    try std.testing.expectEqual(colors.white.r, s.color.r);
+}
+
+test "Style.rounded helper" {
+    var s = Style{};
+    s = s.rounded(.lg);
+    try std.testing.expectEqual(BorderRadius.lg, s.border_radius);
+}
+
+test "Style.border helper" {
+    var s = Style{};
+    s = s.border(.w2, colors.red_500);
+    try std.testing.expectEqual(BorderWidth.w2, s.border_width);
+    try std.testing.expectEqual(colors.red_500.r, s.border_color.r);
+}
+
+test "Style.withShadow helper" {
+    var s = Style{};
+    s = s.withShadow(.md);
+    try std.testing.expectEqual(Shadow.md, s.shadow);
+}
+
+test "Style.text helper" {
+    var s = Style{};
+    s = s.text(.xl2);
+    try std.testing.expectEqual(FontSize.xl2, s.font_size);
+}
+
+test "Style.weight helper" {
+    var s = Style{};
+    s = s.weight(.bold);
+    try std.testing.expectEqual(FontWeight.bold, s.font_weight);
+}
+
+test "Style method chaining" {
+    const s = Style.flex()
+        .p(.s4)
+        .bg(colors.blue_500)
+        .textColor(colors.white)
+        .rounded(.lg)
+        .withShadow(.md);
+
+    try std.testing.expectEqual(Display.flex, s.display);
+    try std.testing.expectEqual(Spacing.s4, s.padding_top);
+    try std.testing.expectEqual(colors.blue_500.r, s.background_color.r);
+    try std.testing.expectEqual(colors.white.r, s.color.r);
+    try std.testing.expectEqual(BorderRadius.lg, s.border_radius);
+    try std.testing.expectEqual(Shadow.md, s.shadow);
+}
+
+test "StyleBuffer append" {
+    var buf = StyleBuffer{};
+    buf.append("hello");
+    try std.testing.expectEqualStrings("hello", buf.slice());
+    buf.append(" world");
+    try std.testing.expectEqualStrings("hello world", buf.slice());
+}
+
+test "StyleBuffer appendFmt" {
+    var buf = StyleBuffer{};
+    buf.appendFmt("width:{d}px;", .{100});
+    try std.testing.expectEqualStrings("width:100px;", buf.slice());
+}
+
+test "StyleBuffer reset" {
+    var buf = StyleBuffer{};
+    buf.append("test");
+    try std.testing.expect(buf.len > 0);
+    buf.reset();
+    try std.testing.expectEqual(@as(usize, 0), buf.len);
+}
+
+test "styleToCss basic" {
+    var style = Style{};
+    var buf = StyleBuffer{};
+
+    styleToCss(&style, &buf);
+
+    // Should contain display:block
+    try std.testing.expect(std.mem.indexOf(u8, buf.slice(), "display:block") != null);
+}
+
+test "styleToCss flex" {
+    var style = Style.flex();
+    var buf = StyleBuffer{};
+
+    styleToCss(&style, &buf);
+
+    // Should contain flex properties
+    try std.testing.expect(std.mem.indexOf(u8, buf.slice(), "display:flex") != null);
+    try std.testing.expect(std.mem.indexOf(u8, buf.slice(), "flex-direction:row") != null);
+}
+
+test "styleToCss with padding" {
+    const base_style = Style{};
+    var style = base_style.p(.s4);
+    var buf = StyleBuffer{};
+
+    styleToCss(&style, &buf);
+
+    // Should contain padding values
+    try std.testing.expect(std.mem.indexOf(u8, buf.slice(), "padding-top:16px") != null);
+}
+
+test "WASM exports init" {
+    init();
+    try std.testing.expectEqual(@as(u32, 0), getStyleCount());
+}
+
+test "WASM exports createStyle" {
+    init();
+    const id1 = createStyle();
+    const id2 = createStyle();
+
+    try std.testing.expectEqual(@as(u32, 0), id1);
+    try std.testing.expectEqual(@as(u32, 1), id2);
+    try std.testing.expectEqual(@as(u32, 2), getStyleCount());
+}
+
+test "WASM exports getStylePtr" {
+    init();
+    const id = createStyle();
+    const ptr = getStylePtr(id);
+
+    try std.testing.expect(ptr != null);
+    try std.testing.expect(getStylePtr(999) == null);
+}
+
+test "WASM exports generateCss" {
+    init();
+    const id = createStyle();
+    const css_ptr = generateCss(id);
+
+    try std.testing.expect(css_ptr != null);
+    try std.testing.expect(getCssLen() > 0);
+}
+
+test "WASM exports generateCss invalid" {
+    init();
+    const css_ptr = generateCss(999);
+    try std.testing.expect(css_ptr == null);
+}

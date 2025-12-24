@@ -337,3 +337,382 @@ pub const FloatKeyframe = Keyframe(f32);
 pub const Point2DKeyframe = Keyframe(Point2D);
 pub const ColorKeyframe = Keyframe(Color);
 pub const TransformKeyframe = Keyframe(Transform2D);
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "Color preset values" {
+    try std.testing.expectEqual(@as(u8, 255), Color.white.r);
+    try std.testing.expectEqual(@as(u8, 255), Color.white.g);
+    try std.testing.expectEqual(@as(u8, 255), Color.white.b);
+    try std.testing.expectEqual(@as(u8, 255), Color.white.a);
+
+    try std.testing.expectEqual(@as(u8, 0), Color.black.r);
+    try std.testing.expectEqual(@as(u8, 0), Color.black.g);
+    try std.testing.expectEqual(@as(u8, 0), Color.black.b);
+    try std.testing.expectEqual(@as(u8, 255), Color.black.a);
+
+    try std.testing.expectEqual(@as(u8, 0), Color.transparent.a);
+
+    try std.testing.expectEqual(@as(u8, 255), Color.red.r);
+    try std.testing.expectEqual(@as(u8, 0), Color.red.g);
+
+    try std.testing.expectEqual(@as(u8, 255), Color.green.g);
+    try std.testing.expectEqual(@as(u8, 0), Color.green.r);
+
+    try std.testing.expectEqual(@as(u8, 255), Color.blue.b);
+    try std.testing.expectEqual(@as(u8, 0), Color.blue.r);
+}
+
+test "Color fromFloat" {
+    const white = Color.fromFloat(1.0, 1.0, 1.0, 1.0);
+    try std.testing.expectEqual(@as(u8, 255), white.r);
+    try std.testing.expectEqual(@as(u8, 255), white.g);
+    try std.testing.expectEqual(@as(u8, 255), white.b);
+    try std.testing.expectEqual(@as(u8, 255), white.a);
+
+    const black = Color.fromFloat(0.0, 0.0, 0.0, 1.0);
+    try std.testing.expectEqual(@as(u8, 0), black.r);
+    try std.testing.expectEqual(@as(u8, 0), black.g);
+    try std.testing.expectEqual(@as(u8, 0), black.b);
+
+    const half = Color.fromFloat(0.5, 0.5, 0.5, 0.5);
+    try std.testing.expect(half.r >= 127 and half.r <= 128);
+    try std.testing.expect(half.a >= 127 and half.a <= 128);
+}
+
+test "Color toFloat" {
+    const floats = Color.white.toFloat();
+    try std.testing.expectEqual(@as(f32, 1.0), floats[0]);
+    try std.testing.expectEqual(@as(f32, 1.0), floats[1]);
+    try std.testing.expectEqual(@as(f32, 1.0), floats[2]);
+    try std.testing.expectEqual(@as(f32, 1.0), floats[3]);
+
+    const black_floats = Color.black.toFloat();
+    try std.testing.expectEqual(@as(f32, 0.0), black_floats[0]);
+    try std.testing.expectEqual(@as(f32, 0.0), black_floats[1]);
+    try std.testing.expectEqual(@as(f32, 0.0), black_floats[2]);
+}
+
+test "Color lerp" {
+    const result_start = Color.black.lerp(Color.white, 0.0);
+    try std.testing.expectEqual(@as(u8, 0), result_start.r);
+
+    const result_end = Color.black.lerp(Color.white, 1.0);
+    try std.testing.expectEqual(@as(u8, 255), result_end.r);
+
+    const result_mid = Color.black.lerp(Color.white, 0.5);
+    try std.testing.expect(result_mid.r >= 127 and result_mid.r <= 128);
+
+    // Test clamping
+    const clamped_low = Color.black.lerp(Color.white, -0.5);
+    try std.testing.expectEqual(@as(u8, 0), clamped_low.r);
+
+    const clamped_high = Color.black.lerp(Color.white, 1.5);
+    try std.testing.expectEqual(@as(u8, 255), clamped_high.r);
+}
+
+test "Point2D zero constant" {
+    try std.testing.expectEqual(@as(f32, 0), Point2D.zero.x);
+    try std.testing.expectEqual(@as(f32, 0), Point2D.zero.y);
+}
+
+test "Point2D add" {
+    const p1 = Point2D{ .x = 1, .y = 2 };
+    const p2 = Point2D{ .x = 3, .y = 4 };
+    const result = p1.add(p2);
+    try std.testing.expectEqual(@as(f32, 4), result.x);
+    try std.testing.expectEqual(@as(f32, 6), result.y);
+}
+
+test "Point2D sub" {
+    const p1 = Point2D{ .x = 5, .y = 7 };
+    const p2 = Point2D{ .x = 2, .y = 3 };
+    const result = p1.sub(p2);
+    try std.testing.expectEqual(@as(f32, 3), result.x);
+    try std.testing.expectEqual(@as(f32, 4), result.y);
+}
+
+test "Point2D scale" {
+    const p = Point2D{ .x = 2, .y = 3 };
+    const result = p.scale(2.5);
+    try std.testing.expectEqual(@as(f32, 5), result.x);
+    try std.testing.expectEqual(@as(f32, 7.5), result.y);
+}
+
+test "Point2D lerp" {
+    const p1 = Point2D{ .x = 0, .y = 0 };
+    const p2 = Point2D{ .x = 10, .y = 20 };
+
+    const result_start = p1.lerp(p2, 0.0);
+    try std.testing.expectEqual(@as(f32, 0), result_start.x);
+    try std.testing.expectEqual(@as(f32, 0), result_start.y);
+
+    const result_end = p1.lerp(p2, 1.0);
+    try std.testing.expectEqual(@as(f32, 10), result_end.x);
+    try std.testing.expectEqual(@as(f32, 20), result_end.y);
+
+    const result_mid = p1.lerp(p2, 0.5);
+    try std.testing.expectEqual(@as(f32, 5), result_mid.x);
+    try std.testing.expectEqual(@as(f32, 10), result_mid.y);
+}
+
+test "Size2D zero constant" {
+    try std.testing.expectEqual(@as(f32, 0), Size2D.zero.width);
+    try std.testing.expectEqual(@as(f32, 0), Size2D.zero.height);
+}
+
+test "Size2D lerp" {
+    const s1 = Size2D{ .width = 100, .height = 200 };
+    const s2 = Size2D{ .width = 200, .height = 400 };
+
+    const result = s1.lerp(s2, 0.5);
+    try std.testing.expectEqual(@as(f32, 150), result.width);
+    try std.testing.expectEqual(@as(f32, 300), result.height);
+}
+
+test "Rect2D contains" {
+    const rect = Rect2D{
+        .origin = Point2D{ .x = 10, .y = 10 },
+        .size = Size2D{ .width = 100, .height = 50 },
+    };
+
+    // Point inside
+    try std.testing.expect(rect.contains(Point2D{ .x = 50, .y = 30 }));
+
+    // Point on edge (should be contained)
+    try std.testing.expect(rect.contains(Point2D{ .x = 10, .y = 10 }));
+    try std.testing.expect(rect.contains(Point2D{ .x = 110, .y = 60 }));
+
+    // Point outside
+    try std.testing.expect(!rect.contains(Point2D{ .x = 5, .y = 30 }));
+    try std.testing.expect(!rect.contains(Point2D{ .x = 50, .y = 5 }));
+    try std.testing.expect(!rect.contains(Point2D{ .x = 120, .y = 30 }));
+    try std.testing.expect(!rect.contains(Point2D{ .x = 50, .y = 70 }));
+}
+
+test "Transform2D identity" {
+    const t = Transform2D.identity;
+    try std.testing.expectEqual(@as(f32, 0), t.position.x);
+    try std.testing.expectEqual(@as(f32, 0), t.position.y);
+    try std.testing.expectEqual(@as(f32, 0), t.rotation);
+    try std.testing.expectEqual(@as(f32, 1), t.scale.x);
+    try std.testing.expectEqual(@as(f32, 1), t.scale.y);
+    try std.testing.expectEqual(@as(f32, 0.5), t.anchor.x);
+    try std.testing.expectEqual(@as(f32, 0.5), t.anchor.y);
+    try std.testing.expectEqual(@as(f32, 1.0), t.opacity);
+}
+
+test "Transform2D lerp" {
+    const t1 = Transform2D{
+        .position = Point2D{ .x = 0, .y = 0 },
+        .rotation = 0,
+        .scale = Point2D{ .x = 1, .y = 1 },
+        .opacity = 0,
+    };
+    const t2 = Transform2D{
+        .position = Point2D{ .x = 100, .y = 200 },
+        .rotation = std.math.pi,
+        .scale = Point2D{ .x = 2, .y = 2 },
+        .opacity = 1,
+    };
+
+    const result = t1.lerp(t2, 0.5);
+    try std.testing.expectEqual(@as(f32, 50), result.position.x);
+    try std.testing.expectEqual(@as(f32, 100), result.position.y);
+    try std.testing.expectApproxEqAbs(@as(f32, std.math.pi / 2.0), result.rotation, 0.001);
+    try std.testing.expectEqual(@as(f32, 1.5), result.scale.x);
+    try std.testing.expectEqual(@as(f32, 0.5), result.opacity);
+}
+
+test "Matrix3x3 identity" {
+    const m = Matrix3x3.identity;
+    try std.testing.expectEqual(@as(f32, 1), m.m[0]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[1]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[2]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[3]);
+    try std.testing.expectEqual(@as(f32, 1), m.m[4]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[5]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[6]);
+    try std.testing.expectEqual(@as(f32, 0), m.m[7]);
+    try std.testing.expectEqual(@as(f32, 1), m.m[8]);
+}
+
+test "Matrix3x3 multiply identity" {
+    const m = Matrix3x3.identity;
+    const result = m.multiply(Matrix3x3.identity);
+
+    // Identity * Identity = Identity
+    try std.testing.expectEqual(@as(f32, 1), result.m[0]);
+    try std.testing.expectEqual(@as(f32, 0), result.m[1]);
+    try std.testing.expectEqual(@as(f32, 0), result.m[3]);
+    try std.testing.expectEqual(@as(f32, 1), result.m[4]);
+    try std.testing.expectEqual(@as(f32, 1), result.m[8]);
+}
+
+test "Matrix3x3 fromTransform no rotation" {
+    const t = Transform2D{
+        .position = Point2D{ .x = 10, .y = 20 },
+        .rotation = 0,
+        .scale = Point2D{ .x = 2, .y = 3 },
+    };
+    const m = Matrix3x3.fromTransform(t);
+
+    // Scale x
+    try std.testing.expectEqual(@as(f32, 2), m.m[0]);
+    // Scale y
+    try std.testing.expectEqual(@as(f32, 3), m.m[4]);
+    // Translation x
+    try std.testing.expectEqual(@as(f32, 10), m.m[2]);
+    // Translation y
+    try std.testing.expectEqual(@as(f32, 20), m.m[5]);
+}
+
+test "Matrix3x3 fromTransform with rotation" {
+    const t = Transform2D{
+        .position = Point2D.zero,
+        .rotation = std.math.pi / 2.0, // 90 degrees
+        .scale = Point2D{ .x = 1, .y = 1 },
+    };
+    const m = Matrix3x3.fromTransform(t);
+
+    // cos(90) ≈ 0, sin(90) ≈ 1
+    try std.testing.expectApproxEqAbs(@as(f32, 0), m.m[0], 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, -1), m.m[1], 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1), m.m[3], 0.001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0), m.m[4], 0.001);
+}
+
+test "PlaybackState enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(PlaybackState.stopped));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(PlaybackState.playing));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(PlaybackState.paused));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(PlaybackState.finished));
+}
+
+test "LoopMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(LoopMode.none));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(LoopMode.loop));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(LoopMode.ping_pong));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(LoopMode.loop_count));
+}
+
+test "PlayDirection enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(PlayDirection.forward));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(PlayDirection.reverse));
+}
+
+test "BlendMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(BlendMode.normal));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(BlendMode.additive));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(BlendMode.multiply));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(BlendMode.screen));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(BlendMode.overlay));
+}
+
+test "FillMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(FillMode.none));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(FillMode.forwards));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(FillMode.backwards));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(FillMode.both));
+}
+
+test "AnimationEventType enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(AnimationEventType.started));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(AnimationEventType.completed));
+    try std.testing.expectEqual(@as(u8, 7), @intFromEnum(AnimationEventType.marker_reached));
+}
+
+test "AnimationError enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(AnimationError.none));
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(AnimationError.parse_error));
+    try std.testing.expectEqual(@as(u8, 9), @intFromEnum(AnimationError.out_of_memory));
+    try std.testing.expectEqual(@as(u8, 10), @intFromEnum(AnimationError.platform_error));
+}
+
+test "RenderQuality enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(RenderQuality.low));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(RenderQuality.medium));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(RenderQuality.high));
+}
+
+test "AnimationEvent default values" {
+    const event = AnimationEvent{
+        .event_type = .started,
+        .animation_id = 42,
+    };
+    try std.testing.expectEqual(AnimationEventType.started, event.event_type);
+    try std.testing.expectEqual(@as(u32, 42), event.animation_id);
+    try std.testing.expectEqual(@as(FrameNumber, 0), event.current_frame);
+    try std.testing.expectEqual(@as(TimeMs, 0), event.current_time);
+    try std.testing.expectEqual(@as(u32, 0), event.loop_count);
+    try std.testing.expectEqual(@as(?[]const u8, null), event.marker_name);
+}
+
+test "PlaybackConfig default values" {
+    const config = PlaybackConfig{};
+    try std.testing.expectEqual(@as(f32, 1.0), config.speed);
+    try std.testing.expectEqual(LoopMode.none, config.loop_mode);
+    try std.testing.expectEqual(@as(u32, 0), config.loop_count);
+    try std.testing.expectEqual(PlayDirection.forward, config.direction);
+    try std.testing.expectEqual(false, config.auto_play);
+    try std.testing.expectEqual(FillMode.none, config.fill_mode);
+}
+
+test "RenderConfig default values" {
+    const config = RenderConfig{};
+    try std.testing.expectEqual(RenderQuality.medium, config.quality);
+    try std.testing.expectEqual(true, config.anti_aliasing);
+    try std.testing.expectEqual(@as(f32, 1.0), config.scale_factor);
+    try std.testing.expectEqual(@as(?Color, null), config.background_color);
+}
+
+test "AnimationResult union" {
+    const success = AnimationResult{ .success = {} };
+    try std.testing.expect(success == .success);
+
+    const err = AnimationResult{ .@"error" = .invalid_id };
+    try std.testing.expect(err == .@"error");
+    try std.testing.expectEqual(AnimationError.invalid_id, err.@"error");
+}
+
+test "Keyframe generic type" {
+    const keyframe = FloatKeyframe{
+        .time = 0.5,
+        .value = 100.0,
+        .easing = null,
+    };
+    try std.testing.expectEqual(@as(NormalizedTime, 0.5), keyframe.time);
+    try std.testing.expectEqual(@as(f32, 100.0), keyframe.value);
+    try std.testing.expectEqual(@as(?*const fn (f32) f32, null), keyframe.easing);
+}
+
+test "Point2DKeyframe" {
+    const keyframe = Point2DKeyframe{
+        .time = 0.75,
+        .value = Point2D{ .x = 50, .y = 100 },
+    };
+    try std.testing.expectEqual(@as(NormalizedTime, 0.75), keyframe.time);
+    try std.testing.expectEqual(@as(f32, 50), keyframe.value.x);
+    try std.testing.expectEqual(@as(f32, 100), keyframe.value.y);
+}
+
+test "ColorKeyframe" {
+    const keyframe = ColorKeyframe{
+        .time = 1.0,
+        .value = Color.red,
+    };
+    try std.testing.expectEqual(@as(NormalizedTime, 1.0), keyframe.time);
+    try std.testing.expectEqual(@as(u8, 255), keyframe.value.r);
+    try std.testing.expectEqual(@as(u8, 0), keyframe.value.g);
+}
+
+test "TransformKeyframe" {
+    const keyframe = TransformKeyframe{
+        .time = 0.0,
+        .value = Transform2D.identity,
+    };
+    try std.testing.expectEqual(@as(NormalizedTime, 0.0), keyframe.time);
+    try std.testing.expectEqual(@as(f32, 0), keyframe.value.rotation);
+}
