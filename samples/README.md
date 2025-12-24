@@ -27,7 +27,7 @@ Comprehensive examples showcasing Zylix capabilities.
 | [**game-arcade**](./showcase/game-arcade/) | Game engine features | ✅ Ready |
 | [**ai-playground**](./showcase/ai-playground/) | AI/ML integration demos | ✅ Ready |
 | [**device-lab**](./showcase/device-lab/) | Platform-specific features | ✅ Ready |
-| [**database-workshop**](./showcase/database-workshop/) | Database operations | 🚧 Planned |
+| [**database-workshop**](./showcase/database-workshop/) | Database operations | ✅ Ready |
 
 ### Apps (Full Applications)
 
