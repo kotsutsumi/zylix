@@ -19,6 +19,7 @@ pub const excel = @import("excel/excel.zig");
 pub const mbaas = @import("mbaas/mbaas.zig");
 pub const server = @import("server/server.zig");
 pub const edge = @import("edge/edge.zig");
+pub const perf = @import("perf/perf.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -76,6 +77,20 @@ pub const AzureAdapter = edge.AzureAdapter;
 pub const DenoAdapter = edge.DenoAdapter;
 pub const GCPAdapter = edge.GCPAdapter;
 pub const FastlyAdapter = edge.FastlyAdapter;
+
+// Re-export Performance types
+pub const PerfConfig = perf.PerfConfig;
+pub const PerfMetrics = perf.PerfMetrics;
+pub const Profiler = perf.Profiler;
+pub const VDomOptimizer = perf.VDomOptimizer;
+pub const MemoryPool = perf.MemoryPool;
+pub const RenderBatcher = perf.RenderBatcher;
+pub const FrameScheduler = perf.FrameScheduler;
+pub const ErrorBoundary = perf.ErrorBoundary;
+pub const CrashReporter = perf.CrashReporter;
+pub const AnalyticsHook = perf.AnalyticsHook;
+pub const BundleAnalyzer = perf.BundleAnalyzer;
+pub const TreeShaker = perf.TreeShaker;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
