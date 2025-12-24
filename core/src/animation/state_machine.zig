@@ -658,3 +658,437 @@ pub const AnimationController = struct {
         }
     }
 };
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "ParameterType enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(ParameterType.bool_type));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(ParameterType.int_type));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(ParameterType.float_type));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(ParameterType.trigger));
+}
+
+test "ParameterValue union" {
+    const bool_val = ParameterValue{ .bool_type = true };
+    try std.testing.expect(bool_val == .bool_type);
+    try std.testing.expectEqual(true, bool_val.bool_type);
+
+    const int_val = ParameterValue{ .int_type = 42 };
+    try std.testing.expect(int_val == .int_type);
+    try std.testing.expectEqual(@as(i32, 42), int_val.int_type);
+
+    const float_val = ParameterValue{ .float_type = 3.14 };
+    try std.testing.expect(float_val == .float_type);
+    try std.testing.expectApproxEqAbs(@as(f32, 3.14), float_val.float_type, 0.01);
+}
+
+test "CompareOp enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(CompareOp.equals));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(CompareOp.not_equals));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(CompareOp.greater));
+    try std.testing.expectEqual(@as(u8, 3), @intFromEnum(CompareOp.greater_or_equal));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(CompareOp.less));
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(CompareOp.less_or_equal));
+}
+
+test "Condition evaluate bool equals" {
+    const condition = Condition{
+        .parameter_name = "is_grounded",
+        .compare_op = .equals,
+        .threshold = ParameterValue{ .bool_type = true },
+    };
+
+    try std.testing.expect(condition.evaluate(ParameterValue{ .bool_type = true }));
+    try std.testing.expect(!condition.evaluate(ParameterValue{ .bool_type = false }));
+}
+
+test "Condition evaluate bool not_equals" {
+    const condition = Condition{
+        .parameter_name = "is_jumping",
+        .compare_op = .not_equals,
+        .threshold = ParameterValue{ .bool_type = false },
+    };
+
+    try std.testing.expect(condition.evaluate(ParameterValue{ .bool_type = true }));
+    try std.testing.expect(!condition.evaluate(ParameterValue{ .bool_type = false }));
+}
+
+test "Condition evaluate int comparisons" {
+    const greater_cond = Condition{
+        .parameter_name = "health",
+        .compare_op = .greater,
+        .threshold = ParameterValue{ .int_type = 50 },
+    };
+    try std.testing.expect(greater_cond.evaluate(ParameterValue{ .int_type = 75 }));
+    try std.testing.expect(!greater_cond.evaluate(ParameterValue{ .int_type = 50 }));
+    try std.testing.expect(!greater_cond.evaluate(ParameterValue{ .int_type = 25 }));
+
+    const less_eq_cond = Condition{
+        .parameter_name = "stamina",
+        .compare_op = .less_or_equal,
+        .threshold = ParameterValue{ .int_type = 100 },
+    };
+    try std.testing.expect(less_eq_cond.evaluate(ParameterValue{ .int_type = 100 }));
+    try std.testing.expect(less_eq_cond.evaluate(ParameterValue{ .int_type = 50 }));
+    try std.testing.expect(!less_eq_cond.evaluate(ParameterValue{ .int_type = 150 }));
+}
+
+test "Condition evaluate float comparisons" {
+    const greater_cond = Condition{
+        .parameter_name = "speed",
+        .compare_op = .greater_or_equal,
+        .threshold = ParameterValue{ .float_type = 0.5 },
+    };
+    try std.testing.expect(greater_cond.evaluate(ParameterValue{ .float_type = 0.5 }));
+    try std.testing.expect(greater_cond.evaluate(ParameterValue{ .float_type = 1.0 }));
+    try std.testing.expect(!greater_cond.evaluate(ParameterValue{ .float_type = 0.3 }));
+}
+
+test "Condition evaluate float equals with epsilon" {
+    const eq_cond = Condition{
+        .parameter_name = "value",
+        .compare_op = .equals,
+        .threshold = ParameterValue{ .float_type = 1.0 },
+    };
+    // Should handle floating point comparison with epsilon
+    try std.testing.expect(eq_cond.evaluate(ParameterValue{ .float_type = 1.0 }));
+    try std.testing.expect(eq_cond.evaluate(ParameterValue{ .float_type = 1.0000001 }));
+    try std.testing.expect(!eq_cond.evaluate(ParameterValue{ .float_type = 1.1 }));
+}
+
+test "Condition evaluate type mismatch returns false" {
+    const cond = Condition{
+        .parameter_name = "value",
+        .compare_op = .equals,
+        .threshold = ParameterValue{ .int_type = 10 },
+    };
+    // Float value for int condition should return false
+    try std.testing.expect(!cond.evaluate(ParameterValue{ .float_type = 10.0 }));
+}
+
+test "TransitionBlendMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(TransitionBlendMode.instant));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(TransitionBlendMode.crossfade));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(TransitionBlendMode.ease_in_out));
+}
+
+test "TransitionConfig default values" {
+    const config = TransitionConfig{};
+    try std.testing.expectEqual(@as(DurationMs, 200), config.duration);
+    try std.testing.expectEqual(TransitionBlendMode.crossfade, config.blend_mode);
+    try std.testing.expectEqual(@as(?f32, null), config.exit_time);
+    try std.testing.expectEqual(false, config.has_exit_time);
+    try std.testing.expectEqual(true, config.can_interrupt);
+    try std.testing.expectEqual(@as(u8, 0), config.priority);
+}
+
+test "Transition initialization" {
+    const allocator = std.testing.allocator;
+    var transition = Transition.init(allocator, "idle", "walk");
+    defer transition.deinit();
+
+    try std.testing.expectEqualStrings("idle", transition.from_state);
+    try std.testing.expectEqualStrings("walk", transition.to_state);
+    try std.testing.expectEqual(@as(usize, 0), transition.conditions.items.len);
+}
+
+test "Transition add conditions" {
+    const allocator = std.testing.allocator;
+    var transition = Transition.init(allocator, "idle", "run");
+    defer transition.deinit();
+
+    _ = transition.addCondition(Condition{
+        .parameter_name = "speed",
+        .compare_op = .greater,
+        .threshold = ParameterValue{ .float_type = 0.5 },
+    });
+
+    try std.testing.expectEqual(@as(usize, 1), transition.conditions.items.len);
+}
+
+test "Transition set config" {
+    const allocator = std.testing.allocator;
+    var transition = Transition.init(allocator, "walk", "run");
+    defer transition.deinit();
+
+    _ = transition.setConfig(TransitionConfig{
+        .duration = 500,
+        .blend_mode = .ease_in_out,
+    });
+
+    try std.testing.expectEqual(@as(DurationMs, 500), transition.config.duration);
+    try std.testing.expectEqual(TransitionBlendMode.ease_in_out, transition.config.blend_mode);
+}
+
+test "State default values" {
+    const state = State{ .name = "test" };
+    try std.testing.expectEqualStrings("test", state.name);
+    try std.testing.expectEqual(@as(?u32, null), state.animation_id);
+    try std.testing.expectEqual(@as(f32, 1.0), state.speed);
+    try std.testing.expectEqual(true, state.loop);
+    try std.testing.expectEqual(@as(f32, 0), state.normalized_time);
+    try std.testing.expectEqual(@as(TimeMs, 0), state.total_time);
+}
+
+test "StateMachine initialization" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    try std.testing.expectEqual(@as(?[]const u8, null), sm.getCurrentStateName());
+    try std.testing.expect(!sm.isInTransition());
+    try std.testing.expectEqual(@as(f32, 0), sm.getTransitionProgress());
+}
+
+test "StateMachine add states" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.addSimpleState("walk");
+    _ = sm.addSimpleState("run");
+
+    try std.testing.expect(sm.hasState("idle"));
+    try std.testing.expect(sm.hasState("walk"));
+    try std.testing.expect(sm.hasState("run"));
+    try std.testing.expect(!sm.hasState("jump"));
+}
+
+test "StateMachine add state with config" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addState("custom", State{
+        .name = "custom",
+        .animation_id = 42,
+        .speed = 2.0,
+        .loop = false,
+    });
+
+    const state = sm.getState("custom");
+    try std.testing.expect(state != null);
+    if (state) |s| {
+        try std.testing.expectEqual(@as(?u32, 42), s.animation_id);
+        try std.testing.expectEqual(@as(f32, 2.0), s.speed);
+        try std.testing.expectEqual(false, s.loop);
+    }
+}
+
+test "StateMachine remove state" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("temp");
+    try std.testing.expect(sm.hasState("temp"));
+
+    try std.testing.expect(sm.removeState("temp"));
+    try std.testing.expect(!sm.hasState("temp"));
+
+    // Remove non-existent returns false
+    try std.testing.expect(!sm.removeState("nonexistent"));
+}
+
+test "StateMachine set state" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.addSimpleState("walk");
+
+    // Set to valid state
+    try std.testing.expect(sm.setState("idle"));
+    try std.testing.expectEqualStrings("idle", sm.getCurrentStateName().?);
+
+    // Set to another state
+    try std.testing.expect(sm.setState("walk"));
+    try std.testing.expectEqualStrings("walk", sm.getCurrentStateName().?);
+
+    // Set to invalid state returns false
+    try std.testing.expect(!sm.setState("nonexistent"));
+}
+
+test "StateMachine parameters" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    // Set bool
+    sm.setBool("is_grounded", true);
+    const bool_val = sm.getParameter("is_grounded");
+    try std.testing.expect(bool_val != null);
+    try std.testing.expectEqual(ParameterValue{ .bool_type = true }, bool_val.?);
+
+    // Set int
+    sm.setInt("health", 100);
+    const int_val = sm.getParameter("health");
+    try std.testing.expect(int_val != null);
+    try std.testing.expectEqual(ParameterValue{ .int_type = 100 }, int_val.?);
+
+    // Set float
+    sm.setFloat("speed", 5.5);
+    const float_val = sm.getParameter("speed");
+    try std.testing.expect(float_val != null);
+    if (float_val) |v| {
+        try std.testing.expectApproxEqAbs(@as(f32, 5.5), v.float_type, 0.01);
+    }
+}
+
+test "StateMachine trigger" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    // Set trigger
+    sm.setTrigger("jump");
+    const trigger_val = sm.getParameter("jump");
+    try std.testing.expect(trigger_val != null);
+    try std.testing.expectEqual(ParameterValue{ .trigger = true }, trigger_val.?);
+
+    // Reset trigger
+    sm.resetTrigger("jump");
+    const reset_val = sm.getParameter("jump");
+    try std.testing.expect(reset_val != null);
+    try std.testing.expectEqual(ParameterValue{ .trigger = false }, reset_val.?);
+}
+
+test "StateMachine add transitions" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.addSimpleState("walk");
+
+    const transition = sm.addTransition("idle", "walk");
+    try std.testing.expectEqualStrings("idle", transition.from_state);
+    try std.testing.expectEqualStrings("walk", transition.to_state);
+}
+
+test "StateMachine any state transition" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.addSimpleState("death");
+
+    const transition = sm.addAnyStateTransition("death");
+    try std.testing.expectEqualStrings("*", transition.from_state);
+    try std.testing.expectEqualStrings("death", transition.to_state);
+}
+
+test "StateMachine force transition" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.addSimpleState("walk");
+    _ = sm.setState("idle");
+
+    // Force transition bypasses conditions
+    try std.testing.expect(sm.forceTransition("walk"));
+    try std.testing.expectEqualStrings("walk", sm.getCurrentStateName().?);
+
+    // Force transition to invalid state returns false
+    try std.testing.expect(!sm.forceTransition("nonexistent"));
+}
+
+test "StateMachine state weights" {
+    const allocator = std.testing.allocator;
+    var sm = StateMachine.init(allocator);
+    defer sm.deinit();
+
+    _ = sm.addSimpleState("idle");
+    _ = sm.setState("idle");
+
+    // Not transitioning - full weight
+    try std.testing.expectEqual(@as(f32, 1.0), sm.getCurrentStateWeight());
+    try std.testing.expectEqual(@as(f32, 0.0), sm.getTargetStateWeight());
+}
+
+test "LayerBlendMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(LayerBlendMode.override));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(LayerBlendMode.additive));
+}
+
+test "AnimationController initialization" {
+    const allocator = std.testing.allocator;
+    var controller = AnimationController.init(allocator);
+    defer controller.deinit();
+
+    try std.testing.expectEqual(@as(usize, 0), controller.layers.items.len);
+}
+
+test "AnimationController add layers" {
+    const allocator = std.testing.allocator;
+    var controller = AnimationController.init(allocator);
+    defer controller.deinit();
+
+    const base_layer = controller.addLayer("base");
+    try std.testing.expectEqualStrings("base", base_layer.name);
+    try std.testing.expectEqual(@as(f32, 1.0), base_layer.weight);
+
+    _ = controller.addLayer("upper_body");
+    try std.testing.expectEqual(@as(usize, 2), controller.layers.items.len);
+}
+
+test "AnimationController get layer" {
+    const allocator = std.testing.allocator;
+    var controller = AnimationController.init(allocator);
+    defer controller.deinit();
+
+    _ = controller.addLayer("base");
+    _ = controller.addLayer("overlay");
+
+    const layer = controller.getLayer("base");
+    try std.testing.expect(layer != null);
+    try std.testing.expectEqualStrings("base", layer.?.name);
+
+    const nonexistent = controller.getLayer("nonexistent");
+    try std.testing.expect(nonexistent == null);
+}
+
+test "AnimationController set parameters on all layers" {
+    const allocator = std.testing.allocator;
+    var controller = AnimationController.init(allocator);
+    defer controller.deinit();
+
+    _ = controller.addLayer("base");
+    _ = controller.addLayer("overlay");
+
+    controller.setFloat("speed", 2.5);
+
+    // Both layers should have the parameter
+    for (controller.layers.items) |*layer| {
+        const param = layer.state_machine.getParameter("speed");
+        try std.testing.expect(param != null);
+        if (param) |p| {
+            try std.testing.expectApproxEqAbs(@as(f32, 2.5), p.float_type, 0.01);
+        }
+    }
+}
+
+test "AnimationController set trigger on all layers" {
+    const allocator = std.testing.allocator;
+    var controller = AnimationController.init(allocator);
+    defer controller.deinit();
+
+    _ = controller.addLayer("base");
+    _ = controller.addLayer("overlay");
+
+    controller.setTrigger("attack");
+
+    // Both layers should have the trigger
+    for (controller.layers.items) |*layer| {
+        const param = layer.state_machine.getParameter("attack");
+        try std.testing.expect(param != null);
+        try std.testing.expectEqual(ParameterValue{ .trigger = true }, param.?);
+    }
+}

@@ -488,3 +488,136 @@ pub fn interpolate(comptime T: type, start: T, end: T, t: f32, easing_fn: *const
 pub fn clamp01(t: f32) f32 {
     return @max(0, @min(1, t));
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "linear easing" {
+    try std.testing.expectEqual(@as(f32, 0.0), linear(0.0));
+    try std.testing.expectEqual(@as(f32, 0.5), linear(0.5));
+    try std.testing.expectEqual(@as(f32, 1.0), linear(1.0));
+}
+
+test "quadratic easing boundary values" {
+    // All easings should return 0 at t=0 and 1 at t=1
+    try std.testing.expectEqual(@as(f32, 0.0), easeInQuad(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInQuad(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutQuad(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutQuad(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeInOutQuad(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInOutQuad(1.0));
+}
+
+test "cubic easing boundary values" {
+    try std.testing.expectEqual(@as(f32, 0.0), easeInCubic(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInCubic(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutCubic(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutCubic(1.0));
+}
+
+test "quartic easing boundary values" {
+    try std.testing.expectEqual(@as(f32, 0.0), easeInQuart(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInQuart(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutQuart(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutQuart(1.0));
+}
+
+test "quintic easing boundary values" {
+    try std.testing.expectEqual(@as(f32, 0.0), easeInQuint(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInQuint(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutQuint(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutQuint(1.0));
+}
+
+test "sinusoidal easing" {
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeInSine(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeInSine(1.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeOutSine(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeOutSine(1.0), 0.0001);
+}
+
+test "exponential easing" {
+    try std.testing.expectEqual(@as(f32, 0.0), easeInExpo(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInExpo(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutExpo(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutExpo(1.0));
+}
+
+test "circular easing" {
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeInCirc(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeInCirc(1.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeOutCirc(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeOutCirc(1.0), 0.0001);
+}
+
+test "elastic easing boundary values" {
+    try std.testing.expectEqual(@as(f32, 0.0), easeInElastic(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeInElastic(1.0));
+    try std.testing.expectEqual(@as(f32, 0.0), easeOutElastic(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), easeOutElastic(1.0));
+}
+
+test "bounce easing" {
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeInBounce(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeInBounce(1.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeOutBounce(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeOutBounce(1.0), 0.0001);
+}
+
+test "back easing" {
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeInBack(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeInBack(1.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), easeOutBack(0.0), 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), easeOutBack(1.0), 0.0001);
+}
+
+test "step functions" {
+    try std.testing.expectEqual(@as(f32, 1.0), stepStart(0.0));
+    try std.testing.expectEqual(@as(f32, 1.0), stepStart(0.5));
+    try std.testing.expectEqual(@as(f32, 0.0), stepEnd(0.0));
+    try std.testing.expectEqual(@as(f32, 0.0), stepEnd(0.5));
+    try std.testing.expectEqual(@as(f32, 1.0), stepEnd(1.0));
+}
+
+test "cubic bezier presets" {
+    const ease = CubicBezier.ease;
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), ease.evaluate(0.0), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), ease.evaluate(1.0), 0.01);
+
+    const ease_in = CubicBezier.ease_in;
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), ease_in.evaluate(0.0), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), ease_in.evaluate(1.0), 0.01);
+}
+
+test "spring physics" {
+    const spring = Spring.default;
+    try std.testing.expectApproxEqAbs(@as(f32, 0.0), spring.evaluate(0.0), 0.01);
+    // Spring approaches 1.0 but may overshoot
+    try std.testing.expect(spring.evaluate(5.0) > 0.9);
+
+    const stiff = Spring.stiff;
+    try std.testing.expect(stiff.evaluate(3.0) > 0.9);
+}
+
+test "easing type enum" {
+    const fn_linear = EasingType.linear.getFunction();
+    try std.testing.expectEqual(@as(f32, 0.5), fn_linear(0.5));
+
+    const fn_quad = EasingType.ease_in_quad.getFunction();
+    try std.testing.expectEqual(@as(f32, 0.25), fn_quad(0.5));
+}
+
+test "interpolate utility" {
+    const result = interpolate(f32, 0.0, 100.0, 0.5, linear);
+    try std.testing.expectEqual(@as(f32, 50.0), result);
+
+    const result_eased = interpolate(f32, 0.0, 100.0, 0.5, easeInQuad);
+    try std.testing.expectEqual(@as(f32, 25.0), result_eased);
+}
+
+test "clamp01" {
+    try std.testing.expectEqual(@as(f32, 0.0), clamp01(-0.5));
+    try std.testing.expectEqual(@as(f32, 0.5), clamp01(0.5));
+    try std.testing.expectEqual(@as(f32, 1.0), clamp01(1.5));
+}

@@ -49,10 +49,17 @@ pub fn PropertyTrack(comptime T: type) type {
             easing_fn: *const fn (f32) f32 = easing.linear,
         };
 
+        // Threshold for switching to binary search
+        const BINARY_SEARCH_THRESHOLD = 8;
+
         keyframes: std.ArrayList(Keyframe),
         name: []const u8,
         current_value: T,
         allocator: std.mem.Allocator,
+        // Performance: cached duration (updated on keyframe add)
+        cached_duration: TimeMs = 0,
+        // Performance: last accessed keyframe index for temporal coherence
+        last_keyframe_idx: usize = 0,
 
         pub fn init(allocator: std.mem.Allocator, name: []const u8, initial_value: T) Self {
             var track = Self{
@@ -60,6 +67,8 @@ pub fn PropertyTrack(comptime T: type) type {
                 .name = name,
                 .current_value = initial_value,
                 .allocator = allocator,
+                .cached_duration = 0,
+                .last_keyframe_idx = 0,
             };
             // Add initial keyframe at time 0
             track.keyframes.append(allocator, .{ .time = 0, .value = initial_value }) catch {};
@@ -73,6 +82,7 @@ pub fn PropertyTrack(comptime T: type) type {
         /// Add a keyframe at specified time
         pub fn addKeyframe(self: *Self, time: TimeMs, value: T) *Self {
             self.keyframes.append(self.allocator, .{ .time = time, .value = value }) catch {};
+            self.updateCachedDuration();
             return self;
         }
 
@@ -83,7 +93,36 @@ pub fn PropertyTrack(comptime T: type) type {
                 .value = value,
                 .easing_fn = easing_fn,
             }) catch {};
+            self.updateCachedDuration();
             return self;
+        }
+
+        /// Update cached duration after keyframe modification
+        fn updateCachedDuration(self: *Self) void {
+            if (self.keyframes.items.len == 0) {
+                self.cached_duration = 0;
+            } else {
+                self.cached_duration = self.keyframes.items[self.keyframes.items.len - 1].time;
+            }
+        }
+
+        /// Binary search to find keyframe index for a given time
+        fn binarySearchKeyframe(keyframes: []const Keyframe, time: TimeMs) usize {
+            if (keyframes.len == 0) return 0;
+
+            var left: usize = 0;
+            var right: usize = keyframes.len;
+
+            while (left < right) {
+                const mid = left + (right - left) / 2;
+                if (keyframes[mid].time <= time) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+
+            return if (left > 0) left - 1 else 0;
         }
 
         /// Get the interpolated value at a given time
@@ -95,16 +134,41 @@ pub fn PropertyTrack(comptime T: type) type {
             var prev_idx: usize = 0;
             var next_idx: usize = 0;
 
-            for (self.keyframes.items, 0..) |kf, i| {
-                if (kf.time <= time) {
-                    prev_idx = i;
+            // Performance: use binary search for many keyframes
+            if (self.keyframes.items.len >= BINARY_SEARCH_THRESHOLD) {
+                prev_idx = binarySearchKeyframe(self.keyframes.items, time);
+                next_idx = @min(prev_idx + 1, self.keyframes.items.len - 1);
+            } else {
+                // Linear search with temporal coherence optimization
+                // Start from last accessed index for sequential playback
+                const start = if (self.last_keyframe_idx < self.keyframes.items.len)
+                    self.last_keyframe_idx
+                else
+                    0;
+
+                // Check if we can use cached position
+                if (start > 0 and self.keyframes.items[start - 1].time <= time and
+                    (start >= self.keyframes.items.len or self.keyframes.items[start].time > time))
+                {
+                    prev_idx = start - 1;
+                    next_idx = start;
+                } else {
+                    // Full linear search
+                    for (self.keyframes.items, 0..) |kf, i| {
+                        if (kf.time <= time) {
+                            prev_idx = i;
+                        }
+                        if (kf.time >= time) {
+                            next_idx = i;
+                            break;
+                        }
+                        next_idx = i;
+                    }
                 }
-                if (kf.time >= time) {
-                    next_idx = i;
-                    break;
-                }
-                next_idx = i;
             }
+
+            // Cache for next lookup
+            self.last_keyframe_idx = next_idx;
 
             const prev_kf = self.keyframes.items[prev_idx];
             const next_kf = self.keyframes.items[next_idx];
@@ -124,10 +188,14 @@ pub fn PropertyTrack(comptime T: type) type {
             return interpolateValue(T, prev_kf.value, next_kf.value, eased_t);
         }
 
-        /// Get the total duration of this track
+        /// Get the total duration of this track (cached for performance)
         pub fn getDuration(self: *const Self) TimeMs {
-            if (self.keyframes.items.len == 0) return 0;
-            return self.keyframes.items[self.keyframes.items.len - 1].time;
+            return self.cached_duration;
+        }
+
+        /// Force recalculation of cached duration
+        pub fn invalidateDurationCache(self: *Self) void {
+            self.updateCachedDuration();
         }
     };
 }
@@ -195,6 +263,9 @@ pub const Timeline = struct {
     direction: PlayDirection,
     start_time: ?i64,
     callbacks: std.ArrayList(*const fn (AnimationEvent) void),
+    // Performance: cached duration valid flag
+    duration_valid: bool = false,
+    cached_total_duration: TimeMs = 0,
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
@@ -212,6 +283,8 @@ pub const Timeline = struct {
             .direction = .forward,
             .start_time = null,
             .callbacks = .{},
+            .duration_valid = false,
+            .cached_total_duration = 0,
         };
     }
 
@@ -423,6 +496,14 @@ pub const Timeline = struct {
             }
         }
         self.duration = max_duration;
+        // Update cache
+        self.cached_total_duration = max_duration;
+        self.duration_valid = true;
+    }
+
+    /// Invalidate the cached duration (call when tracks change)
+    pub fn invalidateDurationCache(self: *Self) void {
+        self.duration_valid = false;
     }
 
     fn updateTracks(self: *Self) void {
@@ -485,6 +566,8 @@ pub const Timeline = struct {
 
     pub fn getDuration(self: *const Self) TimeMs {
         // Calculate duration dynamically from tracks
+        // Note: Each PropertyTrack has its own cached duration, so this is O(n) where n = track count
+        // Timeline-level caching is avoided because tracks can be modified independently
         var max_duration: TimeMs = 0;
         for (self.tracks.items) |track| {
             const track_duration = track.get_duration_fn(track.ptr);
@@ -617,3 +700,417 @@ pub const ParallelGroup = struct {
         }
     }
 };
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "PropertyTrack initialization" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "opacity", 1.0);
+    defer track.deinit();
+
+    try std.testing.expectEqualStrings("opacity", track.name);
+    try std.testing.expectEqual(@as(f32, 1.0), track.current_value);
+    // Initial keyframe at time 0
+    try std.testing.expectEqual(@as(usize, 1), track.keyframes.items.len);
+}
+
+test "PropertyTrack add keyframes" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "scale", 1.0);
+    defer track.deinit();
+
+    _ = track.addKeyframe(500, 1.5);
+    _ = track.addKeyframe(1000, 2.0);
+
+    try std.testing.expectEqual(@as(usize, 3), track.keyframes.items.len);
+    try std.testing.expectEqual(@as(TimeMs, 1000), track.getDuration());
+}
+
+test "PropertyTrack interpolation at boundaries" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "value", 0.0);
+    defer track.deinit();
+
+    _ = track.addKeyframe(1000, 100.0);
+
+    // At start
+    try std.testing.expectEqual(@as(f32, 0.0), track.getValueAt(0));
+
+    // At end
+    try std.testing.expectEqual(@as(f32, 100.0), track.getValueAt(1000));
+}
+
+test "PropertyTrack interpolation midpoint" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "position", 0.0);
+    defer track.deinit();
+
+    _ = track.addKeyframe(1000, 100.0);
+
+    // At midpoint (with linear easing)
+    const mid_value = track.getValueAt(500);
+    try std.testing.expectApproxEqAbs(@as(f32, 50.0), mid_value, 0.01);
+}
+
+test "PropertyTrack with custom easing" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "eased", 0.0);
+    defer track.deinit();
+
+    _ = track.addKeyframeWithEasing(1000, 100.0, easing.easeInQuad);
+
+    // easeInQuad at t=0.5 gives t^2 = 0.25
+    const mid_value = track.getValueAt(500);
+    try std.testing.expectApproxEqAbs(@as(f32, 25.0), mid_value, 0.01);
+}
+
+test "Timeline initialization" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    try std.testing.expectEqual(PlaybackState.stopped, timeline.getState());
+    try std.testing.expectEqual(@as(TimeMs, 0), timeline.getCurrentTime());
+    try std.testing.expectEqual(@as(TimeMs, 0), timeline.getDuration());
+    try std.testing.expectEqual(false, timeline.isPlaying());
+}
+
+test "Timeline add property track" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    const track = timeline.addPropertyTrack(f32, "opacity", 1.0);
+    try std.testing.expect(track != null);
+
+    if (track) |t| {
+        _ = t.addKeyframe(1000, 0.0);
+        try std.testing.expectEqual(@as(TimeMs, 1000), timeline.getDuration());
+    }
+}
+
+test "Timeline markers" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    _ = timeline.addMarker("start", 0);
+    _ = timeline.addMarker("middle", 500);
+    _ = timeline.addMarker("end", 1000);
+
+    try std.testing.expectEqual(@as(usize, 3), timeline.markers.items.len);
+    try std.testing.expectEqualStrings("middle", timeline.markers.items[1].name);
+    try std.testing.expectEqual(@as(TimeMs, 500), timeline.markers.items[1].time);
+}
+
+test "Timeline playback states" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    // Initial state
+    try std.testing.expectEqual(PlaybackState.stopped, timeline.getState());
+
+    // Play
+    timeline.play();
+    try std.testing.expectEqual(PlaybackState.playing, timeline.getState());
+    try std.testing.expect(timeline.isPlaying());
+
+    // Pause
+    timeline.pause();
+    try std.testing.expectEqual(PlaybackState.paused, timeline.getState());
+    try std.testing.expect(!timeline.isPlaying());
+
+    // Resume
+    timeline.play();
+    try std.testing.expectEqual(PlaybackState.playing, timeline.getState());
+
+    // Stop
+    timeline.stop();
+    try std.testing.expectEqual(PlaybackState.stopped, timeline.getState());
+    try std.testing.expectEqual(@as(TimeMs, 0), timeline.getCurrentTime());
+}
+
+test "Timeline seek" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    const track = timeline.addPropertyTrack(f32, "value", 0.0);
+    if (track) |t| {
+        _ = t.addKeyframe(1000, 100.0);
+    }
+
+    timeline.seek(500);
+    try std.testing.expectEqual(@as(TimeMs, 500), timeline.getCurrentTime());
+
+    // Seek beyond duration should clamp
+    timeline.seek(2000);
+    try std.testing.expectEqual(@as(TimeMs, 1000), timeline.getCurrentTime());
+
+    // Seek negative should clamp to 0
+    timeline.seek(-100);
+    try std.testing.expectEqual(@as(TimeMs, 0), timeline.getCurrentTime());
+}
+
+test "Timeline seek to marker" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    const track = timeline.addPropertyTrack(f32, "value", 0.0);
+    if (track) |t| {
+        _ = t.addKeyframe(1000, 100.0);
+    }
+
+    _ = timeline.addMarker("halfway", 500);
+
+    const found = timeline.seekToMarker("halfway");
+    try std.testing.expect(found);
+    try std.testing.expectEqual(@as(TimeMs, 500), timeline.getCurrentTime());
+
+    const not_found = timeline.seekToMarker("nonexistent");
+    try std.testing.expect(!not_found);
+}
+
+test "Timeline speed multiplier" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    _ = timeline.setSpeed(2.0);
+    try std.testing.expectEqual(@as(f32, 2.0), timeline.speed);
+
+    _ = timeline.setSpeed(0.5);
+    try std.testing.expectEqual(@as(f32, 0.5), timeline.speed);
+}
+
+test "Timeline loop mode" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    _ = timeline.setLoopMode(.loop);
+    try std.testing.expectEqual(LoopMode.loop, timeline.loop_mode);
+
+    _ = timeline.setLoopMode(.ping_pong);
+    try std.testing.expectEqual(LoopMode.ping_pong, timeline.loop_mode);
+}
+
+test "Timeline loop count" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    _ = timeline.setLoopCount(3);
+    try std.testing.expectEqual(@as(u32, 3), timeline.loop_count);
+}
+
+test "Timeline progress" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    const track = timeline.addPropertyTrack(f32, "value", 0.0);
+    if (track) |t| {
+        _ = t.addKeyframe(1000, 100.0);
+    }
+
+    try std.testing.expectEqual(@as(f32, 0.0), timeline.getProgress());
+
+    timeline.seek(500);
+    try std.testing.expectEqual(@as(f32, 0.5), timeline.getProgress());
+
+    timeline.seek(1000);
+    try std.testing.expectEqual(@as(f32, 1.0), timeline.getProgress());
+}
+
+test "SequenceBuilder initialization" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    var builder = SequenceBuilder.init(&timeline);
+    try std.testing.expectEqual(@as(TimeMs, 0), builder.getCurrentTime());
+}
+
+test "SequenceBuilder delay" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    var builder = SequenceBuilder.init(&timeline);
+    _ = builder.delay(500);
+    try std.testing.expectEqual(@as(TimeMs, 500), builder.getCurrentTime());
+
+    _ = builder.delay(300);
+    try std.testing.expectEqual(@as(TimeMs, 800), builder.getCurrentTime());
+}
+
+test "SequenceBuilder mark" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    var builder = SequenceBuilder.init(&timeline);
+    _ = builder.delay(500);
+    _ = builder.mark("checkpoint");
+
+    try std.testing.expectEqual(@as(usize, 1), timeline.markers.items.len);
+    try std.testing.expectEqualStrings("checkpoint", timeline.markers.items[0].name);
+    try std.testing.expectEqual(@as(TimeMs, 500), timeline.markers.items[0].time);
+}
+
+test "ParallelGroup initialization" {
+    const allocator = std.testing.allocator;
+    var group = ParallelGroup.init(allocator);
+    defer group.deinit();
+
+    try std.testing.expectEqual(PlaybackState.stopped, group.state);
+    try std.testing.expectEqual(@as(usize, 0), group.timelines.items.len);
+}
+
+test "ParallelGroup playback control" {
+    const allocator = std.testing.allocator;
+    var group = ParallelGroup.init(allocator);
+    defer group.deinit();
+
+    group.play();
+    try std.testing.expectEqual(PlaybackState.playing, group.state);
+
+    group.pause();
+    try std.testing.expectEqual(PlaybackState.paused, group.state);
+
+    group.stop();
+    try std.testing.expectEqual(PlaybackState.stopped, group.state);
+}
+
+test "interpolateValue float" {
+    const result = interpolateValue(f32, 0.0, 100.0, 0.5);
+    try std.testing.expectEqual(@as(f32, 50.0), result);
+}
+
+test "interpolateValue int" {
+    const result = interpolateValue(i32, 0, 100, 0.5);
+    try std.testing.expectEqual(@as(i32, 50), result);
+}
+
+test "interpolateValue struct with lerp" {
+    const result = interpolateValue(types.Point2D, types.Point2D{ .x = 0, .y = 0 }, types.Point2D{ .x = 100, .y = 200 }, 0.5);
+    try std.testing.expectEqual(@as(f32, 50), result.x);
+    try std.testing.expectEqual(@as(f32, 100), result.y);
+}
+
+// === Performance Optimization Tests ===
+
+test "PropertyTrack cached duration" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "cached", 0.0);
+    defer track.deinit();
+
+    // Initial duration should be 0
+    try std.testing.expectEqual(@as(TimeMs, 0), track.cached_duration);
+
+    // Add keyframes and check cached duration is updated
+    _ = track.addKeyframe(500, 50.0);
+    try std.testing.expectEqual(@as(TimeMs, 500), track.cached_duration);
+
+    _ = track.addKeyframe(1000, 100.0);
+    try std.testing.expectEqual(@as(TimeMs, 1000), track.cached_duration);
+
+    // getDuration should return cached value
+    try std.testing.expectEqual(@as(TimeMs, 1000), track.getDuration());
+}
+
+test "PropertyTrack binary search threshold" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "many_keyframes", 0.0);
+    defer track.deinit();
+
+    // Add enough keyframes to trigger binary search (>= 8)
+    var i: TimeMs = 100;
+    while (i <= 1000) : (i += 100) {
+        _ = track.addKeyframe(i, @as(f32, @floatFromInt(i)));
+    }
+
+    // Should have 11 keyframes (initial + 10 added)
+    try std.testing.expectEqual(@as(usize, 11), track.keyframes.items.len);
+
+    // Test interpolation at various points
+    const val_250 = track.getValueAt(250);
+    try std.testing.expectApproxEqAbs(@as(f32, 250.0), val_250, 1.0);
+
+    const val_750 = track.getValueAt(750);
+    try std.testing.expectApproxEqAbs(@as(f32, 750.0), val_750, 1.0);
+}
+
+test "PropertyTrack temporal coherence" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "sequential", 0.0);
+    defer track.deinit();
+
+    // Add a few keyframes (below binary search threshold)
+    _ = track.addKeyframe(250, 25.0);
+    _ = track.addKeyframe(500, 50.0);
+    _ = track.addKeyframe(750, 75.0);
+    _ = track.addKeyframe(1000, 100.0);
+
+    // Simulate sequential playback
+    var time: TimeMs = 0;
+    while (time <= 1000) : (time += 50) {
+        const val = track.getValueAt(time);
+        // Verify value is reasonable
+        const expected = @as(f32, @floatFromInt(time)) / 10.0;
+        try std.testing.expectApproxEqAbs(expected, val, 1.0);
+    }
+
+    // last_keyframe_idx should have been updated
+    try std.testing.expect(track.last_keyframe_idx > 0);
+}
+
+test "Timeline duration from tracks" {
+    const allocator = std.testing.allocator;
+    var timeline = Timeline.init(allocator);
+    defer timeline.deinit();
+
+    // Add track
+    const track = timeline.addPropertyTrack(f32, "test", 0.0);
+
+    // Adding keyframes to track updates track's cache
+    if (track) |t| {
+        _ = t.addKeyframe(1000, 100.0);
+        // Track's cache is updated
+        try std.testing.expectEqual(@as(TimeMs, 1000), t.getDuration());
+    }
+
+    // Timeline getDuration always recalculates from tracks
+    // Each track has its own cached duration, so this is efficient
+    try std.testing.expectEqual(@as(TimeMs, 1000), timeline.getDuration());
+
+    // Add another track with longer duration
+    const track2 = timeline.addPropertyTrack(f32, "test2", 0.0);
+    if (track2) |t| {
+        _ = t.addKeyframe(2000, 200.0);
+    }
+
+    // Timeline returns the maximum duration across all tracks
+    try std.testing.expectEqual(@as(TimeMs, 2000), timeline.getDuration());
+}
+
+test "PropertyTrack invalidateDurationCache" {
+    const allocator = std.testing.allocator;
+    var track = PropertyTrack(f32).init(allocator, "invalidate", 0.0);
+    defer track.deinit();
+
+    _ = track.addKeyframe(500, 50.0);
+    try std.testing.expectEqual(@as(TimeMs, 500), track.cached_duration);
+
+    // Manually set a wrong cached duration
+    track.cached_duration = 999;
+
+    // Invalidate should recalculate
+    track.invalidateDurationCache();
+    try std.testing.expectEqual(@as(TimeMs, 500), track.cached_duration);
+}

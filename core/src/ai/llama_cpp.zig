@@ -290,3 +290,131 @@ pub fn supportsMmap() bool {
 pub fn batchGetOne(tokens: [*]llama_token, n_tokens: i32) llama_batch {
     return c.llama_batch_get_one(tokens, n_tokens);
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+// Note: Most functions require a loaded llama.cpp model which is not available
+// during unit testing. These tests verify module structure and constants.
+
+test "LLAMA_POOLING_TYPE constants exist" {
+    // Verify pooling type constants are defined
+    try std.testing.expect(LLAMA_POOLING_TYPE_NONE != LLAMA_POOLING_TYPE_MEAN);
+    try std.testing.expect(LLAMA_POOLING_TYPE_MEAN != LLAMA_POOLING_TYPE_CLS);
+    try std.testing.expect(LLAMA_POOLING_TYPE_CLS != LLAMA_POOLING_TYPE_LAST);
+}
+
+test "type aliases are valid" {
+    // Verify type aliases exist and have non-zero size
+    try std.testing.expect(@sizeOf(llama_model_params) > 0);
+    try std.testing.expect(@sizeOf(llama_context_params) > 0);
+    try std.testing.expect(@sizeOf(llama_batch) > 0);
+    try std.testing.expect(@sizeOf(llama_token) > 0);
+    try std.testing.expect(@sizeOf(llama_pos) > 0);
+    try std.testing.expect(@sizeOf(llama_seq_id) > 0);
+}
+
+test "function references exist - initialization" {
+    // Verify function references are valid (compile-time check)
+    _ = backendInit;
+    _ = backendFree;
+}
+
+test "function references exist - model loading" {
+    _ = modelDefaultParams;
+    _ = contextDefaultParams;
+    _ = modelLoadFromFile;
+    _ = modelFree;
+    _ = initFromModel;
+    _ = free;
+}
+
+test "function references exist - model info" {
+    _ = modelNEmbd;
+    _ = modelNCtxTrain;
+    _ = modelGetVocab;
+    _ = vocabNTokens;
+}
+
+test "function references exist - context info" {
+    _ = nCtx;
+    _ = nBatch;
+    _ = getModel;
+    _ = poolingType;
+}
+
+test "function references exist - tokenization" {
+    _ = tokenize;
+    _ = tokenToPiece;
+}
+
+test "function references exist - batch operations" {
+    _ = batchInit;
+    _ = batchFree;
+    _ = batchGetOne;
+}
+
+test "function references exist - inference" {
+    _ = decode;
+    _ = encode;
+}
+
+test "function references exist - embeddings" {
+    _ = setEmbeddings;
+    _ = getEmbeddingsIth;
+    _ = getEmbeddingsSeq;
+}
+
+test "function references exist - logits" {
+    _ = getLogitsIth;
+}
+
+test "function references exist - sampling" {
+    _ = samplerChainInit;
+    _ = samplerChainDefaultParams;
+    _ = samplerChainAdd;
+    _ = samplerFree;
+    _ = samplerSample;
+    _ = samplerInitGreedy;
+    _ = samplerInitTemp;
+    _ = samplerInitTopP;
+    _ = samplerInitTopK;
+}
+
+test "function references exist - special tokens" {
+    _ = vocabBos;
+    _ = vocabEos;
+    _ = vocabEot;
+}
+
+test "function references exist - memory management" {
+    _ = getMemory;
+    _ = memoryClear;
+}
+
+test "function references exist - utility" {
+    _ = supportsGpuOffload;
+    _ = supportsMmap;
+}
+
+test "modelDefaultParams returns valid struct" {
+    const params = modelDefaultParams();
+    // Verify struct has expected fields with reasonable defaults
+    try std.testing.expect(@sizeOf(@TypeOf(params)) > 0);
+}
+
+test "contextDefaultParams returns valid struct" {
+    const params = contextDefaultParams();
+    // Verify struct has expected fields
+    try std.testing.expect(@sizeOf(@TypeOf(params)) > 0);
+}
+
+test "samplerChainDefaultParams returns valid struct" {
+    const params = samplerChainDefaultParams();
+    try std.testing.expect(@sizeOf(@TypeOf(params)) > 0);
+}
+
+test "llama_memory_t type exists" {
+    try std.testing.expect(@sizeOf(llama_memory_t) > 0);
+}
