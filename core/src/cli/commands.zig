@@ -464,8 +464,7 @@ fn showServerStatus(platforms: []const Platform) ExitCode {
 
     for (platforms) |platform| {
         const port = platform.defaultPort();
-        // TODO: Check actual server status
-        const status = "stopped";
+        const status = if (isServerRunning(port)) "running" else "stopped";
 
         output.print("{s:<12} {d:<8} {s:<10}\n", .{ platform.toString(), port, status });
     }
@@ -479,10 +478,9 @@ fn showServerStatus(platforms: []const Platform) ExitCode {
 
 /// List available tests
 pub fn listTests(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
-    _ = allocator;
-
     var platform_filter: ?Platform = null;
     var json_output = false;
+    var test_dir: []const u8 = "tests";
 
     // Parse arguments
     var i: usize = 0;
@@ -496,14 +494,41 @@ pub fn listTests(allocator: std.mem.Allocator, args: []const []const u8) ExitCod
             }
         } else if (std.mem.eql(u8, arg, "--json")) {
             json_output = true;
+        } else if (std.mem.eql(u8, arg, "--dir")) {
+            if (i + 1 < args.len) {
+                i += 1;
+                test_dir = args[i];
+            }
         }
+    }
+
+    // Scan for test files
+    const tests = scanTestFiles(allocator, test_dir, platform_filter) catch |err| {
+        output.printError("Failed to scan test directory: {s}", .{@errorName(err)});
+        return ExitCode.runtime_error;
+    };
+    defer {
+        for (tests) |t| {
+            allocator.free(t.file);
+        }
+        allocator.free(tests);
     }
 
     if (json_output) {
         // JSON output
         output.printLiteral("[\n");
-        output.printLiteral("  {\"name\": \"test_home_page\", \"file\": \"tests/home.test.zig\", \"platform\": \"web\"},\n");
-        output.printLiteral("  {\"name\": \"test_login\", \"file\": \"tests/auth.test.zig\", \"platform\": \"web\"}\n");
+        for (tests, 0..) |t, idx| {
+            const platform_str = if (t.platform) |p| p.toString() else "any";
+            output.print("  {{\"name\": \"{s}\", \"file\": \"{s}\", \"platform\": \"{s}\"}}", .{
+                t.name,
+                t.file,
+                platform_str,
+            });
+            if (idx < tests.len - 1) {
+                output.printLiteral(",");
+            }
+            output.printLiteral("\n");
+        }
         output.printLiteral("]\n");
     } else {
         output.printHeader("Available Tests");
@@ -512,13 +537,19 @@ pub fn listTests(allocator: std.mem.Allocator, args: []const []const u8) ExitCod
             output.print("Platform: {s}\n\n", .{p.toString()});
         }
 
-        // TODO: Actually scan for tests
         output.print("{s:<30} {s:<30} {s:<10}\n", .{ "Test Name", "File", "Platform" });
         output.printSeparator();
-        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_home_page", "tests/home.test.zig", "web" });
-        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_login", "tests/auth.test.zig", "web" });
-        output.print("{s:<30} {s:<30} {s:<10}\n", .{ "test_navigation", "tests/nav.test.zig", "web" });
-        output.print("\nTotal: 3 tests\n", .{});
+
+        if (tests.len == 0) {
+            output.printInfo("No test files found in '{s}'", .{test_dir});
+            output.print("\nHint: Test files should match *.test.zig or *_test.zig pattern\n", .{});
+        } else {
+            for (tests) |t| {
+                const platform_str = if (t.platform) |p| p.toString() else "any";
+                output.print("{s:<30} {s:<30} {s:<10}\n", .{ t.name, t.file, platform_str });
+            }
+            output.print("\nTotal: {d} tests\n", .{tests.len});
+        }
     }
 
     return ExitCode.success;
@@ -583,7 +614,9 @@ pub fn generateReport(allocator: std.mem.Allocator, args: []const []const u8) Ex
 
     if (open_report and format == .html) {
         output.printInfo("Opening report in browser...", .{});
-        // TODO: Actually open browser
+        openInBrowser(output_dir, report_file) catch |err| {
+            output.printWarning("Could not open browser: {s}", .{@errorName(err)});
+        };
     }
 
     return ExitCode.success;
@@ -1359,6 +1392,114 @@ fn aiInfo(allocator: std.mem.Allocator, args: []const []const u8) ExitCode {
     output.print("  zylix-test ai info <model.gguf>\n", .{});
 
     return ExitCode.success;
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/// Open a file in the default system browser
+fn openInBrowser(dir: []const u8, file: []const u8) !void {
+    var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+    const full_path = std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ dir, file }) catch return error.PathTooLong;
+
+    // Use platform-specific command to open browser
+    const open_cmd = switch (@import("builtin").os.tag) {
+        .macos => "open",
+        .linux => "xdg-open",
+        .windows => "start",
+        else => return error.UnsupportedPlatform,
+    };
+
+    var child = std.process.Child.init(&.{ open_cmd, full_path }, std.heap.page_allocator);
+    child.spawn() catch return error.SpawnFailed;
+    // Don't wait for the browser process
+}
+
+/// Scan directory for test files
+fn scanTestFiles(allocator: std.mem.Allocator, test_dir: []const u8, platform_filter: ?Platform) ![]TestInfo {
+    var tests: std.ArrayListUnmanaged(TestInfo) = .{};
+    errdefer tests.deinit(allocator);
+
+    // Try to open the test directory
+    var dir = std.fs.cwd().openDir(test_dir, .{ .iterate = true }) catch {
+        // Directory doesn't exist or can't be opened, return empty list
+        return tests.toOwnedSlice(allocator);
+    };
+    defer dir.close();
+
+    var iter = dir.iterate();
+    while (try iter.next()) |entry| {
+        if (entry.kind != .file) continue;
+
+        // Check for test file pattern: *.test.zig or *_test.zig
+        const name = entry.name;
+        const is_test_file = std.mem.endsWith(u8, name, ".test.zig") or
+            std.mem.endsWith(u8, name, "_test.zig");
+
+        if (!is_test_file) continue;
+
+        // Determine platform from filename if possible
+        const platform = detectPlatformFromName(name);
+
+        // Apply platform filter if specified
+        if (platform_filter) |filter| {
+            if (platform) |p| {
+                if (p != filter) continue;
+            }
+        }
+
+        // Create full path
+        const file_path = try std.fmt.allocPrint(allocator, "{s}/{s}", .{ test_dir, name });
+
+        // Extract test name from filename
+        const test_name = extractTestName(name);
+
+        try tests.append(allocator, .{
+            .name = test_name,
+            .file = file_path,
+            .platform = platform,
+        });
+    }
+
+    return tests.toOwnedSlice(allocator);
+}
+
+const TestInfo = struct {
+    name: []const u8,
+    file: []const u8,
+    platform: ?Platform,
+};
+
+fn detectPlatformFromName(name: []const u8) ?Platform {
+    if (std.mem.indexOf(u8, name, "web") != null) return .web;
+    if (std.mem.indexOf(u8, name, "ios") != null) return .ios;
+    if (std.mem.indexOf(u8, name, "android") != null) return .android;
+    if (std.mem.indexOf(u8, name, "macos") != null) return .macos;
+    if (std.mem.indexOf(u8, name, "windows") != null) return .windows;
+    if (std.mem.indexOf(u8, name, "linux") != null) return .linux;
+    return null;
+}
+
+fn extractTestName(filename: []const u8) []const u8 {
+    // Remove .test.zig or _test.zig suffix
+    if (std.mem.endsWith(u8, filename, ".test.zig")) {
+        return filename[0 .. filename.len - 9];
+    }
+    if (std.mem.endsWith(u8, filename, "_test.zig")) {
+        return filename[0 .. filename.len - 9];
+    }
+    return filename;
+}
+
+/// Check if a server is running on a port
+fn isServerRunning(port: u16) bool {
+    const address = std.net.Address.initIp4(.{ 127, 0, 0, 1 }, port);
+    const stream = std.net.tcpConnectToAddress(address) catch {
+        return false;
+    };
+    stream.close();
+    return true;
 }
 
 test "parse platform" {
