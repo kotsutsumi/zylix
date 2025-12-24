@@ -17,6 +17,7 @@ pub const nodeflow = @import("nodeflow/nodeflow.zig");
 pub const pdf = @import("pdf/pdf.zig");
 pub const excel = @import("excel/excel.zig");
 pub const mbaas = @import("mbaas/mbaas.zig");
+pub const server = @import("server/server.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -52,6 +53,15 @@ pub const MbaasProvider = mbaas.Provider;
 pub const FirebaseClient = mbaas.FirebaseClient;
 pub const SupabaseClient = mbaas.SupabaseClient;
 pub const AmplifyClient = mbaas.AmplifyClient;
+
+// Re-export Server types
+pub const Zylix = server.Zylix;
+pub const HttpRequest = server.Request;
+pub const HttpResponse = server.Response;
+pub const HttpRouter = server.Router;
+pub const HttpContext = server.Context;
+pub const HttpHandler = server.Handler;
+pub const RpcServer = server.RpcServer;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
