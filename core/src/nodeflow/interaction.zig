@@ -204,6 +204,19 @@ pub const Key = enum(u16) {
     page_down = 34,
     insert = 45,
 
+    // Symbols
+    equal = 187, // = key (+ with shift)
+    minus = 189, // - key
+    bracket_left = 219,
+    bracket_right = 221,
+    semicolon = 186,
+    quote = 222,
+    comma = 188,
+    period = 190,
+    slash = 191,
+    backslash = 220,
+    backtick = 192,
+
     unknown = 0,
 
     pub fn isAlphanumeric(self: Key) bool {
@@ -757,6 +770,11 @@ fn getKeyName(key: Key) []const u8 {
         .arrow_down => "down",
         .arrow_left => "left",
         .arrow_right => "right",
+        .equal => "plus", // = key maps to "plus" for shortcuts
+        .minus => "minus",
+        .comma => "comma",
+        .period => "period",
+        .slash => "slash",
         else => "unknown",
     };
 }

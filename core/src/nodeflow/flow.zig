@@ -214,6 +214,11 @@ pub const FlowManager = struct {
     }
 
     pub fn deinit(self: *FlowManager) void {
+        // Free clipboard memory if present
+        if (self.clipboard) |clip| {
+            self.allocator.free(clip.nodes);
+            self.allocator.free(clip.edges);
+        }
         self.history.deinit(self.allocator);
         self.event_listeners.deinit(self.allocator);
         self.layout_manager.deinit();
@@ -517,6 +522,12 @@ pub const FlowManager = struct {
             }
         }
 
+        // Free previous clipboard if present
+        if (self.clipboard) |old| {
+            self.allocator.free(old.nodes);
+            self.allocator.free(old.edges);
+        }
+
         self.clipboard = .{
             .nodes = try node_list.toOwnedSlice(self.allocator),
             .edges = try edge_list.toOwnedSlice(self.allocator),
@@ -717,7 +728,7 @@ pub const FlowManager = struct {
 
     /// Clear all selections
     pub fn clearSelection(self: *FlowManager) void {
-        self.node_manager.clearSelection();
+        self.node_manager.deselectAll();
         self.edge_manager.clearSelection();
 
         self.emitEvent(.{
