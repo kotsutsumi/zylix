@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-24
-> **Current Version**: v0.17.0
+> **Current Version**: v0.18.0
 
 ---
 
@@ -28,16 +28,16 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.13.0 | Phase 15 | Game Dev (PIXI.js-style, Physics, Audio) | ✅ Complete | 2025-12-24 |
 | v0.14.0 | Phase 16 | Database Support (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ✅ Complete | 2025-12-24 |
 | v0.15.0 | Phase 17 | App Integration APIs (IAP, Ads, KeyValueStore, Lifecycle) | ✅ Complete | 2025-12-24 |
-| v0.16.0 | Phase 18 | Developer Tooling (CLI, Scaffolding, Build, Templates) | ✅ Complete | 2025-12-24 |
-| v0.17.0 | Phase 19 | Node-based UI (React Flow-style) | ✅ Complete | 2025-12-24 |
-| v0.18.0 | Phase 20 | PDF Support (Generate, Read, Edit) | ⏳ Planned | 2026-Q2 |
-| v0.19.0 | Phase 21 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2026-Q2 |
-| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ Planned | 2026-Q3 |
-| v0.21.0 | Phase 23 | Server Runtime (Zylix Server) | ⏳ Planned | 2026-Q4 |
-| v0.22.0 | Phase 24 | Edge Adapters (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ Planned | 2027-Q1 |
-| v0.23.0 | Phase 25 | Performance & Optimization | ⏳ Planned | 2027-Q2 |
-| v0.24.0 | Phase 26 | Documentation Excellence | ⏳ Planned | 2027-Q3 |
-| v0.25.0 | Phase 27 | Official Sample Projects (23+ Samples) | ⏳ Planned | 2027-Q4 |
+| v0.16.0 | Phase 18 | Developer Tooling (Console, DevTools, Profiler) | ✅ Complete | 2025-12-24 |
+| v0.17.0 | Phase 19 | Node-based UI (React Flow-style NodeFlow) | ✅ Complete | 2025-12-24 |
+| v0.18.0 | Phase 20 | PDF Support (Generate, Read, Edit) + Benchmarks | ✅ Complete | 2025-12-24 |
+| v0.19.0 | Phase 21 | Excel Support (xlsx Read/Write) | ⏳ Planned | 2025-Q4 |
+| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ Planned | 2025-Q4 |
+| v0.21.0 | Phase 23 | Server Runtime (Zylix Server) | ⏳ Planned | 2026-Q1 |
+| v0.22.0 | Phase 24 | Edge Adapters (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ Planned | 2026-Q1 |
+| v0.23.0 | Phase 25 | Performance & Optimization | ⏳ Planned | 2026-Q2 |
+| v0.24.0 | Phase 26 | Documentation Excellence | ⏳ Planned | 2026-Q2 |
+| v0.25.0 | Phase 27 | Official Sample Projects (23+ Samples) | ⏳ Planned | 2026-Q3 |
 
 ---
 
