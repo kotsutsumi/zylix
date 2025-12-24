@@ -83,6 +83,7 @@ pub const ConfigStore = struct {
         const key_copy = try self.allocator.dupe(u8, key);
         errdefer self.allocator.free(key_copy);
         const value_copy = try self.allocator.dupe(u8, value);
+        errdefer self.allocator.free(value_copy);
 
         try self.items.put(self.allocator, key_copy, value_copy);
     }
@@ -150,6 +151,7 @@ pub const KVStore = struct {
         errdefer self.allocator.free(value_copy);
 
         var metadata: ?[]const u8 = null;
+        errdefer if (metadata) |m| self.allocator.free(m);
         if (options) |opts| {
             if (opts.metadata) |m| {
                 metadata = try self.allocator.dupe(u8, m);
@@ -241,6 +243,7 @@ pub const SecretStore = struct {
         const name_copy = try self.allocator.dupe(u8, name);
         errdefer self.allocator.free(name_copy);
         const value_copy = try self.allocator.dupe(u8, value);
+        errdefer self.allocator.free(value_copy);
 
         try self.secrets.put(self.allocator, name_copy, value_copy);
     }
@@ -292,6 +295,7 @@ pub const EdgeDictionary = struct {
         const key_copy = try self.allocator.dupe(u8, key);
         errdefer self.allocator.free(key_copy);
         const value_copy = try self.allocator.dupe(u8, value);
+        errdefer self.allocator.free(value_copy);
 
         try self.items.put(self.allocator, key_copy, value_copy);
     }
