@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-12-24
+
+### Added
+
+#### Zylix PDF - PDF Document Processing Module
+- **Core Module**: `core/src/pdf/pdf.zig` - Unified PDF API
+- **PDF 1.7 Specification**: Full compliance with Adobe PDF 1.7 specification
+- **Cross-Platform**: Works on iOS, Android, Web/WASM, and Desktop targets
+
+#### Document Management (`document.zig`)
+- **Document Creation**: Create new PDF documents from scratch
+- **Document Opening**: Parse existing PDF files from memory or file path
+- **Page Management**: Add, insert, remove, and reorder pages
+- **Document Merging**: Combine multiple PDF documents
+- **Document Splitting**: Split documents into individual pages
+- **Metadata**: Title, author, subject, keywords, creator, producer, dates
+- **Version Support**: PDF 1.0 through 2.0 version control
+- **Compression**: Configurable compression (none, flate, lzw)
+
+#### Page Operations (`page.zig`)
+- **Page Sizes**: A0-A10, Letter, Legal, Ledger, Tabloid, custom sizes
+- **Orientations**: Portrait and landscape with automatic size adjustment
+- **Margins**: Normal, narrow, wide, and custom margin presets
+- **Graphics State**: Save/restore state stack with full state management
+- **Colors**: RGB color support for fill and stroke operations
+- **Line Styles**: Width, cap (butt, round, square), join (miter, round, bevel)
+- **Dash Patterns**: Configurable dash patterns with phase offset
+- **Transformations**: Translate, scale, rotate coordinate system
+
+#### Text Operations (`text.zig`, `font.zig`)
+- **Standard Fonts**: Helvetica, Times-Roman, Courier families (regular, bold, italic)
+- **Symbol Fonts**: Symbol, ZapfDingbats
+- **Font Metrics**: Accurate character positioning with ascender, descender, line gap
+- **Text Drawing**: Position-based text rendering with font and size control
+- **Styled Text**: Text with color, font, and size styling
+- **Text Blocks**: Multi-line text with paragraph handling and line wrapping
+- **Rich Text**: Mixed formatting within text blocks
+- **UTF-8 Support**: Proper UTF-8 codepoint iteration for text width calculation
+- **TrueType Fonts**: Load and embed custom TrueType fonts (with proper ownership)
+
+#### Graphics Operations (`graphics.zig`)
+- **Shapes**: Rectangle, circle, ellipse (stroke, fill, or both)
+- **Lines**: Line drawing with configurable style
+- **Paths**: Complex path construction with moveTo, lineTo, curveTo, quadTo
+- **Path Shapes**: Rounded rectangles, circles, ellipses via path API
+- **Bezier Curves**: Cubic and quadratic bezier curve support
+- **Gradients**: Linear and radial gradients with color stops
+- **Transformation Matrix**: Full 2D transformation matrix operations
+- **Blend Modes**: Normal, multiply, screen, overlay, darken, lighten, etc.
+
+#### Image Handling (`image.zig`)
+- **Image Formats**: JPEG, PNG (with magic byte detection), GIF, BMP, TIFF
+- **Color Spaces**: Grayscale, RGB, RGBA, CMYK, Indexed
+- **Image Scaling**: Nearest-neighbor resampling for dimension changes
+- **Grayscale Conversion**: Luminosity-based color to grayscale conversion
+- **Image Cloning**: Duplicate images with independent data
+- **Placement Options**: Position, dimensions, rotation, opacity, fit modes
+
+#### PDF Writing (`writer.zig`)
+- **PDF Structure**: Header, body, xref table, trailer generation
+- **Object Management**: Automatic object ID allocation and xref tracking
+- **Stream Writing**: Content streams with length calculation
+- **String Escaping**: Proper PDF string escape sequences
+- **Date Formatting**: PDF date format (D:YYYYMMDDHHmmSS)
+- **Negative Timestamp Handling**: Clamp pre-epoch timestamps to Unix epoch
+
+#### PDF Parsing (`parser.zig`)
+- **Header Parsing**: Version detection from PDF header
+- **Cross-Reference Table**: Traditional xref table parsing
+- **Object References**: Object number and generation tracking
+- **Page Count Heuristic**: Quick page counting with overflow protection
+
+### Fixed
+- **Memory Safety**: Proper errdefer cleanup in document.open() and document.merge()
+- **Graphics State**: restoreState only writes Q operator when state exists
+- **Font Ownership**: loadTrueType now copies data for clear ownership semantics
+- **UTF-8 Text Width**: getTextWidth uses proper UTF-8 codepoint iteration
+- **Integer Overflow**: getPageCount prevents underflow with small documents
+
 ## [0.12.0] - 2025-12-24 (In Progress)
 
 ### Added
