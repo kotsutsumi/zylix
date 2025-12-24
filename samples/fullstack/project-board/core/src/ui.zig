@@ -143,15 +143,19 @@ fn buildBoardsScreen(state: *const app.AppState) VNode {
 
 fn buildBoardCard(board: *const app.Board) VNode {
     const S = struct {
-        var items: [3]VNode = undefined;
-        var card_buf: [16]u8 = undefined;
+        var items: [10][3]VNode = undefined;
+        var card_bufs: [10][16]u8 = undefined;
+        var idx: usize = 0;
     };
 
-    const card_str = std.fmt.bufPrint(&S.card_buf, "{d} cards", .{board.card_count}) catch "0 cards";
+    const idx = S.idx;
+    S.idx = (S.idx + 1) % 10;
 
-    S.items[0] = text(board.name, .{ .style = .{ .font_size = 16, .font_weight = 600, .color = Color.text } });
-    S.items[1] = text(board.description, .{ .style = .{ .font_size = 13, .color = Color.text_muted } });
-    S.items[2] = text(card_str, .{ .style = .{ .font_size = 12, .color = Color.text_muted } });
+    const card_str = std.fmt.bufPrint(&S.card_bufs[idx], "{d} cards", .{board.card_count}) catch "0 cards";
+
+    S.items[idx][0] = text(board.name, .{ .style = .{ .font_size = 16, .font_weight = 600, .color = Color.text } });
+    S.items[idx][1] = text(board.description, .{ .style = .{ .font_size = 13, .color = Color.text_muted } });
+    S.items[idx][2] = text(card_str, .{ .style = .{ .font_size = 12, .color = Color.text_muted } });
 
     return div(.{
         .style = .{
@@ -160,7 +164,7 @@ fn buildBoardCard(board: *const app.Board) VNode {
             .border_radius = 12,
             .gap = 8,
         },
-    }, &S.items);
+    }, &S.items[idx]);
 }
 
 fn buildBoardScreen(state: *const app.AppState) VNode {
@@ -211,19 +215,23 @@ fn buildBoardScreen(state: *const app.AppState) VNode {
 
 fn buildColumn(col: *const app.Column, state: *const app.AppState) VNode {
     const S = struct {
-        var items: [12]VNode = undefined;
-        var count_buf: [16]u8 = undefined;
+        var items: [4][12]VNode = undefined;
+        var count_bufs: [4][16]u8 = undefined;
+        var idx: usize = 0;
     };
+
+    const idx = S.idx;
+    S.idx = (S.idx + 1) % 4;
 
     var count_str: []const u8 = "";
     if (col.wip_limit > 0) {
-        count_str = std.fmt.bufPrint(&S.count_buf, "{d}/{d}", .{ col.card_count, col.wip_limit }) catch "";
+        count_str = std.fmt.bufPrint(&S.count_bufs[idx], "{d}/{d}", .{ col.card_count, col.wip_limit }) catch "";
     } else {
-        count_str = std.fmt.bufPrint(&S.count_buf, "{d}", .{col.card_count}) catch "";
+        count_str = std.fmt.bufPrint(&S.count_bufs[idx], "{d}", .{col.card_count}) catch "";
     }
 
     // Column header
-    S.items[0] = row(.{
+    S.items[idx][0] = row(.{
         .style = .{ .gap = 8, .padding = Spacing.symmetric(0, 8) },
     }, &.{
         text(col.name, .{ .style = .{ .font_size = 14, .font_weight = 600, .color = Color.text } }),
@@ -234,13 +242,13 @@ fn buildColumn(col: *const app.Column, state: *const app.AppState) VNode {
     var card_idx: usize = 1;
     for (state.cards[0..state.card_count]) |*card| {
         if (card.column_id == col.id and card_idx < 11) {
-            S.items[card_idx] = buildCard(card, state);
+            S.items[idx][card_idx] = buildCard(card, state);
             card_idx += 1;
         }
     }
 
     // Add card button
-    S.items[card_idx] = button("+ Add Card", .{
+    S.items[idx][card_idx] = button("+ Add Card", .{
         .style = .{
             .color = Color.text_muted,
             .font_size = 13,
@@ -256,7 +264,7 @@ fn buildColumn(col: *const app.Column, state: *const app.AppState) VNode {
             .gap = 8,
             .width = 280,
         },
-    }, S.items[0 .. card_idx + 1]);
+    }, S.items[idx][0 .. card_idx + 1]);
 }
 
 fn buildCard(card_data: *const app.Card, state: *const app.AppState) VNode {
