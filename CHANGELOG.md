@@ -96,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integer Overflow**: getPageCount prevents underflow with small documents
 - **Integration Memory Leaks**: Fixed Future object leaks in ads.zig and keyvalue.zig tests
 
-## [0.12.0] - 2025-12-24 (In Progress)
+## [0.12.0] - 2025-12-24
 
 ### Added
 
