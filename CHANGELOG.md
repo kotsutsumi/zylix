@@ -7,6 +7,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-12-24
+
+### Added
+
+#### Zylix Server - High-Performance HTTP Server Runtime
+- **Core Module**: `core/src/server/server.zig` - Main server application (Zylix)
+- **Inspired by Hono.js**: Express-like API with Zig performance
+- **Cross-Platform**: Pure Zig implementation, works on all targets
+
+#### HTTP Types (`types.zig`)
+- **HTTP Methods**: GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS, TRACE, CONNECT
+- **Status Codes**: Complete HTTP/1.1 status codes (1xx-5xx) with reason phrases
+- **Headers**: Case-insensitive header management with iteration support
+- **URL Parsing**: Path, query string, and fragment parsing
+- **Query Parameters**: QueryParams for URL query handling
+- **Cookies**: Full cookie support with SameSite, HttpOnly, Secure attributes
+- **Content Types**: Common MIME type constants
+- **Server Configuration**: Port, host, max connections, timeouts
+
+#### Request Handling (`request.zig`)
+- **Request Struct**: Full HTTP request representation
+- **Parsing**: Raw HTTP data parsing into structured request
+- **Headers**: Typed header access (header, headers, contentType)
+- **Query Params**: URL query parameter extraction
+- **Route Params**: Path parameter extraction from routes
+- **Body Access**: Raw body, JSON parsing with caching
+- **Context Storage**: Middleware context value passing (set/get/getTyped)
+- **Request Metadata**: Remote address, user agent, content length
+- **RequestBuilder**: Fluent API for constructing test requests
+
+#### Response Handling (`response.zig`)
+- **Response Struct**: Full HTTP response representation
+- **Fluent API**: Chainable response building
+- **Content Types**: text(), html(), json(), jsonValue() helpers
+- **Status Codes**: setStatus() with all HTTP status codes
+- **Headers**: setHeader(), setContentType() with standard types
+- **Cookies**: setCookie() with full cookie options
+- **Redirects**: redirect() with permanent/temporary support
+- **Error Helpers**: notFound(), badRequest(), unauthorized(), forbidden(), internalError()
+- **Serialization**: serialize() to raw HTTP response bytes
+- **ResponseBuilder**: Alternative fluent builder pattern
+
+#### Routing System (`router.zig`)
+- **Router**: Core router with pattern matching
+- **HTTP Method Routes**: get(), post(), put(), delete(), patch(), options(), head(), all()
+- **Path Parameters**: `:param` syntax for dynamic routes
+- **Wildcard Routes**: `*` matching for catch-all patterns
+- **Route Groups**: RouteGroup for prefix-based organization
+- **Context**: Request/response context with convenience methods
+- **Handler Type**: Standard handler function signature
+- **Not Found**: Custom 404 handler support
+
+#### Middleware System (`middleware.zig`)
+- **MiddlewareChain**: Composable middleware pipeline
+- **Next Function**: Koa-style next() for chain execution
+- **MiddlewareFn**: Standard middleware function type
+- **Built-in Logger**: Request timing and logging middleware
+- **CORS Middleware**: cors() with configurable CorsConfig
+- **Security Headers**: secureHeaders() with XSS, frame, MIME protections
+- **Recovery**: recovery() for error catching and 500 responses
+- **Basic Auth**: basicAuth() with realm and validator config
+- **Body Limit**: bodyLimit() with configurable max size
+- **ETag**: etag() for cache validation with If-None-Match
+
+#### JSON-RPC 2.0 (`rpc.zig`)
+- **RpcServer**: Full JSON-RPC 2.0 server implementation
+- **Procedure Registration**: procedure() for method registration
+- **Typed Procedures**: typedProcedure() for compile-time type safety
+- **Request Handling**: Single and batch request support
+- **Error Codes**: Standard JSON-RPC error codes (-32700, -32600, etc.)
+- **RpcClient**: Client for building RPC requests
+- **Batch Requests**: buildBatchRequest() for multiple calls
+- **Router Integration**: mount() to add RPC endpoint to router
+
+#### Main Server API (`server.zig`)
+- **Zylix Struct**: Main application entry point
+- **Initialization**: init(), initWithConfig() with ServerConfig
+- **Middleware API**: use() for adding middleware
+- **Routing API**: Full route registration (get, post, put, etc.)
+- **Route Groups**: group() for prefix-based organization
+- **Request Handling**: handleRequest(), handleRaw() for raw HTTP
+- **RPC Integration**: rpcServer() for mounting RPC endpoints
+- **Lifecycle**: listen(), close() for server management
+
+#### Module Exports (`main.zig`)
+- **Server Module**: Full server module re-export
+- **Type Aliases**: Zylix, HttpRequest, HttpResponse, HttpRouter, HttpContext, RpcServer
+
+#### Unit Tests
+- **Types Tests**: Headers, URL parsing, cookies, query params
+- **Request Tests**: Parsing, headers, body, route params, context
+- **Response Tests**: Text, JSON, redirect, error helpers, serialization
+- **Router Tests**: Route matching, params, groups, wildcards, 404
+- **Middleware Tests**: Chain execution, CORS, security headers
+- **RPC Tests**: Server init, client requests, batch, error formatting
+
 ## [0.20.0] - 2025-12-24
 
 ### Added
