@@ -7,7 +7,7 @@
 Zylix Core exposes its functionality through a stable C ABI.
 This document defines the contract between Zylix Core (Zig) and Platform Shells.
 
-**Current ABI Version: 2** (as of v0.8.0)
+**Current ABI Version: 2** (since v0.8.0)
 
 ---
 

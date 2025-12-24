@@ -1,6 +1,6 @@
 # Zylix API Reference
 
-> **Version**: v0.24.0
+> **Version**: v0.25.0
 > **Last Updated**: 2025-12-24
 
 ## Overview
@@ -118,7 +118,8 @@ try app.listen();
 
 | Zylix Version | Zig Version | Notes |
 |---------------|-------------|-------|
-| v0.24.0 | 0.15.x | Current |
+| v0.25.0 | 0.15.x | Current |
+| v0.24.0 | 0.15.x | Documentation Excellence |
 | v0.23.0 | 0.15.x | Performance Optimization |
 | v0.22.0 | 0.15.x | Server Runtime |
 

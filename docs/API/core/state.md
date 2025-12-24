@@ -1,7 +1,7 @@
 # State Management API
 
 > **Module**: `core/src/state.zig`
-> **Version**: v0.24.0
+> **Version**: v0.25.0
 
 ## Overview
 

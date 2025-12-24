@@ -12,7 +12,7 @@ Zylix enables you to build native applications for Web, iOS, Android, macOS, Lin
 ## Features
 
 - **Blazing Fast** - Zero-cost abstractions with Zig. No garbage collection, predictable performance.
-- **6 Platforms** - Web/WASM, iOS, Android, macOS, Linux, Windows. One codebase, native performance everywhere.
+- **7 Platforms** - Web/WASM, iOS, watchOS, Android, macOS, Linux, Windows. One codebase, native performance everywhere.
 - **Virtual DOM** - Efficient diffing algorithm for minimal updates. Only render what changes.
 - **Tiny Bundle** - Core library under 50KB. WASM builds are incredibly small and load fast.
 - **Type Safe** - Zig's compile-time checks catch errors before runtime. No null pointer exceptions.
@@ -22,14 +22,15 @@ Zylix enables you to build native applications for Web, iOS, Android, macOS, Lin
 
 | Platform | Framework | Status | Notes |
 |----------|-----------|--------|-------|
-| Web/WASM | HTML/JavaScript | ✅ Production Ready | Full Zig core integration, JavaScript SDK |
-| iOS | SwiftUI | ✅ Working | ZylixSwift package with C FFI integration |
-| macOS | SwiftUI | ✅ Working | Shares ZylixSwift package with iOS |
-| Android | Jetpack Compose | 🚧 In Development | UI demo only, JNI pending |
-| Linux | GTK4 | 🚧 In Development | Build infrastructure ready |
-| Windows | WinUI 3 | 🚧 In Development | Build infrastructure ready |
+| Web/WASM | HTML/JavaScript | Production Ready | Full Zig core integration, JavaScript SDK |
+| iOS | SwiftUI | Production Ready | ZylixSwift package with C FFI integration |
+| watchOS | SwiftUI | In Development | Companion app and driver support |
+| macOS | SwiftUI | Production Ready | Shares ZylixSwift package with iOS |
+| Android | Jetpack Compose | In Development | UI demo only, JNI pending |
+| Linux | GTK4 | In Development | Build infrastructure ready |
+| Windows | WinUI 3 | In Development | Build infrastructure ready |
 
-> **Note**: Web/WASM and iOS/macOS platforms have full integration with the Zig core. See the [Roadmap](docs/ROADMAP.md) for details.
+> **Note**: Web/WASM and iOS/macOS platforms have full integration with the Zig core. See the [Compatibility Reference](docs/COMPATIBILITY.md) for definitions and the [Roadmap](docs/ROADMAP.md) for details.
 
 ## Quick Start
 

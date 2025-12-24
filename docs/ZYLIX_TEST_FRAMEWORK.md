@@ -1,13 +1,13 @@
 # Zylix Test Framework 設計書
 
-> **バージョン**: v0.8.0 (計画)
-> **ステータス**: 設計フェーズ
+> **バージョン**: v0.8.1
+> **ステータス**: 実装済み
 
 ---
 
 ## 1. 概要
 
-Zylix Test Framework は、全6プラットフォーム（iOS, Android, macOS, Windows, Linux, Web）で統一されたE2Eテストを実行するための独自テストフレームワークである。
+Zylix Test Framework は、全6プラットフォーム（iOS, Android, macOS, Windows, Linux, Web）で統一されたE2Eテストを実行するための独自テストフレームワークである。v0.8.1 で E2E テスト基盤を実装済み。
 
 ### 設計原則
 

@@ -1,7 +1,7 @@
 # Performance & Optimization Module
 
 > **Module**: `core/src/perf/`
-> **Version**: v0.24.0 (Released in v0.23.0)
+> **Version**: v0.25.0 (Released in v0.23.0)
 
 ## Overview
 

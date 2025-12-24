@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-24
-> **Current Version**: v0.24.0
+> **Current Version**: v0.25.0
 
 ---
 
@@ -370,7 +370,7 @@ pub const Router = struct {
 
 - [ ] Route definition with path patterns and parameters
 - [ ] Navigation history with back/forward support
-- [ ] Deep linking on all 6 platforms
+- [ ] Deep linking on all 7 platforms
 - [ ] Route guards for authentication
 - [ ] Nested routes support
 - [ ] Query string handling
@@ -615,7 +615,7 @@ zylix dev --all --port 3000
 - [ ] Incremental rebuild < 1s for small changes
 - [ ] State preservation across reloads
 - [ ] Error overlay with source mapping
-- [ ] Works on all 6 platforms in development mode
+- [ ] Works on all 7 platforms in development mode
 
 ---
 
@@ -2651,7 +2651,7 @@ All official samples must meet:
 | **Documentation** | README, code comments, tutorial walkthrough |
 | **Accessibility** | WCAG 2.1 AA compliance |
 | **Performance** | Meets platform-specific performance budgets |
-| **License** | MIT license, clear attribution |
+| **License** | Apache License 2.0, clear attribution |
 
 ### Sample Project Structure
 

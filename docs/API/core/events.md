@@ -1,7 +1,7 @@
 # Events API
 
 > **Module**: `core/src/events.zig`
-> **Version**: v0.24.0
+> **Version**: v0.25.0
 
 ## Overview
 

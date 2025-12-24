@@ -6,7 +6,7 @@
 
 | Component | Version | Notes |
 |-----------|---------|-------|
-| **Zylix Framework** | 0.8.1 | Current stable release |
+| **Zylix Framework** | 0.25.0 | Current stable release |
 | **ABI Version** | 2 | Breaking changes from v1 |
 | **Zig Required** | 0.15.0+ | CI uses 0.15.2 |
 
@@ -37,6 +37,7 @@ zig version
 | Web/WASM | HTML/JavaScript | Production Ready | Full | JavaScript SDK available |
 | iOS | SwiftUI | Production Ready | Full | ZylixSwift package with C FFI |
 | macOS | SwiftUI | Production Ready | Full | Shares ZylixSwift with iOS |
+| watchOS | SwiftUI | In Development | Partial | Companion app and driver support |
 | Android | Jetpack Compose | In Development | Partial | UI demo only, JNI pending |
 | Linux | GTK4 | In Development | Partial | Build infrastructure ready |
 | Windows | WinUI 3 | In Development | Partial | Build infrastructure ready |

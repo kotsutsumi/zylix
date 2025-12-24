@@ -2,15 +2,15 @@
 
 ## 1. エグゼクティブサマリー
 
-- **全体評価**: 3/5（情報量は多いが、バージョン/内容不整合が目立つ）
+- **全体評価**: 4/5（主要な不整合は解消済み。残るのは更新運用の定着）
 - **主要な強み**
   - ルート/内部/サイトで網羅的なドキュメント構成があり、参照先が多い
   - `docs/ROADMAP.md` と `docs/ROADMAP.ja.md` は成功基準まで詳細に記述されている
   - `site/content/` は EN/JA ペアが揃っており、`site/i18n/` もキー差分なし
 - **主要な改善点**
-  - バージョン情報（Zig/プロジェクト/ABI/API）を全ドキュメントで統一
-  - ルート/サイト/設計ドキュメント間のロードマップ整合性を回復
-  - 実装と食い違う技術仕様（ABI/API、データフロー）を更新
+  - 監査結果の継続更新（差分監査の定期実行）
+  - API サマリー/詳細の運用ルール定着
+  - 将来フェーズの設計ドキュメント補完
 
 ---
 
@@ -19,40 +19,27 @@
 ### A. 一貫性チェック
 
 **現状評価**
-- 主要ドキュメント群は揃っているが、バージョン・ロードマップ・ステータスの整合性が崩れている。
+- 主要ドキュメント群は揃っており、バージョン・ロードマップ・ステータスの整合性は概ね回復。
 
-**発見した問題点**
-- Zig バージョンの不一致:
-  - `README.md` は 0.15.0+、`CONTRIBUTING.md` は 0.11.0+、`site/content/docs/getting-started.md` は 0.13.0+、`CHANGELOG.md` は CI で Zig 0.15.2 を使用。
-- Test Framework のバージョン不一致:
-  - `docs/API_REFERENCE.md` と `docs/ZYLIX_TEST_FRAMEWORK.md` が v0.8.0 表記だが、`CHANGELOG.md` と `docs/ROADMAP.md` は v0.8.1 を最新とする。
-- ロードマップの整合性崩れ:
-  - `docs/ROADMAP.md` の「Planned Versions」セクションは v0.8.0 を計画扱いにし、v0.9.0〜v0.11.0 の内容がテーブルとずれている。
-  - `docs/ROADMAP.ja.md` と内容が一致せず、翻訳差分が発生。
-- EN/JA での内容差分:
-  - `docs/ROADMAP.md` の v0.6.3 は "Platform Demos (iOS, Android)" だが、`docs/ROADMAP.ja.md` では「npm パッケージ同期」になっている。
-  - 日付も 2025-12-22 / 2025-12-21 で不一致。
-- ルートとサイトのロードマップの不一致:
-  - `site/content/docs/roadmap.md` / `.ja.md` は v0.1.0 が現在で、v0.2.0〜v0.6.0 を将来計画として記載。
-  - ルート `docs/ROADMAP.md` は v0.8.1 を現在としている。
-- プラットフォームの成熟度表現の不一致:
-  - `README.md` は Web/WASM を “Production Ready”、iOS/macOS を “Working” としている。
-  - `site/content/docs/_index.md` は Web を Beta、他を Alpha としている。
+**発見した問題点（解消済み）**
+- Zig/ABI/API の表記は `docs/COMPATIBILITY.md` に集約し、参照先を統一済み。
+- `docs/ROADMAP.*` と `site/content/docs/roadmap.*` は要約版として同期済み。
+- プラットフォーム成熟度表現（Production Ready / In Development）は全体で統一済み。
+- watchOS を In Development として全体の表記に反映済み。
 
-**具体的な改善提案**
-- Zig バージョンは 1 箇所を「正」とし、他はそこを参照する形に統一（例: `docs/COMPATIBILITY.md` にまとめ、他はリンク）。
-- `docs/ROADMAP.md` の「Planned Versions」をテーブルと一致させ、JA 版と差分が出ないよう同期。
-- `site/content/docs/roadmap.*` を `docs/ROADMAP.*` の要約に刷新し、現行バージョンを一致させる。
-- プラットフォーム成熟度の表現基準を定義し、README/サイトを統一。
+**具体的な改善提案（完了済み）**
+- Zig/ABI/API 表記を `docs/COMPATIBILITY.md` 参照に統一。
+- ロードマップとサイト要約の同期完了。
+- 成熟度表現の統一完了。
 
 ---
 
 ### B. 完全性チェック
 
 **現状評価**
-- ルートのロードマップは v0.21.0 まで記載されているが、設計ドキュメントやサイト側の更新が追従していない。
+- ロードマップの版数・要約は最新化済み。設計ドキュメントは v0.16.0〜v0.21.0 が未整備。
 
-**発見した問題点**
+**発見した問題点（継続）**
 - 設計ドキュメントの欠落:
   - `docs/designs/` に v0.16.0〜v0.21.0 が存在しない。
 - ロードマップの Version Summary が欠落/ずれ:
@@ -60,7 +47,7 @@
 - Getting Started のサンプル導線不足:
   - `README.md` の `samples/` 参照に対し、`site/content/docs/getting-started.md` は実際のサンプル導線が弱い。
 
-**具体的な改善提案**
+**具体的な改善提案（継続）**
 - v0.16.0〜v0.21.0 の設計ドキュメントを最小スコープで作成（目標・API・依存関係・リスクだけでも可）。
 - `docs/ROADMAP.md` の Version Summary をテーブルと一致させ、欠落版を補完。
 - Getting Started に `samples/` へのリンクと最短手順を追加。
@@ -70,21 +57,14 @@
 ### C. 技術的正確性
 
 **現状評価**
-- 仕様書が充実している一方、実装に追いついていない箇所が複数ある。
+- ABI/Test Framework/データフローの主要不整合は解消済み。
 
-**発見した問題点**
-- ABI 仕様の不一致:
-  - `docs/ABI.md` は `ZYLIX_ABI_VERSION 1` だが、`core/src/abi.zig` は `ABI_VERSION = 2`。
-  - `core/src/abi.zig` に存在する `zylix_queue_event` / `zylix_process_events` / `zylix_get_diff` などが `docs/ABI.md` に記載されていない。
-- データフローの記述不整合:
-  - `site/content/docs/getting-started.md` は「patches を返す」前提で説明しているが、実装は state/diff 取得が中心。
-- Test Framework の進捗不一致:
-  - `docs/ZYLIX_TEST_FRAMEWORK.md` は「設計フェーズ」、`CHANGELOG.md` は v0.8.1 で E2E 実装済み。
+**発見した問題点（解消済み）**
+- ABI 仕様書は v2 に更新済み。
+- Test Framework は v0.8.1 実装済みとして反映済み。
 
-**具体的な改善提案**
-- ABI 仕様書は `core/src/abi.zig` を唯一の真として更新（関数一覧/ABI_VERSION/差分 API を反映）。
-- データフロー図は「diff API を取得して UI 更新」の現在実装に合わせる。
-- Test Framework の状態を「設計 → 実装済み」に更新し、現行ドライバ構成へ反映。
+**具体的な改善提案（完了済み）**
+- ABI/Test Framework の更新完了。
 
 ---
 
@@ -107,16 +87,14 @@
 ### E. ユーザビリティ
 
 **現状評価**
-- ドキュメント量は豊富だが、初学者向けの導線が分散しており、前提条件の不一致が迷いにつながる。
+- 「最短成功パス」（Getting Started → Tutorials → Core Concepts）を明記し、導線を統一済み。
 
-**発見した問題点**
-- Zig バージョンの差分が初心者に混乱を招く。
-- README とサイトのプラットフォーム成熟度が一致せず、導線が分岐。
-- ルートドキュメントとサイトドキュメントでロードマップが別物になっている。
+**発見した問題点（解消済み）**
+- Zig/成熟度/ロードマップの表記を統一済み。
 
-**具体的な改善提案**
-- 「対応 Zig バージョン」「対応プラットフォームの成熟度」を 1 ファイルに集約し、全ドキュメントから参照。
-- README からサイトの Getting Started への導線に「最新版はこちら」などの明示を追加。
+**具体的な改善提案（完了済み）**
+- `docs/COMPATIBILITY.md` への集約完了。
+- 導線追加済み。
 
 ---
 
@@ -168,4 +146,3 @@
 
 - `site/content/` の EN/JA ペア差分は未検出。
 - `site/i18n/` のキー差分は未検出。
-
