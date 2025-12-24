@@ -281,11 +281,12 @@ poetry add zylix-test
 
 ## 次のタスク候補
 
-🚀 **v0.18.0 リリース準備中**
+🎉 **v0.18.0 リリース完了！**
 
-現在のタスク:
-- [ ] パフォーマンスベンチマーク
-- [ ] v0.18.0 リリース (CHANGELOG更新、タグ作成)
+次期開発候補:
+- [ ] v0.19.0 新機能開発
+- [ ] ドキュメントサイト改善
+- [ ] パフォーマンス最適化（ベンチマーク結果に基づく）
 
 ---
 
@@ -302,8 +303,9 @@ poetry add zylix-test
 | ~~Medium~~ | ~~v0.16.0 Developer Tooling~~ | ~~Console、DevTools、Profiler~~ | ✅ 完了 |
 | ~~Medium~~ | ~~v0.17.0 NodeFlow~~ | ~~Node-based UI Module~~ | ✅ 完了 |
 | ~~Medium~~ | ~~v0.18.0 PDF Support~~ | ~~PDF Parser、Writer、Font~~ | ✅ 完了 |
-| High | パフォーマンス | ベンチマーク、最適化 | 🔄 作業中 |
-| High | v0.18.0 リリース | CHANGELOG、タグ作成 | 🔜 次期 |
+| ~~High~~ | ~~パフォーマンス~~ | ~~ベンチマークフレームワーク~~ | ✅ 完了 |
+| Medium | v0.19.0 | 次期機能開発 | 🔜 次期 |
+| Low | ドキュメントサイト | Hugo サイト改善 | 🔜 次期 |
 
 ---
 
