@@ -73,9 +73,9 @@ End-to-end fullstack applications.
 
 | Project | Description | Status |
 |---------|-------------|--------|
-| [**social-network-stack**](./fullstack/social-network-stack/) | Complete social network | 🚧 Planned |
-| [**project-board**](./fullstack/project-board/) | Project management | 🚧 Planned |
-| [**api-server-demo**](./fullstack/api-server-demo/) | API server example | 🚧 Planned |
+| [**social-network-stack**](./fullstack/social-network-stack/) | Complete social network | ✅ Ready |
+| [**project-board**](./fullstack/project-board/) | Project management | ✅ Ready |
+| [**api-server-demo**](./fullstack/api-server-demo/) | API server example | ✅ Ready |
 
 ---
 
