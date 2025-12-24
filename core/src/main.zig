@@ -15,6 +15,7 @@ pub const integration = @import("integration/integration.zig");
 pub const tooling = @import("tooling/tooling.zig");
 pub const nodeflow = @import("nodeflow/nodeflow.zig");
 pub const pdf = @import("pdf/pdf.zig");
+pub const excel = @import("excel/excel.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -38,6 +39,11 @@ pub const Mesh = graphics3d.Mesh;
 pub const PdfDocument = pdf.Document;
 pub const PdfPage = pdf.Page;
 pub const PageSize = pdf.PageSize;
+
+// Re-export Excel types
+pub const ExcelWorkbook = excel.Workbook;
+pub const ExcelWorksheet = excel.Worksheet;
+pub const ExcelCell = excel.Cell;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
