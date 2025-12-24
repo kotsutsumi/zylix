@@ -149,6 +149,19 @@ pub fn build(b: *std.Build) void {
     test_everything_step.dependOn(&run_integration_tests.step);
     test_everything_step.dependOn(&run_e2e_tests.step);
 
+    // === Benchmarks ===
+    const benchmark_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/benchmark/benchmark.zig"),
+            .target = target,
+            .optimize = .ReleaseFast,
+        }),
+    });
+
+    const run_benchmarks = b.addRunArtifact(benchmark_tests);
+    const benchmark_step = b.step("bench", "Run performance benchmarks");
+    benchmark_step.dependOn(&run_benchmarks.step);
+
     // === Cross-compilation targets ===
 
     // iOS ARM64
