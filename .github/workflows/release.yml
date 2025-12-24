@@ -72,7 +72,7 @@ jobs:
         run: zig build -Doptimize=ReleaseFast
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: zylix-core-${{ matrix.os }}
           path: core/zig-out/
