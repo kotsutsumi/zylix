@@ -28,7 +28,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -59,7 +59,7 @@ jobs:
       contains(github.event.head_commit.modified, 'platforms/macos/') ||
       contains(github.event.head_commit.added, 'platforms/macos/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build macOS Bridge
         working-directory: platforms/macos/zylix-test
@@ -82,7 +82,7 @@ jobs:
       contains(github.event.head_commit.modified, 'platforms/ios/') ||
       contains(github.event.head_commit.added, 'platforms/ios/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
@@ -108,7 +108,7 @@ jobs:
       contains(github.event.head_commit.modified, 'platforms/linux/') ||
       contains(github.event.head_commit.added, 'platforms/linux/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -138,7 +138,7 @@ jobs:
       contains(github.event.head_commit.modified, 'tests/') ||
       contains(github.event.head_commit.added, 'tests/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -170,7 +170,7 @@ jobs:
       contains(github.event.head_commit.modified, 'platforms/windows/') ||
       contains(github.event.head_commit.added, 'platforms/windows/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -199,7 +199,7 @@ jobs:
       contains(github.event.head_commit.modified, 'platforms/android/') ||
       contains(github.event.head_commit.added, 'platforms/android/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -238,7 +238,7 @@ jobs:
       contains(github.event.head_commit.modified, 'docs/') ||
       contains(github.event.head_commit.added, 'docs/')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -266,7 +266,7 @@ jobs:
     timeout-minutes: 10
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
