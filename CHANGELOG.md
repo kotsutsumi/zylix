@@ -79,12 +79,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Object References**: Object number and generation tracking
 - **Page Count Heuristic**: Quick page counting with overflow protection
 
+#### Performance Benchmarks (`benchmark/benchmark.zig`)
+- **Benchmark Framework**: Reusable benchmark runner with warmup and timing
+- **PDF Benchmarks**: Header parsing, version detection performance tests
+- **State Benchmarks**: Hash computation, lookup operation tests
+- **Animation Benchmarks**: Easing functions, interpolation performance tests
+- **NodeFlow Benchmarks**: ID generation, connection validation tests
+- **Memory Benchmarks**: Small (64B) and medium (1KB) allocation tests
+- **Build Integration**: `zig build bench` command for running benchmarks
+
 ### Fixed
 - **Memory Safety**: Proper errdefer cleanup in document.open() and document.merge()
 - **Graphics State**: restoreState only writes Q operator when state exists
 - **Font Ownership**: loadTrueType now copies data for clear ownership semantics
 - **UTF-8 Text Width**: getTextWidth uses proper UTF-8 codepoint iteration
 - **Integer Overflow**: getPageCount prevents underflow with small documents
+- **Integration Memory Leaks**: Fixed Future object leaks in ads.zig and keyvalue.zig tests
 
 ## [0.12.0] - 2025-12-24 (In Progress)
 
