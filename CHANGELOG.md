@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-12-24
+
+### Added
+
+#### Zylix Excel - Excel Document Processing Module
+- **Core Module**: `core/src/excel/excel.zig` - Unified Excel API
+- **XLSX Format**: Full support for Office Open XML spreadsheet format
+- **Cross-Platform**: Works on all Zylix targets (iOS, Android, Web/WASM, Desktop)
+
+#### Workbook Management (`workbook.zig`)
+- **Workbook Creation**: Create new Excel workbooks from scratch
+- **Workbook Loading**: Parse existing XLSX files from memory or file path
+- **Worksheet Management**: Add, get, and remove worksheets by name or index
+- **Shared Strings**: Efficient string deduplication for reduced file size
+- **Active Sheet**: Track and set the active worksheet
+- **Properties**: Title, author, subject, keywords, comments, creation/modification dates
+
+#### Worksheet Operations (`worksheet.zig`)
+- **Cell Management**: Set and get cells by row/column or A1 reference notation
+- **Cell Types**: String, number, boolean, date, time, datetime, formula, error values
+- **Row Heights**: Configurable row heights in points
+- **Column Widths**: Configurable column widths in characters
+- **Hidden Rows/Columns**: Show/hide rows and columns
+- **Merged Cells**: Merge cell ranges with range parsing
+- **Dimension Tracking**: Automatic used range detection
+
+#### Cell Operations (`cell.zig`)
+- **Value Union**: Type-safe cell value storage (string, number, boolean, date, etc.)
+- **A1 Notation**: Parse and format cell references (A1, B2, AA100, etc.)
+- **Range Support**: Parse and format cell ranges (A1:C10)
+- **Style Index**: Link cells to shared style definitions
+
+#### Style Management (`style.zig`)
+- **Style Manager**: Centralized style registry with deduplication
+- **Fonts**: Name, size, bold, italic, underline, strikethrough, color
+- **Fills**: Pattern fills (none, solid, gray_125) with foreground/background colors
+- **Borders**: Left, right, top, bottom, diagonal with style and color
+- **Alignment**: Horizontal (general, left, center, right, fill, justify)
+- **Alignment**: Vertical (top, center, bottom, justify, distributed)
+- **Text Control**: Wrap text, shrink to fit, text rotation, indent
+- **Number Formats**: Built-in formats + custom format strings
+- **Style Builder**: Fluent API for creating styles
+
+#### Color Support (`types.zig`)
+- **RGB Colors**: Full RGB color model with alpha channel
+- **Named Colors**: black, white, red, green, blue, yellow, cyan, magenta
+- **Hex Conversion**: Convert to/from hexadecimal color strings
+
+#### Date/Time Support (`types.zig`)
+- **Date**: Year, month, day with Excel serial number conversion
+- **Time**: Hour, minute, second, millisecond with fractional day conversion
+- **DateTime**: Combined date and time with full serial number support
+
+#### XLSX Writer (`writer.zig`)
+- **ZIP Generation**: Create valid ZIP archives with proper structure
+- **CRC-32 Calculation**: Accurate checksums for file integrity
+- **Content Types**: Generate [Content_Types].xml
+- **Relationships**: Generate _rels/.rels and xl/_rels/workbook.xml.rels
+- **Workbook XML**: Generate xl/workbook.xml with sheet references
+- **Worksheet XML**: Generate xl/worksheets/sheet{n}.xml with cell data
+- **Shared Strings**: Generate xl/sharedStrings.xml for string deduplication
+- **Styles XML**: Generate xl/styles.xml with fonts, fills, borders, formats
+- **File Output**: Write to file path or return as byte buffer
+
+#### XLSX Reader (`reader.zig`)
+- **ZIP Parsing**: Extract files from ZIP archive
+- **DEFLATE Decompression**: Decompress compressed entries
+- **Shared Strings Parsing**: Load string table for value lookup
+- **Workbook Parsing**: Extract sheet names and metadata
+- **Worksheet Parsing**: Parse cell values by type (string, number, boolean, etc.)
+- **Cell Reference Parsing**: Decode A1 notation references
+- **XML Entity Decoding**: Handle &lt;, &gt;, &amp;, &quot;, &apos;
+
+### Fixed
+- **Zig 0.15 Compatibility**: Updated all ArrayList/HashMap APIs for Zig 0.15
+  - Changed `ArrayList.init(allocator)` to `.{}` with allocator passed to methods
+  - Changed `ArrayList.deinit()` to `.deinit(allocator)`
+  - Changed `ArrayList.append(item)` to `.append(allocator, item)`
+  - Changed `ArrayList.writer()` to `.writer(allocator)`
+  - Changed `ArrayList.toOwnedSlice()` to `.toOwnedSlice(allocator)`
+  - Changed `AutoHashMap`/`StringHashMap` to `Unmanaged` variants
+- **Integer Overflow**: Fixed Date.toSerial() overflow for years > 1989
+
 ## [0.18.0] - 2025-12-24
 
 ### Added
