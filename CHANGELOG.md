@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2025-12-24
+
+### Added
+
+#### Documentation Enhancement (Phase 26)
+- **API Reference Structure**: New `docs/API/` directory with comprehensive module documentation
+- **Core Module Docs**: Complete API documentation for State, Events modules
+- **Performance Module Docs**: Detailed documentation for all perf sub-modules
+- **Site API Reference**: New `/docs/api-reference` page with quick reference guides
+
+#### Documentation Features
+- **Module Index**: Organized module listing by category (Core, Feature, Productivity, Performance)
+- **Quick Reference**: Code snippets for common patterns (State, Events, Server, Performance)
+- **Type Reference**: Complete type definitions for all public types
+- **Build Commands**: Cross-compilation reference for all targets
+
+#### Internationalization
+- **Japanese Documentation**: Full Japanese translation of API reference (`api-reference.ja.md`)
+- **Bilingual Support**: EN/JA pair for all new documentation pages
+
+### Changed
+- **Site Documentation**: Updated version reference to v0.23.0
+- **Quick Links**: Added API Reference link to documentation index
+- **Documentation Structure**: Reorganized for better navigation
+
 ## [0.23.0] - 2025-12-24
 
 ### Added

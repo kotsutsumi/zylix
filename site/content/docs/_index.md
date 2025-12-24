@@ -64,10 +64,11 @@ flowchart TB
 ## Quick Links
 
 - **[Getting Started](getting-started)**: Install Zylix and build your first app in minutes
-  - **[Core Concepts](core-concepts)**: Understand Virtual DOM, State, Components, and Events
-  - **[Architecture](architecture)**: Deep dive into Zylix internals
-  - **[Platform Guides](platforms)**: Platform-specific setup and best practices
-  - **[Roadmap](roadmap)**: Future plans: Components, Routing, Async, Hot Reload
+- **[Core Concepts](core-concepts)**: Understand Virtual DOM, State, Components, and Events
+- **[Architecture](architecture)**: Deep dive into Zylix internals
+- **[Platform Guides](platforms)**: Platform-specific setup and best practices
+- **[API Reference](api-reference)**: Complete API documentation for all modules
+- **[Roadmap](roadmap)**: Development progress and future plans
 
 ## Supported Platforms
 
@@ -105,4 +106,4 @@ Seamless integration with platform languages through C ABI (Swift, Kotlin, C#) a
 
 ## Version
 
-This documentation covers **Zylix 0.8.1**. See the [Roadmap](roadmap) for development progress.
+This documentation covers **Zylix v0.23.0**. See the [Roadmap](roadmap) for development progress.
