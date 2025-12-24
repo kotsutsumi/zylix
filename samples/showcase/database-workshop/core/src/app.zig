@@ -317,6 +317,10 @@ pub fn clearQuery() void {
 }
 
 // Transaction Operations
+// NOTE: This is a simplified demo implementation. Rollback only prevents
+// new record creation by restoring record_count. A production implementation
+// would require snapshotting the full records array at transaction start
+// to properly revert updates and deletions.
 pub fn beginTransaction() void {
     if (app_state.in_transaction) {
         setStatus(.error_status, "Already in transaction");
