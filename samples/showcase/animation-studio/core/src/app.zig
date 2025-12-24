@@ -171,9 +171,10 @@ pub fn update(delta_time: f32) void {
         },
         .pingpong => {
             const cycle = @mod(app_state.current_time, app_state.duration * 2);
-            if (cycle > app_state.duration) {
-                app_state.current_time = app_state.duration * 2 - cycle;
-            }
+            app_state.current_time = if (cycle > app_state.duration)
+                app_state.duration * 2 - cycle
+            else
+                cycle;
         },
     }
 }

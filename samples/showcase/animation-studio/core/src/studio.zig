@@ -121,20 +121,20 @@ fn buildTimeDisplay(state: *const app.AppState) VNode {
     };
     const current_secs = @as(u32, @intFromFloat(state.current_time));
     const total_secs = @as(u32, @intFromFloat(state.duration));
-    const len = std.fmt.bufPrint(&S.time_text, "{d:0>2}:{d:0>2} / {d:0>2}:{d:0>2}", .{
+    const time_str = std.fmt.bufPrint(&S.time_text, "{d:0>2}:{d:0>2} / {d:0>2}:{d:0>2}", .{
         current_secs / 60,
         current_secs % 60,
         total_secs / 60,
         total_secs % 60,
-    }) catch &S.time_text;
-    return text(len, .{ .style = .{ .font_size = 12, .color = Color.gray } });
+    }) catch "00:00 / 00:00";
+    return text(time_str, .{ .style = .{ .font_size = 12, .color = Color.gray } });
 }
 
 fn buildSpeedSelector(state: *const app.AppState) VNode {
     const S = struct {
         var speed_text: [8]u8 = undefined;
     };
-    const len = std.fmt.bufPrint(&S.speed_text, "{d:.1}x", .{state.playback_speed}) catch &S.speed_text;
+    const speed_str = std.fmt.bufPrint(&S.speed_text, "{d:.1}x", .{state.playback_speed}) catch "1.0x";
     return row(.{
         .style = .{
             .padding = .{ .left = 8, .right = 8, .top = 4, .bottom = 4 },
@@ -142,15 +142,17 @@ fn buildSpeedSelector(state: *const app.AppState) VNode {
             .border_radius = 4,
         },
     }, &.{
-        text(len, .{ .style = .{ .font_size = 12, .color = Color.white } }),
+        text(speed_str, .{ .style = .{ .font_size = 12, .color = Color.white } }),
     });
 }
 
 fn buildSidebar(state: *const app.AppState) VNode {
     const scenes = [_]app.DemoScene{ .basic, .character, .lottie, .live2d };
-    var items: [4]VNode = undefined;
+    const S = struct {
+        var items: [4]VNode = undefined;
+    };
     for (scenes, 0..) |scene, i| {
-        items[i] = buildSceneItem(scene, state.current_scene == scene);
+        S.items[i] = buildSceneItem(scene, state.current_scene == scene);
     }
     return column(.{
         .style = .{
@@ -162,7 +164,7 @@ fn buildSidebar(state: *const app.AppState) VNode {
         },
     }, &.{
         text("Demo Scenes", .{ .style = .{ .font_size = 12, .font_weight = .bold, .color = Color.gray } }),
-        column(.{ .style = .{ .gap = 4 } }, &items),
+        column(.{ .style = .{ .gap = 4 } }, &S.items),
     });
 }
 
@@ -207,7 +209,7 @@ fn buildCanvas(state: *const app.AppState) VNode {
 }
 
 fn buildBasicDemo(state: *const app.AppState) VNode {
-    const progress = state.current_time / state.duration;
+    const progress = if (state.duration > 0) @min(state.current_time / state.duration, 1.0) else 0;
     return column(.{
         .style = .{
             .width = .fill,
@@ -305,9 +307,11 @@ fn buildLottieDemo(state: *const app.AppState) VNode {
 
 fn buildLive2DDemo(state: *const app.AppState) VNode {
     const expressions = [_]app.Expression{ .neutral, .happy, .sad, .angry, .surprised };
-    var expr_buttons: [5]VNode = undefined;
+    const S = struct {
+        var expr_buttons: [5]VNode = undefined;
+    };
     for (expressions, 0..) |expr, i| {
-        expr_buttons[i] = buildExpressionButton(expr, state.current_expression == expr);
+        S.expr_buttons[i] = buildExpressionButton(expr, state.current_expression == expr);
     }
 
     return column(.{
@@ -331,7 +335,7 @@ fn buildLive2DDemo(state: *const app.AppState) VNode {
         }, &.{
             text("Live2D", .{ .style = .{ .font_size = 24, .color = Color.gray } }),
         }),
-        row(.{ .style = .{ .gap = 8 } }, &expr_buttons),
+        row(.{ .style = .{ .gap = 8 } }, &S.expr_buttons),
     });
 }
 
@@ -386,7 +390,7 @@ fn buildTimeline(state: *const app.AppState) VNode {
         return spacer(0);
     }
 
-    const progress = state.current_time / state.duration;
+    const progress = if (state.duration > 0) @min(state.current_time / state.duration, 1.0) else 0;
 
     return column(.{
         .style = .{
