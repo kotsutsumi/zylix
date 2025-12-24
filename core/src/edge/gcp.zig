@@ -134,6 +134,7 @@ pub const FirestoreClient = struct {
         const doc_key = try self.allocator.dupe(u8, doc_id);
         errdefer self.allocator.free(doc_key);
         const data_copy = try self.allocator.dupe(u8, data);
+        errdefer self.allocator.free(data_copy);
 
         try col.documents.put(self.allocator, doc_key, data_copy);
     }
@@ -236,6 +237,7 @@ pub const CloudStorageClient = struct {
         const content_copy = try self.allocator.dupe(u8, content);
         errdefer self.allocator.free(content_copy);
         const ct_copy = try self.allocator.dupe(u8, content_type);
+        errdefer self.allocator.free(ct_copy);
 
         try self.objects.put(self.allocator, name_copy, .{
             .content = content_copy,
@@ -350,6 +352,7 @@ pub const PubSubClient = struct {
         const topic = self.topics.getPtr(topic_name) orelse return error.TopicNotFound;
 
         const data_copy = try self.allocator.dupe(u8, data);
+        errdefer self.allocator.free(data_copy);
 
         try topic.messages.append(.{
             .data = data_copy,
@@ -370,6 +373,7 @@ pub const PubSubClient = struct {
         const topic = self.topics.getPtr(topic_name) orelse return error.TopicNotFound;
 
         const name_copy = try self.allocator.dupe(u8, subscription_name);
+        errdefer self.allocator.free(name_copy);
 
         try topic.subscriptions.append(.{
             .name = name_copy,
