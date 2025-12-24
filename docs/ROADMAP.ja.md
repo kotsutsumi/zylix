@@ -32,7 +32,7 @@
 | v0.17.0 | Phase 19 | ノードベースUI (React Flow風 NodeFlow) | ✅ 完了 | 2025-12-24 |
 | v0.18.0 | Phase 20 | PDFサポート (生成・読み込み・編集) + ベンチマーク | ✅ 完了 | 2025-12-24 |
 | v0.19.0 | Phase 21 | Excelサポート (xlsx読み書き) | ✅ 完了 | 2025-12-24 |
-| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ 計画中 | 2025年Q4 |
+| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ✅ 完了 | 2025-12-24 |
 | v0.21.0 | Phase 23 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2026年Q1 |
 | v0.22.0 | Phase 24 | エッジアダプター (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ 計画中 | 2026年Q1 |
 | v0.23.0 | Phase 25 | パフォーマンス & 最適化 | ⏳ 計画中 | 2026年Q2 |
@@ -1337,13 +1337,13 @@ Pure Zig による Office Open XML (xlsx) スプレッドシートのサポー�
 
 ---
 
-## Phase 22: mBaaSサポート (v0.20.0)
+## Phase 22: mBaaSサポート (v0.20.0) ✅ 完了
 
 ### 概要
 
 Firebase、Supabase、AWS Amplify などの主要な mBaaS (mobile Backend as a Service) プラットフォームとの統合を提供します。認証、データベース、ストレージ、プッシュ通知などのバックエンド機能を統一APIで利用可能にします。
 
-### 計画機能
+### 実装機能
 
 #### 22.1 Firebase 統合
 

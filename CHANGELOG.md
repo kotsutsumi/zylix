@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-12-24
+
+### Added
+
+#### Zylix mBaaS - Unified Mobile Backend as a Service Module
+- **Core Module**: `core/src/mbaas/mbaas.zig` - Unified mBaaS API
+- **Multi-Provider Support**: Firebase, Supabase, AWS Amplify with consistent APIs
+- **Cross-Platform**: Works on all Zylix targets (iOS, Android, Web/WASM, Desktop)
+
+#### Type System (`types.zig`)
+- **User Types**: Unified User struct with UID, email, phone, profile info
+- **Auth Providers**: Email, phone, anonymous, Google, Apple, Facebook, Twitter, GitHub, Microsoft
+- **Auth States**: Signed in, signed out, error states with callback support
+- **Document Types**: Generic document with typed Value fields (string, int, float, bool, array, map)
+- **GeoPoint**: Latitude/longitude for geographic data
+- **Filter System**: Comprehensive query filters (eq, neq, gt, gte, lt, lte, in, contains, etc.)
+- **Storage Types**: FileMetadata, UploadOptions, UploadProgress, DownloadOptions, ListResult
+- **Realtime Types**: Subscription, RealtimeEventType (added, modified, removed), RealtimeChange
+- **Push Notifications**: NotificationMessage with Android, APNS, and WebPush configs
+- **Provider Configs**: FirebaseConfig, SupabaseConfig, AmplifyConfig
+
+#### Firebase Client (`firebase.zig`)
+- **Authentication**: Email/password, anonymous, OAuth providers, phone auth
+- **Sign In/Out**: signInWithEmail, signInAnonymously, signOut, getCurrentUser
+- **Password Reset**: resetPassword, sendPasswordResetEmail
+- **Auth State**: onAuthStateChange callback support
+- **Firestore**: getDocument, setDocument, updateDocument, deleteDocument
+- **Queries**: Query builder with where, orderBy, limit, startAfter
+- **Batch Operations**: Batch writes with multiple operations
+- **Transactions**: Transaction support with read/write operations
+- **Cloud Storage**: uploadBytes, uploadFile, downloadBytes, downloadFile
+- **Storage Metadata**: getMetadata, updateMetadata, deleteFile, listFiles
+- **Download URLs**: getDownloadURL for public access
+- **Realtime**: onSnapshot for document/collection changes, unsubscribe
+- **FCM**: sendNotification, subscribeToTopic, unsubscribeFromTopic
+
+#### Supabase Client (`supabase.zig`)
+- **Authentication**: Email/password, magic link, OAuth, phone OTP
+- **Session Management**: Session tokens, refresh, expiry handling
+- **User Management**: signUp, signIn, signOut, updateUser, getCurrentUser
+- **Password Reset**: resetPasswordForEmail
+- **PostgREST Query Builder**: Fluent API for PostgreSQL queries
+- **Query Filters**: eq, neq, gt, gte, lt, lte, like, ilike, in, isNull
+- **Query Options**: select, order, limit, offset, single
+- **CRUD Operations**: execute (SELECT), insert, update, delete, upsert
+- **RPC**: Remote procedure call support for PostgreSQL functions
+- **Storage Client**: Bucket-based file storage
+- **Bucket Operations**: createBucket, deleteBucket, emptyBucket, listBuckets
+- **File Operations**: upload, download, getPublicUrl, createSignedUrl
+- **File Management**: list, move, copy, remove
+- **Realtime**: Subscribe to table changes (insert, update, delete, all)
+- **Realtime Filters**: Filter subscriptions by column values
+- **Edge Functions**: invokeFunction for serverless function calls
+
+#### AWS Amplify Client (`amplify.zig`)
+- **Cognito Authentication**: signIn, signUp, confirmSignUp, signOut
+- **MFA Support**: confirmSignIn with MFA code
+- **Password Management**: resetPassword, confirmResetPassword
+- **User Attributes**: getAttribute, updateAttribute, getCurrentUser
+- **DataStore**: Local-first data with cloud sync
+- **Model Operations**: save, query, delete with predicates
+- **Predicate System**: eq, ne, gt, ge, lt, le, contains, beginsWith
+- **Sync Queue**: Offline operation queueing
+- **Observe Changes**: Real-time model change observation
+- **S3 Storage**: uploadFile, downloadFile, remove
+- **Storage Options**: Access level (guest, protected, private)
+- **Upload Progress**: Progress callbacks for large uploads
+- **Download URLs**: getUrl for pre-signed S3 URLs
+- **List Files**: listFiles with path filtering
+
+#### Unified Client Interface (`mbaas.zig`)
+- **Tagged Union**: Client union supporting all three providers
+- **Unified Auth**: signInWithEmail, signOut, getCurrentUser across providers
+- **Unified Database**: getDocument abstraction
+- **Unified Storage**: uploadFile, downloadFile abstraction
+- **Unified Realtime**: subscribe, unsubscribe abstraction
+- **Factory Functions**: createFirebaseClient, createSupabaseClient, createAmplifyClient
+- **Generic Factory**: createClient with provider enum
+
+#### Unit Tests
+- **Firebase Tests**: Client initialization, email auth, document operations, storage, realtime
+- **Supabase Tests**: Client initialization, email auth, query builder, storage, realtime
+- **Amplify Tests**: Client initialization, sign in, DataStore, S3 storage
+- **Unified Tests**: Cross-provider client usage, provider enum
+
 ## [0.19.0] - 2025-12-24
 
 ### Added
