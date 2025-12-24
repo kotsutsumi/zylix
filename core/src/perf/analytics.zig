@@ -27,6 +27,8 @@ pub const AnalyticsEvent = struct {
     properties: ?std.json.Value,
     user_id: ?[]const u8,
     session_id: ?[]const u8,
+    /// Numeric value for performance metrics (nanoseconds)
+    metric_value_ns: ?u64,
 
     pub fn init(event_type: EventType, name: []const u8) AnalyticsEvent {
         return .{
@@ -36,6 +38,19 @@ pub const AnalyticsEvent = struct {
             .properties = null,
             .user_id = null,
             .session_id = null,
+            .metric_value_ns = null,
+        };
+    }
+
+    pub fn initWithMetric(event_type: EventType, name: []const u8, value_ns: u64) AnalyticsEvent {
+        return .{
+            .event_type = event_type,
+            .name = name,
+            .timestamp = std.time.milliTimestamp(),
+            .properties = null,
+            .user_id = null,
+            .session_id = null,
+            .metric_value_ns = value_ns,
         };
     }
 
@@ -139,8 +154,7 @@ pub const AnalyticsHook = struct {
 
     /// Track performance metric
     pub fn trackPerformance(self: *AnalyticsHook, metric_name: []const u8, value_ns: u64) !void {
-        _ = value_ns;
-        try self.track(AnalyticsEvent.init(.performance, metric_name));
+        try self.track(AnalyticsEvent.initWithMetric(.performance, metric_name, value_ns));
     }
 
     /// Flush events
@@ -163,9 +177,9 @@ pub const AnalyticsHook = struct {
 
 /// Crash report data
 pub const CrashReport = struct {
-    /// Error message
+    /// Error message (owned)
     message: []const u8,
-    /// Stack trace
+    /// Stack trace (owned)
     stack_trace: ?[]const u8,
     /// Timestamp
     timestamp: i64,
@@ -181,11 +195,15 @@ pub const CrashReport = struct {
     custom_data: ?std.json.Value,
     /// Breadcrumbs (recent actions)
     breadcrumbs: []const Breadcrumb,
+    /// Whether message/stack_trace are owned (need freeing)
+    owns_strings: bool,
 
     pub const Breadcrumb = struct {
         timestamp: i64,
         message: []const u8,
         category: []const u8,
+        /// Whether strings are owned
+        owns_strings: bool,
     };
 
     pub fn init(message: []const u8) CrashReport {
@@ -199,7 +217,30 @@ pub const CrashReport = struct {
             .session_id = null,
             .custom_data = null,
             .breadcrumbs = &.{},
+            .owns_strings = false,
         };
+    }
+
+    pub fn initOwned(allocator: std.mem.Allocator, message: []const u8) !CrashReport {
+        return .{
+            .message = try allocator.dupe(u8, message),
+            .stack_trace = null,
+            .timestamp = std.time.milliTimestamp(),
+            .app_version = null,
+            .platform = null,
+            .user_id = null,
+            .session_id = null,
+            .custom_data = null,
+            .breadcrumbs = &.{},
+            .owns_strings = true,
+        };
+    }
+
+    pub fn deinitStrings(self: *CrashReport, allocator: std.mem.Allocator) void {
+        if (self.owns_strings) {
+            allocator.free(self.message);
+            if (self.stack_trace) |trace| allocator.free(trace);
+        }
     }
 };
 
@@ -228,7 +269,18 @@ pub const CrashReporter = struct {
     }
 
     pub fn deinit(self: *CrashReporter) void {
+        // Free owned strings in reports
+        for (self.reports.items) |*report| {
+            report.deinitStrings(self.allocator);
+        }
         self.reports.deinit(self.allocator);
+        // Free owned strings in breadcrumbs
+        for (self.breadcrumbs.items) |bc| {
+            if (bc.owns_strings) {
+                self.allocator.free(bc.message);
+                self.allocator.free(bc.category);
+            }
+        }
         self.breadcrumbs.deinit(self.allocator);
         self.handlers.deinit(self.allocator);
         if (self.app_version) |v| self.allocator.free(v);
@@ -249,13 +301,22 @@ pub const CrashReporter = struct {
     /// Add breadcrumb
     pub fn addBreadcrumb(self: *CrashReporter, message: []const u8, category: []const u8) !void {
         if (self.breadcrumbs.items.len >= self.max_breadcrumbs) {
-            _ = self.breadcrumbs.orderedRemove(0);
+            const removed = self.breadcrumbs.orderedRemove(0);
+            if (removed.owns_strings) {
+                self.allocator.free(removed.message);
+                self.allocator.free(removed.category);
+            }
         }
+
+        const duped_message = try self.allocator.dupe(u8, message);
+        errdefer self.allocator.free(duped_message);
+        const duped_category = try self.allocator.dupe(u8, category);
 
         try self.breadcrumbs.append(self.allocator, .{
             .timestamp = std.time.milliTimestamp(),
-            .message = message,
-            .category = category,
+            .message = duped_message,
+            .category = duped_category,
+            .owns_strings = true,
         });
     }
 
@@ -263,7 +324,7 @@ pub const CrashReporter = struct {
     pub fn reportCrash(self: *CrashReporter, message: []const u8) !void {
         if (!self.enabled) return;
 
-        var report = CrashReport.init(message);
+        var report = try CrashReport.initOwned(self.allocator, message);
         report.app_version = self.app_version;
         report.breadcrumbs = self.breadcrumbs.items;
 
@@ -279,8 +340,8 @@ pub const CrashReporter = struct {
     pub fn reportCrashWithTrace(self: *CrashReporter, message: []const u8, stack_trace: []const u8) !void {
         if (!self.enabled) return;
 
-        var report = CrashReport.init(message);
-        report.stack_trace = stack_trace;
+        var report = try CrashReport.initOwned(self.allocator, message);
+        report.stack_trace = try self.allocator.dupe(u8, stack_trace);
         report.app_version = self.app_version;
         report.breadcrumbs = self.breadcrumbs.items;
 
@@ -303,7 +364,18 @@ pub const CrashReporter = struct {
 
     /// Clear all reports
     pub fn clear(self: *CrashReporter) void {
+        // Free owned strings in reports
+        for (self.reports.items) |*report| {
+            report.deinitStrings(self.allocator);
+        }
         self.reports.clearRetainingCapacity();
+        // Free owned strings in breadcrumbs
+        for (self.breadcrumbs.items) |bc| {
+            if (bc.owns_strings) {
+                self.allocator.free(bc.message);
+                self.allocator.free(bc.category);
+            }
+        }
         self.breadcrumbs.clearRetainingCapacity();
     }
 };
@@ -334,6 +406,12 @@ pub const ABTest = struct {
 
     pub fn deinit(self: *ABTest) void {
         self.variants.deinit(self.allocator);
+        // Free duplicated strings in assignments
+        var it = self.assignments.iterator();
+        while (it.next()) |entry| {
+            self.allocator.free(@constCast(entry.key_ptr.*));
+            self.allocator.free(@constCast(entry.value_ptr.*));
+        }
         self.assignments.deinit();
         self.allocator.free(self.name);
         self.allocator.destroy(self);
@@ -376,7 +454,18 @@ pub const ABTest = struct {
 
     /// Force variant for user
     pub fn forceVariant(self: *ABTest, user_id: []const u8, variant: []const u8) !void {
-        try self.assignments.put(user_id, variant);
+        // Check if user already has an assignment and free it
+        if (self.assignments.get(user_id)) |_| {
+            const removed = self.assignments.fetchRemove(user_id);
+            if (removed) |kv| {
+                self.allocator.free(@constCast(kv.key));
+                self.allocator.free(@constCast(kv.value));
+            }
+        }
+        const duped_user = try self.allocator.dupe(u8, user_id);
+        errdefer self.allocator.free(duped_user);
+        const duped_variant = try self.allocator.dupe(u8, variant);
+        try self.assignments.put(duped_user, duped_variant);
     }
 };
 

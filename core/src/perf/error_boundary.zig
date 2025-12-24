@@ -75,6 +75,8 @@ pub const ErrorBoundary = struct {
     children_errors: std.ArrayListUnmanaged(ErrorContext),
     max_retries: u32,
     retry_count: u32,
+    /// Count of errors that could not be tracked due to allocation failure
+    dropped_errors: u64,
 
     pub fn init(allocator: std.mem.Allocator, name: []const u8) !*ErrorBoundary {
         const boundary = try allocator.create(ErrorBoundary);
@@ -88,6 +90,7 @@ pub const ErrorBoundary = struct {
             .children_errors = .{},
             .max_retries = 3,
             .retry_count = 0,
+            .dropped_errors = 0,
         };
         return boundary;
     }
@@ -126,8 +129,10 @@ pub const ErrorBoundary = struct {
             handler(&context);
         }
 
-        // Track child errors
-        self.children_errors.append(self.allocator, context) catch {};
+        // Track child errors (increment dropped_errors counter on allocation failure)
+        self.children_errors.append(self.allocator, context) catch {
+            self.dropped_errors += 1;
+        };
     }
 
     /// Try to recover from error
@@ -149,7 +154,13 @@ pub const ErrorBoundary = struct {
         self.has_error = false;
         self.error_context = null;
         self.retry_count = 0;
+        self.dropped_errors = 0;
         self.children_errors.clearRetainingCapacity();
+    }
+
+    /// Get count of dropped errors (errors lost due to allocation failure)
+    pub fn getDroppedErrors(self: *const ErrorBoundary) u64 {
+        return self.dropped_errors;
     }
 
     /// Render fallback content

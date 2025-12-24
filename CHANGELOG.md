@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2025-12-24
+
+### Added
+
+#### Performance Optimization Module
+- **Core Module**: `core/src/perf/perf.zig` - Unified performance optimization toolkit
+- **Profiler**: Performance profiling with section timing and metrics collection
+
+#### Virtual DOM Optimization (`vdom_opt.zig`)
+- **VDomOptimizer**: Unified VDOM optimization with diff caching and keyed diffing
+- **DiffCache**: LRU-based diff result caching for fast lookups
+- **KeyedListDiff**: Longest Increasing Subsequence (LIS) algorithm for keyed lists
+- **MemoizationCache**: Component memoization for render optimization
+- **DiffOperation**: Patch operations (insert, delete, move, update)
+
+#### Memory Pool and Allocation (`memory.zig`)
+- **MemoryPool**: Fixed-size block pool with O(1) alloc/free
+- **ObjectPool**: Generic typed object pool with factory support
+- **ArenaOptimizer**: Arena allocator with reset and statistics
+- **StackAllocator**: LIFO stack-based allocation with save/restore
+- **FixedStringBuilder**: Zero-allocation string building
+
+#### Render Batching and Scheduling (`batch.zig`)
+- **RenderBatcher**: Combine similar render operations efficiently
+- **FrameScheduler**: Frame budget management for target FPS
+- **PriorityQueue**: Multi-level priority task queue (critical/high/normal/low/idle)
+- **AnimationFrameScheduler**: requestAnimationFrame-style scheduling
+
+#### Error Boundary Components (`error_boundary.zig`)
+- **ErrorBoundary**: React-style error isolation with retry support
+- **ErrorRecovery**: Fallback strategies (retry, ignore, propagate)
+- **ErrorContext**: Rich error context with component stack
+- **ErrorSeverity**: Severity levels (low/medium/high/critical)
+- **Dropped error tracking**: Counter for allocation failures in error handling
+
+#### Analytics and Crash Reporting (`analytics.zig`)
+- **AnalyticsHook**: Custom event tracking with batching
+- **CrashReporter**: Crash reporting with breadcrumbs and stack traces
+- **ABTest**: A/B testing with deterministic variant assignment
+- **EventType**: page_view, user_action, performance, error, custom
+- **AnalyticsEvent**: Event with timestamp, properties, and metric values
+
+#### Bundle Size Optimization (`bundle.zig`)
+- **BundleAnalyzer**: Module analysis with dependency tracking
+- **TreeShaker**: Dead code elimination via export/import analysis
+- **CompressionEstimator**: Gzip/Brotli ratio estimation
+- **CodeSplitter**: Automatic code splitting suggestions
+
+#### Configuration and Metrics
+- **PerfConfig**: Configurable performance settings
+- **PerfMetrics**: Real-time performance metrics collection
+- **OptimizationLevel**: none, balanced, size, speed
+
+#### Module Exports (`main.zig`)
+- **Perf Module**: Full performance module re-export
+- **Type Aliases**: VDomOptimizer, MemoryPool, RenderBatcher, etc.
+
+#### Unit Tests
+- All modules include comprehensive unit tests
+- Memory safety verification with testing allocator
+- Edge case coverage for all optimization algorithms
+
+### Fixed
+- **Clock skew protection**: Safe i128 to u64 casts in frame timing
+- **Memory ownership**: Proper string duplication in CrashReporter and ABTest
+- **Error propagation**: ObjectPool.release now returns errors properly
+
 ## [0.22.0] - 2025-12-24
 
 ### Added

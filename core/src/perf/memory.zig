@@ -153,8 +153,9 @@ pub fn ObjectPool(comptime T: type) type {
         }
 
         /// Return object to pool
-        pub fn release(self: *Self, item: *T) void {
-            self.available.append(self.allocator, item) catch {};
+        /// Note: Returns error if append fails (allocation failure)
+        pub fn release(self: *Self, item: *T) !void {
+            try self.available.append(self.allocator, item);
         }
 
         /// Pre-allocate objects
@@ -162,7 +163,7 @@ pub fn ObjectPool(comptime T: type) type {
             var i: usize = 0;
             while (i < count) : (i += 1) {
                 const item = try self.acquire();
-                self.release(item);
+                try self.release(item);
             }
         }
 
@@ -390,7 +391,7 @@ test "ObjectPool acquire and release" {
     try std.testing.expectEqual(@as(usize, 1), stats1.total);
     try std.testing.expectEqual(@as(usize, 1), stats1.in_use);
 
-    pool.release(obj1);
+    try pool.release(obj1);
 
     const stats2 = pool.getStats();
     try std.testing.expectEqual(@as(usize, 1), stats2.available);
