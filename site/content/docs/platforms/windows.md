@@ -5,6 +5,8 @@ weight: 6
 
 Build native Windows applications with Zylix using WinUI 3. This guide covers Visual Studio setup, P/Invoke integration, and Microsoft Store deployment.
 
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
+
 ## Prerequisites
 
 Before you begin, ensure you have:

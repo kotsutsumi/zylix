@@ -5,7 +5,13 @@ weight: 1
 
 Virtual DOM は Zylix の UI レンダリングエンジンの核心です。実際の DOM/ネイティブ UI の軽量な仮想表現を構築し、効率的な差分検出により最小限の更新を実現します。
 
-## 概要
+## 用語
+
+- **VNode**: 仮想 UI ツリーのノード。
+- **Diff**: 2つのツリー間の差分。
+- **Patch**: 実際の UI に適用する更新操作。
+
+## 概念
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -21,7 +27,9 @@ Virtual DOM は Zylix の UI レンダリングエンジンの核心です。実
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## VNode 構造体
+## 実装
+
+### VNode 構造体
 
 VNode は仮想 DOM の基本単位です。
 
@@ -407,6 +415,21 @@ pub fn renderContent(loading: bool) VNode {
     }
 }
 ```
+
+## 落とし穴
+
+- 不安定な key は並び替えバグの原因になります。
+- テキストバッファの過剰確保は差分計算を重くします。
+- プラットフォーム固有タグの混在は移植性を下げます。
+
+## 実装リンク
+
+- [core/src/vdom.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/vdom.zig)
+- [core/src/diff.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/diff.zig)
+
+## サンプル
+
+- [samples/counter-wasm](https://github.com/kotsutsumi/zylix/tree/main/samples/counter-wasm)
 
 ## 次のステップ
 

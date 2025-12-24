@@ -10,7 +10,14 @@ summary: Understanding Zylix's core concepts - Virtual DOM, state management, co
 
 Understanding Zylix's core concepts is essential for building efficient cross-platform applications. This section covers the fundamental building blocks that power every Zylix app.
 
-## The Zylix Philosophy
+## Terms
+
+- **State**: The application data owned by Zig.
+- **Event**: A typed action dispatched from platform UI.
+- **VNode**: A node in the virtual UI tree.
+- **Diff**: The computed set of changes between UI trees.
+
+## Concept
 
 Zylix is built on several key principles:
 
@@ -22,14 +29,16 @@ Zylix is built on several key principles:
 
 4. **Minimal Patches**: The diffing algorithm ensures only necessary changes are applied to the UI.
 
-## Core Components
+## Implementation
+
+### Core Components
 
 - **[Virtual DOM](virtual-dom)**: Lightweight UI representation for efficient updates
   - **[State Management](state-management)**: Centralized, version-tracked application state
   - **[Components](components)**: Composable, reusable UI building blocks
   - **[Event System](events)**: Type-safe event handling and dispatch
 
-## Data Flow Diagram
+### Data Flow Diagram
 
 ```mermaid
 flowchart TB
@@ -77,7 +86,7 @@ flowchart TB
     Shell2 --> Updated
 ```
 
-## Quick Reference
+### Quick Reference
 
 | Concept | File | Purpose |
 |---------|------|---------|
@@ -91,7 +100,7 @@ flowchart TB
 | ABI | `abi.zig` | C-compatible function exports |
 | WASM | `wasm.zig` | WebAssembly-specific bindings |
 
-## Memory Model
+### Memory Model
 
 Zylix uses arena allocation for predictable, GC-free performance:
 
@@ -112,7 +121,7 @@ Benefits:
 - **Fast allocation**: O(1) bump allocation
 - **Bulk deallocation**: Reset entire arena instantly
 
-## Type Safety
+### Type Safety
 
 Zylix leverages Zig's compile-time features for safety:
 
@@ -132,7 +141,7 @@ switch (event) {
 }
 ```
 
-## Platform Bindings
+### Platform Bindings
 
 Zylix exposes a C ABI for cross-language compatibility:
 
@@ -152,3 +161,16 @@ Platform shells call these functions to:
 3. Query current state
 4. Trigger rendering
 5. Retrieve patches to apply
+
+## Pitfalls
+
+- Skipping initialization leads to null state reads.
+- Holding ABI pointers across dispatch can invalidate data.
+- Unstable IDs cause diff mismatches in lists.
+
+## Next Steps
+
+- [Virtual DOM](./virtual-dom) - Learn how UI trees are built and diffed
+- [State Management](./state-management) - Centralized state and versioning
+- [Components](./components) - Reusable UI building blocks
+- [Event System](./events) - Type-safe event dispatch

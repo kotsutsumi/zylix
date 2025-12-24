@@ -4,10 +4,12 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
-summary: Web、iOS、Android、macOS、Linux、Windows の 6 プラットフォームでのセットアップ、統合パターン、ベストプラクティスを説明します。
+summary: Web、iOS、watchOS、Android、macOS、Linux、Windows の 7 プラットフォームでのセットアップ、統合パターン、ベストプラクティスを説明します。
 ---
 
-Zylix は 6 つのプラットフォームで動作し、それぞれネイティブ UI フレームワークを使用して本物のユーザー体験を提供します。このセクションでは、プラットフォーム固有のセットアップ、統合パターン、およびベストプラクティスを説明します。
+Zylix は 7 つのプラットフォームで動作し、それぞれネイティブ UI フレームワークを使用して本物のユーザー体験を提供します。このセクションでは、プラットフォーム固有のセットアップ、統合パターン、およびベストプラクティスを説明します。
+
+対応状況の定義は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) を参照してください。
 
 ## 対応プラットフォーム
 
@@ -15,6 +17,7 @@ Zylix は 6 つのプラットフォームで動作し、それぞれネイテ�
 |-----------------|------------------|------|---------------|---------------|
 | **Web/WASM** | HTML/JavaScript | JavaScript | WebAssembly | `zig build wasm` |
 | **iOS** | SwiftUI | Swift | C ABI | `zig build ios` |
+| **watchOS** | SwiftUI | Swift | C ABI | `zig build watchos` |
 | **Android** | Jetpack Compose | Kotlin | JNI | `zig build android` |
 | **macOS** | SwiftUI | Swift | C ABI | `zig build` |
 | **Linux** | GTK4 | C | C ABI | `zig build linux` |
@@ -22,14 +25,14 @@ Zylix は 6 つのプラットフォームで動作し、それぞれネイテ�
 
 ## プラットフォーム比較
 
-| 機能 | Web | iOS | Android | macOS | Linux | Windows |
-|---------|-----|-----|---------|-------|-------|---------|
-| **UI フレームワーク** | HTML/JS | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
-| **言語** | JavaScript | Swift | Kotlin | Swift | C | C# |
-| **バインディング** | WASM | C ABI | JNI | C ABI | C ABI | P/Invoke |
-| **最小バージョン** | モダンブラウザ | iOS 15+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
-| **バンドルサイズ** | ~50 KB | ~100 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
-| **ホットリロード** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| 機能 | Web | iOS | watchOS | Android | macOS | Linux | Windows |
+|---------|-----|-----|---------|---------|-------|-------|---------|
+| **UI フレームワーク** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
+| **言語** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# |
+| **バインディング** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke |
+| **最小バージョン** | モダンブラウザ | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
+| **バンドルサイズ** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
+| **ホットリロード** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
 
 ## プラットフォーム別アーキテクチャ
 

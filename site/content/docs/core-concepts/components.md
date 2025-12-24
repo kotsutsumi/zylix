@@ -5,7 +5,19 @@ weight: 3
 
 Components are Zylix's reusable UI building blocks. They encapsulate structure, styling, and behavior into composable units that can be rendered to any platform.
 
-## Component Types
+## Terms
+
+- **Component**: A declarative UI element (button, text, container).
+- **Props**: Data that configures the component.
+- **State**: Interactive flags (hover, focus, checked).
+
+## Concept
+
+Components are data. The renderer decides how to map them to native UI on each platform.
+
+## Implementation
+
+### Component Types
 
 Zylix provides built-in component types for common UI elements:
 
@@ -25,7 +37,7 @@ pub const ComponentType = enum(u8) {
 };
 ```
 
-## Component State
+### Component State
 
 Each component tracks its interactive state:
 
@@ -42,7 +54,7 @@ pub const ComponentState = packed struct {
 };
 ```
 
-## Component Properties
+### Component Properties
 
 ### Common Properties
 
@@ -493,6 +505,21 @@ fn createIconButton(
     return tree.create(btn);
 }
 ```
+
+## Pitfalls
+
+- Forgetting stable IDs can cause diff mismatches.
+- Overusing custom components reduces platform-native fidelity.
+- Large text buffers without length updates lead to truncated text.
+
+## Implementation Links
+
+- [core/src/component.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/component.zig)
+- [core/src/vdom.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/vdom.zig)
+
+## Samples
+
+- [samples/component-showcase](https://github.com/kotsutsumi/zylix/tree/main/samples/component-showcase)
 
 ## Next Steps
 

@@ -5,6 +5,15 @@ weight: 2
 
 Zylix uses centralized, version-tracked state management. All application state lives in Zig and is exposed read-only to platform shells. State changes are atomic, versioned, and trigger automatic re-renders.
 
+## Terms
+
+- **State**: The full application data owned by Zig.
+- **Version**: Monotonic counter incremented on each committed change.
+- **Diff**: A change mask used to update UI efficiently.
+- **Store**: Generic container that manages current/previous snapshots.
+
+## Concept
+
 ## Core Principles
 
 1. **Single Source of Truth**: One global state store owns all application data
@@ -12,7 +21,7 @@ Zylix uses centralized, version-tracked state management. All application state 
 3. **Version Tracking**: Every change increments a version number
 4. **Diff Detection**: Changes are tracked for efficient rendering
 
-## State Structure
+## Implementation
 
 ### Application State
 
@@ -78,7 +87,7 @@ pub const State = struct {
 };
 ```
 
-## Generic State Store
+### Generic State Store
 
 The `Store` provides type-safe state management with automatic versioning:
 
@@ -133,7 +142,7 @@ pub fn Store(comptime T: type) type {
 }
 ```
 
-## State Access
+### State Access
 
 ### Reading State
 
@@ -481,6 +490,23 @@ test "counter increment" {
     try std.testing.expectEqual(@as(u64, 2), getVersion());
 }
 ```
+
+## Pitfalls
+
+- Reading state before `zylix_init()` completes returns null or default values.
+- Mutating state without committing leads to stale versions and missing diffs.
+- Holding ABI pointers across dispatch calls can invalidate the view.
+
+## Implementation Links
+
+- [core/src/state.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/state.zig)
+- [core/src/store.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/store.zig)
+- [core/src/diff.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/diff.zig)
+
+## Samples
+
+- [samples/counter-wasm](https://github.com/kotsutsumi/zylix/tree/main/samples/counter-wasm)
+- [platforms/ios/Zylix](https://github.com/kotsutsumi/zylix/tree/main/platforms/ios/Zylix)
 
 ## Next Steps
 

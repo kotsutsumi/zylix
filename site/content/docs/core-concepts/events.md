@@ -5,6 +5,14 @@ weight: 4
 
 Zylix uses a type-safe event system to handle user interactions. Events flow from platform shells through the core, triggering state changes and UI updates.
 
+## Terms
+
+- **Event**: A typed action sent from platform UI to the Zig core.
+- **Dispatch**: The ABI call that routes events to handlers.
+- **Payload**: Optional data attached to an event.
+
+## Concept
+
 ## Event Architecture
 
 ```mermaid
@@ -33,7 +41,9 @@ sequenceDiagram
     Core-->>Shell: Return result
 ```
 
-## Event Types
+## Implementation
+
+### Event Types
 
 ### Built-in Events
 
@@ -83,7 +93,7 @@ pub const Event = union(enum) {
 };
 ```
 
-## Event Dispatch
+### Event Dispatch
 
 ### ABI Export
 
@@ -513,6 +523,22 @@ fn recordEvent(event: Event) void {
     history_index = (history_index + 1) % 256;
 }
 ```
+
+## Pitfalls
+
+- Dispatching before initialization returns an error code.
+- Payload length mismatches lead to invalid reads.
+- Reusing payload buffers after dispatch can corrupt data.
+
+## Implementation Links
+
+- [core/src/events.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/events.zig)
+- [core/src/abi.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/abi.zig)
+
+## Samples
+
+- [platforms/ios/Zylix](https://github.com/kotsutsumi/zylix/tree/main/platforms/ios/Zylix)
+- [platforms/android/app](https://github.com/kotsutsumi/zylix/tree/main/platforms/android/app)
 
 ## Next Steps
 

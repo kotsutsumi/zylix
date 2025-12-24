@@ -68,6 +68,9 @@ status_beta: "Beta"
 status_alpha: "Alpha"
 status_dev: "In Development"
 
+# Navigation
+tutorials_nav: "Tutorials"
+
 # Get Started
 getstarted_title: "Get Started in Minutes"
 prerequisites: "Prerequisites"

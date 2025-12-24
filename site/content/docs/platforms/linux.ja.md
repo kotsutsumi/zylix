@@ -5,6 +5,8 @@ weight: 5
 
 GTK4 を使用して Zylix でネイティブ Linux アプリケーションを構築します。このガイドでは、開発環境のセットアップ、C ABI 統合、配布パッケージングについて説明します。
 
+対応状況の定義は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) を参照してください。
+
 ## 前提条件
 
 始める前に、以下がインストールされていることを確認してください：

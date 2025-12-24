@@ -9,7 +9,7 @@ tags:
   - release
 ---
 
-**Zylix** の最初のパブリックリリースを発表できることを嬉しく思います。Zylix は、完全に Zig で構築されたクロスプラットフォーム UI フレームワークです。開発者は UI ロジックを一度書くだけで、Web/WASM、iOS、Android、macOS、Linux、Windows の6つのプラットフォームにデプロイできます。
+**Zylix** の最初のパブリックリリースを発表できることを嬉しく思います。Zylix は、完全に Zig で構築されたクロスプラットフォーム UI フレームワークです。開発者は UI ロジックを一度書くだけで、Web/WASM、iOS、watchOS、Android、macOS、Linux、Windows の7つのプラットフォームにデプロイできます。
 
 ## なぜ Zylix なのか？
 
@@ -63,7 +63,7 @@ python3 -m http.server 8080
 
 ## 参加する
 
-Zylix は MIT ライセンスの下でオープンソースとして公開されています。あらゆるスキルレベルの開発者からのコントリビューションを歓迎します。
+Zylix は Apache License 2.0 の下でオープンソースとして公開されています。あらゆるスキルレベルの開発者からのコントリビューションを歓迎します。
 
 - [GitHub リポジトリ](https://github.com/kotsutsumi/zylix)
 - [イシュートラッカー](https://github.com/kotsutsumi/zylix/issues)

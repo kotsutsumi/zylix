@@ -5,6 +5,8 @@ weight: 3
 
 Build native Android applications with Zylix using Jetpack Compose. This guide covers Android Studio setup, JNI integration, and Google Play deployment.
 
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
+
 ## Prerequisites
 
 Before you begin, ensure you have:

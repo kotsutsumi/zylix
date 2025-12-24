@@ -50,8 +50,15 @@
   --z-card-bg: rgba(255, 255, 255, 0.04);
   --z-card-border: rgba(255, 255, 255, 0.12);
   --z-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  --z-code-bg: #0f172a;
+  --z-code-bg: #0b1220;
   --z-code-border: 1px solid rgba(255, 255, 255, 0.08);
+  --z-code-fg: #e2e8f0;
+  --z-code-muted: #94a3b8;
+  --z-code-keyword: #f472b6;
+  --z-code-string: #a7f3d0;
+  --z-code-number: #fbbf24;
+  --z-code-func: #60a5fa;
+  --z-code-comment: #64748b;
 
   /* === Links & Accents === */
   --z-link: #4A8CFF;
@@ -486,6 +493,63 @@ pre:not(.hextra-code-block pre) {
 
 .hextra-code-block pre {
   margin: 0 !important;
+}
+
+.hextra-code-block pre code,
+pre code {
+  color: var(--z-code-fg);
+}
+
+.chroma {
+  color: var(--z-code-fg);
+  background: var(--z-code-bg);
+}
+
+.chroma .k,
+.chroma .kd,
+.chroma .kn,
+.chroma .kt {
+  color: var(--z-code-keyword);
+}
+
+.chroma .s,
+.chroma .s1,
+.chroma .s2,
+.chroma .sb,
+.chroma .sa,
+.chroma .sc,
+.chroma .sd,
+.chroma .se,
+.chroma .sh,
+.chroma .si,
+.chroma .sx {
+  color: var(--z-code-string);
+}
+
+.chroma .m,
+.chroma .mb,
+.chroma .mf,
+.chroma .mh,
+.chroma .mi,
+.chroma .il {
+  color: var(--z-code-number);
+}
+
+.chroma .nf,
+.chroma .nc {
+  color: var(--z-code-func);
+}
+
+.chroma .c,
+.chroma .c1,
+.chroma .cm {
+  color: var(--z-code-comment);
+}
+
+.chroma .o,
+.chroma .p,
+.chroma .na {
+  color: var(--z-code-muted);
 }
 
 /* Inline code */

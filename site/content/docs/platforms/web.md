@@ -5,6 +5,8 @@ weight: 1
 
 Build and deploy Zylix applications to the web using WebAssembly. This guide covers project setup, WASM compilation, JavaScript integration, and deployment strategies.
 
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
+
 ## Prerequisites
 
 Before you begin, ensure you have:

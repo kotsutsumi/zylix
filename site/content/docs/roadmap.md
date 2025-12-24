@@ -9,94 +9,53 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 > For the complete detailed roadmap, see [ROADMAP.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md).
 
+**Last Synced:** 2025-12-25
+
 ## Current Status
 
-**Version 0.8.1** is the current release with:
+**Version 0.25.0** is the current release with:
 
-- Virtual DOM engine with efficient diffing
-- Type-safe state management
-- 40+ UI components (form, layout, navigation, feedback, data display)
-- CSS utility system (TailwindCSS-like)
-- Flexbox layout engine
-- 6-platform support (Web, iOS, Android, macOS, Linux, Windows)
-- 7th platform: watchOS support
-- C ABI (v2) and WASM bindings
-- Event queue with priority system
-- State diff API for efficient updates
-- TypeScript and Python language bindings
-- E2E testing framework
-- CI/CD pipeline
+- Official sample catalog (31 projects across templates, showcases, apps, games, platform-specific, fullstack)
+- Documentation excellence: API reference, architecture, and EN/JA coverage
+- Performance tooling: profiling, diff caching, and memory pools
+- Runtime stack: server runtime, edge adapters, and database support
+- Device and graphics features: gestures, animation, 3D, and game tooling
 
 ## Roadmap Overview
 
 | Version | Focus | Status |
 |---------|-------|--------|
-| v0.1.0 - v0.6.0 | Foundation & Core Features | Done |
+| v0.1.0 - v0.6.3 | Foundation, routing, async, hot reload, samples | Done |
 | v0.7.0 | Component Library (40+ types) | Done |
-| v0.8.1 | Testing, watchOS, Language Bindings | Current |
-| v0.9.0 | Embedded AI (Zylix AI) | Planned |
-| v0.10.0 | Device Features & Gestures | Planned |
-| v0.11.0 | Performance & Optimization | Planned |
-| v0.12.0 | Documentation Excellence | Planned |
-| v0.13.0 | Animation (Lottie, Live2D) | Planned |
-| v0.14.0 | 3D Graphics | Planned |
-| v0.15.0 | Game Development | Planned |
-| v0.16.0 - v0.21.0 | Node UI, PDF, Excel, Database, Server, Edge | Planned |
+| v0.8.1 | Testing, watchOS, language bindings | Done |
+| v0.9.0 - v0.23.0 | AI, device APIs, animation, 3D, game, DB, server, edge, performance | Done |
+| v0.24.0 | Documentation Excellence | Done |
+| v0.25.0 | Official Sample Projects (31 samples) | Current |
 
 ## Completed Milestones
 
-### v0.8.1 - Testing & Language Bindings
+### v0.25.0 - Official Sample Projects
 
-- watchOS platform support
-- TypeScript bindings (`@zylix/test` npm package)
-- Python bindings (`zylix-test` PyPI package)
-- E2E testing framework for all platforms
-- CI/CD workflows (GitHub Actions)
+- 31 production-quality sample projects
+- Starter templates, feature showcases, real-world apps
+- Platform-specific and game-focused samples
+- Fullstack end-to-end examples
 
-### v0.7.0 - Component Library
+### v0.24.0 - Documentation Excellence
 
-40+ component types across 5 categories:
+- API reference for core/perf modules
+- EN/JA bilingual docs across new pages
+- Organized module index and quick reference
 
-- **Form**: select, checkbox, radio, textarea, toggle, slider, form
-- **Layout**: vstack, hstack, zstack, grid, scroll_view, spacer, divider, card
-- **Navigation**: nav_bar, tab_bar
-- **Feedback**: alert, toast, modal, progress, spinner
-- **Data Display**: icon, avatar, tag, badge, accordion
+### v0.23.0 - Performance & Optimization
 
-### v0.6.x - Core Features
+- Profiling, diff caching, memory pools
+- Render batching and scheduling utilities
+- Optimization configuration and metrics
 
-- Router with navigation guards and deep linking
-- Async utilities (Future/Promise pattern)
-- Hot reload development server
-- Sample applications
-- Platform demos (iOS, Android)
+## Next
 
-## Upcoming Features
-
-### v0.9.0 - Zylix AI
-
-AI-powered development assistant with:
-
-- Natural language to component generation
-- Intelligent debugging assistance
-- PR review integration
-- Documentation auto-generation
-
-### v0.10.0 - Device Features
-
-- GPS/Location services
-- Camera access
-- Push notifications (APNs, FCM)
-- Advanced gestures (drag & drop, pinch, swipe)
-
-### v0.13.0+ - Advanced Features
-
-- **Animation**: Lottie, Live2D integration
-- **3D Graphics**: Three.js-inspired engine
-- **Game Development**: 2D engine, physics, audio
-- **Document Support**: PDF, Excel manipulation
-- **Server Runtime**: Full-stack Zig applications
-- **Edge Deployment**: Cloudflare, Vercel, AWS adapters
+The next release is TBD. See the full roadmap for the complete release history and detailed phase descriptions.
 
 ## Contributing
 

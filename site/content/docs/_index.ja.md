@@ -11,14 +11,14 @@ Zylix 公式ドキュメントへようこそ。Zig で構築された高性能�
 
 ## Zylix とは？
 
-Zylix は**Zig で構築された高性能クロスプラットフォーム UI フレームワーク**です。単一のコアロジックから6つのプラットフォームでネイティブアプリケーションを構築できます。
+Zylix は**Zig で構築された高性能クロスプラットフォーム UI フレームワーク**です。単一のコアロジックから7つのプラットフォームでネイティブアプリケーションを構築できます。
 
 ### 主な特徴
 
 | 特徴 | 説明 |
 |------|------|
 | **Virtual DOM** | 効率的な差分アルゴリズムによる最小限の UI 更新 |
-| **6 プラットフォーム** | Web/WASM、iOS、Android、macOS、Linux、Windows |
+| **7 プラットフォーム** | Web/WASM、iOS、watchOS、Android、macOS、Linux、Windows |
 | **C ABI** | ネイティブフレームワークとのシームレスな統合 |
 | **型安全** | Zig のコンパイル時型チェックによる信頼性 |
 | **GC フリー** | アリーナアロケーションによる予測可能なパフォーマンス |
@@ -84,6 +84,7 @@ python3 -m http.server 8080
 
 ### 入門
 
+- **最短ルート**: [はじめる](getting-started) → [チュートリアル](/tutorials) → [コア概念](core-concepts)
 - **[はじめる](getting-started)**: インストールと最初のアプリ
   - **[アーキテクチャ](architecture)**: Zylix の設計思想
 
@@ -97,6 +98,7 @@ python3 -m http.server 8080
 ### プラットフォームガイド
 
 - **[プラットフォームガイド](platforms)**: 全6プラットフォームの統合ガイド
+- **[チュートリアル](/tutorials)**: プラットフォーム別の手順ガイド
 
 ### APIリファレンス
 
@@ -110,12 +112,15 @@ python3 -m http.server 8080
 
 | プラットフォーム | UI フレームワーク | バインディング | 最小バージョン | ステータス |
 |-----------------|------------------|---------------|---------------|-----------|
-| **Web/WASM** | HTML/JavaScript | WebAssembly | モダンブラウザ | 🔵 ベータ |
-| **iOS** | SwiftUI | C ABI | iOS 15+ | 🟡 アルファ |
-| **Android** | Jetpack Compose | JNI | API 26+ | 🟡 アルファ |
-| **macOS** | SwiftUI | C ABI | macOS 12+ | 🟡 アルファ |
-| **Linux** | GTK4 | C ABI | GTK 4.0+ | 🟡 アルファ |
-| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | 🟡 アルファ |
+| **Web/WASM** | HTML/JavaScript | WebAssembly | モダンブラウザ | Production Ready |
+| **iOS** | SwiftUI | C ABI | iOS 15+ | Production Ready |
+| **watchOS** | SwiftUI | C ABI | watchOS 10+ | In Development |
+| **Android** | Jetpack Compose | JNI | API 26+ | In Development |
+| **macOS** | SwiftUI | C ABI | macOS 12+ | Production Ready |
+| **Linux** | GTK4 | C ABI | GTK 4.0+ | In Development |
+| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | In Development |
+
+> 対応状況の定義は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) を参照してください。
 
 ## 設計原則
 
@@ -143,4 +148,8 @@ API はシンプルで理解しやすく、学習曲線を緩やかにします�
 
 ## ライセンス
 
-Zylix は MIT ライセンスの下で公開されています。
+Zylix は Apache License 2.0 の下で公開されています。
+
+## バージョン
+
+本ドキュメントは **Zylix v0.25.0** を対象としています。最新状況は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) と [ロードマップ](roadmap) を参照してください。

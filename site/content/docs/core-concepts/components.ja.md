@@ -5,7 +5,19 @@ weight: 3
 
 コンポーネントは Zylix の再利用可能な UI 構成要素です。構造、スタイル、動作をカプセル化し、任意のプラットフォームにレンダリングできる合成可能なユニットです。
 
-## コンポーネントタイプ
+## 用語
+
+- **Component**: ボタンやテキストなどの UI 要素。
+- **Props**: コンポーネントを設定するデータ。
+- **State**: hover や checked などの状態フラグ。
+
+## 概念
+
+コンポーネントはデータとして表現され、各プラットフォームのレンダラがネイティブ UI に変換します。
+
+## 実装
+
+### コンポーネントタイプ
 
 Zylix は一般的な UI 要素用の組み込みコンポーネントタイプを提供します。
 
@@ -25,7 +37,7 @@ pub const ComponentType = enum(u8) {
 };
 ```
 
-## コンポーネント状態
+### コンポーネント状態
 
 各コンポーネントはインタラクティブな状態を追跡します。
 
@@ -42,7 +54,7 @@ pub const ComponentState = packed struct {
 };
 ```
 
-## コンポーネントプロパティ
+### コンポーネントプロパティ
 
 ### 共通プロパティ
 
@@ -115,7 +127,7 @@ pub const HeadingLevel = enum(u8) {
 };
 ```
 
-## イベントハンドラ
+### イベントハンドラ
 
 コンポーネントは複数のイベントハンドラを持つことができます。
 
@@ -466,6 +478,21 @@ fn createIconButton(
     return tree.create(btn);
 }
 ```
+
+## 落とし穴
+
+- 安定した ID を付けないと差分更新が不安定になります。
+- カスタムコンポーネントの多用はネイティブ表現を損ないます。
+- テキスト長の更新漏れで表示が途切れます。
+
+## 実装リンク
+
+- [core/src/component.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/component.zig)
+- [core/src/vdom.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/vdom.zig)
+
+## サンプル
+
+- [samples/component-showcase](https://github.com/kotsutsumi/zylix/tree/main/samples/component-showcase)
 
 ## 次のステップ
 

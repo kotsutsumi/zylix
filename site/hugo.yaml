@@ -70,19 +70,24 @@ languages:
           weight: 20
           params:
             icon: book-open
+        - name: Tutorials
+          pageRef: /tutorials/
+          weight: 25
+          params:
+            icon: graduation-cap
         - name: Demo
           pageRef: demo
-          weight: 30
+          weight: 35
           params:
             icon: play
         - name: Blog
           pageRef: blog
-          weight: 40
+          weight: 45
           params:
             icon: newspaper
         - name: GitHub
           url: https://github.com/kotsutsumi/zylix
-          weight: 50
+          weight: 55
           params:
             icon: github
       footer:
@@ -112,19 +117,24 @@ languages:
           weight: 20
           params:
             icon: book-open
+        - name: チュートリアル
+          pageRef: /tutorials/
+          weight: 25
+          params:
+            icon: graduation-cap
         - name: デモ
           pageRef: demo
-          weight: 30
+          weight: 35
           params:
             icon: play
         - name: ブログ
           pageRef: blog
-          weight: 40
+          weight: 45
           params:
             icon: newspaper
         - name: GitHub
           url: https://github.com/kotsutsumi/zylix
-          weight: 50
+          weight: 55
           params:
             icon: github
       footer:

@@ -5,6 +5,8 @@ weight: 6
 
 WinUI 3 を使用して Zylix でネイティブ Windows アプリケーションを構築します。このガイドでは、Visual Studio のセットアップ、P/Invoke 統合、Microsoft Store デプロイについて説明します。
 
+対応状況の定義は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) を参照してください。
+
 ## 前提条件
 
 始める前に、以下がインストールされていることを確認してください：

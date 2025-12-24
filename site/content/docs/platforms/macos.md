@@ -5,6 +5,8 @@ weight: 4
 
 Build native macOS applications with Zylix using SwiftUI. This guide covers Xcode project setup, C ABI integration, and Mac App Store deployment.
 
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
+
 ## Prerequisites
 
 Before you begin, ensure you have:

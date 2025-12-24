@@ -68,6 +68,9 @@ status_beta: "ベータ"
 status_alpha: "アルファ"
 status_dev: "開発中"
 
+# Navigation
+tutorials_nav: "チュートリアル"
+
 # Get Started
 getstarted_title: "数分ではじめる"
 prerequisites: "前提条件"

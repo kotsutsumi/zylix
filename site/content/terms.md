@@ -11,14 +11,14 @@ layout: simple
 
 ### Open Source License
 
-Zylix is open source software released under the [MIT License](https://github.com/kotsutsumi/zylix/blob/main/LICENSE). You are free to:
+Zylix is open source software released under the [Apache License 2.0](https://github.com/kotsutsumi/zylix/blob/main/LICENSE.md). You are free to:
 
 - Use the software for any purpose
 - Modify the software
 - Distribute the software
 - Use the software commercially
 
-Subject to the conditions of the MIT License.
+Subject to the conditions of the Apache License 2.0.
 
 ### Website Content
 
@@ -26,11 +26,11 @@ The content on this website, including documentation and examples, is provided f
 
 ### No Warranty
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+Unless required by applicable law or agreed to in writing, the software is provided on an "AS IS" basis, without warranties or conditions of any kind, either express or implied.
 
 ### Limitation of Liability
 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law, shall any contributor be liable for any damages or claims arising from the use of the software.
 
 ### External Links
 

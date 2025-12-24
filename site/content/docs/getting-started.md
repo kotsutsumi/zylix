@@ -8,6 +8,8 @@ summary: Set up Zylix and build your first cross-platform application with this 
 
 This guide walks you through setting up Zylix and building your first cross-platform application. By the end, you'll have a working Todo app running on your chosen platform.
 
+**Recommended shortest path:** Start with the [Web/WASM tutorial](/tutorials/web) to get a quick success, then follow your platform tutorial from [/tutorials](/tutorials).
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -27,6 +29,8 @@ Before you begin, ensure you have the following installed:
   ```
 
 ### Platform-Specific Requirements
+
+For step-by-step walkthroughs, see the [Tutorials](/tutorials) page.
 
 **Web/WASM** requires:
 - A modern web browser (Chrome, Firefox, Safari, Edge)

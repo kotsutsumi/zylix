@@ -5,6 +5,8 @@ weight: 5
 
 Build native Linux applications with Zylix using GTK4. This guide covers development environment setup, C ABI integration, and distribution packaging.
 
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
+
 ## Prerequisites
 
 Before you begin, ensure you have:

@@ -4,10 +4,12 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
-summary: Platform-specific setup, integration patterns, and best practices for Web, iOS, Android, macOS, Linux, and Windows.
+summary: Platform-specific setup, integration patterns, and best practices for Web, iOS, watchOS, Android, macOS, Linux, and Windows.
 ---
 
-Zylix runs on six platforms, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.
+Zylix runs on seven platforms, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.
+
+Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
 
 ## Supported Platforms
 
@@ -15,6 +17,7 @@ Zylix runs on six platforms, each using native UI frameworks for authentic user 
 |----------|-------------|---------|---------------|
 | **Web/WASM** | HTML/JavaScript | WebAssembly | `zig build wasm` |
 | **iOS** | SwiftUI | C ABI | `zig build ios` |
+| **watchOS** | SwiftUI | C ABI | `zig build watchos` |
 | **Android** | Jetpack Compose | JNI | `zig build android` |
 | **macOS** | SwiftUI | C ABI | `zig build` |
 | **Linux** | GTK4 | C ABI | `zig build linux` |
@@ -22,14 +25,14 @@ Zylix runs on six platforms, each using native UI frameworks for authentic user 
 
 ## Platform Comparison
 
-| Feature | Web | iOS | Android | macOS | Linux | Windows |
-|---------|-----|-----|---------|-------|-------|---------|
-| **UI Framework** | HTML/JS | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
-| **Language** | JavaScript | Swift | Kotlin | Swift | C | C# |
-| **Binding** | WASM | C ABI | JNI | C ABI | C ABI | P/Invoke |
-| **Min Version** | Modern browsers | iOS 15+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
-| **Bundle Size** | ~50 KB | ~100 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
-| **Hot Reload** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Feature | Web | iOS | watchOS | Android | macOS | Linux | Windows |
+|---------|-----|-----|---------|---------|-------|-------|---------|
+| **UI Framework** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
+| **Language** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# |
+| **Binding** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke |
+| **Min Version** | Modern browsers | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
+| **Bundle Size** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
+| **Hot Reload** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
 
 ## Architecture Per Platform
 

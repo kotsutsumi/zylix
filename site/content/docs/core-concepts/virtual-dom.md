@@ -5,6 +5,14 @@ weight: 1
 
 The Virtual DOM (VDOM) is Zylix's core abstraction for efficient UI updates. Instead of manipulating platform UI elements directly, you describe your UI as a tree of lightweight `VNode` structures. Zylix then computes the minimal set of changes needed to update the actual UI.
 
+## Terms
+
+- **VNode**: A node in the virtual UI tree.
+- **Diff**: The computed set of changes between two trees.
+- **Patch**: A single update operation applied to the platform UI.
+
+## Concept
+
 ## Why Virtual DOM?
 
 Direct UI manipulation is expensive and error-prone:
@@ -27,7 +35,9 @@ diff(oldTree, newTree)       // Compute patches
 apply(patches)               // Single UI update
 ```
 
-## VNode Structure
+## Implementation
+
+### VNode Structure
 
 A `VNode` represents a single node in the virtual tree:
 
@@ -60,7 +70,7 @@ pub const VNode = struct {
 };
 ```
 
-## Node Types
+### Node Types
 
 Zylix supports four node types:
 
@@ -93,7 +103,7 @@ pub const ElementTag = enum(u8) {
 };
 ```
 
-## Creating VNodes
+### Creating VNodes
 
 ### Using Factory Functions
 
@@ -391,6 +401,21 @@ for (buttons) |_| {
     // ...
 }
 ```
+
+## Pitfalls
+
+- Unstable keys cause list reordering bugs.
+- Over-allocating text buffers increases diff cost.
+- Mixing platform-specific tags reduces portability.
+
+## Implementation Links
+
+- [core/src/vdom.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/vdom.zig)
+- [core/src/diff.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/diff.zig)
+
+## Samples
+
+- [samples/counter-wasm](https://github.com/kotsutsumi/zylix/tree/main/samples/counter-wasm)
 
 ## Next Steps
 

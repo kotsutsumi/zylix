@@ -9,7 +9,7 @@ tags:
   - release
 ---
 
-We're thrilled to announce the first public release of **Zylix**, a cross-platform UI framework built entirely in Zig. Zylix enables developers to write UI logic once and deploy to six platforms: Web/WASM, iOS, Android, macOS, Linux, and Windows.
+We're thrilled to announce the first public release of **Zylix**, a cross-platform UI framework built entirely in Zig. Zylix enables developers to write UI logic once and deploy to seven platforms: Web/WASM, iOS, watchOS, Android, macOS, Linux, and Windows.
 
 ## Why Zylix?
 
@@ -31,7 +31,7 @@ Zylix v0.1.0 is now available with:
 - CSS utility system (TailwindCSS-like syntax)
 - Flexbox layout engine
 - Event handling system
-- Web/WASM platform in Beta, other platforms in Alpha
+- Platform maturity follows the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md)
 
 ## Try It Out
 
@@ -63,7 +63,7 @@ Our [roadmap](/docs/roadmap) outlines the planned features:
 
 ## Get Involved
 
-Zylix is open source under the MIT license. We welcome contributions from developers of all skill levels.
+Zylix is open source under the Apache License 2.0. We welcome contributions from developers of all skill levels.
 
 - [GitHub Repository](https://github.com/kotsutsumi/zylix)
 - [Issue Tracker](https://github.com/kotsutsumi/zylix/issues)

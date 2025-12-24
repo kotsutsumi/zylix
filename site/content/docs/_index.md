@@ -7,7 +7,7 @@ cascade:
   type: docs
 ---
 
-Welcome to the official Zylix documentation. Zylix is a high-performance, cross-platform UI framework powered by [Zig](https://ziglang.org/), designed to build native applications that run on Web, iOS, Android, macOS, Linux, and Windows from a single codebase.
+Welcome to the official Zylix documentation. Zylix is a high-performance, cross-platform UI framework powered by [Zig](https://ziglang.org/), designed to build native applications that run on Web, iOS, watchOS, Android, macOS, Linux, and Windows from a single codebase.
 
 ## Why Zylix?
 
@@ -63,10 +63,12 @@ flowchart TB
 
 ## Quick Links
 
+- **Start Here (Shortest Path)**: [Getting Started](getting-started) → [Tutorials](/tutorials) → [Core Concepts](core-concepts)
 - **[Getting Started](getting-started)**: Install Zylix and build your first app in minutes
 - **[Core Concepts](core-concepts)**: Understand Virtual DOM, State, Components, and Events
 - **[Architecture](architecture)**: Deep dive into Zylix internals
 - **[Platform Guides](platforms)**: Platform-specific setup and best practices
+- **[Tutorials](/tutorials)**: Step-by-step platform walkthroughs
 - **[API Reference](api-reference)**: Complete API documentation for all modules
 - **[Roadmap](roadmap)**: Development progress and future plans
 
@@ -74,12 +76,13 @@ flowchart TB
 
 | Platform | UI Framework | Binding | Min Version | Status |
 |----------|-------------|---------|-------------|--------|
-| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | ✅ Production Ready |
-| **iOS** | SwiftUI | C ABI | iOS 15+ | ✅ Production Ready |
-| **macOS** | SwiftUI | C ABI | macOS 12+ | ✅ Production Ready |
-| **Android** | Jetpack Compose | JNI | API 26+ | 🚧 In Development |
-| **Linux** | GTK4 | C ABI | GTK 4.0+ | 🚧 In Development |
-| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | 🚧 In Development |
+| **Web/WASM** | HTML/JavaScript | WebAssembly | Modern browsers | Production Ready |
+| **iOS** | SwiftUI | C ABI | iOS 15+ | Production Ready |
+| **watchOS** | SwiftUI | C ABI | watchOS 10+ | In Development |
+| **macOS** | SwiftUI | C ABI | macOS 12+ | Production Ready |
+| **Android** | Jetpack Compose | JNI | API 26+ | In Development |
+| **Linux** | GTK4 | C ABI | GTK 4.0+ | In Development |
+| **Windows** | WinUI 3 | P/Invoke | Windows 10+ | In Development |
 
 > See [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) for detailed platform maturity definitions.
 
@@ -102,8 +105,8 @@ Seamless integration with platform languages through C ABI (Swift, Kotlin, C#) a
 - **GitHub**: [github.com/kotsutsumi/zylix](https://github.com/kotsutsumi/zylix)
 - **Issues**: [Report bugs and request features](https://github.com/kotsutsumi/zylix/issues)
 - **Discussions**: [Ask questions and share ideas](https://github.com/kotsutsumi/zylix/discussions)
-- **License**: MIT
+- **License**: Apache License 2.0
 
 ## Version
 
-This documentation covers **Zylix v0.23.0**. See the [Roadmap](roadmap) for development progress.
+This documentation covers **Zylix v0.25.0**. See the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) and [Roadmap](roadmap) for current status.

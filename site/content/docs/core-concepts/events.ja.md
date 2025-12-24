@@ -5,6 +5,14 @@ weight: 4
 
 Zylix は型安全なイベントシステムを使用してユーザーインタラクションを処理します。イベントはプラットフォームシェルからコアを通じて流れ、状態変更と UI 更新をトリガーします。
 
+## 用語
+
+- **Event**: UI から Zig コアに送る型付きアクション。
+- **Dispatch**: イベントをハンドラへルーティングする ABI 呼び出し。
+- **Payload**: イベントに付随するデータ。
+
+## 概念
+
 ## イベントアーキテクチャ
 
 ```mermaid
@@ -33,7 +41,9 @@ sequenceDiagram
     Core-->>Shell: 結果を返す
 ```
 
-## イベントタイプ
+## 実装
+
+### イベントタイプ
 
 ### 組み込みイベント
 
@@ -83,7 +93,7 @@ pub const Event = union(enum) {
 };
 ```
 
-## イベントディスパッチ
+### イベントディスパッチ
 
 ### ABI エクスポート
 
@@ -513,6 +523,22 @@ fn recordEvent(event: Event) void {
     history_index = (history_index + 1) % 256;
 }
 ```
+
+## 落とし穴
+
+- 初期化前のディスパッチはエラーコードを返します。
+- ペイロード長の不一致は不正読み取りの原因になります。
+- ディスパッチ後にペイロードバッファを再利用すると破損します。
+
+## 実装リンク
+
+- [core/src/events.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/events.zig)
+- [core/src/abi.zig](https://github.com/kotsutsumi/zylix/blob/main/core/src/abi.zig)
+
+## サンプル
+
+- [platforms/ios/Zylix](https://github.com/kotsutsumi/zylix/tree/main/platforms/ios/Zylix)
+- [platforms/android/app](https://github.com/kotsutsumi/zylix/tree/main/platforms/android/app)
 
 ## 次のステップ
 
