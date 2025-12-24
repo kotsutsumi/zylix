@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2025-12-24
+
+### Added
+
+#### Official Sample Projects (Phase 27)
+- **Sample Directory Structure**: New organized structure with 6 categories
+  - `templates/` - Starter project templates
+  - `showcase/` - Feature demonstration samples
+  - `apps/` - Full application examples
+  - `platform-specific/` - Platform-exclusive features
+  - `games/` - Game development samples
+  - `fullstack/` - End-to-end fullstack applications
+
+#### Starter Templates
+- **Blank App** (`templates/blank-app/`): Minimal Zylix application template
+  - Complete Zig core with state management, events, and UI components
+  - Build configuration for native and WASM targets
+  - Comprehensive documentation and customization guide
+
+#### Component Showcase
+- **Component Gallery** (`showcase/component-gallery/`): All UI components showcase
+  - Interactive component browser with 6 categories
+  - Theme switching (light/dark)
+  - Component preview cards with descriptions
+  - Comprehensive test coverage
+
+#### Documentation
+- **Updated samples/README.md**: Complete catalog of all sample projects
+  - 31+ planned samples across all categories
+  - Status tracking (Ready/Planned)
+  - Getting started guides for new and legacy samples
+
 ## [0.24.0] - 2025-12-24
 
 ### Added

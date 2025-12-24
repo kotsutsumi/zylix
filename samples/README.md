@@ -1,161 +1,195 @@
 # Zylix Sample Applications
 
-This directory contains sample applications demonstrating Zylix usage.
+This directory contains sample applications demonstrating Zylix usage across platforms.
 
-## Working Samples
+## Sample Categories
+
+### Templates (Starter Projects)
+
+Ready-to-use templates to kickstart your Zylix projects.
+
+| Template | Description | Status |
+|----------|-------------|--------|
+| [**blank-app**](./templates/blank-app/) | Minimal starter template | ✅ Ready |
+| [**tab-navigation**](./templates/tab-navigation/) | Multi-tab app structure | 🚧 Planned |
+| [**drawer-navigation**](./templates/drawer-navigation/) | Side drawer navigation | 🚧 Planned |
+| [**dashboard-layout**](./templates/dashboard-layout/) | Dashboard with widgets | 🚧 Planned |
+
+### Showcase (Feature Demonstrations)
+
+Comprehensive examples showcasing Zylix capabilities.
+
+| Showcase | Description | Status |
+|----------|-------------|--------|
+| [**component-gallery**](./showcase/component-gallery/) | All UI components showcase | ✅ Ready |
+| [**animation-studio**](./showcase/animation-studio/) | Animation system demos | 🚧 Planned |
+| [**3d-viewer**](./showcase/3d-viewer/) | 3D graphics rendering | 🚧 Planned |
+| [**game-arcade**](./showcase/game-arcade/) | Game engine features | 🚧 Planned |
+| [**ai-playground**](./showcase/ai-playground/) | AI/ML integration demos | 🚧 Planned |
+| [**device-lab**](./showcase/device-lab/) | Platform-specific features | 🚧 Planned |
+| [**database-workshop**](./showcase/database-workshop/) | Database operations | 🚧 Planned |
+
+### Apps (Full Applications)
+
+Complete applications demonstrating real-world patterns.
+
+| App | Description | Status |
+|-----|-------------|--------|
+| [**taskmaster**](./apps/taskmaster/) | Advanced todo with projects | 🚧 Planned |
+| [**shop-demo**](./apps/shop-demo/) | E-commerce application | 🚧 Planned |
+| [**chat-space**](./apps/chat-space/) | Real-time messaging | 🚧 Planned |
+| [**analytics-pro**](./apps/analytics-pro/) | Dashboard and charts | 🚧 Planned |
+| [**media-box**](./apps/media-box/) | Media player app | 🚧 Planned |
+| [**note-flow**](./apps/note-flow/) | Rich text notes | 🚧 Planned |
+| [**fit-track**](./apps/fit-track/) | Fitness tracking | 🚧 Planned |
+| [**social-network**](./apps/social-network/) | Social media app | 🚧 Planned |
+
+### Platform-Specific
+
+Samples showcasing platform-exclusive features.
+
+| Sample | Platform | Description | Status |
+|--------|----------|-------------|--------|
+| [**ios-exclusive**](./platform-specific/ios-exclusive/) | iOS | Apple-specific features | 🚧 Planned |
+| [**android-exclusive**](./platform-specific/android-exclusive/) | Android | Android-specific features | 🚧 Planned |
+| [**web-pwa**](./platform-specific/web-pwa/) | Web | Progressive Web App | 🚧 Planned |
+| [**desktop-native**](./platform-specific/desktop-native/) | Desktop | Native desktop features | 🚧 Planned |
+| [**watchos-companion**](./platform-specific/watchos-companion/) | watchOS | Apple Watch companion | 🚧 Planned |
+
+### Games
+
+Game development samples using Zylix.
+
+| Game | Description | Status |
+|------|-------------|--------|
+| [**platformer-adventure**](./games/platformer-adventure/) | 2D platformer game | 🚧 Planned |
+| [**puzzle-world**](./games/puzzle-world/) | Puzzle game collection | 🚧 Planned |
+| [**space-shooter**](./games/space-shooter/) | Space shooter game | 🚧 Planned |
+| [**vtuber-demo**](./games/vtuber-demo/) | VTuber/Live2D demo | 🚧 Planned |
+
+### Fullstack
+
+End-to-end fullstack applications.
+
+| Project | Description | Status |
+|---------|-------------|--------|
+| [**social-network-stack**](./fullstack/social-network-stack/) | Complete social network | 🚧 Planned |
+| [**project-board**](./fullstack/project-board/) | Project management | 🚧 Planned |
+| [**api-server-demo**](./fullstack/api-server-demo/) | API server example | 🚧 Planned |
+
+---
+
+## Legacy Samples (Working)
+
+These samples demonstrate the current Zylix WASM implementation.
 
 | Sample | Platform | Status | Description |
 |--------|----------|--------|-------------|
-| [**counter-wasm**](./counter-wasm/) | Web/WASM | ✅ Working | Minimal counter demo with actual WASM integration |
-| [**todo-wasm**](./todo-wasm/) | Web/WASM | ✅ Working | Full TodoMVC implementation with WASM |
-| [**component-showcase**](./component-showcase/) | Web/WASM | ✅ Working | v0.7.0 Component Library showcase |
-
-## Planned Samples (Not Yet Implemented)
-
-The following samples exist as design documents only. They demonstrate the target API but do not currently run because the Zylix JavaScript framework has not been built yet.
-
-| Sample | Level | Target Features |
-|--------|-------|-----------------|
-| todo-pro | Beginner | State management, forms, local storage |
-| e-commerce | Intermediate | Routing, HTTP requests, shopping cart |
-| dashboard | Intermediate | Real-time data, charts, tables |
-| chat | Advanced | WebSocket, real-time messaging |
-| notes | Advanced | Rich text editing, cloud sync |
-
-> ⚠️ **Note**: These planned samples import from a `zylix` package that does not exist yet. They serve as API design references for future development.
+| [**counter-wasm**](./counter-wasm/) | Web/WASM | ✅ Working | Minimal counter demo |
+| [**todo-wasm**](./todo-wasm/) | Web/WASM | ✅ Working | Full TodoMVC implementation |
+| [**component-showcase**](./component-showcase/) | Web/WASM | ✅ Working | v0.7.0 Component Library |
 
 ## Getting Started
 
-### Working Samples
+### New Templates
 
 ```bash
-# Counter demo (minimal example)
+# Blank App template
+cd templates/blank-app/core
+zig build
+zig build test
+
+# Component Gallery
+cd showcase/component-gallery/core
+zig build
+zig build test
+```
+
+### Legacy WASM Samples
+
+```bash
+# Counter demo
 cd counter-wasm
 ./build.sh
 python3 -m http.server 8080
 # Open http://localhost:8080
 
-# TodoMVC demo (full application)
+# TodoMVC demo
 cd todo-wasm
 ./build.sh
 python3 -m http.server 8081
 # Open http://localhost:8081
 
-# Component Showcase (v0.7.0 components)
+# Component Showcase
 cd component-showcase
 python3 -m http.server 8082
 # Open http://localhost:8082
 ```
 
-### Prerequisites
+## Prerequisites
 
-- **Zig** 0.15.0 or later (for WASM compilation)
+- **Zig** 0.15.0 or later
 - **Python 3** (for development server) or any HTTP server
 - Modern web browser with WebAssembly support
 
 ## Architecture
 
-### counter-wasm
+### Template Structure
 
 ```
-Browser
-├── index.html     → UI and event handlers
-├── zylix.js       → JavaScript ↔ WASM bridge
-└── zylix.wasm     → Zig core (state management)
+templates/blank-app/
+├── README.md
+├── core/
+│   ├── build.zig
+│   └── src/
+│       ├── main.zig    # Entry point
+│       ├── app.zig     # State and logic
+│       └── ui.zig      # UI components
+└── platforms/
+    ├── ios/            # iOS shell
+    ├── android/        # Android shell
+    └── web/            # Web shell
 ```
 
-The counter demo shows the fundamental Zylix architecture:
-1. Zig manages all application state
-2. JavaScript handles DOM rendering
-3. Events flow: User Action → JS → WASM → State Update → JS → DOM
-
-### todo-wasm
+### Cross-Platform Flow
 
 ```
-Browser
-├── index.html      → TodoMVC UI (HTML/CSS)
-├── zylix-todo.js   → JavaScript ↔ WASM bridge (todo-specific)
-└── zylix.wasm      → Zig core (todo state, filtering, VDOM)
+User Input → Platform Shell → C ABI/WASM → Zig Core
+                                              ↓
+                                        State Update
+                                              ↓
+                                        VNode Tree
+                                              ↓
+             Platform Shell ← C ABI/WASM ← Diff Patch
+                    ↓
+               Native UI
 ```
-
-The TodoMVC demo demonstrates a complete application:
-- Full CRUD operations (add, remove, toggle, update)
-- Filtering (all/active/completed)
-- Bulk operations (toggle all, clear completed)
-- URL hash routing for filter state
-
-### component-showcase
-
-```
-Browser
-├── index.html          → Component showcase UI
-├── zylix-showcase.js   → JavaScript ↔ WASM bridge (v0.7.0 components)
-└── zylix.wasm          → Zig core (component tree, state)
-```
-
-The Component Showcase demonstrates v0.7.0 Component Library:
-- **Layout**: VStack, HStack, Card, Divider, Spacer, Grid
-- **Form**: Checkbox, Toggle, Select, Textarea, Radio
-- **Feedback**: Alert, Progress, Spinner, Toast, Modal
-- **Data Display**: Badge, Tag, Accordion, Avatar, Icon
-- Interactive component creation via WASM
-
-### JavaScript SDK
-
-The Zylix JavaScript SDK is now available in `packages/zylix`:
-
-```javascript
-// Using the SDK
-import { init, state, todo, vdom, component } from 'zylix';
-
-await init('zylix.wasm');
-
-// State management
-state.increment();
-console.log(state.getCounter());
-
-// Todo API
-todo.init();
-todo.add('Learn Zylix');
-
-// VDOM and components
-vdom.init();
-component.init();
-```
-
-### Planned Samples
-
-The planned samples (todo-pro, e-commerce, etc.) can now use the SDK. They will be updated to use the actual `zylix` package once it's published to npm.
 
 ## Testing
 
-The working samples include Playwright tests:
-
 ```bash
-# Counter tests
-cd counter-wasm
-npm install
-npm test
+# Template tests
+cd templates/blank-app/core
+zig build test
 
-# TodoMVC tests
-cd todo-wasm
-npm install
-npm test
+# Showcase tests
+cd showcase/component-gallery/core
+zig build test
 
-# Component Showcase tests
-cd component-showcase
-npm install
-npm test
+# Legacy WASM tests
+cd counter-wasm && npm test
+cd todo-wasm && npm test
 ```
 
 ## Contributing
 
 When adding new samples:
 
-1. **Start with WASM**: Build samples that use the Zig core directly via WASM
-2. **Test thoroughly**: Include Playwright tests that verify functionality
-3. **Be honest**: Mark samples as "planned" if they don't actually run
-4. **Keep it simple**: Start with minimal examples that demonstrate one concept
+1. Follow the directory structure (templates/, showcase/, apps/, etc.)
+2. Include comprehensive README.md
+3. Add Zig tests for core logic
+4. Mark status accurately (✅ Ready, 🚧 Planned, ❌ Deprecated)
+5. Keep samples focused on demonstrating specific features
 
 ## License
 
