@@ -1,7 +1,7 @@
 # Zylix ロードマップ
 
 > **最終更新**: 2025-12-24
-> **現在のバージョン**: v0.12.0
+> **現在のバージョン**: v0.18.0
 
 ---
 
@@ -25,19 +25,19 @@
 | v0.10.0 | Phase 12 | デバイス機能 & ジェスチャー | ✅ 完了 | 2025-12-24 |
 | v0.11.0 | Phase 13 | アニメーション (Lottie, Live2D) | ✅ 完了 | 2025-12-24 |
 | v0.12.0 | Phase 14 | 3Dグラフィックス (Three.js風) | ✅ 完了 | 2025-12-24 |
-| v0.13.0 | Phase 15 | ゲーム開発 (PIXI.js風, 物理エンジン, オーディオ) | 🚧 進行中 | 2025-12-24 |
-| v0.14.0 | Phase 16 | データベース (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ⏳ 計画中 | 2025年Q4 |
-| v0.15.0 | Phase 17 | アプリ統合API (IAP, 広告, KeyValueStore, ライフサイクル) | ⏳ 計画中 | 2025年Q4 |
-| v0.16.0 | Phase 18 | 開発者ツール (CLI, スキャフォールディング, ビルド, テンプレート) | ⏳ 計画中 | 2026年Q1 |
-| v0.17.0 | Phase 19 | ノードベースUI (React Flow風) | ⏳ 計画中 | 2026年Q1 |
-| v0.18.0 | Phase 20 | PDFサポート (生成・読み込み・編集) | ⏳ 計画中 | 2026年Q2 |
-| v0.19.0 | Phase 21 | Excelサポート (xlsx読み書き) | ⏳ 計画中 | 2026年Q2 |
-| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ 計画中 | 2026年Q3 |
-| v0.21.0 | Phase 23 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2026年Q4 |
-| v0.22.0 | Phase 24 | エッジアダプター (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ 計画中 | 2027年Q1 |
-| v0.23.0 | Phase 25 | パフォーマンス & 最適化 | ⏳ 計画中 | 2027年Q2 |
-| v0.24.0 | Phase 26 | ドキュメント充実 | ⏳ 計画中 | 2027年Q3 |
-| v0.25.0 | Phase 27 | 公式サンプルプロジェクト (23種類以上) | ⏳ 計画中 | 2027年Q4 |
+| v0.13.0 | Phase 15 | ゲーム開発 (PIXI.js風, 物理エンジン, オーディオ) | ✅ 完了 | 2025-12-24 |
+| v0.14.0 | Phase 16 | データベース (SQLite, MySQL, PostgreSQL, Turso/libSQL) | ✅ 完了 | 2025-12-24 |
+| v0.15.0 | Phase 17 | アプリ統合API (IAP, 広告, KeyValueStore, ライフサイクル) | ✅ 完了 | 2025-12-24 |
+| v0.16.0 | Phase 18 | 開発者ツール (Console, DevTools, Profiler) | ✅ 完了 | 2025-12-24 |
+| v0.17.0 | Phase 19 | ノードベースUI (React Flow風 NodeFlow) | ✅ 完了 | 2025-12-24 |
+| v0.18.0 | Phase 20 | PDFサポート (生成・読み込み・編集) + ベンチマーク | ✅ 完了 | 2025-12-24 |
+| v0.19.0 | Phase 21 | Excelサポート (xlsx読み書き) | ⏳ 計画中 | 2025年Q4 |
+| v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ⏳ 計画中 | 2025年Q4 |
+| v0.21.0 | Phase 23 | サーバーランタイム (Zylix Server) | ⏳ 計画中 | 2026年Q1 |
+| v0.22.0 | Phase 24 | エッジアダプター (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ⏳ 計画中 | 2026年Q1 |
+| v0.23.0 | Phase 25 | パフォーマンス & 最適化 | ⏳ 計画中 | 2026年Q2 |
+| v0.24.0 | Phase 26 | ドキュメント充実 | ⏳ 計画中 | 2026年Q2 |
+| v0.25.0 | Phase 27 | 公式サンプルプロジェクト (23種類以上) | ⏳ 計画中 | 2026年Q3 |
 
 ---
 
