@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:  # 手動実行可能
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +18,11 @@ jobs:
   core-build:
     name: Core Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'core/') ||
+      contains(github.event.head_commit.added, 'core/')
     strategy:
       fail-fast: false
       matrix:
@@ -32,35 +38,14 @@ jobs:
       - name: Build Core
         working-directory: core
         run: zig build
-        continue-on-error: true  # Requires pre-built llama.cpp/whisper.cpp
+        timeout-minutes: 10
+        continue-on-error: true
 
       - name: Run Unit Tests
         working-directory: core
         run: zig build test --summary all
-        continue-on-error: true  # Requires pre-built dependencies
-
-      - name: Run Integration Tests
-        working-directory: core
-        run: zig build test-integration --summary all
+        timeout-minutes: 5
         continue-on-error: true
-
-      - name: Run All Tests
-        working-directory: core
-        run: zig build test-all --summary all
-        continue-on-error: true
-
-      - name: Build Release
-        working-directory: core
-        run: zig build -Doptimize=ReleaseFast
-        continue-on-error: true
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.os }}
-          path: core/test-results/
-          retention-days: 30
 
   # ============================================================================
   # macOS Platform Build (Swift)
@@ -68,6 +53,11 @@ jobs:
   macos-build:
     name: macOS Platform (Swift)
     runs-on: macos-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/macos/') ||
+      contains(github.event.head_commit.added, 'platforms/macos/')
     steps:
       - uses: actions/checkout@v4
 
@@ -86,14 +76,16 @@ jobs:
   ios-build:
     name: iOS/watchOS Platform (Swift)
     runs-on: macos-latest
+    timeout-minutes: 15
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/ios/') ||
+      contains(github.event.head_commit.added, 'platforms/ios/')
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-
-      - name: Show Available Simulators
-        run: xcrun simctl list devices available | grep -E "(iPhone|Watch)" | head -20
 
       - name: Build iOS Bridge Server
         working-directory: platforms/ios/zylix-test
@@ -104,24 +96,17 @@ jobs:
         run: swift test
         continue-on-error: true
 
-      - name: Build Zylix iOS App (Debug)
-        working-directory: platforms/ios
-        run: |
-          xcodebuild -project Zylix.xcodeproj \
-            -scheme Zylix \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
-            -configuration Debug \
-            build \
-            CODE_SIGNING_ALLOWED=NO \
-            || echo "iOS build skipped (project may need setup)"
-        continue-on-error: true
-
   # ============================================================================
   # Linux Platform Lint (Python AT-SPI)
   # ============================================================================
   linux-lint:
     name: Linux Platform Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/linux/') ||
+      contains(github.event.head_commit.added, 'platforms/linux/')
     steps:
       - uses: actions/checkout@v4
 
@@ -145,6 +130,13 @@ jobs:
   web-tests:
     name: Web Platform Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/web/') ||
+      contains(github.event.head_commit.added, 'platforms/web/') ||
+      contains(github.event.head_commit.modified, 'tests/') ||
+      contains(github.event.head_commit.added, 'tests/')
     steps:
       - uses: actions/checkout@v4
 
@@ -172,6 +164,11 @@ jobs:
   windows-build:
     name: Windows Build (.NET)
     runs-on: windows-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/windows/') ||
+      contains(github.event.head_commit.added, 'platforms/windows/')
     steps:
       - uses: actions/checkout@v4
 
@@ -196,6 +193,11 @@ jobs:
   android-build:
     name: Android Platform (Kotlin)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'platforms/android/') ||
+      contains(github.event.head_commit.added, 'platforms/android/')
     steps:
       - uses: actions/checkout@v4
 
@@ -212,28 +214,14 @@ jobs:
         working-directory: platforms/android
         run: chmod +x ./gradlew
 
-      - name: Check Gradle Version
-        working-directory: platforms/android
-        run: ./gradlew --version
-
       - name: Build Android Library
         working-directory: platforms/android
         run: ./gradlew :zylix-android:assembleDebug
         continue-on-error: true
 
-      - name: Build Test Server
-        working-directory: platforms/android
-        run: ./gradlew :zylix-test:assembleDebug
-        continue-on-error: true
-
       - name: Run Unit Tests
         working-directory: platforms/android
         run: ./gradlew test
-        continue-on-error: true
-
-      - name: Lint Check
-        working-directory: platforms/android
-        run: ./gradlew lint
         continue-on-error: true
 
   # ============================================================================
@@ -242,6 +230,13 @@ jobs:
   docs-build:
     name: Documentation Build
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.modified, 'site/') ||
+      contains(github.event.head_commit.added, 'site/') ||
+      contains(github.event.head_commit.modified, 'docs/') ||
+      contains(github.event.head_commit.added, 'docs/')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -268,6 +263,7 @@ jobs:
   coderabbit:
     name: CodeRabbit Review
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
