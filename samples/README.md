@@ -50,11 +50,11 @@ Samples showcasing platform-exclusive features.
 
 | Sample | Platform | Description | Status |
 |--------|----------|-------------|--------|
-| [**ios-exclusive**](./platform-specific/ios-exclusive/) | iOS | Apple-specific features | 🚧 Planned |
-| [**android-exclusive**](./platform-specific/android-exclusive/) | Android | Android-specific features | 🚧 Planned |
-| [**web-pwa**](./platform-specific/web-pwa/) | Web | Progressive Web App | 🚧 Planned |
-| [**desktop-native**](./platform-specific/desktop-native/) | Desktop | Native desktop features | 🚧 Planned |
-| [**watchos-companion**](./platform-specific/watchos-companion/) | watchOS | Apple Watch companion | 🚧 Planned |
+| [**ios-exclusive**](./platform-specific/ios-exclusive/) | iOS | Apple-specific features | ✅ Ready |
+| [**android-exclusive**](./platform-specific/android-exclusive/) | Android | Android-specific features | ✅ Ready |
+| [**web-pwa**](./platform-specific/web-pwa/) | Web | Progressive Web App | ✅ Ready |
+| [**desktop-native**](./platform-specific/desktop-native/) | Desktop | Native desktop features | ✅ Ready |
+| [**watchos-companion**](./platform-specific/watchos-companion/) | watchOS | Apple Watch companion | ✅ Ready |
 
 ### Games
 
