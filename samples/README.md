@@ -23,9 +23,9 @@ Comprehensive examples showcasing Zylix capabilities.
 |----------|-------------|--------|
 | [**component-gallery**](./showcase/component-gallery/) | All UI components showcase | ✅ Ready |
 | [**animation-studio**](./showcase/animation-studio/) | Animation system demos | ✅ Ready |
-| [**3d-viewer**](./showcase/3d-viewer/) | 3D graphics rendering | 🚧 Planned |
-| [**game-arcade**](./showcase/game-arcade/) | Game engine features | 🚧 Planned |
-| [**ai-playground**](./showcase/ai-playground/) | AI/ML integration demos | 🚧 Planned |
+| [**3d-viewer**](./showcase/3d-viewer/) | 3D graphics rendering | ✅ Ready |
+| [**game-arcade**](./showcase/game-arcade/) | Game engine features | ✅ Ready |
+| [**ai-playground**](./showcase/ai-playground/) | AI/ML integration demos | ✅ Ready |
 | [**device-lab**](./showcase/device-lab/) | Platform-specific features | 🚧 Planned |
 | [**database-workshop**](./showcase/database-workshop/) | Database operations | 🚧 Planned |
 
