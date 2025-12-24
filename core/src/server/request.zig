@@ -182,7 +182,13 @@ pub const Request = struct {
 
     /// Set route parameter
     pub fn setParam(self: *Request, key: []const u8, value: []const u8) !void {
+        // Remove old entry if exists to prevent memory leak
+        if (self.route_params.fetchRemove(key)) |old| {
+            self.allocator.free(old.key);
+            self.allocator.free(old.value);
+        }
         const key_copy = try self.allocator.dupe(u8, key);
+        errdefer self.allocator.free(key_copy);
         const value_copy = try self.allocator.dupe(u8, value);
         try self.route_params.put(self.allocator, key_copy, value_copy);
     }
@@ -229,7 +235,13 @@ pub const Request = struct {
 
     /// Store context value (for middleware)
     pub fn set(self: *Request, key: []const u8, value: *anyopaque) !void {
+        // Remove old entry if exists to prevent memory leak
+        if (self.context.fetchRemove(key)) |old| {
+            self.allocator.free(old.key);
+            // Note: values are not owned by context, so don't free
+        }
         const key_copy = try self.allocator.dupe(u8, key);
+        errdefer self.allocator.free(key_copy);
         try self.context.put(self.allocator, key_copy, value);
     }
 
