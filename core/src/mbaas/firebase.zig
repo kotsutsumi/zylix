@@ -46,7 +46,7 @@ pub const FirebaseClient = struct {
     current_user: ?User = null,
 
     /// Auth state listeners
-    auth_listeners: std.ArrayList(AuthStateCallback),
+    auth_listeners: std.ArrayListUnmanaged(AuthStateCallback),
 
     /// Active subscriptions
     subscriptions: std.AutoHashMapUnmanaged(u64, SubscriptionInfo),
@@ -318,7 +318,7 @@ pub const FirebaseClient = struct {
     pub fn queryDocuments(self: *FirebaseClient, collection: []const u8, options: QueryOptions) Error![]Document {
         _ = options;
 
-        var docs: std.ArrayList(Document) = .{};
+        var docs: std.ArrayListUnmanaged(Document) = .{};
         errdefer {
             for (docs.items) |*d| d.deinit(self.allocator);
             docs.deinit(self.allocator);
@@ -572,8 +572,8 @@ pub const FirebaseClient = struct {
 /// Transaction context for atomic operations
 pub const TransactionContext = struct {
     client: *FirebaseClient,
-    reads: std.ArrayList([]const u8),
-    writes: std.ArrayList(types.BatchOperation),
+    reads: std.ArrayListUnmanaged([]const u8),
+    writes: std.ArrayListUnmanaged(types.BatchOperation),
 
     pub fn deinit(self: *TransactionContext) void {
         self.reads.deinit(self.client.allocator);

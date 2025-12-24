@@ -51,7 +51,7 @@ pub const SupabaseClient = struct {
     session: ?Session = null,
 
     /// Auth state listeners
-    auth_listeners: std.ArrayList(AuthStateCallback),
+    auth_listeners: std.ArrayListUnmanaged(AuthStateCallback),
 
     /// Active realtime subscriptions
     subscriptions: std.AutoHashMapUnmanaged(u64, SubscriptionInfo),
@@ -453,11 +453,11 @@ pub const SupabaseClient = struct {
     pub fn invokeFunction(self: *SupabaseClient, function_name: []const u8, body: ?[]const u8) Error![]u8 {
         _ = body;
         // POST {url}/functions/v1/{function_name}
-        return try self.allocator.dupe(u8, std.fmt.allocPrint(
+        return std.fmt.allocPrint(
             self.allocator,
             "{{\"result\": \"Function {s} invoked\"}}",
             .{function_name},
-        ) catch return MbaasError.OutOfMemory);
+        ) catch return MbaasError.OutOfMemory;
     }
 };
 
@@ -476,8 +476,8 @@ pub const QueryBuilder = struct {
 
     // Query parts
     select_columns: ?[]const u8 = null,
-    filters: std.ArrayList(FilterClause),
-    order_clauses: std.ArrayList(OrderClause),
+    filters: std.ArrayListUnmanaged(FilterClause),
+    order_clauses: std.ArrayListUnmanaged(OrderClause),
     limit_value: ?u32 = null,
     offset_value: ?u32 = null,
     single_row: bool = false,
@@ -646,7 +646,7 @@ pub const QueryBuilder = struct {
     /// Execute SELECT query
     pub fn execute(self: *QueryBuilder) Error![]Document {
         // Build URL: {rest_url}/{table}?select=columns&filters&order&limit
-        var docs: std.ArrayList(Document) = .{};
+        var docs: std.ArrayListUnmanaged(Document) = .{};
 
         // Simulate results
         const doc_id = try std.fmt.allocPrint(self.client.allocator, "{s}/1", .{self.table});
@@ -669,14 +669,14 @@ pub const QueryBuilder = struct {
     pub fn update(self: *QueryBuilder, data: std.StringHashMapUnmanaged(Value)) Error![]Document {
         _ = data;
         // PATCH {rest_url}/{table}?filters
-        var docs: std.ArrayList(Document) = .{};
+        var docs: std.ArrayListUnmanaged(Document) = .{};
         return docs.toOwnedSlice(self.client.allocator);
     }
 
     /// Delete data
     pub fn delete(self: *QueryBuilder) Error![]Document {
         // DELETE {rest_url}/{table}?filters
-        var docs: std.ArrayList(Document) = .{};
+        var docs: std.ArrayListUnmanaged(Document) = .{};
         return docs.toOwnedSlice(self.client.allocator);
     }
 
@@ -703,7 +703,7 @@ pub const StorageClient = struct {
     /// List all buckets
     pub fn listBuckets(self: StorageClient) Error![]BucketInfo {
         // GET {storage_url}/bucket
-        var buckets: std.ArrayList(BucketInfo) = .{};
+        var buckets: std.ArrayListUnmanaged(BucketInfo) = .{};
         return buckets.toOwnedSlice(self.client.allocator);
     }
 
