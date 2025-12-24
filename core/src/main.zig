@@ -13,6 +13,8 @@ pub const animation = @import("animation/animation.zig");
 pub const graphics3d = @import("graphics3d/graphics3d.zig");
 pub const integration = @import("integration/integration.zig");
 pub const tooling = @import("tooling/tooling.zig");
+pub const nodeflow = @import("nodeflow/nodeflow.zig");
+pub const pdf = @import("pdf/pdf.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -31,6 +33,11 @@ pub const Mat4 = graphics3d.Mat4;
 pub const Camera = graphics3d.Camera;
 pub const Scene = graphics3d.Scene;
 pub const Mesh = graphics3d.Mesh;
+
+// Re-export PDF types
+pub const PdfDocument = pdf.Document;
+pub const PdfPage = pdf.Page;
+pub const PageSize = pdf.PageSize;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
