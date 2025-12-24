@@ -48,7 +48,7 @@ pub const AmplifyClient = struct {
     session: ?CognitoSession = null,
 
     /// Auth state listeners
-    auth_listeners: std.ArrayList(AuthStateCallback),
+    auth_listeners: std.ArrayListUnmanaged(AuthStateCallback),
 
     /// Active subscriptions
     subscriptions: std.AutoHashMapUnmanaged(u64, SubscriptionInfo),
@@ -58,7 +58,7 @@ pub const AmplifyClient = struct {
     models: std.StringHashMapUnmanaged(ModelMetadata),
 
     /// Offline sync queue
-    sync_queue: std.ArrayList(SyncOperation),
+    sync_queue: std.ArrayListUnmanaged(SyncOperation),
 
     const SubscriptionInfo = struct {
         model: []const u8,
@@ -146,6 +146,18 @@ pub const AmplifyClient = struct {
         }
         self.models.deinit(self.allocator);
 
+        // Clean up sync_queue items before deinit
+        for (self.sync_queue.items) |*op| {
+            if (op.data) |*data_map| {
+                var it = data_map.iterator();
+                while (it.next()) |entry| {
+                    self.allocator.free(entry.key_ptr.*);
+                    var value = entry.value_ptr.*;
+                    value.deinit(self.allocator);
+                }
+                data_map.deinit(self.allocator);
+            }
+        }
         self.sync_queue.deinit(self.allocator);
 
         self.allocator.destroy(self);
@@ -518,7 +530,7 @@ pub const DataStoreClient = struct {
     pub fn query(self: DataStoreClient, model_name: []const u8, predicate: ?Predicate) Error![]Document {
         _ = predicate;
 
-        var docs: std.ArrayList(Document) = .{};
+        var docs: std.ArrayListUnmanaged(Document) = .{};
 
         const doc_id = try std.fmt.allocPrint(self.client.allocator, "{s}/1", .{model_name});
         const doc = try Document.init(self.client.allocator, doc_id);
@@ -568,6 +580,18 @@ pub const DataStoreClient = struct {
 
     /// Clear local DataStore
     pub fn clear(self: DataStoreClient) Error!void {
+        // Clean up sync_queue items before clearing
+        for (self.client.sync_queue.items) |*op| {
+            if (op.data) |*data_map| {
+                var it = data_map.iterator();
+                while (it.next()) |entry| {
+                    self.client.allocator.free(entry.key_ptr.*);
+                    var value = entry.value_ptr.*;
+                    value.deinit(self.client.allocator);
+                }
+                data_map.deinit(self.client.allocator);
+            }
+        }
         self.client.sync_queue.clearRetainingCapacity();
     }
 };

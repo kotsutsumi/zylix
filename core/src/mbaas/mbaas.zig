@@ -148,8 +148,16 @@ pub const Client = union(Provider) {
                     defer query.deinit();
                     _ = query.eq("id", id).single();
                     const docs = try query.execute();
+                    defer c.allocator.free(docs);
+
                     if (docs.len > 0) {
-                        break :blk docs[0];
+                        const first = docs[0];
+                        // Deinit remaining docs (ownership of first transfers to caller)
+                        for (docs[1..]) |*d| {
+                            var doc = d.*;
+                            doc.deinit(c.allocator);
+                        }
+                        break :blk first;
                     }
                 }
                 break :blk null;
@@ -159,8 +167,16 @@ pub const Client = union(Provider) {
                 if (slash_pos) |pos| {
                     const model = path[0..pos];
                     const docs = try c.dataStore().query(model, null);
+                    defer c.allocator.free(docs);
+
                     if (docs.len > 0) {
-                        break :blk docs[0];
+                        const first = docs[0];
+                        // Deinit remaining docs (ownership of first transfers to caller)
+                        for (docs[1..]) |*d| {
+                            var doc = d.*;
+                            doc.deinit(c.allocator);
+                        }
+                        break :blk first;
                     }
                 }
                 break :blk null;
