@@ -174,9 +174,14 @@ pub fn buildMainView(state: *const app.AppState) VNode {
 }
 
 /// Build the counter section (example component)
+/// Note: Uses static buffer for counter text - safe for single-threaded rendering.
+/// In production, consider passing numeric values to the renderer for formatting.
 fn buildCounterSection(state: *const app.AppState) VNode {
-    var counter_text: [32]u8 = undefined;
-    const counter_str = std.fmt.bufPrint(&counter_text, "Count: {d}", .{state.counter}) catch "Count: ?";
+    // Use static buffer to avoid dangling pointer from stack allocation
+    const S = struct {
+        var counter_text: [32]u8 = undefined;
+    };
+    const counter_str = std.fmt.bufPrint(&S.counter_text, "Count: {d}", .{state.counter}) catch "Count: ?";
 
     return column(.{
         .style = .{
