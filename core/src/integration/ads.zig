@@ -524,9 +524,11 @@ test "Banner management" {
     var ads = createDefaultAds(allocator);
     defer ads.deinit();
 
-    _ = ads.initialize();
+    const init_future = ads.initialize();
+    defer allocator.destroy(init_future);
 
     const load_future = ads.loadBanner("banner_1", .standard);
+    defer allocator.destroy(load_future);
     try std.testing.expect(load_future.isCompleted());
 
     ads.showBanner("banner_1", .bottom);

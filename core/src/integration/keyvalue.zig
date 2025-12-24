@@ -475,6 +475,7 @@ test "KeyValueStore initialization" {
     defer store.deinit();
 
     const future = store.open();
+    defer allocator.destroy(future);
     try std.testing.expect(future.isCompleted());
     try std.testing.expect(store.initialized);
 }
@@ -484,7 +485,8 @@ test "Boolean storage" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putBool("enabled", true);
     try std.testing.expect(store.getBool("enabled", false));
@@ -501,7 +503,8 @@ test "Integer storage" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putInt("score", 100);
     try std.testing.expectEqual(@as(i64, 100), store.getInt("score", 0));
@@ -518,7 +521,8 @@ test "Float storage" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putFloat("pi", 3.14);
     try std.testing.expectApproxEqAbs(@as(f32, 3.14), store.getFloat("pi", 0.0), 0.01);
@@ -532,7 +536,8 @@ test "String storage" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putString("name", "Alice");
     try std.testing.expect(std.mem.eql(u8, "Alice", store.getString("name", "")));
@@ -546,7 +551,8 @@ test "Contains and remove" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putInt("key", 42);
     try std.testing.expect(store.contains("key"));
@@ -562,7 +568,8 @@ test "Clear and count" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putInt("a", 1);
     store.putInt("b", 2);
@@ -578,7 +585,8 @@ test "Value type detection" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     store.putBool("b", true);
     store.putInt("i", 42);
@@ -597,7 +605,8 @@ test "Batch operations" {
     var store = createDefaultStore(allocator);
     defer store.deinit();
 
-    _ = store.open();
+    const future = store.open();
+    defer allocator.destroy(future);
 
     var batch = BatchOperation.init(&store);
     defer batch.deinit();

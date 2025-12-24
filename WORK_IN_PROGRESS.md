@@ -1,6 +1,6 @@
 # Zylix 開発メモ (Work in Progress)
 
-## 現在のステータス: 2025-12-23
+## 現在のステータス: 2025-12-24
 
 ### 完了済み
 - [x] Zig コアライブラリ (drivers, selectors, elements, etc.)
@@ -13,6 +13,11 @@
 - [x] **ドキュメント - API リファレンス整備** (2025-12-23 完了)
 - [x] **サンプル - 各プラットフォーム向けデモ** (2025-12-23 完了)
 - [x] **言語バインディング - TypeScript/Python** (2025-12-23 完了)
+- [x] **v0.15.0 App Integration APIs** (2025-12-23 完了)
+- [x] **v0.16.0 Developer Tooling APIs** (2025-12-23 完了)
+- [x] **v0.17.0 Node-based UI Module (NodeFlow)** (2025-12-24 完了)
+- [x] **v0.18.0 PDF Support** (2025-12-24 完了)
+- [x] **メモリリーク修正 (integration/ads.zig, keyvalue.zig)** (2025-12-24 完了)
 
 ### 統合テスト構成
 ```
@@ -276,15 +281,11 @@ poetry add zylix-test
 
 ## 次のタスク候補
 
-🎉 **全タスク完了！**
+🚀 **v0.18.0 リリース準備中**
 
-主要機能はすべて実装済み:
-- ✅ watchOS 対応
-- ✅ CI/CD (GitHub Actions)
-- ✅ E2E テスト
-- ✅ API リファレンス
-- ✅ プラットフォームデモ
-- ✅ 言語バインディング (TypeScript/Python)
+現在のタスク:
+- [ ] パフォーマンスベンチマーク
+- [ ] v0.18.0 リリース (CHANGELOG更新、タグ作成)
 
 ---
 
@@ -297,8 +298,12 @@ poetry add zylix-test
 | ~~Medium~~ | ~~ドキュメント~~ | ~~API リファレンス整備~~ | ✅ 完了 |
 | ~~Medium~~ | ~~サンプル~~ | ~~各プラットフォーム向けデモ~~ | ✅ 完了 |
 | ~~Low~~ | ~~言語バインディング~~ | ~~TypeScript/Python ラッパー~~ | ✅ 完了 |
-| Low | パフォーマンス | ベンチマーク、最適化 | 🔜 次期 |
-| Low | v0.8.0 リリース | npm/PyPI 公開 | 🔜 次期 |
+| ~~Medium~~ | ~~v0.15.0 App Integration~~ | ~~広告、課金、Analytics、KVS~~ | ✅ 完了 |
+| ~~Medium~~ | ~~v0.16.0 Developer Tooling~~ | ~~Console、DevTools、Profiler~~ | ✅ 完了 |
+| ~~Medium~~ | ~~v0.17.0 NodeFlow~~ | ~~Node-based UI Module~~ | ✅ 完了 |
+| ~~Medium~~ | ~~v0.18.0 PDF Support~~ | ~~PDF Parser、Writer、Font~~ | ✅ 完了 |
+| High | パフォーマンス | ベンチマーク、最適化 | 🔄 作業中 |
+| High | v0.18.0 リリース | CHANGELOG、タグ作成 | 🔜 次期 |
 
 ---
 
