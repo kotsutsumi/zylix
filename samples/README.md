@@ -11,9 +11,9 @@ Ready-to-use templates to kickstart your Zylix projects.
 | Template | Description | Status |
 |----------|-------------|--------|
 | [**blank-app**](./templates/blank-app/) | Minimal starter template | ✅ Ready |
-| [**tab-navigation**](./templates/tab-navigation/) | Multi-tab app structure | 🚧 Planned |
-| [**drawer-navigation**](./templates/drawer-navigation/) | Side drawer navigation | 🚧 Planned |
-| [**dashboard-layout**](./templates/dashboard-layout/) | Dashboard with widgets | 🚧 Planned |
+| [**tab-navigation**](./templates/tab-navigation/) | Multi-tab app structure | ✅ Ready |
+| [**drawer-navigation**](./templates/drawer-navigation/) | Side drawer navigation | ✅ Ready |
+| [**dashboard-layout**](./templates/dashboard-layout/) | Dashboard with widgets | ✅ Ready |
 
 ### Showcase (Feature Demonstrations)
 
@@ -22,7 +22,7 @@ Comprehensive examples showcasing Zylix capabilities.
 | Showcase | Description | Status |
 |----------|-------------|--------|
 | [**component-gallery**](./showcase/component-gallery/) | All UI components showcase | ✅ Ready |
-| [**animation-studio**](./showcase/animation-studio/) | Animation system demos | 🚧 Planned |
+| [**animation-studio**](./showcase/animation-studio/) | Animation system demos | ✅ Ready |
 | [**3d-viewer**](./showcase/3d-viewer/) | 3D graphics rendering | 🚧 Planned |
 | [**game-arcade**](./showcase/game-arcade/) | Game engine features | 🚧 Planned |
 | [**ai-playground**](./showcase/ai-playground/) | AI/ML integration demos | 🚧 Planned |
