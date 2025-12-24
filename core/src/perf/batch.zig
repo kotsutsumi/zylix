@@ -286,8 +286,8 @@ pub const FrameScheduler = struct {
         const now = std.time.nanoTimestamp();
         const delta = now - self.last_frame_time;
 
-        // Check for dropped frames
-        if (@as(u64, @intCast(delta)) > self.target_frame_time_ns * 2) {
+        // Check for dropped frames (guard against clock skew)
+        if (delta > 0 and @as(u64, @intCast(delta)) > self.target_frame_time_ns * 2) {
             self.dropped_frames += 1;
         }
 
@@ -310,7 +310,9 @@ pub const FrameScheduler = struct {
             if (self.task_queue.pop()) |*task| {
                 const start = std.time.nanoTimestamp();
                 @constCast(task).execute();
-                const elapsed = @as(u64, @intCast(std.time.nanoTimestamp() - start));
+                const elapsed_signed = std.time.nanoTimestamp() - start;
+                // Guard against clock skew
+                const elapsed: u64 = if (elapsed_signed > 0) @intCast(elapsed_signed) else 0;
                 ctx.consumeBudget(elapsed);
                 processed += 1;
             } else {
@@ -338,13 +340,19 @@ pub const FrameScheduler = struct {
 
         /// Check if there's remaining frame budget
         pub fn hasRemainingBudget(self: *const FrameContext) bool {
-            const elapsed = @as(u64, @intCast(std.time.nanoTimestamp() - self.start_time));
+            const elapsed_signed = std.time.nanoTimestamp() - self.start_time;
+            // Guard against clock skew - assume budget available if clock went backwards
+            if (elapsed_signed <= 0) return true;
+            const elapsed: u64 = @intCast(elapsed_signed);
             return elapsed < self.budget_ns;
         }
 
         /// Get remaining budget in nanoseconds
         pub fn remainingBudget(self: *const FrameContext) u64 {
-            const elapsed = @as(u64, @intCast(std.time.nanoTimestamp() - self.start_time));
+            const elapsed_signed = std.time.nanoTimestamp() - self.start_time;
+            // Guard against clock skew
+            if (elapsed_signed <= 0) return self.budget_ns;
+            const elapsed: u64 = @intCast(elapsed_signed);
             if (elapsed >= self.budget_ns) return 0;
             return self.budget_ns - elapsed;
         }
