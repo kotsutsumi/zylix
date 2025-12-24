@@ -62,10 +62,10 @@ Game development samples using Zylix.
 
 | Game | Description | Status |
 |------|-------------|--------|
-| [**platformer-adventure**](./games/platformer-adventure/) | 2D platformer game | 🚧 Planned |
-| [**puzzle-world**](./games/puzzle-world/) | Puzzle game collection | 🚧 Planned |
-| [**space-shooter**](./games/space-shooter/) | Space shooter game | 🚧 Planned |
-| [**vtuber-demo**](./games/vtuber-demo/) | VTuber/Live2D demo | 🚧 Planned |
+| [**platformer-adventure**](./games/platformer-adventure/) | 2D platformer game | ✅ Ready |
+| [**puzzle-world**](./games/puzzle-world/) | Puzzle game collection | ✅ Ready |
+| [**space-shooter**](./games/space-shooter/) | Space shooter game | ✅ Ready |
+| [**vtuber-demo**](./games/vtuber-demo/) | VTuber/Live2D demo | ✅ Ready |
 
 ### Fullstack
 
