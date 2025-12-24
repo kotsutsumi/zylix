@@ -19,14 +19,11 @@ tab-navigation/
 ├── core/
 │   ├── build.zig
 │   └── src/
-│       ├── main.zig        # Entry point
-│       ├── app.zig         # App state and navigation
-│       ├── router.zig      # Tab routing logic
-│       └── screens/
-│           ├── home.zig    # Home screen
-│           ├── search.zig  # Search screen
-│           ├── profile.zig # Profile screen
-│           └── settings.zig # Settings screen
+│       ├── main.zig        # Entry point and C ABI exports
+│       ├── app.zig         # App state and navigation logic
+│       └── router.zig      # Tab bar UI and screen builders
+│                           # (buildHomeScreen, buildSearchScreen,
+│                           #  buildProfileScreen, buildSettingsScreen)
 └── platforms/
     ├── ios/
     ├── android/

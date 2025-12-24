@@ -50,8 +50,13 @@ pub const AppState = struct {
     notification_count: u32 = 0,
 };
 
+/// Global app state. Note: This template assumes single-threaded usage.
+/// For multi-threaded contexts, add synchronization or use thread-local storage.
 var app_state: AppState = .{};
 
+/// Initialize app state. Resets all fields to defaults.
+/// Call this once at app startup. To preserve user data across reinit,
+/// save relevant fields before calling init() and restore after.
 pub fn init() void {
     app_state = .{ .initialized = true };
 }

@@ -128,19 +128,31 @@ fn buildUserSection(state: *const app.AppState) VNode {
 }
 
 fn buildMenuSections(state: *const app.AppState) VNode {
-    var sections: [3]VNode = undefined;
+    const S = struct {
+        var sections: [app.menu_sections.len]VNode = undefined;
+    };
     for (app.menu_sections, 0..) |section, i| {
-        sections[i] = buildSection(section, state.current_screen);
+        S.sections[i] = buildSection(section, state.current_screen);
     }
-    return column(.{ .style = .{ .padding = Spacing.all(8), .gap = 16 } }, &sections);
+    return column(.{ .style = .{ .padding = Spacing.all(8), .gap = 16 } }, &S.sections);
+}
+
+fn maxSectionItems() comptime_int {
+    var max: comptime_int = 0;
+    for (app.menu_sections) |section| {
+        if (section.items.len > max) max = section.items.len;
+    }
+    return max + 1; // +1 for section header
 }
 
 fn buildSection(section: app.MenuSection, current: app.Screen) VNode {
-    var items: [3]VNode = undefined;
+    const S = struct {
+        var items: [maxSectionItems()]VNode = undefined;
+    };
     var count: usize = 0;
 
     // Section header
-    items[count] = text(section.title, .{
+    S.items[count] = text(section.title, .{
         .style = .{
             .font_size = 12,
             .font_weight = .bold,
@@ -150,14 +162,13 @@ fn buildSection(section: app.MenuSection, current: app.Screen) VNode {
     });
     count += 1;
 
-    // Menu items (max 2 per section for simplicity)
+    // Menu items
     for (section.items) |screen| {
-        if (count >= items.len) break;
-        items[count] = buildMenuItem(screen, current == screen);
+        S.items[count] = buildMenuItem(screen, current == screen);
         count += 1;
     }
 
-    return column(.{ .style = .{ .gap = 4 } }, items[0..count]);
+    return column(.{ .style = .{ .gap = 4 } }, S.items[0..count]);
 }
 
 fn buildMenuItem(screen: app.Screen, active: bool) VNode {
