@@ -1,7 +1,7 @@
 # Zylix Roadmap
 
 > **Last Updated**: 2025-12-24
-> **Current Version**: v0.22.0
+> **Current Version**: v0.23.0
 
 ---
 
@@ -35,8 +35,8 @@ This document outlines the development roadmap for the Zylix framework. The road
 | v0.20.0 | Phase 22 | mBaaS (Firebase, Supabase, AWS Amplify) | ✅ Complete | 2025-12-24 |
 | v0.21.0 | Phase 23 | Server Runtime (Zylix Server) | ✅ Complete | 2025-12-24 |
 | v0.22.0 | Phase 24 | Edge Adapters (Cloudflare, Vercel, AWS, Azure, Deno, GCP, Fastly) | ✅ Complete | 2025-12-24 |
-| v0.23.0 | Phase 25 | Performance & Optimization | 🚧 In Progress | 2025-12-24 |
-| v0.24.0 | Phase 26 | Documentation Excellence | ⏳ Planned | 2026-Q2 |
+| v0.23.0 | Phase 25 | Performance & Optimization | ✅ Complete | 2025-12-24 |
+| v0.24.0 | Phase 26 | Documentation Excellence | 🚧 In Progress | 2025-12-24 |
 | v0.25.0 | Phase 27 | Official Sample Projects (23+ Samples) | ⏳ Planned | 2026-Q3 |
 
 ---
