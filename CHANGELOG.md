@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2025-12-24
+
+### Added
+
+#### Edge Adapters - Universal Edge Computing Module
+- **Core Module**: `core/src/edge/edge.zig` - Unified edge adapter factory
+- **Platform Support**: Deploy Zylix apps to any major edge platform
+- **Unified API**: Common EdgeRequest/EdgeResponse abstractions
+
+#### Common Types (`types.zig`)
+- **Platform Enum**: cloudflare, vercel, aws_lambda, azure, deno, gcp, fastly, native, unknown
+- **EdgeConfig**: Platform-agnostic configuration (timeout, caching, streaming)
+- **EdgeRequest**: Unified HTTP request with geo, headers, body
+- **EdgeResponse**: Unified HTTP response with fluent API
+- **KVStore Interface**: Generic key-value storage abstraction
+- **EdgeAdapter Interface**: Base adapter with handle/getKV methods
+- **CacheControl**: HTTP cache control header builder
+- **GeoInfo**: Geographic location data (country, region, city, lat/long)
+
+#### Cloudflare Workers (`cloudflare.zig`)
+- **CloudflareAdapter**: Full Cloudflare Workers integration
+- **CloudflareKV**: KV namespace with get/put/delete/list operations
+- **D1Database**: SQLite-at-edge with query/execute/batch support
+- **R2Bucket**: Object storage with get/put/delete/list
+- **CloudflareEnv**: Environment bindings (vars, secrets, KV, D1, R2)
+- **Middleware**: Cloudflare-specific headers and context
+
+#### Vercel Edge Functions (`vercel.zig`)
+- **VercelAdapter**: Full Vercel Edge integration
+- **VercelKV**: Redis-compatible KV with TTL, hash operations
+- **VercelBlob**: Blob storage with content-type support
+- **EdgeConfigClient**: Global edge configuration access
+- **ISR Support**: Incremental Static Regeneration headers
+
+#### AWS Lambda (`aws.zig`)
+- **LambdaAdapter**: AWS Lambda and Lambda@Edge integration
+- **APIGatewayEvent**: HTTP API v2 event format parsing
+- **APIGatewayResponse**: HTTP API v2 response format
+- **DynamoDBClient**: Document database with CRUD operations
+- **S3Client**: Object storage with presigned URL support
+- **LambdaConfig**: Cold start optimization, memory, timeout settings
+
+#### Azure Functions (`azure.zig`)
+- **AzureAdapter**: Azure Functions Custom Handler integration
+- **AzureHttpRequest/Response**: Azure-specific request/response formats
+- **CosmosDBClient**: Document database with partition key support
+- **BlobStorageClient**: Azure Blob Storage operations
+- **Durable Functions**: Orchestration support configuration
+
+#### Deno Deploy (`deno.zig`)
+- **DenoAdapter**: Full Deno Deploy integration
+- **DenoKV**: Hierarchical key-value store with versioning
+- **AtomicOperation**: Transactional KV operations (check/set/delete)
+- **BroadcastChannel**: Real-time pub/sub messaging
+- **CronSchedule**: Cron trigger configuration
+
+#### Google Cloud Run (`gcp.zig`)
+- **GCPAdapter**: Google Cloud Run integration
+- **FirestoreClient**: Document database with collections/documents
+- **CloudStorageClient**: GCS bucket operations
+- **PubSubClient**: Pub/Sub messaging with topics/subscriptions
+- **GCPConfig**: Region, scaling, memory, CPU configuration
+
+#### Fastly Compute@Edge (`fastly.zig`)
+- **FastlyAdapter**: Fastly Compute platform integration
+- **ConfigStore**: Read-only configuration storage
+- **KVStore**: Key-value storage with metadata and generations
+- **SecretStore**: Secure secret management (zero-on-free)
+- **EdgeDictionary**: Legacy dictionary support
+- **FastlyGeo**: Geolocation from request data
+- **Request Collapsing**: Cache optimization configuration
+
+#### Unified Edge API (`edge.zig`)
+- **UnifiedAdapter**: Platform-agnostic adapter wrapper
+- **create()**: Factory function for creating adapters
+- **detectPlatform()**: Auto-detect edge platform from environment
+- **createAuto()**: Create adapter for detected platform
+- **Platform Accessors**: asCloudflare(), asVercel(), asAWS(), etc.
+- **edgeMiddleware()**: Common edge headers middleware
+
+#### Module Exports (`main.zig`)
+- **Edge Module**: Full edge module re-export
+- **Type Aliases**: EdgePlatform, EdgeRequest, EdgeResponse, UnifiedAdapter
+- **Adapter Aliases**: CloudflareAdapter, VercelAdapter, LambdaAdapter, etc.
+
+#### Unit Tests
+- **Types Tests**: Platform enum, EdgeRequest, EdgeResponse, CacheControl
+- **KV Tests**: CloudflareKV, VercelKV, DenoKV operations
+- **Storage Tests**: D1Database, R2Bucket, S3Client, CosmosDB, Firestore
+- **Adapter Tests**: All adapter init/deinit, platform detection
+- **Unified Tests**: UnifiedAdapter creation for all platforms
+
 ## [0.21.0] - 2025-12-24
 
 ### Added

@@ -18,6 +18,7 @@ pub const pdf = @import("pdf/pdf.zig");
 pub const excel = @import("excel/excel.zig");
 pub const mbaas = @import("mbaas/mbaas.zig");
 pub const server = @import("server/server.zig");
+pub const edge = @import("edge/edge.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -62,6 +63,19 @@ pub const HttpRouter = server.Router;
 pub const HttpContext = server.Context;
 pub const HttpHandler = server.Handler;
 pub const RpcServer = server.RpcServer;
+
+// Re-export Edge types
+pub const EdgePlatform = edge.Platform;
+pub const EdgeRequest = edge.EdgeRequest;
+pub const EdgeResponse = edge.EdgeResponse;
+pub const UnifiedAdapter = edge.UnifiedAdapter;
+pub const CloudflareAdapter = edge.CloudflareAdapter;
+pub const VercelAdapter = edge.VercelAdapter;
+pub const LambdaAdapter = edge.LambdaAdapter;
+pub const AzureAdapter = edge.AzureAdapter;
+pub const DenoAdapter = edge.DenoAdapter;
+pub const GCPAdapter = edge.GCPAdapter;
+pub const FastlyAdapter = edge.FastlyAdapter;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
