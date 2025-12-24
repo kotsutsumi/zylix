@@ -35,14 +35,14 @@ Complete applications demonstrating real-world patterns.
 
 | App | Description | Status |
 |-----|-------------|--------|
-| [**taskmaster**](./apps/taskmaster/) | Advanced todo with projects | 🚧 Planned |
-| [**shop-demo**](./apps/shop-demo/) | E-commerce application | 🚧 Planned |
-| [**chat-space**](./apps/chat-space/) | Real-time messaging | 🚧 Planned |
-| [**analytics-pro**](./apps/analytics-pro/) | Dashboard and charts | 🚧 Planned |
-| [**media-box**](./apps/media-box/) | Media player app | 🚧 Planned |
-| [**note-flow**](./apps/note-flow/) | Rich text notes | 🚧 Planned |
-| [**fit-track**](./apps/fit-track/) | Fitness tracking | 🚧 Planned |
-| [**social-network**](./apps/social-network/) | Social media app | 🚧 Planned |
+| [**taskmaster**](./apps/taskmaster/) | Advanced todo with projects | ✅ Ready |
+| [**shop-demo**](./apps/shop-demo/) | E-commerce application | ✅ Ready |
+| [**chat-space**](./apps/chat-space/) | Real-time messaging | ✅ Ready |
+| [**analytics-pro**](./apps/analytics-pro/) | Dashboard and charts | ✅ Ready |
+| [**media-box**](./apps/media-box/) | Media player app | ✅ Ready |
+| [**note-flow**](./apps/note-flow/) | Rich text notes | ✅ Ready |
+| [**fit-track**](./apps/fit-track/) | Fitness tracking | ✅ Ready |
+| [**social-network**](./apps/social-network/) | Social media app | ✅ Ready |
 
 ### Platform-Specific
 
