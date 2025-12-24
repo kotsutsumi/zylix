@@ -198,15 +198,18 @@ pub const Zylix = struct {
             .response = &res,
         };
 
+        // Store router reference in context to avoid static variable race condition
+        try req.set("__zylix_router", @ptrCast(&self.router));
+
         // Set up middleware chain with router as final handler
         const RouterHandler = struct {
-            var router_ptr: *Router = undefined;
-
             fn handle(c: *Context) anyerror!void {
-                try router_ptr.handle(c);
+                if (c.request.get("__zylix_router")) |ptr| {
+                    const router_ptr: *Router = @ptrCast(@alignCast(ptr));
+                    try router_ptr.handle(c);
+                }
             }
         };
-        RouterHandler.router_ptr = &self.router;
 
         var chain = self.middleware_chain;
         _ = chain.setHandler(RouterHandler.handle);

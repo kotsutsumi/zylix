@@ -300,9 +300,20 @@ pub const RpcServer = struct {
         errdefer buffer.deinit(self.allocator);
 
         try buffer.writer(self.allocator).print(
-            "{{\"jsonrpc\":\"2.0\",\"error\":{{\"code\":{d},\"message\":\"{s}\"}}",
-            .{ code, message },
+            "{{\"jsonrpc\":\"2.0\",\"error\":{{\"code\":{d},\"message\":",
+            .{code},
         );
+
+        // Properly escape message string to prevent JSON injection
+        const escaped_message = std.json.Stringify.valueAlloc(
+            self.allocator,
+            std.json.Value{ .string = message },
+            .{},
+        ) catch return error.OutOfMemory;
+        defer self.allocator.free(escaped_message);
+        try buffer.appendSlice(self.allocator, escaped_message);
+
+        try buffer.appendSlice(self.allocator, "}");
 
         if (id) |i| {
             try buffer.appendSlice(self.allocator, ",\"id\":");
@@ -319,17 +330,28 @@ pub const RpcServer = struct {
     }
 
     /// Mount RPC server on router
+    /// Note: The RPC server pointer must be set in request context as "__zylix_rpc_server"
+    /// before routing. The Zylix server handles this automatically.
+    /// The caller is responsible for ensuring the RpcServer outlives the router.
     pub fn mount(self: *RpcServer, router: *Router) !void {
-        const handler = struct {
-            var server: *RpcServer = undefined;
-
+        // Create wrapper handler that retrieves RPC server from context
+        const WrapperHandler = struct {
             fn handle(ctx: *Context) anyerror!void {
-                try server.handleRequest(ctx);
+                // The RPC server pointer should be set in context before routing
+                if (ctx.request.get("__zylix_rpc_server")) |ptr| {
+                    const rpc_ptr: *RpcServer = @ptrCast(@alignCast(ptr));
+                    try rpc_ptr.handleRequest(ctx);
+                }
             }
         };
-        handler.server = self;
 
-        _ = try router.post(self.path, handler.handle);
+        // Register a route that expects __zylix_rpc_server to be set in context
+        _ = try router.post(self.path, WrapperHandler.handle);
+    }
+
+    /// Get the RPC server pointer for setting in request context
+    pub fn getServerPtr(self: *RpcServer) *anyopaque {
+        return @ptrCast(self);
     }
 };
 
@@ -365,10 +387,16 @@ pub const RpcClient = struct {
         const id = self.next_id;
         self.next_id += 1;
 
-        try buffer.writer(self.allocator).print(
-            "{{\"jsonrpc\":\"2.0\",\"method\":\"{s}\"",
-            .{method},
-        );
+        try buffer.appendSlice(self.allocator, "{\"jsonrpc\":\"2.0\",\"method\":");
+
+        // Properly escape method name to prevent JSON injection
+        const escaped_method = std.json.Stringify.valueAlloc(
+            self.allocator,
+            std.json.Value{ .string = method },
+            .{},
+        ) catch return error.OutOfMemory;
+        defer self.allocator.free(escaped_method);
+        try buffer.appendSlice(self.allocator, escaped_method);
 
         if (params) |p| {
             try buffer.appendSlice(self.allocator, ",\"params\":");
@@ -393,10 +421,16 @@ pub const RpcClient = struct {
             const id = self.next_id;
             self.next_id += 1;
 
-            try buffer.writer(self.allocator).print(
-                "{{\"jsonrpc\":\"2.0\",\"method\":\"{s}\"",
-                .{req.method},
-            );
+            try buffer.appendSlice(self.allocator, "{\"jsonrpc\":\"2.0\",\"method\":");
+
+            // Properly escape method name to prevent JSON injection
+            const escaped_method = std.json.Stringify.valueAlloc(
+                self.allocator,
+                std.json.Value{ .string = req.method },
+                .{},
+            ) catch return error.OutOfMemory;
+            defer self.allocator.free(escaped_method);
+            try buffer.appendSlice(self.allocator, escaped_method);
 
             if (req.params) |p| {
                 try buffer.appendSlice(self.allocator, ",\"params\":");
