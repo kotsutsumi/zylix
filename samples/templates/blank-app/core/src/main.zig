@@ -53,6 +53,8 @@ export fn zylix_deinit() void {
 }
 
 /// Dispatch event (C ABI)
+/// Note: EventType is a non-exhaustive enum, so @enumFromInt is safe for any u32.
+/// Unknown values are handled by the `_` wildcard in handleEvent.
 export fn zylix_dispatch(event_type: u32, payload: ?*const anyopaque, payload_size: usize) i32 {
     _ = payload_size;
     const event = Event{

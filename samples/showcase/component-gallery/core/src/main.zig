@@ -55,6 +55,11 @@ export fn gallery_deinit() void {
 }
 
 export fn gallery_select_category(category: u32) void {
+    // Validate category is in valid range before enum conversion
+    const max_category = @typeInfo(ComponentCategory).@"enum".fields.len;
+    if (category >= max_category) {
+        return; // Invalid category, ignore
+    }
     selectCategory(@enumFromInt(category));
 }
 
