@@ -82,11 +82,94 @@ pub fn compareImages(actual: Screenshot, baseline: Screenshot, config: CompareCo
     const diff_percentage = @as(f32, @floatFromInt(diff_pixels)) / @as(f32, @floatFromInt(total_pixels));
     const matches = diff_percentage <= config.diff_threshold;
 
+    // Generate diff image if requested
+    var diff_image: ?Screenshot = null;
+    if (config.generate_diff and diff_pixels > 0) {
+        diff_image = generateDiffImage(actual, baseline, config) catch null;
+    }
+
     return CompareResult{
         .matches = matches,
         .diff_percentage = diff_percentage,
         .diff_pixels = diff_pixels,
-        .diff_image = null, // TODO: Generate diff image if config.generate_diff
+        .diff_image = diff_image,
+    };
+}
+
+/// Generate a diff image highlighting pixel differences
+/// Red pixels indicate differences, original pixels shown with reduced opacity
+fn generateDiffImage(actual: Screenshot, baseline: Screenshot, config: CompareConfig) !Screenshot {
+    const allocator = std.heap.page_allocator;
+    const width = actual.width;
+    const height = actual.height;
+    const bytes_per_pixel: u32 = switch (actual.format) {
+        .rgba => 4,
+        .rgb => 3,
+        else => 4,
+    };
+
+    const region = config.region orelse Region{
+        .x = 0,
+        .y = 0,
+        .width = width,
+        .height = height,
+    };
+
+    // Allocate diff image pixels (always RGBA)
+    const diff_pixels = try allocator.alloc(u8, width * height * 4);
+
+    // Copy actual image as base, then highlight differences
+    var y: u32 = 0;
+    while (y < height) : (y += 1) {
+        var x: u32 = 0;
+        while (x < width) : (x += 1) {
+            const diff_idx = (y * width + x) * 4;
+            const src_idx = (y * width + x) * bytes_per_pixel;
+
+            // Check if within comparison region
+            const in_region = x >= region.x and x < region.x + region.width and
+                y >= region.y and y < region.y + region.height;
+
+            if (in_region and src_idx + bytes_per_pixel <= actual.pixels.len and
+                src_idx + bytes_per_pixel <= baseline.pixels.len)
+            {
+                const actual_pixel = actual.pixels[src_idx .. src_idx + bytes_per_pixel];
+                const baseline_pixel = baseline.pixels[src_idx .. src_idx + bytes_per_pixel];
+
+                if (!pixelsMatch(actual_pixel, baseline_pixel, config)) {
+                    // Highlight difference in red
+                    diff_pixels[diff_idx] = 255; // R
+                    diff_pixels[diff_idx + 1] = 0; // G
+                    diff_pixels[diff_idx + 2] = 0; // B
+                    diff_pixels[diff_idx + 3] = 255; // A
+                } else {
+                    // Copy original with slight transparency to show context
+                    diff_pixels[diff_idx] = actual_pixel[0];
+                    diff_pixels[diff_idx + 1] = if (bytes_per_pixel > 1) actual_pixel[1] else actual_pixel[0];
+                    diff_pixels[diff_idx + 2] = if (bytes_per_pixel > 2) actual_pixel[2] else actual_pixel[0];
+                    diff_pixels[diff_idx + 3] = if (bytes_per_pixel > 3) actual_pixel[3] else 200; // Slightly transparent
+                }
+            } else if (src_idx + bytes_per_pixel <= actual.pixels.len) {
+                // Outside region or baseline missing - copy original
+                diff_pixels[diff_idx] = actual.pixels[src_idx];
+                diff_pixels[diff_idx + 1] = if (bytes_per_pixel > 1) actual.pixels[src_idx + 1] else actual.pixels[src_idx];
+                diff_pixels[diff_idx + 2] = if (bytes_per_pixel > 2) actual.pixels[src_idx + 2] else actual.pixels[src_idx];
+                diff_pixels[diff_idx + 3] = if (bytes_per_pixel > 3) actual.pixels[src_idx + 3] else 128;
+            } else {
+                // No source data - transparent
+                diff_pixels[diff_idx] = 0;
+                diff_pixels[diff_idx + 1] = 0;
+                diff_pixels[diff_idx + 2] = 0;
+                diff_pixels[diff_idx + 3] = 0;
+            }
+        }
+    }
+
+    return Screenshot{
+        .width = width,
+        .height = height,
+        .pixels = diff_pixels,
+        .format = .rgba,
     };
 }
 

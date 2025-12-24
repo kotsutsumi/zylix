@@ -155,6 +155,7 @@ pub const DriverError = error{
     PlatformNotSupported,
     PermissionDenied,
     OutOfMemory,
+    AssertionFailed,
 };
 
 /// Driver interface virtual table

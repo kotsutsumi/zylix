@@ -173,10 +173,14 @@ pub const BasicAuthConfig = struct {
 /// Create basic auth middleware
 pub fn basicAuth(config: BasicAuthConfig) MiddlewareFn {
     const validator = config.validator;
-    _ = config.realm; // TODO: Use realm in response header
+    const realm = config.realm;
 
     return struct {
         fn middleware(ctx: *Context, next: Next) anyerror!void {
+            // Build WWW-Authenticate header with configured realm
+            var auth_header_buf: [128]u8 = undefined;
+            const auth_header = std.fmt.bufPrint(&auth_header_buf, "Basic realm=\"{s}\"", .{realm}) catch "Basic realm=\"Restricted\"";
+
             if (ctx.header("authorization")) |auth| {
                 if (std.mem.startsWith(u8, auth, "Basic ")) {
                     const encoded = auth[6..]; // Skip "Basic "
@@ -184,19 +188,19 @@ pub fn basicAuth(config: BasicAuthConfig) MiddlewareFn {
                     // Decode base64 credentials
                     var decoded_buf: [256]u8 = undefined;
                     const decoded_len = std.base64.standard.Decoder.calcSizeForSlice(encoded) catch {
-                        _ = try ctx.response.setHeader("www-authenticate", "Basic realm=\"Restricted\"");
+                        _ = try ctx.response.setHeader("www-authenticate", auth_header);
                         _ = try ctx.response.unauthorized();
                         return;
                     };
 
                     if (decoded_len > decoded_buf.len) {
-                        _ = try ctx.response.setHeader("www-authenticate", "Basic realm=\"Restricted\"");
+                        _ = try ctx.response.setHeader("www-authenticate", auth_header);
                         _ = try ctx.response.unauthorized();
                         return;
                     }
 
                     const decoded = std.base64.standard.Decoder.decode(&decoded_buf, encoded) catch {
-                        _ = try ctx.response.setHeader("www-authenticate", "Basic realm=\"Restricted\"");
+                        _ = try ctx.response.setHeader("www-authenticate", auth_header);
                         _ = try ctx.response.unauthorized();
                         return;
                     };
@@ -215,7 +219,7 @@ pub fn basicAuth(config: BasicAuthConfig) MiddlewareFn {
                 }
             }
 
-            _ = try ctx.response.setHeader("www-authenticate", "Basic realm=\"Restricted\"");
+            _ = try ctx.response.setHeader("www-authenticate", auth_header);
             _ = try ctx.response.unauthorized();
         }
     }.middleware;

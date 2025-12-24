@@ -207,7 +207,7 @@ pub const App = struct {
     pub fn assertNotExists(self: *Self, sel: Selector) DriverError!void {
         if (self.driver.findElement(sel)) |maybe| {
             if (maybe != null) {
-                return DriverError.ElementNotFound; // TODO: Add proper assertion error
+                return DriverError.AssertionFailed;
             }
         } else |_| {}
     }

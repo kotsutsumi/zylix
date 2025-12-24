@@ -200,14 +200,14 @@ pub const Element = struct {
     pub fn assertText(self: *Self, expected: []const u8) DriverError!void {
         const actual = try self.getText();
         if (!std.mem.eql(u8, actual, expected)) {
-            return DriverError.ElementNotFound; // TODO: Add assertion error
+            return DriverError.AssertionFailed;
         }
     }
 
     /// Assert element contains text
     pub fn assertContainsText(self: *Self, text: []const u8) DriverError!void {
         if (!try self.containsText(text)) {
-            return DriverError.ElementNotFound; // TODO: Add assertion error
+            return DriverError.AssertionFailed;
         }
     }
 };
