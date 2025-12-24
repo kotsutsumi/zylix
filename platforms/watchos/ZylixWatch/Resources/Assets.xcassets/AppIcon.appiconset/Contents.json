@@ -1,0 +1,73 @@
+{
+  "images" : [
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "40x40"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "44x44"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "46x46"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "50x50"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "51x51"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "54x54"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "60x60"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "64x64"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "66x66"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "92x92"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "102x102"
+    },
+    {
+      "idiom" : "watch",
+      "scale" : "2x",
+      "size" : "108x108"
+    },
+    {
+      "idiom" : "watch-marketing",
+      "scale" : "1x",
+      "size" : "1024x1024"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

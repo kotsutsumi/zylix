@@ -185,6 +185,27 @@ pub fn build(b: *std.Build) void {
         .dest_dir = .{ .override = .{ .custom = "ios-simulator" } },
     }).step);
 
+    // watchOS ARM64
+    const watchos_step = b.step("watchos", "Build for watchOS (arm64)");
+    const watchos_lib = buildForTarget(b, .{
+        .cpu_arch = .aarch64,
+        .os_tag = .watchos,
+    }, optimize);
+    watchos_step.dependOn(&b.addInstallArtifact(watchos_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "watchos" } },
+    }).step);
+
+    // watchOS Simulator (arm64)
+    const watchos_sim_step = b.step("watchos-sim", "Build for watchOS Simulator (arm64)");
+    const watchos_sim_lib = buildForTarget(b, .{
+        .cpu_arch = .aarch64,
+        .os_tag = .watchos,
+        .abi = .simulator,
+    }, optimize);
+    watchos_sim_step.dependOn(&b.addInstallArtifact(watchos_sim_lib, .{
+        .dest_dir = .{ .override = .{ .custom = "watchos-simulator" } },
+    }).step);
+
     // Android ARM64 (arm64-v8a)
     const android_arm64_step = b.step("android-arm64", "Build for Android (arm64-v8a)");
     const android_arm64_lib = buildAndroidShared(b, .aarch64, optimize);
@@ -306,6 +327,8 @@ pub fn build(b: *std.Build) void {
     const all_step = b.step("all", "Build for all platforms");
     all_step.dependOn(ios_step);
     all_step.dependOn(ios_sim_step);
+    all_step.dependOn(watchos_step);
+    all_step.dependOn(watchos_sim_step);
     all_step.dependOn(android_all_step);
     all_step.dependOn(macos_arm64_step);
     all_step.dependOn(macos_x64_step);
