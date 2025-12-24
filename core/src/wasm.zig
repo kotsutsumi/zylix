@@ -2205,3 +2205,417 @@ pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     _ = msg;
     @trap();
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "MAX_RUNTIME_ELEMENTS constant" {
+    try std.testing.expectEqual(@as(usize, 256), MAX_RUNTIME_ELEMENTS);
+}
+
+// --- DSL Element Type Constants ---
+
+test "DSL element type div" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.div)), zigdom_dsl_element_type_div());
+}
+
+test "DSL element type span" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.span)), zigdom_dsl_element_type_span());
+}
+
+test "DSL element type section" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.section)), zigdom_dsl_element_type_section());
+}
+
+test "DSL element type article" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.article)), zigdom_dsl_element_type_article());
+}
+
+test "DSL element type header" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.header)), zigdom_dsl_element_type_header());
+}
+
+test "DSL element type footer" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.footer)), zigdom_dsl_element_type_footer());
+}
+
+test "DSL element type nav" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.nav)), zigdom_dsl_element_type_nav());
+}
+
+test "DSL element type main" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.main)), zigdom_dsl_element_type_main());
+}
+
+test "DSL element type h1" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h1)), zigdom_dsl_element_type_h1());
+}
+
+test "DSL element type h2" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h2)), zigdom_dsl_element_type_h2());
+}
+
+test "DSL element type h3" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h3)), zigdom_dsl_element_type_h3());
+}
+
+test "DSL element type h4" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h4)), zigdom_dsl_element_type_h4());
+}
+
+test "DSL element type h5" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h5)), zigdom_dsl_element_type_h5());
+}
+
+test "DSL element type h6" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.h6)), zigdom_dsl_element_type_h6());
+}
+
+test "DSL element type p" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.p)), zigdom_dsl_element_type_p());
+}
+
+test "DSL element type text" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.text)), zigdom_dsl_element_type_text());
+}
+
+test "DSL element type button" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.button)), zigdom_dsl_element_type_button());
+}
+
+test "DSL element type a" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.a)), zigdom_dsl_element_type_a());
+}
+
+test "DSL element type input" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.input)), zigdom_dsl_element_type_input());
+}
+
+test "DSL element type img" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.img)), zigdom_dsl_element_type_img());
+}
+
+test "DSL element type ul" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.ul)), zigdom_dsl_element_type_ul());
+}
+
+test "DSL element type ol" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.ol)), zigdom_dsl_element_type_ol());
+}
+
+test "DSL element type li" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.li)), zigdom_dsl_element_type_li());
+}
+
+test "DSL element type form" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.form)), zigdom_dsl_element_type_form());
+}
+
+test "DSL element type label" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(dsl.ElementType.label)), zigdom_dsl_element_type_label());
+}
+
+// --- VDOM Tag Constants ---
+
+test "VDOM tag div" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.div)), zigdom_vdom_tag_div());
+}
+
+test "VDOM tag span" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.span)), zigdom_vdom_tag_span());
+}
+
+test "VDOM tag section" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.section)), zigdom_vdom_tag_section());
+}
+
+test "VDOM tag article" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.article)), zigdom_vdom_tag_article());
+}
+
+test "VDOM tag header" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.header)), zigdom_vdom_tag_header());
+}
+
+test "VDOM tag footer" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.footer)), zigdom_vdom_tag_footer());
+}
+
+test "VDOM tag nav" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.nav)), zigdom_vdom_tag_nav());
+}
+
+test "VDOM tag main" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.main)), zigdom_vdom_tag_main());
+}
+
+test "VDOM tag h1" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h1)), zigdom_vdom_tag_h1());
+}
+
+test "VDOM tag h2" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h2)), zigdom_vdom_tag_h2());
+}
+
+test "VDOM tag h3" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h3)), zigdom_vdom_tag_h3());
+}
+
+test "VDOM tag h4" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h4)), zigdom_vdom_tag_h4());
+}
+
+test "VDOM tag h5" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h5)), zigdom_vdom_tag_h5());
+}
+
+test "VDOM tag h6" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.h6)), zigdom_vdom_tag_h6());
+}
+
+test "VDOM tag p" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.p)), zigdom_vdom_tag_p());
+}
+
+test "VDOM tag button" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.button)), zigdom_vdom_tag_button());
+}
+
+test "VDOM tag a" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.a)), zigdom_vdom_tag_a());
+}
+
+test "VDOM tag input" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.input)), zigdom_vdom_tag_input());
+}
+
+test "VDOM tag img" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.img)), zigdom_vdom_tag_img());
+}
+
+test "VDOM tag ul" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.ul)), zigdom_vdom_tag_ul());
+}
+
+test "VDOM tag ol" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.ol)), zigdom_vdom_tag_ol());
+}
+
+test "VDOM tag li" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.li)), zigdom_vdom_tag_li());
+}
+
+test "VDOM tag form" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.form)), zigdom_vdom_tag_form());
+}
+
+test "VDOM tag label" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.ElementTag.label)), zigdom_vdom_tag_label());
+}
+
+// --- VDOM Patch Type Constants ---
+
+test "VDOM patch none" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.none)), zigdom_vdom_patch_none());
+}
+
+test "VDOM patch create" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.create)), zigdom_vdom_patch_create());
+}
+
+test "VDOM patch remove" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.remove)), zigdom_vdom_patch_remove());
+}
+
+test "VDOM patch replace" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.replace)), zigdom_vdom_patch_replace());
+}
+
+test "VDOM patch update_props" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.update_props)), zigdom_vdom_patch_update_props());
+}
+
+test "VDOM patch update_text" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.update_text)), zigdom_vdom_patch_update_text());
+}
+
+test "VDOM patch reorder" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.reorder)), zigdom_vdom_patch_reorder());
+}
+
+test "VDOM patch insert_child" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.insert_child)), zigdom_vdom_patch_insert_child());
+}
+
+test "VDOM patch remove_child" {
+    try std.testing.expectEqual(@as(u8, @intFromEnum(vdom.PatchType.remove_child)), zigdom_vdom_patch_remove_child());
+}
+
+// --- Todo Event ID Constants ---
+
+test "Todo event ADD_TODO" {
+    try std.testing.expectEqual(todo.EventId.ADD_TODO, zigdom_todo_event_add());
+}
+
+test "Todo event TOGGLE_TODO" {
+    try std.testing.expectEqual(todo.EventId.TOGGLE_TODO, zigdom_todo_event_toggle_base());
+}
+
+test "Todo event REMOVE_TODO" {
+    try std.testing.expectEqual(todo.EventId.REMOVE_TODO, zigdom_todo_event_remove_base());
+}
+
+test "Todo event TOGGLE_ALL" {
+    try std.testing.expectEqual(todo.EventId.TOGGLE_ALL, zigdom_todo_event_toggle_all());
+}
+
+test "Todo event CLEAR_COMPLETED" {
+    try std.testing.expectEqual(todo.EventId.CLEAR_COMPLETED, zigdom_todo_event_clear_completed());
+}
+
+test "Todo event FILTER_ALL" {
+    try std.testing.expectEqual(todo.EventId.FILTER_ALL, zigdom_todo_event_filter_all());
+}
+
+test "Todo event FILTER_ACTIVE" {
+    try std.testing.expectEqual(todo.EventId.FILTER_ACTIVE, zigdom_todo_event_filter_active());
+}
+
+test "Todo event FILTER_COMPLETED" {
+    try std.testing.expectEqual(todo.EventId.FILTER_COMPLETED, zigdom_todo_event_filter_completed());
+}
+
+// --- Runtime Element Storage ---
+
+test "runtime_elements array size" {
+    try std.testing.expectEqual(@as(usize, 256), runtime_elements.len);
+}
+
+test "runtime_element_children array size" {
+    try std.testing.expectEqual(@as(usize, 256), runtime_element_children.len);
+}
+
+test "runtime_children_counts initial zero" {
+    for (runtime_children_counts) |count| {
+        try std.testing.expectEqual(@as(u8, 0), count);
+    }
+}
+
+test "DSL element types are unique" {
+    const types = [_]u8{
+        zigdom_dsl_element_type_div(),
+        zigdom_dsl_element_type_span(),
+        zigdom_dsl_element_type_section(),
+        zigdom_dsl_element_type_article(),
+        zigdom_dsl_element_type_header(),
+        zigdom_dsl_element_type_footer(),
+        zigdom_dsl_element_type_nav(),
+        zigdom_dsl_element_type_main(),
+        zigdom_dsl_element_type_h1(),
+        zigdom_dsl_element_type_h2(),
+        zigdom_dsl_element_type_h3(),
+        zigdom_dsl_element_type_h4(),
+        zigdom_dsl_element_type_h5(),
+        zigdom_dsl_element_type_h6(),
+        zigdom_dsl_element_type_p(),
+        zigdom_dsl_element_type_text(),
+        zigdom_dsl_element_type_button(),
+        zigdom_dsl_element_type_a(),
+        zigdom_dsl_element_type_input(),
+        zigdom_dsl_element_type_img(),
+        zigdom_dsl_element_type_ul(),
+        zigdom_dsl_element_type_ol(),
+        zigdom_dsl_element_type_li(),
+        zigdom_dsl_element_type_form(),
+        zigdom_dsl_element_type_label(),
+    };
+
+    // Check uniqueness by looking for duplicates
+    for (types, 0..) |t1, i| {
+        for (types[i + 1 ..]) |t2| {
+            try std.testing.expect(t1 != t2);
+        }
+    }
+}
+
+test "VDOM tags are unique" {
+    const tags = [_]u8{
+        zigdom_vdom_tag_div(),
+        zigdom_vdom_tag_span(),
+        zigdom_vdom_tag_section(),
+        zigdom_vdom_tag_article(),
+        zigdom_vdom_tag_header(),
+        zigdom_vdom_tag_footer(),
+        zigdom_vdom_tag_nav(),
+        zigdom_vdom_tag_main(),
+        zigdom_vdom_tag_h1(),
+        zigdom_vdom_tag_h2(),
+        zigdom_vdom_tag_h3(),
+        zigdom_vdom_tag_h4(),
+        zigdom_vdom_tag_h5(),
+        zigdom_vdom_tag_h6(),
+        zigdom_vdom_tag_p(),
+        zigdom_vdom_tag_button(),
+        zigdom_vdom_tag_a(),
+        zigdom_vdom_tag_input(),
+        zigdom_vdom_tag_img(),
+        zigdom_vdom_tag_ul(),
+        zigdom_vdom_tag_ol(),
+        zigdom_vdom_tag_li(),
+        zigdom_vdom_tag_form(),
+        zigdom_vdom_tag_label(),
+    };
+
+    // Check uniqueness
+    for (tags, 0..) |t1, i| {
+        for (tags[i + 1 ..]) |t2| {
+            try std.testing.expect(t1 != t2);
+        }
+    }
+}
+
+test "VDOM patch types are unique" {
+    const patches = [_]u8{
+        zigdom_vdom_patch_none(),
+        zigdom_vdom_patch_create(),
+        zigdom_vdom_patch_remove(),
+        zigdom_vdom_patch_replace(),
+        zigdom_vdom_patch_update_props(),
+        zigdom_vdom_patch_update_text(),
+        zigdom_vdom_patch_reorder(),
+        zigdom_vdom_patch_insert_child(),
+        zigdom_vdom_patch_remove_child(),
+    };
+
+    // Check uniqueness
+    for (patches, 0..) |p1, i| {
+        for (patches[i + 1 ..]) |p2| {
+            try std.testing.expect(p1 != p2);
+        }
+    }
+}
+
+test "Todo event IDs are unique" {
+    const events = [_]u32{
+        zigdom_todo_event_add(),
+        zigdom_todo_event_toggle_base(),
+        zigdom_todo_event_remove_base(),
+        zigdom_todo_event_toggle_all(),
+        zigdom_todo_event_clear_completed(),
+        zigdom_todo_event_filter_all(),
+        zigdom_todo_event_filter_active(),
+        zigdom_todo_event_filter_completed(),
+    };
+
+    // Check uniqueness
+    for (events, 0..) |e1, i| {
+        for (events[i + 1 ..]) |e2| {
+            try std.testing.expect(e1 != e2);
+        }
+    }
+}
+
+test "scheduler stats size" {
+    try std.testing.expect(zigdom_scheduler_get_stats_size() > 0);
+}

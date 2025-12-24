@@ -830,3 +830,247 @@ pub const LottieManager = struct {
         }
     }
 };
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+test "LayerType enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(LayerType.precomp));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(LayerType.shape));
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(LayerType.text));
+    try std.testing.expectEqual(@as(u8, 13), @intFromEnum(LayerType.camera));
+}
+
+test "LottieBlendMode enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(LottieBlendMode.normal));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(LottieBlendMode.multiply));
+    try std.testing.expectEqual(@as(u8, 2), @intFromEnum(LottieBlendMode.screen));
+    try std.testing.expectEqual(@as(u8, 15), @intFromEnum(LottieBlendMode.luminosity));
+}
+
+test "MatteType enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(MatteType.none));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(MatteType.add));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(MatteType.luma_invert));
+}
+
+test "ShapeType enum values" {
+    try std.testing.expectEqual(@as(u8, 0), @intFromEnum(ShapeType.group));
+    try std.testing.expectEqual(@as(u8, 1), @intFromEnum(ShapeType.rectangle));
+    try std.testing.expectEqual(@as(u8, 4), @intFromEnum(ShapeType.path));
+    try std.testing.expectEqual(@as(u8, 5), @intFromEnum(ShapeType.fill));
+}
+
+test "PathVertex struct" {
+    const vertex = PathVertex{
+        .position = Point2D{ .x = 10, .y = 20 },
+        .in_tangent = Point2D{ .x = 5, .y = 10 },
+        .out_tangent = Point2D{ .x = 15, .y = 30 },
+    };
+    try std.testing.expectEqual(@as(f32, 10), vertex.position.x);
+    try std.testing.expectEqual(@as(f32, 20), vertex.position.y);
+}
+
+test "BezierPath initialization" {
+    const allocator = std.testing.allocator;
+    var path = BezierPath.init(allocator);
+    defer path.deinit();
+
+    try std.testing.expectEqual(false, path.closed);
+    try std.testing.expectEqual(@as(usize, 0), path.vertices.items.len);
+}
+
+test "ShapeElement defaults" {
+    const shape = ShapeElement{ .shape_type = .rectangle };
+    try std.testing.expectEqual(ShapeType.rectangle, shape.shape_type);
+    try std.testing.expectEqual(false, shape.hidden);
+    try std.testing.expectEqual(@as(f32, 100), shape.fill_opacity);
+    try std.testing.expectEqual(@as(f32, 1), shape.stroke_width);
+}
+
+test "AnimatedValue static value" {
+    const allocator = std.testing.allocator;
+    var animated = AnimatedValue(f32).init(allocator, 50.0);
+    defer animated.deinit();
+
+    try std.testing.expectEqual(false, animated.is_animated);
+    try std.testing.expectEqual(@as(f32, 50.0), animated.static_value);
+    try std.testing.expectEqual(@as(f32, 50.0), animated.getValueAt(0));
+    try std.testing.expectEqual(@as(f32, 50.0), animated.getValueAt(100));
+}
+
+test "Layer initialization" {
+    const allocator = std.testing.allocator;
+    var layer = Layer.init(allocator);
+    defer layer.deinit();
+
+    try std.testing.expectEqual(LayerType.shape, layer.layer_type);
+    try std.testing.expectEqual(@as(f32, 1.0), layer.time_stretch);
+    try std.testing.expectEqual(LottieBlendMode.normal, layer.blend_mode);
+    try std.testing.expectEqual(false, layer.hidden);
+}
+
+test "Layer visibility check" {
+    const allocator = std.testing.allocator;
+    var layer = Layer.init(allocator);
+    defer layer.deinit();
+
+    layer.in_point = 10;
+    layer.out_point = 100;
+    layer.hidden = false;
+
+    try std.testing.expect(layer.isVisibleAt(50));
+    try std.testing.expect(layer.isVisibleAt(10));
+    try std.testing.expect(!layer.isVisibleAt(5));
+    try std.testing.expect(!layer.isVisibleAt(100)); // out_point is exclusive
+}
+
+test "Layer visibility hidden" {
+    const allocator = std.testing.allocator;
+    var layer = Layer.init(allocator);
+    defer layer.deinit();
+
+    layer.in_point = 0;
+    layer.out_point = 100;
+    layer.hidden = true;
+
+    try std.testing.expect(!layer.isVisibleAt(50));
+}
+
+test "LottieMarker struct" {
+    const marker = LottieMarker{
+        .name = "test_marker",
+        .time = 60,
+        .duration = 30,
+    };
+    try std.testing.expectEqualStrings("test_marker", marker.name);
+    try std.testing.expectEqual(@as(FrameNumber, 60), marker.time);
+    try std.testing.expectEqual(@as(FrameNumber, 30), marker.duration);
+}
+
+test "Animation initialization" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    try std.testing.expectEqual(PlaybackState.stopped, animation.state);
+    try std.testing.expectEqual(@as(f32, 0), animation.current_frame);
+    try std.testing.expectEqual(LoopMode.none, animation.loop_mode);
+    try std.testing.expectEqual(@as(f32, 1.0), animation.speed);
+    try std.testing.expectEqual(PlayDirection.forward, animation.direction);
+}
+
+test "Animation playback control" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    // Play
+    animation.play();
+    try std.testing.expectEqual(PlaybackState.playing, animation.state);
+    try std.testing.expect(animation.isPlaying());
+
+    // Pause
+    animation.pause();
+    try std.testing.expectEqual(PlaybackState.paused, animation.state);
+
+    // Resume
+    animation.play();
+    try std.testing.expectEqual(PlaybackState.playing, animation.state);
+
+    // Stop
+    animation.stop();
+    try std.testing.expectEqual(PlaybackState.stopped, animation.state);
+}
+
+test "Animation seek" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    animation.in_point = 0;
+    animation.out_point = 100;
+
+    animation.seekToFrame(50);
+    try std.testing.expectEqual(@as(FrameNumber, 50), animation.getCurrentFrame());
+
+    // Seek beyond bounds should clamp
+    animation.seekToFrame(150);
+    try std.testing.expectEqual(@as(FrameNumber, 100), animation.getCurrentFrame());
+}
+
+test "Animation seek to progress" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    animation.in_point = 0;
+    animation.out_point = 100;
+
+    animation.seekToProgress(0.5);
+    try std.testing.expectEqual(@as(FrameNumber, 50), animation.getCurrentFrame());
+
+    animation.seekToProgress(0.0);
+    try std.testing.expectEqual(@as(FrameNumber, 0), animation.getCurrentFrame());
+
+    animation.seekToProgress(1.0);
+    try std.testing.expectEqual(@as(FrameNumber, 100), animation.getCurrentFrame());
+}
+
+test "Animation speed and loop settings" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    animation.setSpeed(2.0);
+    try std.testing.expectEqual(@as(f32, 2.0), animation.speed);
+
+    animation.setLoopMode(.loop);
+    try std.testing.expectEqual(LoopMode.loop, animation.loop_mode);
+
+    animation.setLoopCount(3);
+    try std.testing.expectEqual(@as(u32, 3), animation.loop_count);
+
+    animation.setDirection(.reverse);
+    try std.testing.expectEqual(PlayDirection.reverse, animation.direction);
+}
+
+test "Animation getters" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    animation.in_point = 0;
+    animation.out_point = 120;
+    animation.frame_rate = 30;
+    animation.width = 1920;
+    animation.height = 1080;
+
+    try std.testing.expectEqual(@as(FrameNumber, 120), animation.getTotalFrames());
+    try std.testing.expectEqual(@as(DurationMs, 4000), animation.getDurationMs());
+
+    const size = animation.getSize();
+    try std.testing.expectEqual(@as(f32, 1920), size.width);
+    try std.testing.expectEqual(@as(f32, 1080), size.height);
+}
+
+test "Animation progress calculation" {
+    const allocator = std.testing.allocator;
+    var animation = Animation.init(allocator);
+    defer animation.deinit();
+
+    animation.in_point = 0;
+    animation.out_point = 100;
+    animation.current_frame = 25;
+
+    try std.testing.expectEqual(@as(f32, 0.25), animation.getProgress());
+}
+
+test "LottieManager initialization" {
+    const allocator = std.testing.allocator;
+    var manager = LottieManager.init(allocator);
+    defer manager.deinit();
+
+    try std.testing.expectEqual(@as(u32, 1), manager.next_id);
+}
