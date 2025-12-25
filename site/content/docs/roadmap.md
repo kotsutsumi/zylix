@@ -9,17 +9,16 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 > For the complete detailed roadmap, see [ROADMAP.md](https://github.com/kotsutsumi/zylix/blob/main/docs/ROADMAP.md).
 
-**Last Synced:** 2025-12-25
+**Last Synced:** 2025-12-26
 
 ## Current Status
 
-**Version 0.25.0** is the current release with:
+**Version 0.19.3** is the current stable release with:
 
-- Official sample catalog (31 projects across templates, showcases, apps, games, platform-specific, fullstack)
-- Documentation excellence: API reference, architecture, and EN/JA coverage
-- Performance tooling: profiling, diff caching, and memory pools
-- Runtime stack: server runtime, edge adapters, and database support
-- Device and graphics features: gestures, animation, 3D, and game tooling
+- Zig 0.15 API compatibility (ArrayList → ArrayListUnmanaged migration)
+- Integration platform bindings for iOS and Android
+- CI/CD improvements and test infrastructure fixes
+- Tooling C ABI exports for cross-platform development
 
 ## Roadmap Overview
 
@@ -28,34 +27,57 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 | v0.1.0 - v0.6.3 | Foundation, routing, async, hot reload, samples | Done |
 | v0.7.0 | Component Library (40+ types) | Done |
 | v0.8.1 | Testing, watchOS, language bindings | Done |
-| v0.9.0 - v0.23.0 | AI, device APIs, animation, 3D, game, DB, server, edge, performance | Done |
-| v0.24.0 | Documentation Excellence | Done |
-| v0.25.0 | Official Sample Projects (31 samples) | Current |
+| v0.9.0 - v0.10.0 | AI, device APIs, animation, 3D, game | Done |
+| v0.18.0 - v0.19.0 | Tooling APIs, C ABI, cross-platform fixes | Done |
+| v0.19.1 - v0.19.3 | Integration bindings, CI fixes, Zig 0.15 compat | Current |
+| v0.20.0 | M5Stack CoreS3 embedded platform support | Next |
 
-## Completed Milestones
+## Upcoming: v0.20.0 - M5Stack Embedded Platform
 
-### v0.25.0 - Official Sample Projects
+Native Zig support for M5Stack CoreS3 SE (ESP32-S3):
 
-- 31 production-quality sample projects
-- Starter templates, feature showcases, real-world apps
-- Platform-specific and game-focused samples
-- Fullstack end-to-end examples
+- **Display**: ILI9342C driver (SPI, 320x240, RGB565)
+- **Touch**: FT6336U capacitive touch controller
+- **Power**: AXP2101 PMIC, AW9523B I/O expander
+- **Integration**: Zylix Core running natively on ESP32-S3 (Xtensa)
 
-### v0.24.0 - Documentation Excellence
+See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/docs/M5STACK_IMPLEMENTATION_PLAN.md) for details.
 
-- API reference for core/perf modules
-- EN/JA bilingual docs across new pages
-- Organized module index and quick reference
+## Recent Releases
 
-### v0.23.0 - Performance & Optimization
+### v0.19.3 - Zig 0.15 Compatibility (2025-12-26)
+
+- Fixed ArrayList API for Zig 0.15 in tooling/artifacts.zig
+- Migrated to `std.ArrayListUnmanaged` pattern
+
+### v0.19.2 - CI Fixes (2025-12-26)
+
+- Made AI dependencies (llama.cpp, whisper.cpp) optional
+- Fixed web platform test exclusions for container directories
+
+### v0.19.1 - Integration Platform Bindings (2025-12-26)
+
+- iOS: Motion tracking, audio, IAP, ads, key-value store, app lifecycle
+- Android: CameraX, SoundPool, Play Billing, SharedPreferences, ProcessLifecycle
+- Tooling C ABI exports and cross-platform compatibility improvements
+
+## Legacy Milestones
+
+### v0.10.0 - Performance & Optimization
 
 - Profiling, diff caching, memory pools
 - Render batching and scheduling utilities
 - Optimization configuration and metrics
 
+### v0.9.0 - AI & Device Features
+
+- AI module integration (Whisper, Core ML)
+- Device API improvements
+- Animation and 3D enhancements
+
 ## Next
 
-The next release is TBD. See the full roadmap for the complete release history and detailed phase descriptions.
+**v0.20.0** will introduce M5Stack CoreS3 embedded platform support, enabling Zylix applications to run on ESP32-S3 based IoT devices.
 
 ## Contributing
 

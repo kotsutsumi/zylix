@@ -152,4 +152,4 @@ Zylix は Apache License 2.0 の下で公開されています。
 
 ## バージョン
 
-本ドキュメントは **Zylix v0.25.0** を対象としています。最新状況は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) と [ロードマップ](roadmap) を参照してください。
+本ドキュメントは **Zylix v0.19.3** を対象としています。最新状況は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) と [ロードマップ](roadmap) を参照してください。
