@@ -154,7 +154,9 @@ describe('Sample Applications Structure', () => {
     // WASM samples use a different structure (zylix.js instead of src/main.js)
     const wasmSamples = ['counter-wasm', 'todo-wasm', 'component-showcase'];
     // test-demos is a platform-specific test suite, not a standard web app
-    const excludedSamples = [...wasmSamples, 'test-demos'];
+    // Container directories hold multiple samples and don't have src/main.js themselves
+    const containerDirs = ['apps', 'fullstack', 'games', 'platform-specific', 'showcase', 'templates'];
+    const excludedSamples = [...wasmSamples, 'test-demos', ...containerDirs];
 
     const sampleApps = readdirSync(samplesDir, { withFileTypes: true })
         .filter(d => d.isDirectory() && !d.name.startsWith('.'))
