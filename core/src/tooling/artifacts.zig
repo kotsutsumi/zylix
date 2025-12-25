@@ -172,18 +172,18 @@ pub const Artifacts = struct {
         };
         future.* = Future([]Artifact).init();
 
-        var result = std.ArrayList(Artifact).init(self.allocator);
+        var result: std.ArrayListUnmanaged(Artifact) = .{};
         var iter = self.artifacts.iterator();
         while (iter.next()) |entry| {
             if (entry.value_ptr.build_id.id == build_id.id) {
-                result.append(entry.value_ptr.*) catch {
+                result.append(self.allocator, entry.value_ptr.*) catch {
                     future.fail(ArtifactError.OutOfMemory);
                     return future;
                 };
             }
         }
 
-        future.complete(result.toOwnedSlice() catch &.{});
+        future.complete(result.toOwnedSlice(self.allocator) catch &.{});
         return future;
     }
 
