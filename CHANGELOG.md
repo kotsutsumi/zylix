@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2025-12-26
+
+### Fixed
+
+#### Tooling
+- Update ArrayList to ArrayListUnmanaged for Zig 0.15 API compatibility (#55)
+- Migrate `std.ArrayList(T).init(allocator)` to `std.ArrayListUnmanaged(T)` pattern
+- Pass allocator to `append()` and `toOwnedSlice()` methods
+
 ## [0.19.2] - 2025-12-26
 
 ### Fixed
