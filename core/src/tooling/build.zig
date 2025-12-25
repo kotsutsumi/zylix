@@ -10,6 +10,7 @@
 
 const std = @import("std");
 const project = @import("project.zig");
+const build_executor = @import("build_executor.zig");
 
 /// Build error types
 pub const BuildError = error{
@@ -309,8 +310,143 @@ pub const Build = struct {
             return future;
         };
 
-        // In real implementation, would start actual build process
-        future.complete(build_id);
+        // Execute actual build process
+        const exec_result = build_executor.runBuildSync(
+            self.allocator,
+            project_id.path,
+            project_id.name,
+            target,
+            config,
+            build_id,
+        );
+
+        switch (exec_result) {
+            .ok => |result| {
+                // Update build status to completed
+                if (self.builds.getPtr(build_id.id)) |build_entry| {
+                    build_entry.status.state = .completed;
+                    build_entry.status.progress = 1.0;
+                    build_entry.status.elapsed_ms = result.duration_ms;
+                }
+                future.complete(build_id);
+            },
+            .err => |err| {
+                // Update build status to failed
+                if (self.builds.getPtr(build_id.id)) |build_entry| {
+                    build_entry.status.state = .failed;
+                }
+                switch (err) {
+                    build_executor.ExecutorError.InvalidProjectPath => future.fail(BuildError.InvalidProject),
+                    build_executor.ExecutorError.ProcessSpawnFailed => future.fail(BuildError.BuildFailed),
+                    build_executor.ExecutorError.OutOfMemory => future.fail(BuildError.OutOfMemory),
+                    else => future.fail(BuildError.BuildFailed),
+                }
+            },
+        }
+        return future;
+    }
+
+    /// Start a build with progress and log callbacks
+    pub fn startWithCallbacks(
+        self: *Build,
+        project_id: project.ProjectId,
+        target: project.Target,
+        config: BuildConfig,
+        progress_cb: ?ProgressCallback,
+        log_cb: ?LogCallback,
+    ) *Future(BuildId) {
+        const future = self.allocator.create(Future(BuildId)) catch {
+            const err_future = self.allocator.create(Future(BuildId)) catch unreachable;
+            err_future.* = Future(BuildId).init();
+            err_future.fail(BuildError.OutOfMemory);
+            return err_future;
+        };
+        future.* = Future(BuildId).init();
+
+        if (!project_id.isValid()) {
+            future.fail(BuildError.InvalidProject);
+            return future;
+        }
+
+        const build_id = BuildId{
+            .id = self.next_id,
+            .project_name = project_id.name,
+            .target = target,
+            .started_at = std.time.timestamp(),
+        };
+        self.next_id += 1;
+
+        const entry = BuildEntry{
+            .id = build_id,
+            .config = config,
+            .status = .{
+                .state = .pending,
+                .progress = 0.0,
+            },
+            .progress_callback = progress_cb,
+            .log_callback = log_cb,
+        };
+
+        self.builds.put(self.allocator, build_id.id, entry) catch {
+            future.fail(BuildError.OutOfMemory);
+            return future;
+        };
+
+        // Create internal callback wrappers
+        const ProgressWrapper = struct {
+            fn wrap(state: BuildState, prog: f32, msg: ?[]const u8) void {
+                _ = state;
+                _ = prog;
+                _ = msg;
+                // In a full implementation, this would update the entry
+            }
+        };
+
+        const LogWrapper = struct {
+            fn wrap(level: LogLevel, msg: []const u8) void {
+                _ = level;
+                _ = msg;
+                // In a full implementation, this would emit to the log callback
+            }
+        };
+
+        // Execute build with callbacks
+        const ctx = build_executor.BuildContext{
+            .project_path = project_id.path,
+            .project_name = project_id.name,
+            .target = target,
+            .config = config,
+            .build_id = build_id,
+        };
+
+        const exec_result = build_executor.executeBuild(
+            self.allocator,
+            ctx,
+            ProgressWrapper.wrap,
+            LogWrapper.wrap,
+        );
+
+        switch (exec_result) {
+            .ok => |result| {
+                if (self.builds.getPtr(build_id.id)) |build_entry| {
+                    build_entry.status.state = .completed;
+                    build_entry.status.progress = 1.0;
+                    build_entry.status.elapsed_ms = result.duration_ms;
+                }
+                future.complete(build_id);
+            },
+            .err => |err| {
+                if (self.builds.getPtr(build_id.id)) |build_entry| {
+                    build_entry.status.state = .failed;
+                }
+                switch (err) {
+                    build_executor.ExecutorError.InvalidProjectPath => future.fail(BuildError.InvalidProject),
+                    build_executor.ExecutorError.ProcessSpawnFailed => future.fail(BuildError.BuildFailed),
+                    build_executor.ExecutorError.OutOfMemory => future.fail(BuildError.OutOfMemory),
+                    else => future.fail(BuildError.BuildFailed),
+                }
+            },
+        }
         return future;
     }
 

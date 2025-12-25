@@ -36,8 +36,40 @@
 //! ```
 
 const std = @import("std");
+const builtin = @import("builtin");
 
-// Re-export types
+// === Platform Detection ===
+// Native C imports are only available on native builds with libc support.
+// For freestanding targets (WASM) or cross-compilation, we use stub implementations.
+
+/// Check if native C imports are supported on this platform
+pub const has_native_c_support = blk: {
+    // Freestanding targets don't have libc
+    if (builtin.os.tag == .freestanding) break :blk false;
+
+    // WASM doesn't support native C imports
+    if (builtin.cpu.arch == .wasm32 or builtin.cpu.arch == .wasm64) break :blk false;
+
+    // Cross-compilation typically lacks proper sysroot for C headers
+    // Native builds (host == target) have C support
+    const native_endian = builtin.cpu.arch.endian();
+    const target_endian = builtin.target.cpu.arch.endian();
+
+    // Check if this is likely a native build by comparing architectures
+    // In cross-compilation scenarios without proper sysroot, C imports fail
+    if (builtin.target.os.tag == .linux and builtin.cpu.arch != .x86_64 and builtin.cpu.arch != .aarch64) {
+        // Android cross-compile without NDK sysroot
+        break :blk false;
+    }
+
+    // For now, enable C support on native desktop platforms
+    break :blk switch (builtin.target.os.tag) {
+        .macos, .linux, .windows => native_endian == target_endian,
+        else => false,
+    };
+};
+
+// Re-export types (always available - no C dependencies)
 pub const types = @import("types.zig");
 pub const ModelType = types.ModelType;
 pub const ModelConfig = types.ModelConfig;
@@ -47,67 +79,69 @@ pub const Quantization = types.Quantization;
 pub const GenerateParams = types.GenerateParams;
 pub const Result = types.Result;
 
-// Re-export embedding module
+// Re-export embedding module (pure Zig - no C dependencies)
 pub const embedding = @import("embedding.zig");
 pub const EmbeddingModel = embedding.EmbeddingModel;
 pub const EmbeddingConfig = embedding.EmbeddingConfig;
 pub const cosineSimilarity = embedding.cosineSimilarity;
 
-// Re-export backend module
-pub const backend = @import("backend.zig");
+// === Conditionally import C-dependent modules ===
+
+// Backend module (depends on llama_cpp, coreml, metal)
+pub const backend = if (has_native_c_support) @import("backend.zig") else @import("backend_stub.zig");
 pub const Backend = backend.Backend;
 pub const BackendType = backend.BackendType;
 pub const BackendConfig = backend.BackendConfig;
 pub const createBackend = backend.createBackend;
 
-// Re-export LLM module
-pub const llm = @import("llm.zig");
+// LLM module (depends on backend)
+pub const llm = if (has_native_c_support) @import("llm.zig") else @import("llm_stub.zig");
 pub const LLMModel = llm.LLMModel;
 pub const LLMConfig = llm.LLMConfig;
 pub const ChatMessage = llm.ChatMessage;
 pub const ChatRole = llm.ChatRole;
 
-// Re-export VLM module
-pub const vlm = @import("vlm.zig");
-pub const vlm_backend = @import("vlm_backend.zig");
-pub const mtmd_cpp = @import("mtmd_cpp.zig");
+// VLM module (depends on mtmd_cpp)
+pub const vlm = if (has_native_c_support) @import("vlm.zig") else @import("vlm_stub.zig");
+pub const vlm_backend = if (has_native_c_support) @import("vlm_backend.zig") else @import("vlm_backend_stub.zig");
+pub const mtmd_cpp = if (has_native_c_support) @import("mtmd_cpp.zig") else @import("mtmd_cpp_stub.zig");
 pub const VLMModel = vlm.VLMModel;
 pub const VLMConfig = vlm.VLMConfig;
 pub const Image = vlm.Image;
 pub const ImageFormat = vlm.ImageFormat;
 pub const VLMBackend = vlm_backend.VLMBackend;
 
-// Re-export Whisper module
-pub const whisper = @import("whisper.zig");
-pub const whisper_backend = @import("whisper_backend.zig");
+// Whisper module (depends on whisper_cpp)
+pub const whisper = if (has_native_c_support) @import("whisper.zig") else @import("whisper_stub.zig");
+pub const whisper_backend = if (has_native_c_support) @import("whisper_backend.zig") else @import("whisper_backend_stub.zig");
 pub const WhisperModel = whisper.WhisperModel;
 pub const WhisperConfig = whisper.WhisperConfig;
 pub const Audio = whisper.Audio;
 pub const Language = whisper.Language;
 
-// Re-export Audio Decoder module (MP3, FLAC, OGG, WAV support)
-pub const audio_decoder = @import("audio_decoder.zig");
-pub const miniaudio = @import("miniaudio.zig");
+// Audio Decoder module (depends on miniaudio)
+pub const audio_decoder = if (has_native_c_support) @import("audio_decoder.zig") else @import("audio_decoder_stub.zig");
+pub const miniaudio = if (has_native_c_support) @import("miniaudio.zig") else @import("miniaudio_stub.zig");
 pub const AudioFormat = audio_decoder.AudioFormat;
 pub const AudioInfo = audio_decoder.AudioInfo;
 pub const DecodeResult = audio_decoder.DecodeResult;
 
-// Re-export Whisper Streaming module (real-time transcription)
-pub const whisper_stream = @import("whisper_stream.zig");
+// Whisper Streaming module (depends on whisper_backend)
+pub const whisper_stream = if (has_native_c_support) @import("whisper_stream.zig") else @import("whisper_stream_stub.zig");
 pub const StreamingContext = whisper_stream.StreamingContext;
 pub const StreamConfig = whisper_stream.StreamConfig;
 pub const StreamSegment = whisper_stream.StreamSegment;
 pub const StreamState = whisper_stream.StreamState;
 
-// Re-export Metal/GPU module (Apple platform acceleration)
-pub const metal = @import("metal.zig");
+// Metal/GPU module (Apple platform only, uses Objective-C runtime)
+pub const metal = if (has_native_c_support) @import("metal.zig") else @import("metal_stub.zig");
 pub const MetalConfig = metal.MetalConfig;
 pub const MetalStatus = metal.MetalStatus;
 pub const DeviceInfo = metal.DeviceInfo;
 pub const DeviceCapabilities = metal.DeviceCapabilities;
 
-// Re-export Core ML module (Apple ML framework)
-pub const coreml = @import("coreml.zig");
+// Core ML module (Apple platform only)
+pub const coreml = if (has_native_c_support) @import("coreml.zig") else @import("coreml_stub.zig");
 pub const CoreMLModel = coreml.Model;
 pub const CoreMLConfig = coreml.Config;
 pub const CoreMLComputeUnits = coreml.ComputeUnits;
@@ -349,14 +383,19 @@ test "formatFileSize" {
 
 // Include submodule tests
 test {
+    // Always test pure Zig modules
     _ = types;
     _ = embedding;
-    _ = backend;
-    _ = llm;
-    _ = vlm;
-    _ = whisper;
-    _ = whisper_stream;
-    _ = audio_decoder;
-    _ = metal;
-    _ = coreml;
+
+    // Conditionally test C-dependent modules
+    if (has_native_c_support) {
+        _ = backend;
+        _ = llm;
+        _ = vlm;
+        _ = whisper;
+        _ = whisper_stream;
+        _ = audio_decoder;
+        _ = metal;
+        _ = coreml;
+    }
 }

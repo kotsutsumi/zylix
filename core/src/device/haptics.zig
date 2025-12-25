@@ -244,6 +244,136 @@ pub fn selectionChanged() Result {
     return getEngine().selection();
 }
 
+// === Simplified Pulse API (#45) ===
+
+/// Pulse intensity presets
+pub const PulseIntensity = enum(u8) {
+    soft = 0,
+    light = 1,
+    medium = 2,
+    strong = 3,
+    heavy = 4,
+
+    /// Get normalized intensity value (0.0 - 1.0)
+    pub fn toFloat(self: PulseIntensity) f32 {
+        return switch (self) {
+            .soft => 0.2,
+            .light => 0.4,
+            .medium => 0.6,
+            .strong => 0.8,
+            .heavy => 1.0,
+        };
+    }
+
+    /// Get corresponding impact style
+    pub fn toImpactStyle(self: PulseIntensity) ImpactStyle {
+        return switch (self) {
+            .soft => .soft,
+            .light => .light,
+            .medium => .medium,
+            .strong => .heavy,
+            .heavy => .rigid,
+        };
+    }
+};
+
+/// Simple haptic pulse with default medium intensity
+/// This is the simplest cross-platform haptic API
+pub fn pulse() Result {
+    return pulseWithIntensity(.medium);
+}
+
+/// Haptic pulse with specified intensity preset
+pub fn pulseWithIntensity(intensity: PulseIntensity) Result {
+    const engine = getEngine();
+    if (!engine.is_enabled or !engine.is_available) {
+        return .not_available;
+    }
+
+    const style = intensity.toImpactStyle();
+    const intensity_value = intensity.toFloat() * engine.intensity_multiplier;
+
+    return engine.impact(style, intensity_value);
+}
+
+/// Haptic pulse with custom intensity (0.0 - 1.0)
+pub fn pulseWithCustomIntensity(intensity: f32) Result {
+    if (intensity < 0.0 or intensity > 1.0) {
+        return .invalid_arg;
+    }
+
+    const engine = getEngine();
+    if (!engine.is_enabled or !engine.is_available) {
+        return .not_available;
+    }
+
+    // Map intensity to appropriate style
+    const style: ImpactStyle = if (intensity < 0.2)
+        .soft
+    else if (intensity < 0.4)
+        .light
+    else if (intensity < 0.7)
+        .medium
+    else if (intensity < 0.9)
+        .heavy
+    else
+        .rigid;
+
+    const adjusted_intensity = intensity * engine.intensity_multiplier;
+
+    return engine.impact(style, adjusted_intensity);
+}
+
+/// Double pulse pattern (useful for confirmations)
+pub fn doublePulse() Result {
+    const engine = getEngine();
+    if (!engine.is_enabled or !engine.is_available) {
+        return .not_available;
+    }
+
+    var pattern = HapticPattern{};
+    _ = pattern.addTransient(0.8, 0.7);
+    _ = pattern.addPause(0.05);
+    _ = pattern.addTransient(0.6, 0.5);
+
+    return engine.playPattern(&pattern);
+}
+
+/// Triple pulse pattern (useful for alerts)
+pub fn triplePulse() Result {
+    const engine = getEngine();
+    if (!engine.is_enabled or !engine.is_available) {
+        return .not_available;
+    }
+
+    var pattern = HapticPattern{};
+    _ = pattern.addTransient(0.7, 0.6);
+    _ = pattern.addPause(0.04);
+    _ = pattern.addTransient(0.7, 0.6);
+    _ = pattern.addPause(0.04);
+    _ = pattern.addTransient(0.7, 0.6);
+
+    return engine.playPattern(&pattern);
+}
+
+/// Quick tick pulse (for UI interactions)
+pub fn tick() Result {
+    return pulseWithIntensity(.light);
+}
+
+/// Buzz pulse (longer, continuous feel)
+pub fn buzz() Result {
+    const engine = getEngine();
+    if (!engine.is_enabled or !engine.is_available) {
+        return .not_available;
+    }
+
+    var pattern = HapticPattern{};
+    _ = pattern.addContinuous(0.5, 0.4, 0.1);
+
+    return engine.playPattern(&pattern);
+}
+
 // === Tests ===
 
 test "HapticsEngine initialization" {
@@ -273,4 +403,34 @@ test "Intensity multiplier validation" {
     try std.testing.expectEqual(Result.ok, engine.setIntensityMultiplier(0.5));
     try std.testing.expectEqual(Result.invalid_arg, engine.setIntensityMultiplier(1.5));
     try std.testing.expectEqual(Result.invalid_arg, engine.setIntensityMultiplier(-0.1));
+}
+
+test "PulseIntensity conversions" {
+    try std.testing.expectApproxEqAbs(@as(f32, 0.2), PulseIntensity.soft.toFloat(), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.4), PulseIntensity.light.toFloat(), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.6), PulseIntensity.medium.toFloat(), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.8), PulseIntensity.strong.toFloat(), 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), PulseIntensity.heavy.toFloat(), 0.01);
+
+    try std.testing.expectEqual(ImpactStyle.soft, PulseIntensity.soft.toImpactStyle());
+    try std.testing.expectEqual(ImpactStyle.light, PulseIntensity.light.toImpactStyle());
+    try std.testing.expectEqual(ImpactStyle.medium, PulseIntensity.medium.toImpactStyle());
+    try std.testing.expectEqual(ImpactStyle.heavy, PulseIntensity.strong.toImpactStyle());
+    try std.testing.expectEqual(ImpactStyle.rigid, PulseIntensity.heavy.toImpactStyle());
+}
+
+test "Pulse API basic functionality" {
+    // These test the code path, actual haptic feedback would require platform support
+    _ = pulse();
+    _ = pulseWithIntensity(.light);
+    _ = pulseWithIntensity(.heavy);
+    _ = tick();
+    _ = doublePulse();
+    _ = triplePulse();
+    _ = buzz();
+}
+
+test "Custom intensity validation" {
+    try std.testing.expectEqual(Result.invalid_arg, pulseWithCustomIntensity(-0.1));
+    try std.testing.expectEqual(Result.invalid_arg, pulseWithCustomIntensity(1.5));
 }

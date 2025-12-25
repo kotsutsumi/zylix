@@ -258,6 +258,145 @@ bool zylix_field_changed(uint16_t field_id);
 #define ZYLIX_FIELD_INPUT_TEXT 1
 #define ZYLIX_FIELD_INPUT_LEN  2
 
+/* === Haptics Pulse API (#45) === */
+
+/* Pulse intensity presets */
+#define ZYLIX_PULSE_SOFT   0
+#define ZYLIX_PULSE_LIGHT  1
+#define ZYLIX_PULSE_MEDIUM 2
+#define ZYLIX_PULSE_STRONG 3
+#define ZYLIX_PULSE_HEAVY  4
+
+/**
+ * Simple haptic pulse with medium intensity.
+ * This is the simplest cross-platform haptic API.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_pulse(void);
+
+/**
+ * Haptic pulse with intensity preset.
+ *
+ * @param intensity  Intensity preset (ZYLIX_PULSE_*)
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_pulse_with_intensity(uint8_t intensity);
+
+/**
+ * Haptic pulse with custom intensity.
+ *
+ * @param intensity  Custom intensity (0.0 - 1.0)
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_pulse_custom(float intensity);
+
+/**
+ * Double haptic pulse (for confirmations).
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_double_pulse(void);
+
+/**
+ * Triple haptic pulse (for alerts).
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_triple_pulse(void);
+
+/**
+ * Quick tick pulse (for UI interactions).
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_tick(void);
+
+/**
+ * Buzz pulse (longer, continuous feel).
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_buzz(void);
+
+/**
+ * Light impact feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_light_impact(void);
+
+/**
+ * Medium impact feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_medium_impact(void);
+
+/**
+ * Heavy impact feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_heavy_impact(void);
+
+/**
+ * Success notification feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_success(void);
+
+/**
+ * Warning notification feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_warning(void);
+
+/**
+ * Error notification feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_error(void);
+
+/**
+ * Selection changed feedback.
+ *
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_selection(void);
+
+/**
+ * Enable or disable haptics globally.
+ *
+ * @param enabled  true to enable, false to disable
+ */
+void zylix_haptics_set_enabled(bool enabled);
+
+/**
+ * Check if haptics hardware is available.
+ *
+ * @return true if available
+ */
+bool zylix_haptics_is_available(void);
+
+/**
+ * Check if haptics are enabled.
+ *
+ * @return true if enabled
+ */
+bool zylix_haptics_is_enabled(void);
+
+/**
+ * Set global intensity multiplier.
+ *
+ * @param multiplier  Intensity multiplier (0.0 - 1.0)
+ * @return ZYLIX_OK on success
+ */
+int32_t zylix_haptics_set_intensity_multiplier(float multiplier);
+
 #ifdef __cplusplus
 }
 #endif

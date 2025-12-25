@@ -21,13 +21,18 @@ const std = @import("std");
 
 // Re-export submodules
 pub const project = @import("project.zig");
+pub const project_io = @import("project_io.zig");
 pub const build = @import("build.zig");
+pub const build_executor = @import("build_executor.zig");
 pub const artifacts = @import("artifacts.zig");
 pub const targets = @import("targets.zig");
 pub const templates = @import("templates.zig");
 pub const watcher = @import("watcher.zig");
 pub const ui = @import("ui.zig");
 pub const preview = @import("preview.zig");
+
+// C ABI exports for platform shell integration
+pub const abi = @import("tooling_abi.zig");
 
 // Re-export common types from Project
 pub const Project = project.Project;

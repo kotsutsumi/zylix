@@ -10,6 +10,7 @@ const state = @import("state.zig");
 const events = @import("events.zig");
 const queue_mod = @import("queue.zig");
 const diff_mod = @import("diff.zig");
+const haptics = @import("device/haptics.zig");
 
 /// ABI version number (bumped for Phase 2)
 pub const ABI_VERSION: u32 = 2;
@@ -262,6 +263,101 @@ pub fn zylix_field_changed(field_id: u16) callconv(.c) bool {
     return diff.hasFieldChanged(field_id);
 }
 
+// === Haptics Pulse API (#45) ===
+
+/// Simple haptic pulse with medium intensity
+pub fn zylix_haptics_pulse() callconv(.c) i32 {
+    return @intFromEnum(haptics.pulse());
+}
+
+/// Haptic pulse with intensity preset (0=soft, 1=light, 2=medium, 3=strong, 4=heavy)
+pub fn zylix_haptics_pulse_with_intensity(intensity: u8) callconv(.c) i32 {
+    if (intensity > 4) {
+        return @intFromEnum(haptics.Result.invalid_arg);
+    }
+    return @intFromEnum(haptics.pulseWithIntensity(@enumFromInt(intensity)));
+}
+
+/// Haptic pulse with custom intensity (0.0 - 1.0)
+pub fn zylix_haptics_pulse_custom(intensity: f32) callconv(.c) i32 {
+    return @intFromEnum(haptics.pulseWithCustomIntensity(intensity));
+}
+
+/// Double haptic pulse (for confirmations)
+pub fn zylix_haptics_double_pulse() callconv(.c) i32 {
+    return @intFromEnum(haptics.doublePulse());
+}
+
+/// Triple haptic pulse (for alerts)
+pub fn zylix_haptics_triple_pulse() callconv(.c) i32 {
+    return @intFromEnum(haptics.triplePulse());
+}
+
+/// Quick tick pulse (for UI interactions)
+pub fn zylix_haptics_tick() callconv(.c) i32 {
+    return @intFromEnum(haptics.tick());
+}
+
+/// Buzz pulse (longer, continuous feel)
+pub fn zylix_haptics_buzz() callconv(.c) i32 {
+    return @intFromEnum(haptics.buzz());
+}
+
+/// Light impact feedback
+pub fn zylix_haptics_light_impact() callconv(.c) i32 {
+    return @intFromEnum(haptics.lightImpact());
+}
+
+/// Medium impact feedback
+pub fn zylix_haptics_medium_impact() callconv(.c) i32 {
+    return @intFromEnum(haptics.mediumImpact());
+}
+
+/// Heavy impact feedback
+pub fn zylix_haptics_heavy_impact() callconv(.c) i32 {
+    return @intFromEnum(haptics.heavyImpact());
+}
+
+/// Success notification feedback
+pub fn zylix_haptics_success() callconv(.c) i32 {
+    return @intFromEnum(haptics.successNotification());
+}
+
+/// Warning notification feedback
+pub fn zylix_haptics_warning() callconv(.c) i32 {
+    return @intFromEnum(haptics.warningNotification());
+}
+
+/// Error notification feedback
+pub fn zylix_haptics_error() callconv(.c) i32 {
+    return @intFromEnum(haptics.errorNotification());
+}
+
+/// Selection changed feedback
+pub fn zylix_haptics_selection() callconv(.c) i32 {
+    return @intFromEnum(haptics.selectionChanged());
+}
+
+/// Enable/disable haptics globally
+pub fn zylix_haptics_set_enabled(enabled: bool) callconv(.c) void {
+    haptics.getEngine().setEnabled(enabled);
+}
+
+/// Check if haptics are available
+pub fn zylix_haptics_is_available() callconv(.c) bool {
+    return haptics.getEngine().is_available;
+}
+
+/// Check if haptics are enabled
+pub fn zylix_haptics_is_enabled() callconv(.c) bool {
+    return haptics.getEngine().is_enabled;
+}
+
+/// Set global intensity multiplier (0.0 - 1.0)
+pub fn zylix_haptics_set_intensity_multiplier(multiplier: f32) callconv(.c) i32 {
+    return @intFromEnum(haptics.getEngine().setIntensityMultiplier(multiplier));
+}
+
 // === Export symbols for C ABI ===
 comptime {
     // Phase 1 exports
@@ -281,6 +377,26 @@ comptime {
     @export(&zylix_queue_clear, .{ .name = "zylix_queue_clear" });
     @export(&zylix_get_diff, .{ .name = "zylix_get_diff" });
     @export(&zylix_field_changed, .{ .name = "zylix_field_changed" });
+
+    // Haptics Pulse API (#45)
+    @export(&zylix_haptics_pulse, .{ .name = "zylix_haptics_pulse" });
+    @export(&zylix_haptics_pulse_with_intensity, .{ .name = "zylix_haptics_pulse_with_intensity" });
+    @export(&zylix_haptics_pulse_custom, .{ .name = "zylix_haptics_pulse_custom" });
+    @export(&zylix_haptics_double_pulse, .{ .name = "zylix_haptics_double_pulse" });
+    @export(&zylix_haptics_triple_pulse, .{ .name = "zylix_haptics_triple_pulse" });
+    @export(&zylix_haptics_tick, .{ .name = "zylix_haptics_tick" });
+    @export(&zylix_haptics_buzz, .{ .name = "zylix_haptics_buzz" });
+    @export(&zylix_haptics_light_impact, .{ .name = "zylix_haptics_light_impact" });
+    @export(&zylix_haptics_medium_impact, .{ .name = "zylix_haptics_medium_impact" });
+    @export(&zylix_haptics_heavy_impact, .{ .name = "zylix_haptics_heavy_impact" });
+    @export(&zylix_haptics_success, .{ .name = "zylix_haptics_success" });
+    @export(&zylix_haptics_warning, .{ .name = "zylix_haptics_warning" });
+    @export(&zylix_haptics_error, .{ .name = "zylix_haptics_error" });
+    @export(&zylix_haptics_selection, .{ .name = "zylix_haptics_selection" });
+    @export(&zylix_haptics_set_enabled, .{ .name = "zylix_haptics_set_enabled" });
+    @export(&zylix_haptics_is_available, .{ .name = "zylix_haptics_is_available" });
+    @export(&zylix_haptics_is_enabled, .{ .name = "zylix_haptics_is_enabled" });
+    @export(&zylix_haptics_set_intensity_multiplier, .{ .name = "zylix_haptics_set_intensity_multiplier" });
 }
 
 // === Tests ===

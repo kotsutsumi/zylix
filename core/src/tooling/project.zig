@@ -9,6 +9,7 @@
 //! This module provides the foundation for the `zylix new` CLI command.
 
 const std = @import("std");
+const project_io = @import("project_io.zig");
 
 /// Project error types
 pub const ProjectError = error{
@@ -285,8 +286,35 @@ pub const Project = struct {
             return future;
         };
 
-        // In real implementation, would create directory structure here
-        future.complete(project_id);
+        // Create actual project structure on disk
+        const full_config = ProjectConfig{
+            .name = config.name,
+            .description = config.description,
+            .version = config.version,
+            .project_type = config.project_type,
+            .targets = targets,
+            .template_id = if (config.template_id) |tid| tid else template_id,
+            .author = config.author,
+            .license = config.license,
+            .org_id = config.org_id,
+            .init_git = config.init_git,
+            .install_deps = config.install_deps,
+        };
+
+        const io_result = project_io.scaffoldProject(self.allocator, output_dir, full_config);
+        switch (io_result) {
+            .ok => future.complete(project_id),
+            .err => |err| {
+                // Clean up the project from registry on I/O failure
+                _ = self.projects.remove(config.name);
+                switch (err) {
+                    project_io.IoError.DirectoryExists => future.fail(ProjectError.DirectoryExists),
+                    project_io.IoError.PermissionDenied => future.fail(ProjectError.PermissionDenied),
+                    project_io.IoError.OutOfMemory => future.fail(ProjectError.OutOfMemory),
+                    else => future.fail(ProjectError.ConfigurationError),
+                }
+            },
+        }
         return future;
     }
 
