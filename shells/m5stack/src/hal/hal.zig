@@ -2,8 +2,16 @@
 //!
 //! Provides low-level access to ESP32-S3 peripherals.
 //! This module abstracts the ESP-IDF driver layer.
+//!
+//! Modules:
+//! - spi: SPI driver with DMA support
+//! - i2c: I2C driver with device abstraction
 
 const std = @import("std");
+
+// Re-export advanced HAL modules
+pub const spi_driver = @import("spi.zig");
+pub const i2c_driver = @import("i2c.zig");
 
 /// SPI peripheral interface
 pub const Spi = struct {
