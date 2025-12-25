@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-12-26
+
+### Added
+
+#### Integration Platform Bindings (Issues #39-#44)
+
+**iOS Platform (ZylixIntegration.swift)**
+- `ZylixMotionFrameProvider` - Camera-based motion tracking via AVFoundation
+- `ZylixAudioClipPlayer` - Low-latency audio playback via AVAudioPlayer
+- `ZylixIAPStore` - In-App Purchases via StoreKit 2
+- `ZylixAdsManager` - AdMob integration placeholder
+- `ZylixKeyValueStore` - Persistent storage via UserDefaults
+- `ZylixAppLifecycle` - App state management via UIApplication notifications
+
+**Android Platform (ZylixIntegration.kt)**
+- `ZylixMotionFrameProvider` - Camera-based motion tracking via CameraX
+- `ZylixAudioClipPlayer` - Low-latency audio playback via SoundPool
+- `ZylixIAPStore` - In-App Purchases via Google Play Billing
+- `ZylixAdsManager` - AdMob integration placeholder
+- `ZylixKeyValueStore` - Persistent storage via SharedPreferences
+- `ZylixAppLifecycle` - App state management via ProcessLifecycleOwner
+
+#### Tooling & Cross-Platform Fixes (Issues #45-#54)
+- CLI command implementations with actual functionality
+- Cross-platform compatibility improvements
+- AI module stubs for non-native platforms (Core ML, Metal, Whisper)
+
+### Fixed
+- Removed watchOS build artifacts from repository
+
 ## [0.25.0] - 2025-12-24
 
 ### Added

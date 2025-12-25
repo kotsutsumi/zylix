@@ -437,6 +437,13 @@ fn addLlamaCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
         return;
     }
 
+    // Check if llama.cpp libraries exist (skip if not built)
+    const llama_lib_path = b.path("deps/llama.cpp/build/src/libllama.a");
+    std.fs.cwd().access(llama_lib_path.getPath(b), .{}) catch {
+        // llama.cpp not built, skip linking
+        return;
+    };
+
     // Add include paths for llama.cpp headers
     compile.root_module.addIncludePath(b.path("deps/llama.cpp/include"));
     compile.root_module.addIncludePath(b.path("deps/llama.cpp/ggml/include"));
@@ -484,6 +491,13 @@ fn addWhisperCppSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
     if (!is_native) {
         return;
     }
+
+    // Check if whisper.cpp libraries exist (skip if not built)
+    const whisper_lib_path = b.path("deps/whisper.cpp/build/src/libwhisper.a");
+    std.fs.cwd().access(whisper_lib_path.getPath(b), .{}) catch {
+        // whisper.cpp not built, skip linking
+        return;
+    };
 
     // Add include paths for whisper.cpp headers
     compile.root_module.addIncludePath(b.path("deps/whisper.cpp/include"));
