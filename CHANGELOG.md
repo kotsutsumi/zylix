@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2025-12-26
+
+### Fixed
+
+#### Build System
+- Make AI dependencies (llama.cpp, whisper.cpp) optional for CI builds
+- Added existence check before linking AI libraries
+
+#### Tests
+- Exclude sample container directories from structure validation tests
+- `apps`, `fullstack`, `games`, `platform-specific`, `showcase`, `templates` properly excluded
+
 ## [0.19.1] - 2025-12-26
 
 ### Added
