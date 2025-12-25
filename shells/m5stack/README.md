@@ -62,6 +62,13 @@ source export.sh
 shells/m5stack/
 ├── build.zig              # Build configuration
 ├── README.md              # This file
+├── docs/
+│   ├── SETUP.md           # Setup guide
+│   └── API.md             # API reference
+├── samples/
+│   ├── hello-world/       # Basic display sample
+│   ├── counter/           # State management sample
+│   └── touch-demo/        # Touch and gesture sample
 └── src/
     ├── main.zig           # Entry point and M5Stack API
     ├── hal/
@@ -178,12 +185,13 @@ zig build docs
 - [x] Virtual DOM renderer with diff algorithm and reconciler
 - [x] Dirty region optimization for efficient redraws
 
-### Phase 5: Samples and Testing
+### Phase 5: Samples and Documentation ✅
 
-- [ ] Hello World sample
-- [ ] Counter sample
-- [ ] Touch demo
-- [ ] On-device testing
+- [x] Hello World sample (basic display and animation)
+- [x] Counter sample (state management and button interaction)
+- [x] Touch demo (drawing canvas, gesture recognition, multi-touch)
+- [x] Setup guide documentation
+- [x] API reference documentation
 
 ## References
 
