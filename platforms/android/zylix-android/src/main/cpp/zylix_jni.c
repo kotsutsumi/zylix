@@ -15,6 +15,7 @@ extern int32_t zylix_init(void);
 extern int32_t zylix_deinit(void);
 extern uint32_t zylix_get_abi_version(void);
 extern uint64_t zylix_get_state_version(void);
+extern int64_t zylix_get_counter(void);
 extern int32_t zylix_dispatch(uint32_t event_type, const void* payload, size_t payload_len);
 extern int32_t zylix_queue_event(uint32_t event_type, const void* payload, size_t payload_len, uint8_t priority);
 extern uint32_t zylix_process_events(uint32_t max_events);
@@ -53,6 +54,13 @@ Java_com_zylix_ZylixNative_zylix_1get_1state_1version(JNIEnv *env, jclass clazz)
     (void)env;
     (void)clazz;
     return (jlong)zylix_get_state_version();
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_zylix_ZylixNative_zylix_1get_1counter(JNIEnv *env, jclass clazz) {
+    (void)env;
+    (void)clazz;
+    return (jlong)zylix_get_counter();
 }
 
 // === Event Dispatch ===

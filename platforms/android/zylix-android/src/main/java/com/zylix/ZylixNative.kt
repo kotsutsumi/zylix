@@ -49,6 +49,13 @@ object ZylixNative {
     @JvmStatic
     external fun zylix_get_state_version(): Long
 
+    /**
+     * Get counter value.
+     * @return Current counter value
+     */
+    @JvmStatic
+    external fun zylix_get_counter(): Long
+
     // === Event Dispatch ===
 
     /**

@@ -87,6 +87,14 @@ pub fn zylix_get_state_version() callconv(.c) u64 {
     return state.getVersion();
 }
 
+/// Get counter value
+pub fn zylix_get_counter() callconv(.c) i64 {
+    if (!state.isInitialized()) {
+        return 0;
+    }
+    return state.getState().app.counter;
+}
+
 // === Event Dispatch ===
 
 /// Dispatch an event to Zylix Core
@@ -366,6 +374,7 @@ comptime {
     @export(&zylix_get_abi_version, .{ .name = "zylix_get_abi_version" });
     @export(&zylix_get_state, .{ .name = "zylix_get_state" });
     @export(&zylix_get_state_version, .{ .name = "zylix_get_state_version" });
+    @export(&zylix_get_counter, .{ .name = "zylix_get_counter" });
     @export(&zylix_dispatch, .{ .name = "zylix_dispatch" });
     @export(&zylix_get_last_error, .{ .name = "zylix_get_last_error" });
     @export(&zylix_copy_string, .{ .name = "zylix_copy_string" });
