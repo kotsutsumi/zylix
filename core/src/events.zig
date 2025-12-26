@@ -183,3 +183,238 @@ test "event dispatch - not initialized" {
     const result = dispatch(@intFromEnum(EventType.counter_increment), null, 0);
     try std.testing.expectEqual(DispatchResult.not_initialized, result);
 }
+
+test "event dispatch - counter decrement" {
+    state.init();
+    defer state.deinit();
+
+    // First increment to have a positive value
+    _ = dispatch(@intFromEnum(EventType.counter_increment), null, 0);
+    try std.testing.expectEqual(@as(i64, 1), state.getState().app.counter);
+
+    // Then decrement
+    const result = dispatch(@intFromEnum(EventType.counter_decrement), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(i64, 0), state.getState().app.counter);
+}
+
+test "event dispatch - counter reset" {
+    state.init();
+    defer state.deinit();
+
+    // Increment a few times
+    _ = dispatch(@intFromEnum(EventType.counter_increment), null, 0);
+    _ = dispatch(@intFromEnum(EventType.counter_increment), null, 0);
+    try std.testing.expectEqual(@as(i64, 2), state.getState().app.counter);
+
+    // Reset
+    const result = dispatch(@intFromEnum(EventType.counter_reset), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(i64, 0), state.getState().app.counter);
+}
+
+test "event dispatch - button press decrement" {
+    state.init();
+    defer state.deinit();
+
+    const btn = ButtonEvent{ .button_id = 1 }; // Decrement
+    const result = dispatch(@intFromEnum(EventType.button_press), @ptrCast(&btn), @sizeOf(ButtonEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(i64, -1), state.getState().app.counter);
+}
+
+test "event dispatch - button press reset" {
+    state.init();
+    defer state.deinit();
+
+    // First increment
+    _ = dispatch(@intFromEnum(EventType.counter_increment), null, 0);
+
+    // Reset via button
+    const btn = ButtonEvent{ .button_id = 2 }; // Reset
+    const result = dispatch(@intFromEnum(EventType.button_press), @ptrCast(&btn), @sizeOf(ButtonEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(i64, 0), state.getState().app.counter);
+}
+
+test "event dispatch - button press unknown button" {
+    state.init();
+    defer state.deinit();
+
+    const btn = ButtonEvent{ .button_id = 999 }; // Unknown button
+    const result = dispatch(@intFromEnum(EventType.button_press), @ptrCast(&btn), @sizeOf(ButtonEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    // Counter should remain unchanged
+    try std.testing.expectEqual(@as(i64, 0), state.getState().app.counter);
+}
+
+test "event dispatch - button press invalid payload" {
+    state.init();
+    defer state.deinit();
+
+    const small_data: u8 = 0;
+    const result = dispatch(@intFromEnum(EventType.button_press), @ptrCast(&small_data), 1);
+    try std.testing.expectEqual(DispatchResult.invalid_payload, result);
+}
+
+test "event dispatch - text input" {
+    state.init();
+    defer state.deinit();
+
+    const text = "Hello";
+    const txt = TextEvent{
+        .text_ptr = text.ptr,
+        .text_len = text.len,
+        .field_id = 0,
+    };
+    const result = dispatch(@intFromEnum(EventType.text_input), @ptrCast(&txt), @sizeOf(TextEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(usize, 5), state.getState().app.input_len);
+}
+
+test "event dispatch - text commit" {
+    state.init();
+    defer state.deinit();
+
+    const text = "World";
+    const txt = TextEvent{
+        .text_ptr = text.ptr,
+        .text_len = text.len,
+        .field_id = 0,
+    };
+    const result = dispatch(@intFromEnum(EventType.text_commit), @ptrCast(&txt), @sizeOf(TextEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(@as(usize, 5), state.getState().app.input_len);
+}
+
+test "event dispatch - text input invalid payload" {
+    state.init();
+    defer state.deinit();
+
+    const small_data: u8 = 0;
+    const result = dispatch(@intFromEnum(EventType.text_input), @ptrCast(&small_data), 1);
+    try std.testing.expectEqual(DispatchResult.invalid_payload, result);
+}
+
+test "event dispatch - navigate" {
+    state.init();
+    defer state.deinit();
+
+    const nav = NavigateEvent{
+        .screen_id = 1, // detail
+        .params_ptr = null,
+        .params_len = 0,
+    };
+    const result = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&nav), @sizeOf(NavigateEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(state.UIState.Screen.detail, state.getState().ui.screen);
+}
+
+test "event dispatch - navigate to settings" {
+    state.init();
+    defer state.deinit();
+
+    const nav = NavigateEvent{
+        .screen_id = 2, // settings
+        .params_ptr = null,
+        .params_len = 0,
+    };
+    const result = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&nav), @sizeOf(NavigateEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(state.UIState.Screen.settings, state.getState().ui.screen);
+}
+
+test "event dispatch - navigate invalid screen falls back to home" {
+    state.init();
+    defer state.deinit();
+
+    // First navigate to detail
+    const nav1 = NavigateEvent{
+        .screen_id = 1,
+        .params_ptr = null,
+        .params_len = 0,
+    };
+    _ = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&nav1), @sizeOf(NavigateEvent));
+    try std.testing.expectEqual(state.UIState.Screen.detail, state.getState().ui.screen);
+
+    // Navigate with invalid screen ID - should fall back to home
+    const nav2 = NavigateEvent{
+        .screen_id = 999,
+        .params_ptr = null,
+        .params_len = 0,
+    };
+    const result = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&nav2), @sizeOf(NavigateEvent));
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(state.UIState.Screen.home, state.getState().ui.screen);
+}
+
+test "event dispatch - navigate invalid payload" {
+    state.init();
+    defer state.deinit();
+
+    const small_data: u8 = 0;
+    const result = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&small_data), 1);
+    try std.testing.expectEqual(DispatchResult.invalid_payload, result);
+}
+
+test "event dispatch - navigate back" {
+    state.init();
+    defer state.deinit();
+
+    // First navigate to detail
+    const nav = NavigateEvent{
+        .screen_id = 1,
+        .params_ptr = null,
+        .params_len = 0,
+    };
+    _ = dispatch(@intFromEnum(EventType.navigate), @ptrCast(&nav), @sizeOf(NavigateEvent));
+    try std.testing.expectEqual(state.UIState.Screen.detail, state.getState().ui.screen);
+
+    // Navigate back
+    const result = dispatch(@intFromEnum(EventType.navigate_back), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expectEqual(state.UIState.Screen.home, state.getState().ui.screen);
+}
+
+test "event dispatch - unknown event" {
+    state.init();
+    defer state.deinit();
+
+    const result = dispatch(0xFFFF, null, 0);
+    try std.testing.expectEqual(DispatchResult.unknown_event, result);
+}
+
+test "event dispatch - app lifecycle events" {
+    state.init();
+    defer state.deinit();
+
+    // These should all succeed without changing state
+    var result = dispatch(@intFromEnum(EventType.app_init), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+
+    result = dispatch(@intFromEnum(EventType.app_foreground), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+
+    result = dispatch(@intFromEnum(EventType.app_background), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+
+    result = dispatch(@intFromEnum(EventType.app_low_memory), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+}
+
+test "event dispatch - app terminate deinitializes state" {
+    state.init();
+    try std.testing.expect(state.isInitialized());
+
+    const result = dispatch(@intFromEnum(EventType.app_terminate), null, 0);
+    try std.testing.expectEqual(DispatchResult.ok, result);
+    try std.testing.expect(!state.isInitialized());
+}
+
+test "EventType.fromInt" {
+    try std.testing.expectEqual(EventType.counter_increment, EventType.fromInt(0x1000));
+    try std.testing.expectEqual(EventType.counter_decrement, EventType.fromInt(0x1001));
+    try std.testing.expectEqual(EventType.counter_reset, EventType.fromInt(0x1002));
+    try std.testing.expectEqual(EventType.button_press, EventType.fromInt(0x0100));
+    try std.testing.expectEqual(EventType.navigate, EventType.fromInt(0x0200));
+}

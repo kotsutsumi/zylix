@@ -201,8 +201,9 @@ pub fn handleIncrement() void {
             app.counter += 1;
         }
     }.f;
-    global_store.updateAndCommit(&increment);
+    global_store.update(&increment);
     _ = calculateDiff();
+    global_store.commit();
 }
 
 /// Handle decrement event
@@ -212,8 +213,9 @@ pub fn handleDecrement() void {
             app.counter -= 1;
         }
     }.f;
-    global_store.updateAndCommit(&decrement);
+    global_store.update(&decrement);
     _ = calculateDiff();
+    global_store.commit();
 }
 
 /// Handle reset event
@@ -223,8 +225,9 @@ pub fn handleReset() void {
             app.counter = 0;
         }
     }.f;
-    global_store.updateAndCommit(&reset_counter);
+    global_store.update(&reset_counter);
     _ = calculateDiff();
+    global_store.commit();
 }
 
 /// Handle text input event
@@ -236,8 +239,8 @@ pub fn handleTextInput(text: []const u8) void {
     app.input_text[copy_len] = 0;
     app.input_len = copy_len;
     global_store.dirty = true;
-    global_store.commit();
     _ = calculateDiff();
+    global_store.commit();
 }
 
 /// Handle navigation event
@@ -288,4 +291,119 @@ test "counter reset" {
     handleIncrement();
     handleReset();
     try std.testing.expectEqual(@as(i64, 0), getState().app.counter);
+}
+
+test "text input handling" {
+    init();
+    defer deinit();
+
+    handleTextInput("Hello");
+    const state = getState();
+    try std.testing.expectEqual(@as(usize, 5), state.app.input_len);
+    try std.testing.expectEqualStrings("Hello", state.app.input_text[0..5]);
+}
+
+test "text input truncation" {
+    init();
+    defer deinit();
+
+    // Test that long text is truncated
+    var long_text: [300]u8 = undefined;
+    @memset(&long_text, 'A');
+
+    handleTextInput(&long_text);
+    const state = getState();
+    // Should be truncated to 255 (buffer size - 1)
+    try std.testing.expectEqual(@as(usize, 255), state.app.input_len);
+}
+
+test "navigation handling" {
+    init();
+    defer deinit();
+
+    try std.testing.expectEqual(UIState.Screen.home, getState().ui.screen);
+
+    handleNavigate(.detail);
+    try std.testing.expectEqual(UIState.Screen.detail, getState().ui.screen);
+
+    handleNavigate(.settings);
+    try std.testing.expectEqual(UIState.Screen.settings, getState().ui.screen);
+}
+
+test "diff calculation" {
+    init();
+    defer deinit();
+
+    handleIncrement();
+    const diff = getDiff(); // Get the already-calculated diff from handleIncrement
+
+    try std.testing.expect(diff.hasChanges());
+    try std.testing.expect(diff.hasFieldChangedByName("counter"));
+}
+
+test "scratch arena reset" {
+    init();
+    defer deinit();
+
+    const arena = getScratchArena();
+    _ = arena.alloc(u8, 100);
+
+    resetScratchArena();
+    // After reset, the arena should be empty again
+    // We can verify by allocating again
+    _ = arena.alloc(u8, 4000);
+}
+
+test "error handling" {
+    init();
+    defer deinit();
+
+    try std.testing.expect(getState().last_error == null);
+
+    setError("Test error message");
+    try std.testing.expect(getState().last_error != null);
+    try std.testing.expectEqualStrings("Test error message", getState().last_error.?);
+
+    setError(null);
+    try std.testing.expect(getState().last_error == null);
+}
+
+test "ABI state conversion" {
+    init();
+    defer deinit();
+
+    handleIncrement();
+    handleNavigate(.detail);
+
+    const state = getState();
+    const abi = state.toABI();
+
+    try std.testing.expectEqual(@as(u32, 1), abi.screen);
+    try std.testing.expect(!abi.loading);
+    try std.testing.expect(abi.view_data != null);
+    try std.testing.expectEqual(@sizeOf(AppState), abi.view_data_size);
+}
+
+test "store access" {
+    init();
+    defer deinit();
+
+    const store = getStore();
+    // Verify store is accessible (not null)
+    try std.testing.expect(@intFromPtr(store) != 0);
+
+    const app_state = getAppState();
+    try std.testing.expectEqual(@as(i64, 0), app_state.counter);
+}
+
+test "version bumping" {
+    var state = State{};
+
+    try std.testing.expectEqual(@as(u64, 0), state.version);
+
+    state.bumpVersion();
+    try std.testing.expectEqual(@as(u64, 1), state.version);
+
+    state.bumpVersion();
+    try std.testing.expectEqual(@as(u64, 2), state.version);
 }

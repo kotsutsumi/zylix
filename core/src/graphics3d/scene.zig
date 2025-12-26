@@ -240,7 +240,9 @@ pub const SceneNode = struct {
     /// Find children by layer
     pub fn findByLayer(self: *const SceneNode, layer_mask: u32, result: *std.ArrayList(*SceneNode)) void {
         if (self.layer & layer_mask != 0) {
-            result.append(self.allocator, @constCast(self)) catch {};
+            result.append(self.allocator, @constCast(self)) catch {
+                std.log.warn("SceneNode.findByLayer: Failed to append result for node '{s}'", .{self.name});
+            };
         }
         for (self.children.items) |child| {
             child.findByLayer(layer_mask, result);
@@ -382,7 +384,9 @@ pub const Scene = struct {
 
     fn collectMeshNodes(self: *Scene, node: *SceneNode, result: *std.ArrayList(*SceneNode)) void {
         if (node.node_type == .mesh) {
-            result.append(self.allocator, node) catch {};
+            result.append(self.allocator, node) catch {
+                std.log.warn("Scene.collectMeshNodes: Failed to append result for node '{s}'", .{node.name});
+            };
         }
         for (node.children.items) |child| {
             self.collectMeshNodes(child, result);

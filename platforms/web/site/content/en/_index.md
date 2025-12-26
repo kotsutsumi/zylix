@@ -50,7 +50,17 @@ zig build all
 
 ## Documentation
 
+### Concepts
 - [Concept]({{< relref "concept" >}}) - Core philosophy
 - [Why Not JavaScript?]({{< relref "why-not-js" >}}) - Technical comparison
 - [Architecture]({{< relref "architecture" >}}) - System design
 - [ZigDom]({{< relref "zigdom" >}}) - Web platform implementation
+
+### API Reference
+- [API Reference]({{< relref "docs/api" >}}) - Complete API documentation
+  - [C ABI]({{< relref "docs/api/abi" >}}) - Platform integration interface
+  - [State Management]({{< relref "docs/api/state" >}}) - Application state
+  - [Events]({{< relref "docs/api/events" >}}) - Event dispatching
+  - [Virtual DOM]({{< relref "docs/api/vdom" >}}) - UI reconciliation
+  - [Animation]({{< relref "docs/api/animation" >}}) - Animation system
+  - [AI Module]({{< relref "docs/api/ai" >}}) - AI/ML backends

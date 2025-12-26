@@ -451,7 +451,9 @@ pub const LightManager = struct {
             if (!light.base.enabled) continue;
             const distance = point.sub(light.transform.position).length();
             if (distance < light.range) {
-                result.append(self.allocator, light) catch {};
+                result.append(self.allocator, light) catch {
+                    std.log.warn("LightManager.getAffectingPointLights: Failed to append light", .{});
+                };
             }
         }
     }
@@ -463,7 +465,9 @@ pub const LightManager = struct {
             if (!light.base.enabled) continue;
             const distance = point.sub(light.transform.position).length();
             if (distance < light.range) {
-                result.append(self.allocator, light) catch {};
+                result.append(self.allocator, light) catch {
+                    std.log.warn("LightManager.getAffectingSpotLights: Failed to append light", .{});
+                };
             }
         }
     }

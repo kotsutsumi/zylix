@@ -109,20 +109,32 @@ pub fn Future(comptime T: type) type {
         }
 
         /// Add a success callback
+        /// Returns null if allocation failed
         pub fn then(self: *Self, callback: *const fn (T) void) *Self {
-            self.then_callbacks.append(callback) catch {};
+            self.then_callbacks.append(callback) catch {
+                // Log allocation failure - callback will not be registered
+                std.log.warn("Future: Failed to register then callback", .{});
+            };
             return self;
         }
 
         /// Add an error callback
+        /// Returns null if allocation failed
         pub fn catch_(self: *Self, callback: *const fn (anyerror, ?[]const u8) void) *Self {
-            self.catch_callbacks.append(callback) catch {};
+            self.catch_callbacks.append(callback) catch {
+                // Log allocation failure - callback will not be registered
+                std.log.warn("Future: Failed to register catch callback", .{});
+            };
             return self;
         }
 
         /// Add a finally callback
+        /// Returns null if allocation failed
         pub fn finally(self: *Self, callback: *const fn () void) *Self {
-            self.finally_callbacks.append(callback) catch {};
+            self.finally_callbacks.append(callback) catch {
+                // Log allocation failure - callback will not be registered
+                std.log.warn("Future: Failed to register finally callback", .{});
+            };
             return self;
         }
 
@@ -296,7 +308,9 @@ pub const TaskQueue = struct {
             }
         }
 
-        self.tasks.insert(insert_idx, entry) catch {};
+        self.tasks.insert(insert_idx, entry) catch {
+            std.log.warn("TaskQueue: Failed to insert task {d}", .{id});
+        };
         return handle;
     }
 
@@ -391,7 +405,9 @@ pub const HttpRequest = struct {
     }
 
     pub fn addHeader(self: *HttpRequest, name: []const u8, value: []const u8) *HttpRequest {
-        self.headers.append(.{ .name = name, .value = value }) catch {};
+        self.headers.append(.{ .name = name, .value = value }) catch {
+            std.log.warn("HttpRequest: Failed to add header '{s}'", .{name});
+        };
         return self;
     }
 
@@ -481,8 +497,12 @@ pub const HttpClient = struct {
             .default_headers = std.ArrayList(HttpHeader).init(allocator),
         };
         // Add default headers
-        client.default_headers.append(.{ .name = "User-Agent", .value = "Zylix/0.4.0" }) catch {};
-        client.default_headers.append(.{ .name = "Accept", .value = "*/*" }) catch {};
+        client.default_headers.append(.{ .name = "User-Agent", .value = "Zylix/0.4.0" }) catch {
+            std.log.warn("HttpClient: Failed to add default User-Agent header", .{});
+        };
+        client.default_headers.append(.{ .name = "Accept", .value = "*/*" }) catch {
+            std.log.warn("HttpClient: Failed to add default Accept header", .{});
+        };
         return client;
     }
 

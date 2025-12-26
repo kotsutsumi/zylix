@@ -262,7 +262,9 @@ pub const SelectBuilder = struct {
             .operator = op,
             .value = value,
             .logical_op = .@"and",
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.addParam(value);
         return self;
     }
@@ -274,7 +276,9 @@ pub const SelectBuilder = struct {
             .operator = op,
             .value = value,
             .logical_op = .@"or",
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.addParam(value);
         return self;
     }
@@ -284,7 +288,9 @@ pub const SelectBuilder = struct {
         self.conditions.append(self.allocator, .{
             .column = column,
             .operator = .is_null,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         return self;
     }
 
@@ -293,7 +299,9 @@ pub const SelectBuilder = struct {
         self.conditions.append(self.allocator, .{
             .column = column,
             .operator = .is_not_null,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         return self;
     }
 
@@ -303,7 +311,9 @@ pub const SelectBuilder = struct {
             .column = column,
             .operator = .in,
             .values = values,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         for (values) |v| {
             self.addParam(v);
         }
@@ -317,7 +327,9 @@ pub const SelectBuilder = struct {
             .operator = .between,
             .value = low,
             .value2 = high,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.addParam(low);
         self.addParam(high);
         return self;
@@ -330,14 +342,18 @@ pub const SelectBuilder = struct {
             .operator = .eq,
             .is_raw = true,
             .raw_sql = sql,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         return self;
     }
 
     /// Add GROUP BY
     pub fn groupBy(self: *SelectBuilder, cols: []const []const u8) *SelectBuilder {
         for (cols) |col| {
-            self.group_by.append(self.allocator, col) catch {};
+            self.group_by.append(self.allocator, col) catch {
+                self.has_error = true;
+            };
         }
         return self;
     }
@@ -348,7 +364,9 @@ pub const SelectBuilder = struct {
             .column = column,
             .operator = op,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.addParam(value);
         return self;
     }
@@ -358,7 +376,9 @@ pub const SelectBuilder = struct {
         self.order_by.append(self.allocator, .{
             .column = column,
             .direction = direction,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         return self;
     }
 
@@ -378,7 +398,9 @@ pub const SelectBuilder = struct {
         self.params.append(self.allocator, .{
             .index = self.param_index,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.param_index += 1;
     }
 
@@ -558,6 +580,9 @@ pub const InsertBuilder = struct {
     params: std.ArrayListUnmanaged(Parameter) = .{},
     param_index: usize = 1,
 
+    // Error tracking for allocation failures
+    has_error: bool = false,
+
     pub const OnConflict = enum {
         none,
         ignore,
@@ -581,12 +606,18 @@ pub const InsertBuilder = struct {
     }
 
     pub fn column(self: *InsertBuilder, col: []const u8, value: Value) *InsertBuilder {
-        self.columns.append(self.allocator, col) catch {};
-        self.values.append(self.allocator, value) catch {};
+        self.columns.append(self.allocator, col) catch {
+            self.has_error = true;
+        };
+        self.values.append(self.allocator, value) catch {
+            self.has_error = true;
+        };
         self.params.append(self.allocator, .{
             .index = self.param_index,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.param_index += 1;
         return self;
     }
@@ -602,6 +633,9 @@ pub const InsertBuilder = struct {
     }
 
     pub fn build(self: *const InsertBuilder, buf: []u8) ![]const u8 {
+        // Check for allocation failures during builder construction
+        if (self.has_error) return error.OutOfMemory;
+
         var fbs = std.io.fixedBufferStream(buf);
         const writer = fbs.writer();
 
@@ -661,6 +695,9 @@ pub const UpdateBuilder = struct {
     params: std.ArrayListUnmanaged(Parameter) = .{},
     param_index: usize = 1,
 
+    // Error tracking for allocation failures
+    has_error: bool = false,
+
     pub fn init(allocator: std.mem.Allocator) UpdateBuilder {
         return .{ .allocator = allocator };
     }
@@ -677,11 +714,15 @@ pub const UpdateBuilder = struct {
     }
 
     pub fn set(self: *UpdateBuilder, column: []const u8, value: Value) *UpdateBuilder {
-        self.sets.append(self.allocator, .{ .column = column, .value = value }) catch {};
+        self.sets.append(self.allocator, .{ .column = column, .value = value }) catch {
+            self.has_error = true;
+        };
         self.params.append(self.allocator, .{
             .index = self.param_index,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.param_index += 1;
         return self;
     }
@@ -691,11 +732,15 @@ pub const UpdateBuilder = struct {
             .column = column,
             .operator = op,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.params.append(self.allocator, .{
             .index = self.param_index,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.param_index += 1;
         return self;
     }
@@ -706,6 +751,9 @@ pub const UpdateBuilder = struct {
     }
 
     pub fn build(self: *const UpdateBuilder, buf: []u8) ![]const u8 {
+        // Check for allocation failures during builder construction
+        if (self.has_error) return error.OutOfMemory;
+
         var fbs = std.io.fixedBufferStream(buf);
         const writer = fbs.writer();
 
@@ -766,6 +814,9 @@ pub const DeleteBuilder = struct {
     params: std.ArrayListUnmanaged(Parameter) = .{},
     param_index: usize = 1,
 
+    // Error tracking for allocation failures
+    has_error: bool = false,
+
     pub fn init(allocator: std.mem.Allocator) DeleteBuilder {
         return .{ .allocator = allocator };
     }
@@ -785,11 +836,15 @@ pub const DeleteBuilder = struct {
             .column = column,
             .operator = op,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.params.append(self.allocator, .{
             .index = self.param_index,
             .value = value,
-        }) catch {};
+        }) catch {
+            self.has_error = true;
+        };
         self.param_index += 1;
         return self;
     }
@@ -800,6 +855,9 @@ pub const DeleteBuilder = struct {
     }
 
     pub fn build(self: *const DeleteBuilder, buf: []u8) ![]const u8 {
+        // Check for allocation failures during builder construction
+        if (self.has_error) return error.OutOfMemory;
+
         var fbs = std.io.fixedBufferStream(buf);
         const writer = fbs.writer();
 
