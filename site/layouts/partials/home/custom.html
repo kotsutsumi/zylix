@@ -248,23 +248,23 @@
   }
 }
 
-.zylix-grid-7 {
+.zylix-grid-8 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-top: 3rem;
-  max-width: 72rem;
+  max-width: 80rem;
   margin-left: auto;
   margin-right: auto;
 }
 @media (min-width: 640px) {
-  .zylix-grid-7 {
+  .zylix-grid-8 {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 @media (min-width: 1024px) {
-  .zylix-grid-7 {
-    grid-template-columns: repeat(7, 1fr);
+  .zylix-grid-8 {
+    grid-template-columns: repeat(8, 1fr);
     gap: 1.5rem;
   }
 }
@@ -893,7 +893,7 @@
               <span class="zylix-compare-label">{{ i18n "table_language" | default "Language" }}</span>
             </div>
             <div class="zylix-compare-stat">
-              <span class="zylix-compare-value highlight">7</span>
+              <span class="zylix-compare-value highlight">8</span>
               <span class="zylix-compare-label">{{ i18n "table_platforms" | default "Platforms" }}</span>
             </div>
           </div>
@@ -998,7 +998,7 @@
   <div class="zylix-section-inner">
     <h2 class="zylix-section-title">{{ i18n "platform_title" | default "Platform Support" }}</h2>
 
-    <div class="zylix-grid-7">
+    <div class="zylix-grid-8">
       <div class="zylix-platform zylix-card-blue">
         <span class="zylix-platform-icon">🌐</span>
         <div class="zylix-platform-name">Web/WASM</div>
@@ -1032,6 +1032,11 @@
       <div class="zylix-platform zylix-card-amber">
         <span class="zylix-platform-icon">🪟</span>
         <div class="zylix-platform-name">Windows</div>
+        <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
+      </div>
+      <div class="zylix-platform zylix-card-amber">
+        <span class="zylix-platform-icon">🔲</span>
+        <div class="zylix-platform-name">M5Stack</div>
         <div class="zylix-platform-status zylix-status-dev">{{ i18n "status_dev" | default "In Development" }}</div>
       </div>
     </div>
