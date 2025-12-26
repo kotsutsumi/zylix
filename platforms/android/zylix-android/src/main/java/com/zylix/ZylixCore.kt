@@ -220,4 +220,84 @@ class ZylixCore private constructor() {
     private fun updateStateVersion() {
         _stateVersion.value = stateVersion
     }
+
+    // ========================================================================
+    // Event Type Constants
+    // ========================================================================
+
+    /**
+     * Event type constants for dispatching.
+     */
+    object EventType {
+        // Lifecycle events
+        const val APP_INIT = 0x0001
+        const val APP_TERMINATE = 0x0002
+        const val APP_FOREGROUND = 0x0003
+        const val APP_BACKGROUND = 0x0004
+        const val APP_LOW_MEMORY = 0x0005
+
+        // User interaction
+        const val BUTTON_PRESS = 0x0100
+        const val TEXT_INPUT = 0x0101
+        const val TEXT_COMMIT = 0x0102
+        const val SELECTION = 0x0103
+        const val SCROLL = 0x0104
+        const val GESTURE = 0x0105
+
+        // Navigation
+        const val NAVIGATE = 0x0200
+        const val NAVIGATE_BACK = 0x0201
+        const val TAB_SWITCH = 0x0202
+
+        // Counter PoC events
+        const val COUNTER_INCREMENT = 0x1000
+        const val COUNTER_DECREMENT = 0x1001
+        const val COUNTER_RESET = 0x1002
+
+        // Todo events
+        const val TODO_ADD = 0x2000
+        const val TODO_REMOVE = 0x2001
+        const val TODO_TOGGLE = 0x2002
+        const val TODO_TOGGLE_ALL = 0x2003
+        const val TODO_CLEAR_COMPLETED = 0x2004
+        const val TODO_SET_FILTER = 0x2005
+        const val TODO_UPDATE_TEXT = 0x2006
+    }
+
+    // ========================================================================
+    // Counter Convenience Methods
+    // ========================================================================
+
+    /**
+     * Increment the counter.
+     *
+     * @throws ZylixException if dispatch fails
+     */
+    fun increment() {
+        dispatch(EventType.COUNTER_INCREMENT)
+    }
+
+    /**
+     * Decrement the counter.
+     *
+     * @throws ZylixException if dispatch fails
+     */
+    fun decrement() {
+        dispatch(EventType.COUNTER_DECREMENT)
+    }
+
+    /**
+     * Reset the counter to zero.
+     *
+     * @throws ZylixException if dispatch fails
+     */
+    fun reset() {
+        dispatch(EventType.COUNTER_RESET)
+    }
+
+    /**
+     * Get the current counter value from app state.
+     */
+    val counterValue: Long
+        get() = ZylixNative.zylix_get_counter()
 }

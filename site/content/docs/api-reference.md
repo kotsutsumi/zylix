@@ -205,6 +205,82 @@ pub const PerfConfig = struct {
 };
 ```
 
+## Language Bindings
+
+### TypeScript (@zylix/test)
+
+```typescript
+import {
+  ZylixResult,
+  ZylixPriority,
+  ZylixEventType,
+  TodoFilterMode,
+  type TodoItem,
+} from '@zylix/test';
+
+// Event types match core/src/events.zig
+ZylixEventType.COUNTER_INCREMENT  // 0x1000
+ZylixEventType.TODO_ADD           // 0x2000
+
+// Result codes
+if (result === ZylixResult.OK) {
+  // Success
+}
+
+// Priority levels
+queueEvent(eventType, ZylixPriority.HIGH);
+
+// Todo filter modes
+setFilter(TodoFilterMode.ACTIVE);
+```
+
+### Python (zylix_test)
+
+```python
+from zylix_test import (
+    ZylixResult,
+    ZylixPriority,
+    ZylixEventType,
+    TodoFilterMode,
+    TodoItem,
+)
+
+# Event types match core/src/events.zig
+ZylixEventType.COUNTER_INCREMENT  # 0x1000
+ZylixEventType.TODO_ADD           # 0x2000
+
+# Result codes
+if result == ZylixResult.OK:
+    # Success
+
+# Priority levels
+queue_event(event_type, ZylixPriority.HIGH)
+
+# Todo filter modes
+set_filter(TodoFilterMode.ACTIVE)
+```
+
+### Event Type Constants
+
+| Category | Event | Value |
+|----------|-------|-------|
+| Lifecycle | APP_INIT | 0x0001 |
+| Lifecycle | APP_TERMINATE | 0x0002 |
+| Lifecycle | APP_FOREGROUND | 0x0003 |
+| Lifecycle | APP_BACKGROUND | 0x0004 |
+| User | BUTTON_PRESS | 0x0100 |
+| User | TEXT_INPUT | 0x0101 |
+| Navigation | NAVIGATE | 0x0200 |
+| Navigation | NAVIGATE_BACK | 0x0201 |
+| Counter | COUNTER_INCREMENT | 0x1000 |
+| Counter | COUNTER_DECREMENT | 0x1001 |
+| Counter | COUNTER_RESET | 0x1002 |
+| Todo | TODO_ADD | 0x2000 |
+| Todo | TODO_REMOVE | 0x2001 |
+| Todo | TODO_TOGGLE | 0x2002 |
+| Todo | TODO_CLEAR_COMPLETED | 0x2004 |
+| Todo | TODO_SET_FILTER | 0x2005 |
+
 ## Build Commands
 
 ```bash

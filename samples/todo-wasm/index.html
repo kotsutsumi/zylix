@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zylix TodoMVC - WebAssembly powered todo application">
+    <meta name="theme-color" content="#f5f5f5">
     <title>Zylix TodoMVC - WebAssembly</title>
     <style>
         :root {
@@ -15,6 +17,20 @@
             --completed: #d9d9d9;
             --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2),
                       0 25px 50px 0 rgba(0, 0, 0, 0.1);
+            color-scheme: light;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #eaeaea;
+            --text-light: #8b8b8b;
+            --border: #2d3a54;
+            --primary: #e94560;
+            --completed: #6b7280;
+            --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.4),
+                      0 25px 50px 0 rgba(0, 0, 0, 0.3);
+            color-scheme: dark;
         }
 
         * {
@@ -265,56 +281,235 @@
         .info a {
             color: inherit;
         }
+
+        .info a:hover {
+            text-decoration: underline;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, background 0.3s;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Focus styles for accessibility */
+        input:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        #new-todo:focus-visible {
+            outline: none;
+            box-shadow: inset 0 -2px 1px rgba(233, 69, 96, 0.3);
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            z-index: 1000;
+            text-decoration: none;
+        }
+
+        .skip-link:focus {
+            top: 1rem;
+        }
+
+        /* Screen reader only text */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+            }
+            .theme-toggle:hover {
+                transform: none;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --border: #000;
+            }
+            .todo-item .toggle {
+                border-width: 2px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Skip link for keyboard navigation -->
+    <a href="#new-todo" class="skip-link">Skip to add todo</a>
+
+    <!-- Theme toggle -->
+    <button
+        class="theme-toggle"
+        id="theme-toggle"
+        aria-label="Toggle dark/light theme"
+        title="Toggle theme (T)"
+    >
+        <span aria-hidden="true">☀️</span>
+    </button>
+
+    <main class="container" role="main">
         <h1>todos</h1>
 
-        <section class="todoapp">
+        <section class="todoapp" aria-label="Todo application">
             <header class="header">
                 <div class="toggle-all-container">
-                    <input id="toggle-all" type="checkbox" disabled>
-                    <label class="toggle-all-label" for="toggle-all">❯</label>
+                    <input
+                        id="toggle-all"
+                        type="checkbox"
+                        disabled
+                        aria-label="Mark all todos as complete"
+                    >
+                    <label class="toggle-all-label" for="toggle-all" aria-hidden="true">❯</label>
                 </div>
-                <input id="new-todo" type="text" placeholder="What needs to be done?" autofocus disabled>
+                <input
+                    id="new-todo"
+                    type="text"
+                    placeholder="What needs to be done?"
+                    autofocus
+                    disabled
+                    aria-label="New todo input"
+                >
             </header>
 
-            <section class="main hidden" id="main">
-                <ul class="todo-list" id="todo-list"></ul>
+            <section class="main hidden" id="main" aria-label="Todo list">
+                <ul class="todo-list" id="todo-list" role="list" aria-live="polite"></ul>
             </section>
 
-            <footer class="footer hidden" id="footer">
-                <span class="todo-count">
+            <footer class="footer hidden" id="footer" aria-label="Todo statistics and filters">
+                <span class="todo-count" aria-live="polite">
                     <strong id="active-count">0</strong> item<span id="item-plural">s</span> left
                 </span>
-                <ul class="filters">
-                    <li><a id="filter-all" class="selected" href="#/">All</a></li>
+                <ul class="filters" role="navigation" aria-label="Filter todos">
+                    <li><a id="filter-all" class="selected" href="#/" aria-current="page">All</a></li>
                     <li><a id="filter-active" href="#/active">Active</a></li>
                     <li><a id="filter-completed" href="#/completed">Completed</a></li>
                 </ul>
-                <button id="clear-completed" class="hidden">Clear completed</button>
+                <button id="clear-completed" class="hidden" aria-label="Clear completed todos">Clear completed</button>
             </footer>
         </section>
 
-        <div class="status loading" id="status">Loading WASM...</div>
+        <div class="status loading" id="status" role="status" aria-live="polite">Loading WASM...</div>
 
         <footer class="info">
             <p>Double-click to edit a todo</p>
-            <p>Created with <a href="https://github.com/kotsutsumi/zylix">Zylix</a></p>
-            <p>Part of <a href="https://todomvc.com">TodoMVC</a></p>
+            <p>Created with <a href="https://github.com/kotsutsumi/zylix" rel="noopener noreferrer">Zylix</a></p>
+            <p>Part of <a href="https://todomvc.com" rel="noopener noreferrer">TodoMVC</a></p>
         </footer>
-    </div>
+    </main>
 
     <script src="zylix-todo.js"></script>
     <script>
+        // Theme management
+        const ThemeManager = {
+            storageKey: 'zylix-theme',
+
+            init() {
+                const saved = localStorage.getItem(this.storageKey);
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = saved || (prefersDark ? 'dark' : 'light');
+                this.apply(theme);
+
+                // Listen for system theme changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem(this.storageKey)) {
+                        this.apply(e.matches ? 'dark' : 'light');
+                    }
+                });
+            },
+
+            apply(theme) {
+                const html = document.documentElement;
+                const toggle = document.getElementById('theme-toggle');
+
+                if (theme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                    toggle.querySelector('span').textContent = '🌙';
+                    toggle.setAttribute('aria-label', 'Switch to light theme');
+                } else {
+                    html.removeAttribute('data-theme');
+                    toggle.querySelector('span').textContent = '☀️';
+                    toggle.setAttribute('aria-label', 'Switch to dark theme');
+                }
+            },
+
+            toggle() {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem(this.storageKey, next);
+                this.apply(next);
+            }
+        };
+
         // Application state
         let todoItems = [];
 
         async function main() {
+            // Initialize theme
+            ThemeManager.init();
+
             const status = document.getElementById('status');
             const newTodo = document.getElementById('new-todo');
             const toggleAll = document.getElementById('toggle-all');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // Theme toggle handler
+            themeToggle.addEventListener('click', () => ThemeManager.toggle());
+
+            // Keyboard shortcut for theme
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === 't' || e.key === 'T') {
+                    ThemeManager.toggle();
+                    themeToggle.focus();
+                }
+            });
 
             try {
                 // Initialize WASM
@@ -471,11 +666,12 @@
                 const li = document.createElement('li');
                 li.className = 'todo-item' + (isCompleted ? ' completed' : '');
                 li.dataset.id = id;
+                li.setAttribute('role', 'listitem');
 
                 li.innerHTML = `
-                    <input class="toggle" type="checkbox" ${isCompleted ? 'checked' : ''}>
+                    <input class="toggle" type="checkbox" ${isCompleted ? 'checked' : ''} aria-label="Toggle ${escapeHtml(text)}">
                     <label>${escapeHtml(text)}</label>
-                    <button class="destroy">×</button>
+                    <button class="destroy" aria-label="Delete ${escapeHtml(text)}">×</button>
                 `;
 
                 // Toggle handler

@@ -3,9 +3,98 @@ Zylix Test Framework - Type Definitions
 """
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Literal, Protocol, TypedDict
 
+
+# ============================================================================
+# Zylix Core Types (matching core/src/events.zig and ABI)
+# ============================================================================
+
+
+class ZylixResult(IntEnum):
+    """Result codes returned by Zylix functions.
+
+    Matches ABI specification and platform shells.
+    """
+
+    OK = 0
+    INVALID_ARGUMENT = 1
+    OUT_OF_MEMORY = 2
+    INVALID_STATE = 3
+    NOT_INITIALIZED = 4
+
+
+class ZylixPriority(IntEnum):
+    """Event priority levels for queue ordering."""
+
+    LOW = 0
+    NORMAL = 1
+    HIGH = 2
+    IMMEDIATE = 3
+
+
+class ZylixEventType(IntEnum):
+    """Event type constants matching core/src/events.zig.
+
+    These values are used when dispatching events to Zylix Core.
+    """
+
+    # Lifecycle events (0x0000 - 0x00FF)
+    APP_INIT = 0x0001
+    APP_TERMINATE = 0x0002
+    APP_FOREGROUND = 0x0003
+    APP_BACKGROUND = 0x0004
+    APP_LOW_MEMORY = 0x0005
+
+    # User interaction (0x0100 - 0x01FF)
+    BUTTON_PRESS = 0x0100
+    TEXT_INPUT = 0x0101
+    TEXT_COMMIT = 0x0102
+    SELECTION = 0x0103
+    SCROLL = 0x0104
+    GESTURE = 0x0105
+
+    # Navigation (0x0200 - 0x02FF)
+    NAVIGATE = 0x0200
+    NAVIGATE_BACK = 0x0201
+    TAB_SWITCH = 0x0202
+
+    # Counter PoC events (0x1000 - 0x1FFF)
+    COUNTER_INCREMENT = 0x1000
+    COUNTER_DECREMENT = 0x1001
+    COUNTER_RESET = 0x1002
+
+    # Todo events (0x2000 - 0x2FFF)
+    TODO_ADD = 0x2000
+    TODO_REMOVE = 0x2001
+    TODO_TOGGLE = 0x2002
+    TODO_TOGGLE_ALL = 0x2003
+    TODO_CLEAR_COMPLETED = 0x2004
+    TODO_SET_FILTER = 0x2005
+    TODO_UPDATE_TEXT = 0x2006
+
+
+class TodoFilterMode(IntEnum):
+    """Todo filter modes."""
+
+    ALL = 0
+    ACTIVE = 1
+    COMPLETED = 2
+
+
+@dataclass
+class TodoItem:
+    """Todo item representation."""
+
+    id: int
+    text: str
+    completed: bool = False
+
+
+# ============================================================================
+# Test Framework Types
+# ============================================================================
 
 # Platform Types
 Platform = Literal["web", "ios", "watchos", "android", "macos"]

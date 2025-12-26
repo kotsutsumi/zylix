@@ -18,7 +18,20 @@
  * ```
  */
 
-// Types
+// Zylix Core Types
+export {
+    ZylixResult,
+    ZylixPriority,
+    ZylixEventType,
+    TodoFilterMode,
+} from './types.js';
+
+export type {
+    ZylixEventTypeValue,
+    TodoItem,
+} from './types.js';
+
+// Test Framework Types
 export type {
     // Platform types
     Platform,

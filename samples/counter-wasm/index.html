@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zylix Counter Demo - WebAssembly powered counter application">
+    <meta name="theme-color" content="#1a1a2e">
     <title>Zylix Counter Demo</title>
     <style>
         :root {
@@ -12,6 +14,17 @@
             --text: #eaeaea;
             --text-muted: #8b8b8b;
             --success: #4ade80;
+            color-scheme: dark;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f7;
+            --card-bg: #ffffff;
+            --primary: #e94560;
+            --text: #1d1d1f;
+            --text-muted: #6e6e73;
+            --success: #34c759;
+            color-scheme: light;
         }
 
         * {
@@ -172,46 +185,207 @@
             color: var(--primary);
             text-decoration: none;
         }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Focus styles for accessibility */
+        button:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            z-index: 1000;
+            text-decoration: none;
+        }
+
+        .skip-link:focus {
+            top: 1rem;
+        }
+
+        /* Screen reader only text */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+            }
+            button:hover,
+            button:active {
+                transform: none;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Skip link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Theme toggle -->
+    <button
+        class="theme-toggle"
+        id="theme-toggle"
+        aria-label="Toggle dark/light theme"
+        title="Toggle theme (T)"
+    >
+        <span aria-hidden="true">🌙</span>
+    </button>
+
+    <main id="main-content" class="container" role="main">
         <h1 class="logo">Zylix</h1>
         <p class="subtitle">Counter Demo — WebAssembly</p>
 
-        <div class="card">
-            <div class="counter-value" id="counter">0</div>
-            <div class="counter-label">State managed by Zig/WASM</div>
+        <div class="card" role="region" aria-label="Counter application">
+            <div
+                class="counter-value"
+                id="counter"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+            >0</div>
+            <div class="counter-label" id="counter-label">State managed by Zig/WASM</div>
 
-            <div class="buttons">
-                <button class="btn-decrement" id="btn-dec" disabled>−</button>
-                <button class="btn-reset" id="btn-reset" disabled>Reset</button>
-                <button class="btn-increment" id="btn-inc" disabled>+</button>
+            <div class="buttons" role="group" aria-label="Counter controls">
+                <button
+                    class="btn-decrement"
+                    id="btn-dec"
+                    disabled
+                    aria-label="Decrease counter"
+                    title="Decrease (−)"
+                >−</button>
+                <button
+                    class="btn-reset"
+                    id="btn-reset"
+                    disabled
+                    aria-label="Reset counter to zero"
+                    title="Reset (R)"
+                >Reset</button>
+                <button
+                    class="btn-increment"
+                    id="btn-inc"
+                    disabled
+                    aria-label="Increase counter"
+                    title="Increase (+)"
+                >+</button>
             </div>
 
-            <div class="status loading" id="status">Loading WASM...</div>
+            <div class="status loading" id="status" role="status" aria-live="polite">Loading WASM...</div>
 
-            <div class="stats">
+            <div class="stats" aria-label="Application statistics">
                 <div class="stat">
-                    <span class="stat-value" id="version">0</span>
-                    <span>State Version</span>
+                    <span class="stat-value" id="version" aria-describedby="version-label">0</span>
+                    <span id="version-label">State Version</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-value" id="memory">0 KB</span>
-                    <span>WASM Memory</span>
+                    <span class="stat-value" id="memory" aria-describedby="memory-label">0 KB</span>
+                    <span id="memory-label">WASM Memory</span>
                 </div>
             </div>
         </div>
 
         <p class="footer">
-            Built with <a href="https://zylix.dev" target="_blank">Zylix</a> — Zig-powered cross-platform UI
+            Built with <a href="https://zylix.dev" target="_blank" rel="noopener noreferrer">Zylix</a> — Zig-powered cross-platform UI
         </p>
-    </div>
+    </main>
 
     <script src="zylix.js"></script>
     <script>
+        // Theme management
+        const ThemeManager = {
+            storageKey: 'zylix-theme',
+
+            init() {
+                const saved = localStorage.getItem(this.storageKey);
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = saved || (prefersDark ? 'dark' : 'light');
+                this.apply(theme);
+
+                // Listen for system theme changes
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem(this.storageKey)) {
+                        this.apply(e.matches ? 'dark' : 'light');
+                    }
+                });
+            },
+
+            apply(theme) {
+                const html = document.documentElement;
+                const toggle = document.getElementById('theme-toggle');
+
+                if (theme === 'light') {
+                    html.setAttribute('data-theme', 'light');
+                    toggle.querySelector('span').textContent = '☀️';
+                    toggle.setAttribute('aria-label', 'Switch to dark theme');
+                } else {
+                    html.removeAttribute('data-theme');
+                    toggle.querySelector('span').textContent = '🌙';
+                    toggle.setAttribute('aria-label', 'Switch to light theme');
+                }
+            },
+
+            toggle() {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'light' ? 'dark' : 'light';
+                localStorage.setItem(this.storageKey, next);
+                this.apply(next);
+            }
+        };
+
         // Initialize Zylix and set up event handlers
         async function main() {
+            // Initialize theme
+            ThemeManager.init();
+
             const statusEl = document.getElementById('status');
             const counterEl = document.getElementById('counter');
             const versionEl = document.getElementById('version');
@@ -219,6 +393,10 @@
             const btnInc = document.getElementById('btn-inc');
             const btnDec = document.getElementById('btn-dec');
             const btnReset = document.getElementById('btn-reset');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // Theme toggle handler
+            themeToggle.addEventListener('click', () => ThemeManager.toggle());
 
             try {
                 // Load and initialize Zylix WASM
@@ -256,6 +434,46 @@
                 btnReset.addEventListener('click', () => {
                     Zylix.dispatch(Zylix.Events.RESET);
                     updateUI();
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    // Don't trigger if user is typing in an input
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                    switch (e.key) {
+                        case '+':
+                        case '=':
+                        case 'ArrowUp':
+                            if (!btnInc.disabled) {
+                                Zylix.dispatch(Zylix.Events.INCREMENT);
+                                updateUI();
+                                btnInc.focus();
+                            }
+                            break;
+                        case '-':
+                        case '_':
+                        case 'ArrowDown':
+                            if (!btnDec.disabled) {
+                                Zylix.dispatch(Zylix.Events.DECREMENT);
+                                updateUI();
+                                btnDec.focus();
+                            }
+                            break;
+                        case 'r':
+                        case 'R':
+                            if (!btnReset.disabled) {
+                                Zylix.dispatch(Zylix.Events.RESET);
+                                updateUI();
+                                btnReset.focus();
+                            }
+                            break;
+                        case 't':
+                        case 'T':
+                            ThemeManager.toggle();
+                            themeToggle.focus();
+                            break;
+                    }
                 });
 
                 // Initial render

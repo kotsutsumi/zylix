@@ -205,6 +205,82 @@ pub const PerfConfig = struct {
 };
 ```
 
+## 言語バインディング
+
+### TypeScript (@zylix/test)
+
+```typescript
+import {
+  ZylixResult,
+  ZylixPriority,
+  ZylixEventType,
+  TodoFilterMode,
+  type TodoItem,
+} from '@zylix/test';
+
+// イベントタイプは core/src/events.zig と一致
+ZylixEventType.COUNTER_INCREMENT  // 0x1000
+ZylixEventType.TODO_ADD           // 0x2000
+
+// 結果コード
+if (result === ZylixResult.OK) {
+  // 成功
+}
+
+// 優先度レベル
+queueEvent(eventType, ZylixPriority.HIGH);
+
+// Todoフィルターモード
+setFilter(TodoFilterMode.ACTIVE);
+```
+
+### Python (zylix_test)
+
+```python
+from zylix_test import (
+    ZylixResult,
+    ZylixPriority,
+    ZylixEventType,
+    TodoFilterMode,
+    TodoItem,
+)
+
+# イベントタイプは core/src/events.zig と一致
+ZylixEventType.COUNTER_INCREMENT  # 0x1000
+ZylixEventType.TODO_ADD           # 0x2000
+
+# 結果コード
+if result == ZylixResult.OK:
+    # 成功
+
+# 優先度レベル
+queue_event(event_type, ZylixPriority.HIGH)
+
+# Todoフィルターモード
+set_filter(TodoFilterMode.ACTIVE)
+```
+
+### イベントタイプ定数
+
+| カテゴリ | イベント | 値 |
+|---------|---------|------|
+| ライフサイクル | APP_INIT | 0x0001 |
+| ライフサイクル | APP_TERMINATE | 0x0002 |
+| ライフサイクル | APP_FOREGROUND | 0x0003 |
+| ライフサイクル | APP_BACKGROUND | 0x0004 |
+| ユーザー | BUTTON_PRESS | 0x0100 |
+| ユーザー | TEXT_INPUT | 0x0101 |
+| ナビゲーション | NAVIGATE | 0x0200 |
+| ナビゲーション | NAVIGATE_BACK | 0x0201 |
+| カウンター | COUNTER_INCREMENT | 0x1000 |
+| カウンター | COUNTER_DECREMENT | 0x1001 |
+| カウンター | COUNTER_RESET | 0x1002 |
+| Todo | TODO_ADD | 0x2000 |
+| Todo | TODO_REMOVE | 0x2001 |
+| Todo | TODO_TOGGLE | 0x2002 |
+| Todo | TODO_CLEAR_COMPLETED | 0x2004 |
+| Todo | TODO_SET_FILTER | 0x2005 |
+
 ## ビルドコマンド
 
 ```bash

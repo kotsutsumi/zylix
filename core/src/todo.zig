@@ -511,3 +511,193 @@ test "TodoState clearCompleted" {
     try std.testing.expectEqual(@as(u32, 2), removed);
     try std.testing.expectEqual(@as(u32, 1), state.item_count);
 }
+
+test "TodoItem text truncation" {
+    // Create text longer than MAX_TODO_TEXT_LEN
+    var long_text: [MAX_TODO_TEXT_LEN + 100]u8 = undefined;
+    @memset(&long_text, 'A');
+
+    var item = TodoItem.init(1, &long_text);
+
+    // Text should be truncated to MAX_TODO_TEXT_LEN
+    try std.testing.expectEqual(@as(u16, MAX_TODO_TEXT_LEN), item.text_len);
+    try std.testing.expectEqual(MAX_TODO_TEXT_LEN, item.getText().len);
+}
+
+test "TodoState add empty text returns null" {
+    var state = TodoState.init();
+
+    const result = state.add("");
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), state.item_count);
+}
+
+test "TodoState add when full returns null" {
+    var state = TodoState.init();
+
+    // Fill the state
+    var i: u32 = 0;
+    while (i < MAX_TODOS) : (i += 1) {
+        _ = state.add("Item");
+    }
+
+    // Should be full now
+    try std.testing.expectEqual(@as(u32, MAX_TODOS), state.item_count);
+
+    // Next add should fail
+    const result = state.add("One more");
+    try std.testing.expect(result == null);
+}
+
+test "TodoState toggleAll with all active" {
+    var state = TodoState.init();
+
+    _ = state.add("Item 1");
+    _ = state.add("Item 2");
+    _ = state.add("Item 3");
+
+    // All should be active
+    try std.testing.expectEqual(@as(u32, 3), state.getActiveCount());
+    try std.testing.expectEqual(@as(u32, 0), state.getCompletedCount());
+
+    // Toggle all should complete all
+    state.toggleAll();
+    try std.testing.expectEqual(@as(u32, 0), state.getActiveCount());
+    try std.testing.expectEqual(@as(u32, 3), state.getCompletedCount());
+}
+
+test "TodoState toggleAll with all completed" {
+    var state = TodoState.init();
+
+    const id1 = state.add("Item 1").?;
+    const id2 = state.add("Item 2").?;
+
+    _ = state.toggle(id1);
+    _ = state.toggle(id2);
+
+    // All should be completed
+    try std.testing.expectEqual(@as(u32, 0), state.getActiveCount());
+    try std.testing.expectEqual(@as(u32, 2), state.getCompletedCount());
+
+    // Toggle all should uncomplete all
+    state.toggleAll();
+    try std.testing.expectEqual(@as(u32, 2), state.getActiveCount());
+    try std.testing.expectEqual(@as(u32, 0), state.getCompletedCount());
+}
+
+test "TodoState toggleAll with empty state" {
+    var state = TodoState.init();
+
+    // Should not crash with empty state
+    state.toggleAll();
+    try std.testing.expectEqual(@as(u32, 0), state.item_count);
+}
+
+test "TodoState toggle non-existent item" {
+    var state = TodoState.init();
+
+    _ = state.add("Item");
+
+    // Toggle non-existent ID
+    const result = state.toggle(999);
+    try std.testing.expect(!result);
+}
+
+test "TodoState updateText" {
+    var state = TodoState.init();
+
+    const id = state.add("Original text").?;
+
+    const updated = state.updateText(id, "New text");
+    try std.testing.expect(updated);
+
+    const item = state.getItem(id).?;
+    try std.testing.expectEqualStrings("New text", item.getText());
+}
+
+test "TodoState updateText non-existent item" {
+    var state = TodoState.init();
+
+    _ = state.add("Item");
+
+    const updated = state.updateText(999, "New text");
+    try std.testing.expect(!updated);
+}
+
+test "TodoState getItem" {
+    var state = TodoState.init();
+
+    const id = state.add("Test item").?;
+
+    const item = state.getItem(id);
+    try std.testing.expect(item != null);
+    try std.testing.expectEqualStrings("Test item", item.?.getText());
+}
+
+test "TodoState getItem non-existent" {
+    var state = TodoState.init();
+
+    _ = state.add("Item");
+
+    const item = state.getItem(999);
+    try std.testing.expect(item == null);
+}
+
+test "TodoState reset" {
+    var state = TodoState.init();
+
+    _ = state.add("Item 1");
+    _ = state.add("Item 2");
+    state.setFilter(.completed);
+
+    try std.testing.expectEqual(@as(u32, 2), state.item_count);
+    try std.testing.expectEqual(FilterMode.completed, state.filter);
+
+    state.reset();
+
+    try std.testing.expectEqual(@as(u32, 0), state.item_count);
+    try std.testing.expectEqual(@as(u32, 1), state.next_id);
+    try std.testing.expectEqual(FilterMode.all, state.filter);
+}
+
+test "TodoState isVisible with inactive item" {
+    var state = TodoState.init();
+
+    var inactive_item = TodoItem.init(1, "Inactive");
+    inactive_item.active = false;
+
+    // Inactive items should not be visible regardless of filter
+    state.setFilter(.all);
+    try std.testing.expect(!state.isVisible(&inactive_item));
+
+    state.setFilter(.active);
+    try std.testing.expect(!state.isVisible(&inactive_item));
+
+    state.setFilter(.completed);
+    try std.testing.expect(!state.isVisible(&inactive_item));
+}
+
+test "TodoState clearCompleted with no completed items" {
+    var state = TodoState.init();
+
+    _ = state.add("Active 1");
+    _ = state.add("Active 2");
+
+    const removed = state.clearCompleted();
+    try std.testing.expectEqual(@as(u32, 0), removed);
+    try std.testing.expectEqual(@as(u32, 2), state.item_count);
+}
+
+test "TodoState clearCompleted with all completed" {
+    var state = TodoState.init();
+
+    const id1 = state.add("Completed 1").?;
+    const id2 = state.add("Completed 2").?;
+
+    _ = state.toggle(id1);
+    _ = state.toggle(id2);
+
+    const removed = state.clearCompleted();
+    try std.testing.expectEqual(@as(u32, 2), removed);
+    try std.testing.expectEqual(@as(u32, 0), state.item_count);
+}

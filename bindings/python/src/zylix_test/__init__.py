@@ -17,7 +17,16 @@ Example:
     ...     await driver.delete_session(session.id)
 """
 
-# Types
+# Zylix Core Types
+from .types import (
+    ZylixResult,
+    ZylixPriority,
+    ZylixEventType,
+    TodoFilterMode,
+    TodoItem,
+)
+
+# Test Framework Types
 from .types import (
     # Platform types
     Platform,
@@ -108,6 +117,12 @@ __all__ = [
     "__version__",
     # Constants
     "DEFAULT_PORTS",
+    # Zylix Core Types
+    "ZylixResult",
+    "ZylixPriority",
+    "ZylixEventType",
+    "TodoFilterMode",
+    "TodoItem",
     # Platform types
     "Platform",
     "BrowserType",
