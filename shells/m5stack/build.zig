@@ -16,43 +16,32 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    // Target configuration for ESP32-S3
-    // Note: Requires zig-xtensa fork, not standard Zig
-    const target = b.standardTargetOptions(.{
-        .default_target = .{
-            // ESP32-S3 uses Xtensa LX7 architecture
-            // This requires the zig-xtensa toolchain
-            .cpu_arch = .xtensa,
-            .os_tag = .freestanding,
-            .abi = .none,
-        },
-    });
-
+    // Target configuration
+    // Note: ESP32-S3 (Xtensa) requires zig-xtensa fork
+    // For testing, use native target: zig build test
+    const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
     // M5Stack Shell Library
-    const m5stack_lib = b.addStaticLibrary(.{
+    const m5stack_lib = b.addLibrary(.{
+        .linkage = .static,
         .name = "zylix-m5stack",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
-
-    // Add core module dependency
-    if (b.lazyDependency("zylix-core", .{
-        .target = target,
-        .optimize = optimize,
-    })) |core_dep| {
-        m5stack_lib.root_module.addImport("zylix", core_dep.module("zylix"));
-    }
 
     b.installArtifact(m5stack_lib);
 
     // Unit tests (for host target only)
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = b.standardTargetOptions(.{}),
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
@@ -60,11 +49,14 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_unit_tests.step);
 
     // Documentation
-    const docs = b.addStaticLibrary(.{
-        .name = "zylix-m5stack",
-        .root_source_file = b.path("src/main.zig"),
-        .target = b.standardTargetOptions(.{}),
-        .optimize = .Debug,
+    const docs = b.addLibrary(.{
+        .linkage = .static,
+        .name = "zylix-m5stack-docs",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
     });
 
     const install_docs = b.addInstallDirectory(.{

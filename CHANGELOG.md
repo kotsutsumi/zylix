@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-12-26
+
+### Added
+
+#### M5Stack CoreS3 Embedded Platform Support
+
+Native Zig support for M5Stack CoreS3 SE (ESP32-S3 Xtensa) with complete hardware abstraction layer.
+
+**Display Driver** (`shells/m5stack/src/drivers/ili9342c.zig`)
+- ILI9342C LCD controller driver (SPI interface)
+- 320x240 resolution, RGB565 color format
+- Hardware-accelerated fill and rectangle operations
+- Configurable SPI speed and DMA support
+
+**Touch Controller** (`shells/m5stack/src/drivers/ft6336u.zig`)
+- FT6336U capacitive touch controller driver (I2C interface)
+- Multi-touch support (2 simultaneous touch points)
+- Gesture recognition (tap, double-tap, long press, swipe)
+- Configurable touch threshold and sensitivity
+
+**Power Management** (`shells/m5stack/src/drivers/axp2101.zig`)
+- AXP2101 PMIC driver for battery and power management
+- LDO and DC-DC voltage configuration
+- Battery status monitoring and charging control
+- Low power mode support
+
+**I/O Expander** (`shells/m5stack/src/drivers/aw9523b.zig`)
+- AW9523B GPIO expander driver (I2C interface)
+- 16 bidirectional GPIO pins
+- LED current source mode support
+- Interrupt-driven input detection
+
+**Hardware Abstraction Layer**
+- SPI bus management (`shells/m5stack/src/hal/spi.zig`)
+- I2C bus management (`shells/m5stack/src/hal/i2c.zig`)
+- Interrupt handling (`shells/m5stack/src/hal/interrupt.zig`)
+- Platform HAL (`shells/m5stack/src/hal/hal.zig`)
+
+**Graphics System**
+- Framebuffer management (`shells/m5stack/src/graphics/framebuffer.zig`)
+- Graphics primitives (`shells/m5stack/src/graphics/graphics.zig`)
+- Display abstraction (`shells/m5stack/src/graphics/display.zig`)
+
+**Touch Input System**
+- Input event handling (`shells/m5stack/src/touch/input.zig`)
+- Gesture recognition (`shells/m5stack/src/touch/gesture.zig`)
+- Touch event system (`shells/m5stack/src/touch/events.zig`)
+
+**UI Components**
+- Button, Label, Panel, Progress, List components
+- Virtual DOM renderer for M5Stack
+- Diff algorithm optimized for embedded displays
+- Reconciler for efficient UI updates
+
+**Samples**
+- Hello World (`shells/m5stack/samples/hello-world/`)
+- Counter app (`shells/m5stack/samples/counter/`)
+- Touch demo (`shells/m5stack/samples/touch-demo/`)
+
+### Fixed
+
+#### Build System
+- Updated M5Stack `build.zig` for Zig 0.15 API compatibility
+- Changed `addStaticLibrary` to `addLibrary` with `root_module` pattern
+- Changed `addTest` to use `root_module` pattern
+- Added `build.zig.zon` with package metadata
+- Fixed unused variable warning in `spi.zig` (`var` → `const`)
+
 ## [0.20.0] - 2025-12-26
 
 ### Added

@@ -176,7 +176,7 @@ pub const SpiDevice = struct {
 
     /// Initialize SPI device
     pub fn init(bus: *SpiBus, config: DeviceConfig) SpiError!SpiDevice {
-        var device = SpiDevice{
+        const device = SpiDevice{
             .bus = bus,
             .config = config,
         };

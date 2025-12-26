@@ -13,12 +13,12 @@ summary: Zylix の開発ロードマップ。パフォーマンス、シンプ�
 
 ## 現在の状況
 
-**バージョン 0.20.0** が現在の安定リリースです：
+**バージョン 0.21.0** が現在の安定リリースです：
 
-- P0 ツーリング API: コンポーネントレジストリ、UI シリアライゼーション、コンポーネントインスタンス化
-- 27個の公式サンプルリポジトリ（主要ユースケースをカバー）
-- スレッドセーフティとセキュリティ修正（CodeRabbit レビュー）
-- Zig 0.15 API 互換性
+- M5Stack CoreS3 SE 組み込みプラットフォームサポート（ESP32-S3 Xtensa）
+- 組み込みディスプレイ向け完全なハードウェア抽象化レイヤー
+- ILI9342C、FT6336U、AXP2101、AW9523B 向けネイティブ Zig ドライバー
+- 組み込みシステム向け最適化 Virtual DOM レンダラー
 
 ## ロードマップ概要
 
@@ -29,21 +29,30 @@ summary: Zylix の開発ロードマップ。パフォーマンス、シンプ�
 | v0.8.1 | テスト、watchOS、言語バインディング | 完了 |
 | v0.9.0 - v0.10.0 | AI、デバイスAPI、アニメーション、3D、ゲーム | 完了 |
 | v0.18.0 - v0.19.3 | ツーリング API、C ABI、Zig 0.15 互換性 | 完了 |
-| v0.20.0 | P0 ツーリング API、27個のサンプルリポジトリ | 現在 |
-| v0.21.0 | M5Stack CoreS3 組み込みプラットフォームサポート | 次期 |
+| v0.20.0 | P0 ツーリング API、27個のサンプルリポジトリ | 完了 |
+| v0.21.0 | M5Stack CoreS3 組み込みプラットフォームサポート | 現在 |
+| v0.22.0 | P2 ツーリング API（Component Tree Export、Live Preview Bridge） | 次期 |
 
-## 次期リリース: v0.21.0 - M5Stack 組み込みプラットフォーム
+## 次期リリース: v0.22.0 - P2 ツーリング API
 
-M5Stack CoreS3 SE（ESP32-S3）向けネイティブ Zig サポート：
+IDE 統合向け高度なツーリング API：
+
+- **Component Tree Export API**: UI 階層アクセス用 C ABI エクスポート（Issue #56）
+- **Live Preview Bridge API**: プレビューセッション管理用 C ABI エクスポート（Issue #57）
+- **Hot Reload API**: ライブアップデート対応開発プレビュー（Issue #61）
+- **LSP 統合**: Language Server Protocol サポート（Issue #62）
+
+## 最近のリリース
+
+### v0.21.0 - M5Stack 組み込みプラットフォーム (2025-12-26)
 
 - **ディスプレイ**: ILI9342C ドライバー（SPI、320x240、RGB565）
 - **タッチ**: FT6336U 静電容量式タッチコントローラー
 - **電源管理**: AXP2101 PMIC、AW9523B I/O エキスパンダー
-- **統合**: ESP32-S3（Xtensa）上でネイティブ動作する Zylix Core
+- **統合**: 組み込みディスプレイ向け Virtual DOM レンダラー
+- **サンプル**: Hello World、Counter、Touch Demo
 
 詳細は [M5Stack 実装計画](https://github.com/kotsutsumi/zylix/blob/main/docs/M5STACK_IMPLEMENTATION_PLAN.md) をご覧ください。
-
-## 最近のリリース
 
 ### v0.20.0 - ツーリング API & サンプルリポジトリ (2025-12-26)
 
@@ -85,7 +94,7 @@ M5Stack CoreS3 SE（ESP32-S3）向けネイティブ Zig サポート：
 
 ## 次のリリース
 
-**v0.21.0** では M5Stack CoreS3 組み込みプラットフォームサポートを導入し、ESP32-S3 ベースの IoT デバイス上で Zylix アプリケーションを実行可能にします。
+**v0.22.0** では P2 ツーリング API（Component Tree Export、Live Preview Bridge、Hot Reload、LSP 統合）を導入し、IDE ツーリングサポートを強化します。
 
 ## コントリビュート
 

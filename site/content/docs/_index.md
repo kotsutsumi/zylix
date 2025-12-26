@@ -109,4 +109,4 @@ Seamless integration with platform languages through C ABI (Swift, Kotlin, C#) a
 
 ## Version
 
-This documentation covers **Zylix v0.20.0**. See the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) and [Roadmap](roadmap) for current status.
+This documentation covers **Zylix v0.21.0**. See the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) and [Roadmap](roadmap) for current status.

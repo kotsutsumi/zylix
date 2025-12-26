@@ -13,12 +13,12 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 ## Current Status
 
-**Version 0.20.0** is the current stable release with:
+**Version 0.21.0** is the current stable release with:
 
-- P0 Tooling APIs: Component Registry, UI Serialization, Component Instantiation
-- 27 official example repositories covering all major use cases
-- Thread-safety and security fixes (CodeRabbit review)
-- Zig 0.15 API compatibility
+- M5Stack CoreS3 SE embedded platform support (ESP32-S3 Xtensa)
+- Complete hardware abstraction layer for embedded displays
+- Native Zig drivers for ILI9342C, FT6336U, AXP2101, AW9523B
+- Virtual DOM renderer optimized for embedded systems
 
 ## Roadmap Overview
 
@@ -29,21 +29,30 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 | v0.8.1 | Testing, watchOS, language bindings | Done |
 | v0.9.0 - v0.10.0 | AI, device APIs, animation, 3D, game | Done |
 | v0.18.0 - v0.19.3 | Tooling APIs, C ABI, Zig 0.15 compat | Done |
-| v0.20.0 | P0 Tooling APIs, 27 Example Repos | Current |
-| v0.21.0 | M5Stack CoreS3 embedded platform support | Next |
+| v0.20.0 | P0 Tooling APIs, 27 Example Repos | Done |
+| v0.21.0 | M5Stack CoreS3 embedded platform support | Current |
+| v0.22.0 | P2 Tooling APIs (Component Tree Export, Live Preview Bridge) | Next |
 
-## Upcoming: v0.21.0 - M5Stack Embedded Platform
+## Upcoming: v0.22.0 - P2 Tooling APIs
 
-Native Zig support for M5Stack CoreS3 SE (ESP32-S3):
+Advanced tooling APIs for IDE integration:
+
+- **Component Tree Export API**: C ABI exports for UI hierarchy access (Issue #56)
+- **Live Preview Bridge API**: C ABI exports for preview session management (Issue #57)
+- **Hot Reload API**: Development preview with live updates (Issue #61)
+- **LSP Integration**: Language Server Protocol support (Issue #62)
+
+## Recent Releases
+
+### v0.21.0 - M5Stack Embedded Platform (2025-12-26)
 
 - **Display**: ILI9342C driver (SPI, 320x240, RGB565)
 - **Touch**: FT6336U capacitive touch controller
 - **Power**: AXP2101 PMIC, AW9523B I/O expander
-- **Integration**: Zylix Core running natively on ESP32-S3 (Xtensa)
+- **Integration**: Virtual DOM renderer for embedded displays
+- **Samples**: Hello World, Counter, Touch Demo
 
 See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/docs/M5STACK_IMPLEMENTATION_PLAN.md) for details.
-
-## Recent Releases
 
 ### v0.20.0 - Tooling APIs & Example Repos (2025-12-26)
 
@@ -85,7 +94,7 @@ See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/
 
 ## Next
 
-**v0.21.0** will introduce M5Stack CoreS3 embedded platform support, enabling Zylix applications to run on ESP32-S3 based IoT devices.
+**v0.22.0** will introduce P2 Tooling APIs including Component Tree Export, Live Preview Bridge, Hot Reload, and LSP integration for enhanced IDE tooling support.
 
 ## Contributing
 

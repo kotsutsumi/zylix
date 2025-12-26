@@ -1,0 +1,14 @@
+.{
+    .name = .zylix_m5stack,
+    .version = "0.21.0",
+    .fingerprint = 0xbf217bebe54f9340,
+    .minimum_zig_version = "0.15.0",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "samples",
+        "README.md",
+    },
+    .dependencies = .{},
+}
