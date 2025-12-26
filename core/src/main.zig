@@ -20,6 +20,7 @@ pub const mbaas = @import("mbaas/mbaas.zig");
 pub const server = @import("server/server.zig");
 pub const edge = @import("edge/edge.zig");
 pub const perf = @import("perf/perf.zig");
+pub const markdown = @import("markdown/markdown.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -91,6 +92,12 @@ pub const CrashReporter = perf.CrashReporter;
 pub const AnalyticsHook = perf.AnalyticsHook;
 pub const BundleAnalyzer = perf.BundleAnalyzer;
 pub const TreeShaker = perf.TreeShaker;
+
+// Re-export Markdown types
+pub const MarkdownParser = markdown.MarkdownParser;
+pub const MarkdownNode = markdown.Node;
+pub const MarkdownOptions = markdown.ParserOptions;
+pub const MarkdownRenderer = markdown.HtmlRenderer;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
