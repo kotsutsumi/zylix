@@ -257,6 +257,33 @@ pub const VirtualMesh = lod.VirtualMesh;
 pub const MeshChunk = lod.MeshChunk;
 
 // ============================================================================
+// Skeletal Animation System
+// ============================================================================
+
+pub const skeletal = @import("skeletal.zig");
+
+pub const Bone = skeletal.Bone;
+pub const Skeleton = skeletal.Skeleton;
+pub const BoneWeights = skeletal.BoneWeights;
+pub const SkinnedMesh = skeletal.SkinnedMesh;
+pub const Keyframe = skeletal.Keyframe;
+pub const KeyframeValue = skeletal.KeyframeValue;
+pub const InterpolationMode = skeletal.InterpolationMode;
+pub const AnimationChannel = skeletal.AnimationChannel;
+pub const AnimationClip = skeletal.AnimationClip;
+pub const AnimationLayer = skeletal.AnimationLayer;
+pub const AnimationBlender = skeletal.AnimationBlender;
+pub const TwoBoneIKSolver = skeletal.TwoBoneIKSolver;
+pub const FABRIKSolver = skeletal.FABRIKSolver;
+pub const IKTarget = skeletal.IKTarget;
+pub const MorphTarget = skeletal.MorphTarget;
+pub const MorphTargetManager = skeletal.MorphTargetManager;
+pub const AnimationState = skeletal.AnimationState;
+pub const AnimationTransition = skeletal.AnimationTransition;
+pub const AnimationController = skeletal.AnimationController;
+pub const AnimationParameters = skeletal.AnimationParameters;
+
+// ============================================================================
 // Platform Backends
 // ============================================================================
 
@@ -294,9 +321,9 @@ pub const WebDepthState = backend_web.DepthState;
 /// Graphics3D module version
 pub const version = struct {
     pub const major = 0;
-    pub const minor = 15;
+    pub const minor = 16;
     pub const patch = 0;
-    pub const string = "0.15.0";
+    pub const string = "0.16.0";
 };
 
 /// Get module information
@@ -325,6 +352,7 @@ pub fn getInfo() struct {
             "Navigation Mesh & Pathfinding",
             "Behavior Tree System",
             "LOD & Mesh Virtualization",
+            "Skeletal Animation & IK",
         },
     };
 }
@@ -352,6 +380,7 @@ test "graphics3d module exports" {
     _ = navmesh;
     _ = behavior_tree;
     _ = lod;
+    _ = skeletal;
 }
 
 test "graphics3d types accessible" {
@@ -367,7 +396,7 @@ test "graphics3d types accessible" {
 }
 
 test "graphics3d version" {
-    try std.testing.expectEqualStrings("0.15.0", version.string);
+    try std.testing.expectEqualStrings("0.16.0", version.string);
 
     const info = getInfo();
     try std.testing.expect(info.features.len > 0);
