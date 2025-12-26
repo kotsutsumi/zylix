@@ -359,11 +359,56 @@ pub fn isWhitespace(c: u8) bool {
     return c == ' ' or c == '\t' or c == '\n' or c == '\r';
 }
 
-/// Check if character is a Unicode whitespace (simplified)
+/// Check if bytes at given offset represent Unicode whitespace
+/// Handles common Unicode whitespace characters:
+/// - ASCII whitespace (space, tab, newlines)
+/// - U+00A0 NO-BREAK SPACE
+/// - U+2000-U+200A various spaces
+/// - U+2028 LINE SEPARATOR
+/// - U+2029 PARAGRAPH SEPARATOR
+/// - U+202F NARROW NO-BREAK SPACE
+/// - U+205F MEDIUM MATHEMATICAL SPACE
+/// - U+3000 IDEOGRAPHIC SPACE
 pub fn isUnicodeWhitespace(c: u8) bool {
-    // For now, just handle ASCII whitespace
-    // TODO: Handle full Unicode whitespace
-    return isWhitespace(c);
+    // ASCII whitespace
+    if (isWhitespace(c)) return true;
+    // Lead bytes for Unicode whitespace sequences
+    // 0xC2 starts U+00A0 (NO-BREAK SPACE)
+    // 0xE2 starts U+2000-U+206F range
+    // 0xE3 starts U+3000 (IDEOGRAPHIC SPACE)
+    return c == 0xC2 or c == 0xE2 or c == 0xE3;
+}
+
+/// Check if a UTF-8 sequence starting at the given slice is Unicode whitespace
+pub fn isUnicodeWhitespaceSequence(slice: []const u8) bool {
+    if (slice.len == 0) return false;
+
+    // ASCII whitespace
+    if (isWhitespace(slice[0])) return true;
+
+    // U+00A0 NO-BREAK SPACE: 0xC2 0xA0
+    if (slice.len >= 2 and slice[0] == 0xC2 and slice[1] == 0xA0) return true;
+
+    // U+2000-U+200A (various spaces), U+2028, U+2029, U+202F, U+205F
+    if (slice.len >= 3 and slice[0] == 0xE2) {
+        if (slice[1] == 0x80) {
+            // U+2000-U+200A: 0xE2 0x80 0x80-0x8A
+            if (slice[2] >= 0x80 and slice[2] <= 0x8A) return true;
+            // U+2028: 0xE2 0x80 0xA8 (LINE SEPARATOR)
+            if (slice[2] == 0xA8) return true;
+            // U+2029: 0xE2 0x80 0xA9 (PARAGRAPH SEPARATOR)
+            if (slice[2] == 0xA9) return true;
+            // U+202F: 0xE2 0x80 0xAF (NARROW NO-BREAK SPACE)
+            if (slice[2] == 0xAF) return true;
+        }
+        // U+205F: 0xE2 0x81 0x9F (MEDIUM MATHEMATICAL SPACE)
+        if (slice[1] == 0x81 and slice[2] == 0x9F) return true;
+    }
+
+    // U+3000 IDEOGRAPHIC SPACE: 0xE3 0x80 0x80
+    if (slice.len >= 3 and slice[0] == 0xE3 and slice[1] == 0x80 and slice[2] == 0x80) return true;
+
+    return false;
 }
 
 /// Check if character starts a special inline delimiter

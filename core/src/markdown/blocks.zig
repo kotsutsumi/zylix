@@ -148,11 +148,39 @@ pub const BlockParser = struct {
     }
 
     /// Generate a slug ID from heading text
+    /// Follows GitHub-style slugification:
+    /// - Convert to lowercase
+    /// - Replace whitespace with hyphens
+    /// - Remove non-alphanumeric characters (except hyphens)
+    /// - Collapse multiple hyphens
     fn generateHeadingId(self: *BlockParser, text: []const u8) !?[]const u8 {
-        // For now, just return the text as-is (duped for ownership)
-        // TODO: Proper slug generation (lowercase, replace spaces, remove special chars)
         if (text.len == 0) return null;
-        return try self.allocator.dupe(u8, text);
+
+        var slug: std.ArrayListUnmanaged(u8) = .{};
+        defer slug.deinit(self.allocator);
+
+        var last_was_hyphen = true; // Start true to skip leading hyphens
+
+        for (text) |c| {
+            if (std.ascii.isAlphanumeric(c)) {
+                try slug.append(self.allocator, std.ascii.toLower(c));
+                last_was_hyphen = false;
+            } else if (c == ' ' or c == '\t' or c == '-' or c == '_') {
+                if (!last_was_hyphen) {
+                    try slug.append(self.allocator, '-');
+                    last_was_hyphen = true;
+                }
+            }
+            // Skip other characters (punctuation, etc.)
+        }
+
+        // Remove trailing hyphen
+        while (slug.items.len > 0 and slug.items[slug.items.len - 1] == '-') {
+            _ = slug.pop();
+        }
+
+        if (slug.items.len == 0) return null;
+        return try self.allocator.dupe(u8, slug.items);
     }
 
     /// Try to parse thematic break (---, ***, ___)
@@ -571,11 +599,22 @@ pub const BlockParser = struct {
 
         try self.closeOpenBlocks();
 
+        // Parse alignments from delimiter row
+        const alignments = try self.parseTableAlignments(next_line.trimmed());
+
+        // Count columns from header
+        var col_count: u16 = 0;
+        var col_counter = std.mem.splitScalar(u8, content, '|');
+        while (col_counter.next()) |cell_content| {
+            const trimmed = std.mem.trim(u8, cell_content, " \t");
+            if (trimmed.len > 0) col_count += 1;
+        }
+
         // Create table
         const table = try Node.create(self.allocator, .table, .{
             .table = .{
-                .col_count = 0,
-                .alignments = &.{},
+                .col_count = col_count,
+                .alignments = alignments,
             },
         });
         table.pos = types.SourcePos.init(line.line_num, @intCast(line.indent + 1), line.start_offset);
@@ -586,17 +625,20 @@ pub const BlockParser = struct {
         table.appendChild(header_row);
 
         var cells = std.mem.splitScalar(u8, content, '|');
+        var col_idx: usize = 0;
         while (cells.next()) |cell_content| {
             const trimmed = std.mem.trim(u8, cell_content, " \t");
             if (trimmed.len > 0 or cells.peek() != null) {
+                const alignment = if (col_idx < alignments.len) alignments[col_idx] else types.TableAlign.none;
                 const cell = try Node.create(self.allocator, .table_cell, .{
-                    .table_cell = .{ .is_header = true },
+                    .table_cell = .{ .is_header = true, .alignment = alignment },
                 });
                 if (trimmed.len > 0) {
                     const text = try Node.create(self.allocator, .text, .{ .text = .{ .content = try self.allocator.dupe(u8, trimmed) } });
                     cell.appendChild(text);
                 }
                 header_row.appendChild(cell);
+                col_idx += 1;
             }
         }
 
@@ -614,17 +656,20 @@ pub const BlockParser = struct {
             table.appendChild(data_row);
 
             var data_cells = std.mem.splitScalar(u8, data_content, '|');
+            var data_col_idx: usize = 0;
             while (data_cells.next()) |cell_content| {
                 const trimmed = std.mem.trim(u8, cell_content, " \t");
                 if (trimmed.len > 0 or data_cells.peek() != null) {
+                    const data_alignment = if (data_col_idx < alignments.len) alignments[data_col_idx] else types.TableAlign.none;
                     const cell = try Node.create(self.allocator, .table_cell, .{
-                        .table_cell = .{ .is_header = false },
+                        .table_cell = .{ .is_header = false, .alignment = data_alignment },
                     });
                     if (trimmed.len > 0) {
                         const text = try Node.create(self.allocator, .text, .{ .text = .{ .content = try self.allocator.dupe(u8, trimmed) } });
                         cell.appendChild(text);
                     }
                     data_row.appendChild(cell);
+                    data_col_idx += 1;
                 }
             }
         }
@@ -663,6 +708,36 @@ pub const BlockParser = struct {
         }
 
         return has_valid_cell;
+    }
+
+    /// Parse table delimiter row and extract column alignments
+    fn parseTableAlignments(self: *BlockParser, content: []const u8) ![]const types.TableAlign {
+        var alignments: std.ArrayListUnmanaged(types.TableAlign) = .{};
+        defer alignments.deinit(self.allocator);
+
+        var cells = std.mem.splitScalar(u8, content, '|');
+
+        while (cells.next()) |cell| {
+            const trimmed = std.mem.trim(u8, cell, " \t");
+            if (trimmed.len == 0) continue;
+
+            // Parse alignment from :---: pattern
+            const has_left_colon = trimmed.len > 0 and trimmed[0] == ':';
+            const has_right_colon = trimmed.len > 0 and trimmed[trimmed.len - 1] == ':';
+
+            const alignment: types.TableAlign = if (has_left_colon and has_right_colon)
+                .center
+            else if (has_right_colon)
+                .right
+            else if (has_left_colon)
+                .left
+            else
+                .none;
+
+            try alignments.append(self.allocator, alignment);
+        }
+
+        return try self.allocator.dupe(types.TableAlign, alignments.items);
     }
 
     /// Add paragraph (default block)

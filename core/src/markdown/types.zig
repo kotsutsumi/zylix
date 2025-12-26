@@ -343,6 +343,10 @@ pub const Node = struct {
                 self.allocator.free(d.shortcode);
                 if (d.unicode) |unicode| self.allocator.free(unicode);
             },
+            .table => |d| {
+                // Only free if not the default empty slice
+                if (d.alignments.len > 0) self.allocator.free(d.alignments);
+            },
             else => {},
         }
 
