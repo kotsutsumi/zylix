@@ -319,6 +319,192 @@ pub const VTree = struct {
     pub fn getNodeCount(self: *const VTree) u32 {
         return self.count;
     }
+
+    // ========================================================================
+    // Incremental Update Methods
+    // ========================================================================
+
+    /// Mark a node as dirty (needs re-diffing)
+    pub fn markDirty(self: *VTree, id: u32) void {
+        if (self.get(id)) |node| {
+            node.dirty = true;
+        }
+    }
+
+    /// Mark a node and all its descendants as dirty
+    pub fn markSubtreeDirty(self: *VTree, id: u32) void {
+        if (self.get(id)) |node| {
+            node.dirty = true;
+            for (node.children[0..node.child_count]) |child_id| {
+                self.markSubtreeDirty(child_id);
+            }
+        }
+    }
+
+    /// Clear dirty flag on a node
+    pub fn clearDirty(self: *VTree, id: u32) void {
+        if (self.get(id)) |node| {
+            node.dirty = false;
+        }
+    }
+
+    /// Clear all dirty flags in the tree
+    pub fn clearAllDirty(self: *VTree) void {
+        for (self.nodes[0..self.count]) |*node| {
+            node.dirty = false;
+        }
+    }
+
+    /// Check if any node in the tree is dirty
+    pub fn hasDirtyNodes(self: *const VTree) bool {
+        for (self.nodes[0..self.count]) |*node| {
+            if (node.dirty) return true;
+        }
+        return false;
+    }
+
+    /// Get all dirty node IDs
+    pub fn getDirtyNodes(self: *const VTree, out_ids: []u32) u32 {
+        var count: u32 = 0;
+        for (self.nodes[0..self.count]) |*node| {
+            if (node.dirty and count < out_ids.len) {
+                out_ids[count] = node.id;
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    /// Update a node's text in place (incremental update)
+    pub fn updateNodeText(self: *VTree, id: u32, new_text: []const u8) bool {
+        if (self.get(id)) |node| {
+            node.setText(new_text);
+            node.dirty = true;
+            return true;
+        }
+        return false;
+    }
+
+    /// Update a node's class in place (incremental update)
+    pub fn updateNodeClass(self: *VTree, id: u32, new_class: []const u8) bool {
+        if (self.get(id)) |node| {
+            node.props.setClass(new_class);
+            node.dirty = true;
+            return true;
+        }
+        return false;
+    }
+
+    /// Update a node's props in place (incremental update)
+    pub fn updateNodeProps(self: *VTree, id: u32, new_props: VNodeProps) bool {
+        if (self.get(id)) |node| {
+            node.props = new_props;
+            node.dirty = true;
+            return true;
+        }
+        return false;
+    }
+
+    /// Replace a subtree with a new node (returns new node id)
+    /// The old subtree nodes are marked invalid but remain in array
+    /// (they will be overwritten by new nodes)
+    pub fn replaceNode(self: *VTree, old_id: u32, new_node: VNode) u32 {
+        // Find and mark old node
+        if (self.get(old_id)) |old| {
+            old.dirty = true;
+            // Mark children for removal (they'll become orphaned)
+            for (old.children[0..old.child_count]) |child_id| {
+                self.markSubtreeDirty(child_id);
+            }
+        }
+
+        // Create new node
+        const new_id = self.create(new_node);
+        if (new_id == 0) return 0;
+
+        // If old node was root, update root
+        if (self.root_id == old_id) {
+            self.root_id = new_id;
+        }
+
+        // Update parent references (find parent and replace child)
+        for (self.nodes[0..self.count]) |*node| {
+            for (node.children[0..node.child_count], 0..) |child_id, i| {
+                if (child_id == old_id) {
+                    node.children[i] = new_id;
+                    node.dirty = true;
+                    break;
+                }
+            }
+        }
+
+        return new_id;
+    }
+
+    /// Clone a node (creates a copy with new ID)
+    pub fn cloneNode(self: *VTree, id: u32) u32 {
+        if (self.getConst(id)) |node| {
+            var clone = node.*;
+            clone.id = 0; // Will be assigned by create()
+            clone.dirty = true;
+            return self.create(clone);
+        }
+        return 0;
+    }
+
+    /// Get parent of a node (O(n) search)
+    pub fn getParent(self: *const VTree, id: u32) ?u32 {
+        for (self.nodes[0..self.count]) |*node| {
+            for (node.children[0..node.child_count]) |child_id| {
+                if (child_id == id) return node.id;
+            }
+        }
+        return null;
+    }
+
+    /// Remove a child from its parent
+    pub fn removeChild(self: *VTree, parent_id: u32, child_id: u32) bool {
+        if (self.get(parent_id)) |parent| {
+            var found_idx: ?u8 = null;
+            for (parent.children[0..parent.child_count], 0..) |cid, i| {
+                if (cid == child_id) {
+                    found_idx = @intCast(i);
+                    break;
+                }
+            }
+
+            if (found_idx) |idx| {
+                // Shift remaining children
+                var i = idx;
+                while (i < parent.child_count - 1) : (i += 1) {
+                    parent.children[i] = parent.children[i + 1];
+                }
+                parent.child_count -= 1;
+                parent.dirty = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Insert a child at a specific index
+    pub fn insertChildAt(self: *VTree, parent_id: u32, child_id: u32, index: u8) bool {
+        if (self.get(parent_id)) |parent| {
+            if (parent.child_count >= MAX_VNODE_CHILDREN) return false;
+            if (index > parent.child_count) return false;
+
+            // Shift children to make room
+            var i = parent.child_count;
+            while (i > index) : (i -= 1) {
+                parent.children[i] = parent.children[i - 1];
+            }
+            parent.children[index] = child_id;
+            parent.child_count += 1;
+            parent.dirty = true;
+            return true;
+        }
+        return false;
+    }
 };
 
 // ============================================================================
@@ -450,6 +636,161 @@ pub const DiffResult = struct {
     pub fn getPatch(self: *const DiffResult, index: u32) ?*const Patch {
         if (index >= self.count) return null;
         return &self.patches[index];
+    }
+};
+
+// ============================================================================
+// Batch Patch Application
+// ============================================================================
+
+/// Maximum patches per batch type
+pub const MAX_BATCH_SIZE = MAX_PATCHES;
+
+/// Batched patches organized by type for optimal DOM application
+/// Order of application: remove → create → update
+/// This reduces DOM reflows and improves performance
+pub const PatchBatch = struct {
+    /// Remove patches (applied first, in reverse order for valid DOM refs)
+    removes: [MAX_BATCH_SIZE]u32 = undefined,
+    remove_count: u32 = 0,
+
+    /// Create patches (applied second, in tree order)
+    creates: [MAX_BATCH_SIZE]u32 = undefined,
+    create_count: u32 = 0,
+
+    /// Update patches (applied last, order doesn't matter)
+    updates: [MAX_BATCH_SIZE]u32 = undefined,
+    update_count: u32 = 0,
+
+    /// Reference to original patches
+    source: ?*const DiffResult = null,
+
+    pub fn init() PatchBatch {
+        return .{};
+    }
+
+    /// Organize patches from DiffResult into batches
+    pub fn fromDiffResult(result: *const DiffResult) PatchBatch {
+        var batch = PatchBatch.init();
+        batch.source = result;
+
+        var i: u32 = 0;
+        while (i < result.count) : (i += 1) {
+            const patch = &result.patches[i];
+            switch (patch.patch_type) {
+                .remove, .remove_child => {
+                    if (batch.remove_count < MAX_BATCH_SIZE) {
+                        batch.removes[batch.remove_count] = i;
+                        batch.remove_count += 1;
+                    }
+                },
+                .create, .replace, .insert_child => {
+                    if (batch.create_count < MAX_BATCH_SIZE) {
+                        batch.creates[batch.create_count] = i;
+                        batch.create_count += 1;
+                    }
+                },
+                .update_props, .update_text, .reorder => {
+                    if (batch.update_count < MAX_BATCH_SIZE) {
+                        batch.updates[batch.update_count] = i;
+                        batch.update_count += 1;
+                    }
+                },
+                .none => {},
+            }
+        }
+
+        // Reverse remove order for safe DOM removal (children before parents)
+        if (batch.remove_count > 1) {
+            var left: u32 = 0;
+            var right: u32 = batch.remove_count - 1;
+            while (left < right) {
+                const temp = batch.removes[left];
+                batch.removes[left] = batch.removes[right];
+                batch.removes[right] = temp;
+                left += 1;
+                right -= 1;
+            }
+        }
+
+        return batch;
+    }
+
+    /// Get total number of patches in batch
+    pub fn getTotalCount(self: *const PatchBatch) u32 {
+        return self.remove_count + self.create_count + self.update_count;
+    }
+
+    /// Iterator for processing batches in optimal order
+    pub const BatchIterator = struct {
+        batch: *const PatchBatch,
+        phase: Phase = .removes,
+        index: u32 = 0,
+
+        pub const Phase = enum { removes, creates, updates, done };
+
+        pub fn next(self: *BatchIterator) ?*const Patch {
+            while (true) {
+                switch (self.phase) {
+                    .removes => {
+                        if (self.index < self.batch.remove_count) {
+                            const patch_idx = self.batch.removes[self.index];
+                            self.index += 1;
+                            if (self.batch.source) |src| {
+                                return &src.patches[patch_idx];
+                            }
+                        }
+                        self.phase = .creates;
+                        self.index = 0;
+                    },
+                    .creates => {
+                        if (self.index < self.batch.create_count) {
+                            const patch_idx = self.batch.creates[self.index];
+                            self.index += 1;
+                            if (self.batch.source) |src| {
+                                return &src.patches[patch_idx];
+                            }
+                        }
+                        self.phase = .updates;
+                        self.index = 0;
+                    },
+                    .updates => {
+                        if (self.index < self.batch.update_count) {
+                            const patch_idx = self.batch.updates[self.index];
+                            self.index += 1;
+                            if (self.batch.source) |src| {
+                                return &src.patches[patch_idx];
+                            }
+                        }
+                        self.phase = .done;
+                        return null;
+                    },
+                    .done => return null,
+                }
+            }
+        }
+
+        pub fn getCurrentPhase(self: *const BatchIterator) Phase {
+            return self.phase;
+        }
+    };
+
+    /// Create iterator for processing patches in optimal order
+    pub fn iterator(self: *const PatchBatch) BatchIterator {
+        return .{ .batch = self };
+    }
+
+    /// Get patches for a specific phase
+    pub fn getRemovePatches(self: *const PatchBatch) []const u32 {
+        return self.removes[0..self.remove_count];
+    }
+
+    pub fn getCreatePatches(self: *const PatchBatch) []const u32 {
+        return self.creates[0..self.create_count];
+    }
+
+    pub fn getUpdatePatches(self: *const PatchBatch) []const u32 {
+        return self.updates[0..self.update_count];
     }
 };
 
@@ -987,6 +1328,15 @@ pub fn getPatch(index: u32) ?*const Patch {
 /// Get total patch count
 pub fn getPatchCount() u32 {
     return getReconciler().getPatchCount();
+}
+
+/// Batch patches for optimal application order
+/// Returns a PatchBatch that groups patches by type:
+/// 1. Removes (applied first, in reverse order)
+/// 2. Creates (applied second, in tree order)
+/// 3. Updates (applied last)
+pub fn batchPatches() PatchBatch {
+    return PatchBatch.fromDiffResult(&getReconciler().differ.result);
 }
 
 // ============================================================================
@@ -2058,4 +2408,240 @@ test "global VNode pool" {
 
     resetGlobal();
     try std.testing.expect(pool_ptr.isEmpty());
+}
+
+test "PatchBatch basic operations" {
+    var result = DiffResult{};
+
+    // Add mixed patches
+    _ = result.addPatch(Patch.create(1, 0, .div));
+    _ = result.addPatch(Patch.remove(2));
+    _ = result.addPatch(Patch.updateText(3, "hello"));
+    _ = result.addPatch(Patch.create(4, 1, .span));
+    _ = result.addPatch(Patch.remove(5));
+
+    const batch = PatchBatch.fromDiffResult(&result);
+
+    // Check counts
+    try std.testing.expectEqual(@as(u32, 2), batch.remove_count);
+    try std.testing.expectEqual(@as(u32, 2), batch.create_count);
+    try std.testing.expectEqual(@as(u32, 1), batch.update_count);
+    try std.testing.expectEqual(@as(u32, 5), batch.getTotalCount());
+}
+
+test "PatchBatch iterator order" {
+    var result = DiffResult{};
+
+    // Add patches in mixed order
+    _ = result.addPatch(Patch.create(1, 0, .div)); // create
+    _ = result.addPatch(Patch.remove(2)); // remove
+    _ = result.addPatch(Patch.updateText(3, "text")); // update
+
+    const batch = PatchBatch.fromDiffResult(&result);
+    var iter = batch.iterator();
+
+    // First should be remove (phase 1)
+    const first = iter.next();
+    try std.testing.expect(first != null);
+    try std.testing.expectEqual(PatchType.remove, first.?.patch_type);
+
+    // Second should be create (phase 2)
+    const second = iter.next();
+    try std.testing.expect(second != null);
+    try std.testing.expectEqual(PatchType.create, second.?.patch_type);
+
+    // Third should be update (phase 3)
+    const third = iter.next();
+    try std.testing.expect(third != null);
+    try std.testing.expectEqual(PatchType.update_text, third.?.patch_type);
+
+    // No more patches
+    try std.testing.expect(iter.next() == null);
+}
+
+test "PatchBatch remove order reversed" {
+    var result = DiffResult{};
+
+    // Add removes - they should be reversed for safe DOM removal
+    _ = result.addPatch(Patch.remove(1)); // index 0
+    _ = result.addPatch(Patch.remove(2)); // index 1
+    _ = result.addPatch(Patch.remove(3)); // index 2
+
+    const batch = PatchBatch.fromDiffResult(&result);
+
+    // Removes should be in reverse order (children before parents)
+    try std.testing.expectEqual(@as(u32, 2), batch.removes[0]); // was index 2
+    try std.testing.expectEqual(@as(u32, 1), batch.removes[1]); // was index 1
+    try std.testing.expectEqual(@as(u32, 0), batch.removes[2]); // was index 0
+}
+
+test "PatchBatch empty result" {
+    var result = DiffResult{};
+    const batch = PatchBatch.fromDiffResult(&result);
+
+    try std.testing.expectEqual(@as(u32, 0), batch.getTotalCount());
+
+    var iter = batch.iterator();
+    try std.testing.expect(iter.next() == null);
+}
+
+test "batchPatches global helper" {
+    resetGlobal();
+
+    // Build a tree and commit
+    const tree = getReconciler().getNextTree();
+    const div_id = tree.create(VNode.element(.div));
+    tree.setRoot(div_id);
+
+    _ = getReconciler().commit();
+
+    // Batch the patches
+    const batch = batchPatches();
+    try std.testing.expect(batch.getTotalCount() >= 1);
+    try std.testing.expect(batch.create_count >= 1);
+}
+
+// ============================================================================
+// Incremental Update Tests
+// ============================================================================
+
+test "VTree markDirty and clearDirty" {
+    var tree = VTree.init();
+    const id = tree.create(VNode.element(.div));
+
+    // New nodes start dirty
+    try std.testing.expect(tree.get(id).?.dirty);
+
+    // Clear dirty
+    tree.clearDirty(id);
+    try std.testing.expect(!tree.get(id).?.dirty);
+
+    // Mark dirty
+    tree.markDirty(id);
+    try std.testing.expect(tree.get(id).?.dirty);
+}
+
+test "VTree markSubtreeDirty" {
+    var tree = VTree.init();
+    const parent_id = tree.create(VNode.element(.div));
+    const child1_id = tree.create(VNode.element(.span));
+    const child2_id = tree.create(VNode.element(.p));
+    _ = tree.addChild(parent_id, child1_id);
+    _ = tree.addChild(parent_id, child2_id);
+    tree.setRoot(parent_id);
+
+    // Clear all dirty flags
+    tree.clearAllDirty();
+    try std.testing.expect(!tree.hasDirtyNodes());
+
+    // Mark subtree dirty
+    tree.markSubtreeDirty(parent_id);
+    try std.testing.expect(tree.get(parent_id).?.dirty);
+    try std.testing.expect(tree.get(child1_id).?.dirty);
+    try std.testing.expect(tree.get(child2_id).?.dirty);
+}
+
+test "VTree getDirtyNodes" {
+    var tree = VTree.init();
+    const id1 = tree.create(VNode.element(.div));
+    const id2 = tree.create(VNode.element(.span));
+    const id3 = tree.create(VNode.element(.p));
+    _ = id2; // unused but created for test
+
+    // Clear all, then mark some dirty
+    tree.clearAllDirty();
+    tree.markDirty(id1);
+    tree.markDirty(id3);
+
+    var dirty_ids: [10]u32 = undefined;
+    const count = tree.getDirtyNodes(&dirty_ids);
+
+    try std.testing.expectEqual(@as(u32, 2), count);
+}
+
+test "VTree updateNodeText" {
+    var tree = VTree.init();
+    const id = tree.create(VNode.textNode("Hello"));
+    tree.clearDirty(id);
+
+    try std.testing.expect(tree.updateNodeText(id, "World"));
+    try std.testing.expectEqualStrings("World", tree.get(id).?.getText());
+    try std.testing.expect(tree.get(id).?.dirty);
+}
+
+test "VTree updateNodeClass" {
+    var tree = VTree.init();
+    const id = tree.create(VNode.element(.div).withClass("old"));
+    tree.clearDirty(id);
+
+    try std.testing.expect(tree.updateNodeClass(id, "new-class"));
+    try std.testing.expectEqualStrings("new-class", tree.get(id).?.props.getClass());
+    try std.testing.expect(tree.get(id).?.dirty);
+}
+
+test "VTree replaceNode" {
+    var tree = VTree.init();
+    const old_id = tree.create(VNode.element(.div));
+    tree.setRoot(old_id);
+
+    const new_id = tree.replaceNode(old_id, VNode.element(.section));
+
+    try std.testing.expect(new_id > 0);
+    try std.testing.expectEqual(new_id, tree.root_id);
+    try std.testing.expectEqual(ElementTag.section, tree.get(new_id).?.tag);
+}
+
+test "VTree cloneNode" {
+    var tree = VTree.init();
+    const original = tree.create(VNode.element(.div).withClass("original"));
+
+    const clone_id = tree.cloneNode(original);
+
+    try std.testing.expect(clone_id != original);
+    try std.testing.expectEqualStrings("original", tree.get(clone_id).?.props.getClass());
+}
+
+test "VTree getParent" {
+    var tree = VTree.init();
+    const parent_id = tree.create(VNode.element(.div));
+    const child_id = tree.create(VNode.element(.span));
+    _ = tree.addChild(parent_id, child_id);
+    tree.setRoot(parent_id);
+
+    try std.testing.expectEqual(parent_id, tree.getParent(child_id).?);
+    try std.testing.expect(tree.getParent(parent_id) == null);
+}
+
+test "VTree removeChild" {
+    var tree = VTree.init();
+    const parent_id = tree.create(VNode.element(.div));
+    const child1_id = tree.create(VNode.element(.span));
+    const child2_id = tree.create(VNode.element(.p));
+    _ = tree.addChild(parent_id, child1_id);
+    _ = tree.addChild(parent_id, child2_id);
+
+    try std.testing.expectEqual(@as(u8, 2), tree.get(parent_id).?.child_count);
+
+    try std.testing.expect(tree.removeChild(parent_id, child1_id));
+    try std.testing.expectEqual(@as(u8, 1), tree.get(parent_id).?.child_count);
+    try std.testing.expectEqual(child2_id, tree.get(parent_id).?.children[0]);
+}
+
+test "VTree insertChildAt" {
+    var tree = VTree.init();
+    const parent_id = tree.create(VNode.element(.div));
+    const child1_id = tree.create(VNode.element(.span));
+    const child2_id = tree.create(VNode.element(.p));
+    const child3_id = tree.create(VNode.element(.a));
+    _ = tree.addChild(parent_id, child1_id);
+    _ = tree.addChild(parent_id, child3_id);
+
+    // Insert child2 at index 1 (between child1 and child3)
+    try std.testing.expect(tree.insertChildAt(parent_id, child2_id, 1));
+
+    const parent = tree.get(parent_id).?;
+    try std.testing.expectEqual(@as(u8, 3), parent.child_count);
+    try std.testing.expectEqual(child1_id, parent.children[0]);
+    try std.testing.expectEqual(child2_id, parent.children[1]);
+    try std.testing.expectEqual(child3_id, parent.children[2]);
 }

@@ -195,8 +195,49 @@ const stats = diff_cache.getStats();
 std.debug.print("Hit rate: {d:.1}%\n", .{stats.hit_rate * 100});
 ```
 
+## Implemented Optimizations
+
+- [x] Batch patch application (`vdom.zig:PatchBatch`)
+- [x] Incremental tree updates (`vdom.zig:VTree` dirty tracking & in-place updates)
+- [x] Component-level memoization (`memo.zig`)
+
+### memo.zig - Component Memoization
+
+Caches component render results based on props/state hash to skip redundant re-renders.
+
+#### Components
+
+| Type | Purpose | Use Case |
+|------|---------|----------|
+| `MemoCache(N)` | Fixed-size memoization cache | Component render caching |
+| `MemoEntry` | Cached render result | Props/state hash storage |
+| `hashVNodeProps()` | Props hashing | Prop comparison |
+| `hashState()` | State hashing | State comparison |
+
+#### Usage
+
+```zig
+const memo = @import("perf/memo.zig");
+
+// Get global cache
+const cache = memo.getGlobalMemoCache();
+
+// Check if render can be skipped
+const props_hash = memo.hashVNodeProps(class, style_id, on_click, on_input, on_change, input_type, disabled);
+const state_hash = memo.hashState(hover, focus, active, disabled, checked, expanded, loading, error);
+
+if (cache.canSkipRender(component_id, props_hash, state_hash, child_count)) {
+    // Skip render - use cached result
+    return;
+}
+
+// Render and cache result
+renderComponent();
+cache.cache(component_id, props_hash, state_hash, child_count);
+```
+
 ## Future Optimizations
 
-- [ ] Batch patch application
-- [ ] Incremental tree updates
-- [ ] Component-level memoization
+- [ ] Fiber-based incremental rendering
+- [ ] Priority-based scheduling
+- [ ] Concurrent mode support
