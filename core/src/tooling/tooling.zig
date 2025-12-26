@@ -30,6 +30,9 @@ pub const templates = @import("templates.zig");
 pub const watcher = @import("watcher.zig");
 pub const ui = @import("ui.zig");
 pub const preview = @import("preview.zig");
+pub const lsp = @import("lsp.zig");
+pub const dap = @import("dap.zig");
+pub const hot_reload = @import("hot_reload.zig");
 
 // P0 Tooling APIs (v0.20.0)
 pub const registry = @import("registry.zig");
@@ -108,6 +111,40 @@ pub const DebugOverlay = preview.DebugOverlay;
 pub const DeviceInfo = preview.DeviceInfo;
 pub const PreviewError = preview.PreviewError;
 
+// Re-export common types from LSP (Issue #79)
+pub const Lsp = lsp.Lsp;
+pub const LspConfig = lsp.LspConfig;
+pub const LspSession = lsp.LspSession;
+pub const LspServerId = lsp.ServerId;
+pub const LspServerState = lsp.ServerState;
+pub const LspServerCapabilities = lsp.ServerCapabilities;
+pub const LspPosition = lsp.Position;
+pub const LspRange = lsp.Range;
+pub const LspLocation = lsp.Location;
+pub const LspCompletionItem = lsp.CompletionItem;
+pub const LspDiagnostic = lsp.Diagnostic;
+pub const LspDocumentSymbol = lsp.DocumentSymbol;
+pub const LspError = lsp.LspError;
+
+// Re-export common types from DAP (Issue #79)
+pub const Dap = dap.Dap;
+pub const DapConfig = dap.DapConfig;
+pub const DapSession = dap.DapSession;
+pub const DapAdapterId = dap.AdapterId;
+pub const DapAdapterState = dap.AdapterState;
+pub const DapBreakpoint = dap.Breakpoint;
+pub const DapThread = dap.Thread;
+pub const DapStackFrame = dap.StackFrame;
+pub const DapVariable = dap.Variable;
+pub const DapScope = dap.Scope;
+pub const DapError = dap.DapError;
+
+// Re-export common types from HotReload (Issue #79)
+pub const HotReload = hot_reload.HotReload;
+pub const HotReloadConfig = hot_reload.HotReloadConfig;
+pub const HotReloadSession = hot_reload.HotReloadSession;
+pub const HotReloadError = hot_reload.HotReloadError;
+
 // Re-export common types from Registry (Issue #58)
 pub const ComponentRegistry = registry.Registry;
 pub const ComponentMeta = registry.ComponentMeta;
@@ -151,6 +188,9 @@ pub const ToolingManager = struct {
     file_watcher: ?*FileWatcher = null,
     ui_manager: ?*UI = null,
     preview_manager: ?*Preview = null,
+    lsp_manager: ?*Lsp = null,
+    dap_manager: ?*Dap = null,
+    hot_reload_manager: ?*HotReload = null,
 
     pub fn init(allocator: std.mem.Allocator) ToolingManager {
         return .{
@@ -190,6 +230,18 @@ pub const ToolingManager = struct {
         if (self.preview_manager) |p| {
             p.deinit();
             self.allocator.destroy(p);
+        }
+        if (self.lsp_manager) |l| {
+            l.deinit();
+            self.allocator.destroy(l);
+        }
+        if (self.dap_manager) |d| {
+            d.deinit();
+            self.allocator.destroy(d);
+        }
+        if (self.hot_reload_manager) |h| {
+            h.deinit();
+            self.allocator.destroy(h);
         }
     }
 
@@ -272,6 +324,36 @@ pub const ToolingManager = struct {
         self.preview_manager = p;
         return p;
     }
+
+    /// Get or create LSP manager (Issue #79)
+    pub fn getLspManager(self: *ToolingManager) !*Lsp {
+        if (self.lsp_manager) |l| return l;
+
+        const l = try self.allocator.create(Lsp);
+        l.* = lsp.createLspManager(self.allocator);
+        self.lsp_manager = l;
+        return l;
+    }
+
+    /// Get or create DAP manager (Issue #79)
+    pub fn getDapManager(self: *ToolingManager) !*Dap {
+        if (self.dap_manager) |d| return d;
+
+        const d = try self.allocator.create(Dap);
+        d.* = dap.createDapManager(self.allocator);
+        self.dap_manager = d;
+        return d;
+    }
+
+    /// Get or create HotReload manager (Issue #79)
+    pub fn getHotReloadManager(self: *ToolingManager) !*HotReload {
+        if (self.hot_reload_manager) |h| return h;
+
+        const h = try self.allocator.create(HotReload);
+        h.* = hot_reload.createHotReloadManager(self.allocator);
+        self.hot_reload_manager = h;
+        return h;
+    }
 };
 
 /// Create a tooling manager
@@ -321,6 +403,21 @@ pub fn createPreviewManager(allocator: std.mem.Allocator) Preview {
     return preview.createPreviewManager(allocator);
 }
 
+/// Create an LSP manager (Issue #79)
+pub fn createLspManager(allocator: std.mem.Allocator) Lsp {
+    return lsp.createLspManager(allocator);
+}
+
+/// Create a DAP manager (Issue #79)
+pub fn createDapManager(allocator: std.mem.Allocator) Dap {
+    return dap.createDapManager(allocator);
+}
+
+/// Create a HotReload manager (Issue #79)
+pub fn createHotReloadManager(allocator: std.mem.Allocator) HotReload {
+    return hot_reload.createHotReloadManager(allocator);
+}
+
 // Tests
 test "Tooling module imports" {
     // Verify all submodules can be imported
@@ -336,6 +433,10 @@ test "Tooling module imports" {
     _ = registry;
     _ = serialization;
     _ = instantiation;
+    // Issue #79: LSP/DAP/HotReload
+    _ = lsp;
+    _ = dap;
+    _ = hot_reload;
 }
 
 test "ToolingManager creation" {
@@ -367,6 +468,16 @@ test "ToolingManager creation" {
 
     const prev = try manager.getPreviewManager();
     try std.testing.expectEqual(@as(usize, 0), prev.totalCount());
+
+    // Issue #79: LSP/DAP/HotReload managers
+    const lsp_mgr = try manager.getLspManager();
+    try std.testing.expectEqual(@as(usize, 0), lsp_mgr.totalCount());
+
+    const dap_mgr = try manager.getDapManager();
+    try std.testing.expectEqual(@as(usize, 0), dap_mgr.totalCount());
+
+    const hr_mgr = try manager.getHotReloadManager();
+    try std.testing.expectEqual(@as(usize, 0), hr_mgr.totalCount());
 }
 
 test "ToolingManager caching" {
@@ -405,6 +516,16 @@ test "Convenience constructors" {
 
     var prev = createPreviewManager(allocator);
     defer prev.deinit();
+
+    // Issue #79: LSP/DAP/HotReload
+    var lsp_mgr = createLspManager(allocator);
+    defer lsp_mgr.deinit();
+
+    var dap_mgr = createDapManager(allocator);
+    defer dap_mgr.deinit();
+
+    var hr_mgr = createHotReloadManager(allocator);
+    defer hr_mgr.deinit();
 }
 
 test "Type re-exports" {
@@ -417,6 +538,9 @@ test "Type re-exports" {
     const _change_type: ChangeType = .modified;
     const _component_type: ComponentType = .button;
     const _preview_state: PreviewState = .ready;
+    // Issue #79: LSP/DAP types
+    const _lsp_state: LspServerState = .ready;
+    const _dap_state: DapAdapterState = .running;
 
     _ = _target;
     _ = _build_mode;
@@ -426,6 +550,8 @@ test "Type re-exports" {
     _ = _change_type;
     _ = _component_type;
     _ = _preview_state;
+    _ = _lsp_state;
+    _ = _dap_state;
 }
 
 test "End-to-end workflow" {
