@@ -13,12 +13,12 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 ## Current Status
 
-**Version 0.22.0** is the current stable release with:
+**Version 0.23.0** is the current stable release with:
 
-- P2 Tooling APIs for complete IDE integration
-- Component Tree Export, Live Preview Bridge, Hot Reload APIs
-- Language Server Protocol (LSP) and Debug Adapter Protocol (DAP) support
-- Full C ABI exports for external tooling
+- iOS XCUITest E2E testing framework integration
+- Android Espresso E2E testing framework integration
+- Cross-platform test orchestration with CI/CD pipeline support
+- Unified test command (`./scripts/test.sh`)
 
 ## Roadmap Overview
 
@@ -31,18 +31,39 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 | v0.18.0 - v0.19.3 | Tooling APIs, C ABI, Zig 0.15 compat | Done |
 | v0.20.0 | P0 Tooling APIs, 27 Example Repos | Done |
 | v0.21.0 | M5Stack CoreS3 embedded platform support | Done |
-| v0.22.0 | P2 Tooling APIs (IDE Integration) | Current |
-| v0.23.0 | Testing Frameworks (XCUITest, Espresso) | Next |
+| v0.22.0 | P2 Tooling APIs (IDE Integration) | Done |
+| v0.23.0 | Testing Frameworks (XCUITest, Espresso) | Current |
+| v0.24.0 | Visual Regression Testing & Snapshot Testing | Next |
 
-## Upcoming: v0.23.0 - Testing Frameworks
+## Upcoming: v0.24.0 - Visual Testing
 
-Native testing framework integrations:
+Enhanced visual testing capabilities:
 
-- **iOS XCUITest Integration**: Native E2E testing for iOS apps (Issue #64)
-- **Android Espresso Integration**: Native E2E testing for Android apps (Issue #65)
-- **Cross-Platform Test Orchestration**: CI/CD pipeline support (Issue #66)
+- **Snapshot Testing**: Component snapshot comparison
+- **Visual Regression Detection**: Automated UI change detection
+- **Cross-Platform Screenshot Comparison**: Compare renders across platforms
 
 ## Recent Releases
+
+### v0.23.0 - Testing Frameworks (2025-12-26)
+
+Comprehensive E2E testing framework integrations:
+
+- **iOS XCUITest Integration**: ZylixTestContext for iOS E2E testing (Issue #64)
+  - App lifecycle management, interaction helpers, wait utilities
+  - Element query helpers, assertion helpers, screenshot capture
+  - ZylixUITestCase base class for test organization
+
+- **Android Espresso Integration**: ZylixTestContext for Android E2E testing (Issue #65)
+  - Espresso-based testing with UiAutomator integration
+  - View matchers, assertions, and interaction helpers
+  - ZylixBaseTest base class for test organization
+
+- **Cross-Platform Test Orchestration**: Unified CI/CD pipeline support (Issue #66)
+  - `./scripts/test.sh` unified test command
+  - GitHub Actions workflows for all platforms
+  - Test report aggregation and artifact collection
+  - Automatic simulator/emulator management
 
 ### v0.22.0 - P2 Tooling APIs (2025-12-26)
 
@@ -106,7 +127,7 @@ See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/
 
 ## Next
 
-**v0.23.0** will introduce native testing framework integrations including iOS XCUITest, Android Espresso, and cross-platform test orchestration for comprehensive E2E testing support.
+**v0.24.0** will introduce visual testing capabilities including snapshot testing, visual regression detection, and cross-platform screenshot comparison for comprehensive UI verification.
 
 ## Contributing
 

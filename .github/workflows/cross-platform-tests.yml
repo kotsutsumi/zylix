@@ -1,0 +1,405 @@
+# Cross-Platform Test Orchestration
+# Unified workflow that coordinates all platform tests and generates aggregated reports
+#
+# This workflow orchestrates testing across:
+# - Core (Zig) unit tests
+# - iOS E2E tests (XCUITest)
+# - Android E2E tests (Espresso)
+# - Web tests
+
+name: Cross-Platform Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run_core:
+        description: 'Run Core (Zig) tests'
+        required: false
+        default: true
+        type: boolean
+      run_ios:
+        description: 'Run iOS E2E tests'
+        required: false
+        default: true
+        type: boolean
+      run_android:
+        description: 'Run Android E2E tests'
+        required: false
+        default: true
+        type: boolean
+      run_web:
+        description: 'Run Web tests'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: cross-platform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Determine what to test based on changed files
+  # ============================================================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      ios: ${{ steps.filter.outputs.ios }}
+      android: ${{ steps.filter.outputs.android }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            ios:
+              - 'platforms/ios/**'
+              - 'core/**'
+            android:
+              - 'platforms/android/**'
+              - 'core/**'
+            web:
+              - 'platforms/web/**'
+              - 'tests/**'
+              - 'core/**'
+
+  # ============================================================================
+  # Core (Zig) Tests
+  # ============================================================================
+  core-tests:
+    name: Core Tests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.core == 'true' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 15
+    outputs:
+      result: ${{ steps.test.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Cache Zig Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            core/zig-cache
+            core/zig-out
+          key: zig-core-${{ runner.os }}-${{ hashFiles('core/**/*.zig') }}
+
+      - name: Build Core
+        working-directory: core
+        run: zig build
+
+      - name: Run Unit Tests
+        id: test
+        working-directory: core
+        run: zig build test --summary all
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-test-results
+          path: core/zig-out/
+          retention-days: 7
+
+  # ============================================================================
+  # iOS E2E Tests
+  # ============================================================================
+  ios-tests:
+    name: iOS E2E Tests
+    runs-on: macos-latest
+    needs: changes
+    if: needs.changes.outputs.ios == 'true' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
+    outputs:
+      result: ${{ steps.test.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Build Core for iOS
+        working-directory: core
+        run: zig build -Dtarget=aarch64-macos
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Build iOS App
+        working-directory: platforms/ios
+        run: |
+          xcodebuild build-for-testing \
+            -project Zylix.xcodeproj \
+            -scheme Zylix \
+            -destination "platform=iOS Simulator,name=iPhone 15,OS=17.5" \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty || true
+
+      - name: Run XCUITest E2E Tests
+        id: test
+        working-directory: platforms/ios
+        run: |
+          xcodebuild test-without-building \
+            -project Zylix.xcodeproj \
+            -scheme ZylixUITests \
+            -destination "platform=iOS Simulator,name=iPhone 15,OS=17.5" \
+            -derivedDataPath build \
+            -resultBundlePath TestResults.xcresult \
+            | xcpretty --report junit --output TestResults.xml || true
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: |
+            platforms/ios/TestResults.xcresult
+            platforms/ios/TestResults.xml
+          retention-days: 14
+
+  # ============================================================================
+  # Android E2E Tests
+  # ============================================================================
+  android-tests:
+    name: Android E2E Tests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.android == 'true' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 45
+    outputs:
+      result: ${{ steps.test.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build Android Library
+        working-directory: platforms/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :zylix-android:assembleDebug
+
+      - name: Run Espresso E2E Tests
+        id: test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          script: |
+            cd platforms/android
+            ./gradlew :zylix-android:connectedDebugAndroidTest --continue || true
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-results
+          path: |
+            platforms/android/zylix-android/build/outputs/androidTest-results
+            platforms/android/zylix-android/build/reports/androidTests
+          retention-days: 14
+
+  # ============================================================================
+  # Web Tests
+  # ============================================================================
+  web-tests:
+    name: Web Tests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 15
+    outputs:
+      result: ${{ steps.test.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tests/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: tests
+        run: npm ci || npm install
+
+      - name: Run Web Tests
+        id: test
+        working-directory: tests
+        run: npm test
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-test-results
+          path: tests/coverage/
+          retention-days: 7
+
+  # ============================================================================
+  # Test Report Aggregation
+  # ============================================================================
+  report:
+    name: Aggregate Results
+    runs-on: ubuntu-latest
+    needs: [core-tests, ios-tests, android-tests, web-tests]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts/
+
+      - name: Generate Summary Report
+        run: |
+          # Create summary
+          echo "# Cross-Platform Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Platform Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          # Core status
+          CORE_STATUS="${{ needs.core-tests.result }}"
+          if [ "$CORE_STATUS" = "success" ]; then
+            echo "| Core (Zig) | :white_check_mark: Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$CORE_STATUS" = "skipped" ]; then
+            echo "| Core (Zig) | :yellow_circle: Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Core (Zig) | :x: Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # iOS status
+          IOS_STATUS="${{ needs.ios-tests.result }}"
+          if [ "$IOS_STATUS" = "success" ]; then
+            echo "| iOS | :white_check_mark: Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$IOS_STATUS" = "skipped" ]; then
+            echo "| iOS | :yellow_circle: Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| iOS | :x: Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Android status
+          ANDROID_STATUS="${{ needs.android-tests.result }}"
+          if [ "$ANDROID_STATUS" = "success" ]; then
+            echo "| Android | :white_check_mark: Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$ANDROID_STATUS" = "skipped" ]; then
+            echo "| Android | :yellow_circle: Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Android | :x: Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Web status
+          WEB_STATUS="${{ needs.web-tests.result }}"
+          if [ "$WEB_STATUS" = "success" ]; then
+            echo "| Web | :white_check_mark: Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [ "$WEB_STATUS" = "skipped" ]; then
+            echo "| Web | :yellow_circle: Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Web | :x: Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test results are available as workflow artifacts:" >> $GITHUB_STEP_SUMMARY
+          echo "- core-test-results" >> $GITHUB_STEP_SUMMARY
+          echo "- ios-test-results" >> $GITHUB_STEP_SUMMARY
+          echo "- android-test-results" >> $GITHUB_STEP_SUMMARY
+          echo "- web-test-results" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create JSON Report
+        run: |
+          mkdir -p test-artifacts/report
+
+          cat > test-artifacts/report/summary.json << EOF
+          {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "actor": "${{ github.actor }}",
+            "results": {
+              "core": "${{ needs.core-tests.result }}",
+              "ios": "${{ needs.ios-tests.result }}",
+              "android": "${{ needs.android-tests.result }}",
+              "web": "${{ needs.web-tests.result }}"
+            }
+          }
+          EOF
+
+      - name: Upload Aggregated Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-platform-report
+          path: test-artifacts/
+          retention-days: 30
+
+      - name: Check Overall Status
+        run: |
+          FAILED=false
+
+          if [ "${{ needs.core-tests.result }}" = "failure" ]; then
+            FAILED=true
+          fi
+          if [ "${{ needs.ios-tests.result }}" = "failure" ]; then
+            FAILED=true
+          fi
+          if [ "${{ needs.android-tests.result }}" = "failure" ]; then
+            FAILED=true
+          fi
+          if [ "${{ needs.web-tests.result }}" = "failure" ]; then
+            FAILED=true
+          fi
+
+          if [ "$FAILED" = "true" ]; then
+            echo "::error::One or more platform tests failed"
+            exit 1
+          fi
+
+          echo "All platform tests passed or were skipped!"

@@ -1,0 +1,303 @@
+# Android E2E Tests with Espresso
+# Runs Zylix E2E tests on Android Emulator
+#
+# This workflow runs Espresso-based E2E tests for Zylix Android apps.
+# It uses the ZylixTestContext framework for comprehensive UI testing.
+
+name: Android E2E Tests
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'platforms/android/**'
+      - 'core/**'
+      - '.github/workflows/android-e2e-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'platforms/android/**'
+      - 'core/**'
+  workflow_dispatch:
+    inputs:
+      api_level:
+        description: 'Android API Level'
+        required: false
+        default: '34'
+        type: choice
+        options:
+          - '34'
+          - '33'
+          - '31'
+          - '30'
+      arch:
+        description: 'CPU Architecture'
+        required: false
+        default: 'x86_64'
+        type: choice
+        options:
+          - 'x86_64'
+          - 'x86'
+
+concurrency:
+  group: android-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '17'
+  DEFAULT_API_LEVEL: '34'
+  DEFAULT_ARCH: 'x86_64'
+
+jobs:
+  # ============================================================================
+  # Build Zylix Core for Android
+  # ============================================================================
+  build-core:
+    name: Build Core (Android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      core-built: ${{ steps.build.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Cache Zig Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            core/zig-cache
+            core/zig-out
+          key: zig-android-${{ runner.os }}-${{ hashFiles('core/**/*.zig') }}
+          restore-keys: |
+            zig-android-${{ runner.os }}-
+
+      - name: Build Core for Android
+        id: build
+        working-directory: core
+        run: |
+          zig build -Dtarget=aarch64-linux-android
+          zig build -Dtarget=x86_64-linux-android
+          echo "Core built successfully for Android targets"
+
+  # ============================================================================
+  # Run Espresso E2E Tests
+  # ============================================================================
+  e2e-tests:
+    name: E2E Tests (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    needs: build-core
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api-level: 34
+            target: google_apis
+            arch: x86_64
+          - api-level: 33
+            target: google_apis
+            arch: x86_64
+          # ARM emulator for compatibility testing
+          - api-level: 34
+            target: google_apis
+            arch: x86_64
+            profile: pixel_6
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd
+            ~/.android/adb*
+          key: android-sdk-${{ matrix.api-level }}-${{ matrix.arch }}
+          restore-keys: |
+            android-sdk-${{ matrix.api-level }}-
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build Android Library
+        working-directory: platforms/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :zylix-android:assembleDebug
+
+      - name: Build Test APK
+        working-directory: platforms/android
+        run: |
+          ./gradlew :zylix-android:assembleDebugAndroidTest
+
+      - name: Run Espresso E2E Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: ${{ matrix.profile || 'pixel_5' }}
+          disable-animations: true
+          script: |
+            cd platforms/android
+            ./gradlew :zylix-android:connectedDebugAndroidTest \
+              --no-daemon \
+              --stacktrace \
+              --info \
+              -Pandroid.testInstrumentationRunnerArguments.class=com.zylix.test.ZylixIntegrationTests
+
+      - name: Extract Test Results
+        if: always()
+        working-directory: platforms/android
+        run: |
+          echo "## Test Summary (API ${{ matrix.api-level }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Find test results
+          RESULTS_DIR="zylix-android/build/outputs/androidTest-results/connected"
+          if [ -d "$RESULTS_DIR" ]; then
+            # Count tests
+            TOTAL=$(grep -r "tests=" "$RESULTS_DIR" | grep -oP 'tests="\K[0-9]+' | awk '{s+=$1} END {print s}')
+            FAILED=$(grep -r "failures=" "$RESULTS_DIR" | grep -oP 'failures="\K[0-9]+' | awk '{s+=$1} END {print s}')
+            ERRORS=$(grep -r "errors=" "$RESULTS_DIR" | grep -oP 'errors="\K[0-9]+' | awk '{s+=$1} END {print s}')
+
+            echo "- **API Level**: ${{ matrix.api-level }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Architecture**: ${{ matrix.arch }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Total Tests**: ${TOTAL:-0}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failed**: ${FAILED:-0}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Errors**: ${ERRORS:-0}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-e2e-results-api${{ matrix.api-level }}-${{ matrix.arch }}
+          path: |
+            platforms/android/zylix-android/build/outputs/androidTest-results
+            platforms/android/zylix-android/build/reports/androidTests
+          retention-days: 30
+
+      - name: Upload Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screenshots-api${{ matrix.api-level }}
+          path: platforms/android/zylix-android/build/outputs/connected_android_test_additional_output
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ============================================================================
+  # Unit Tests (No Emulator Required)
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Unit Tests
+        working-directory: platforms/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test --continue
+
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-results
+          path: platforms/android/**/build/reports/tests
+          retention-days: 14
+
+  # ============================================================================
+  # Lint and Static Analysis
+  # ============================================================================
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Lint
+        working-directory: platforms/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew lint --continue
+
+      - name: Upload Lint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lint-results
+          path: platforms/android/**/build/reports/lint-results*
+          retention-days: 14
+
+  # ============================================================================
+  # Test Report Summary
+  # ============================================================================
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [e2e-tests, unit-tests, lint]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# Android E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test results and screenshots are available as workflow artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for Failures
+        if: needs.e2e-tests.result == 'failure' || needs.unit-tests.result == 'failure' || needs.lint.result == 'failure'
+        run: |
+          echo "::warning::Some Android tests failed. Check the workflow artifacts for details."

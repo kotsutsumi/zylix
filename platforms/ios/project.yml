@@ -69,6 +69,22 @@ targets:
           echo "Copied libzylix.a to Libraries/"
         basedOnDependencyAnalysis: false
 
+  ZylixUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ZylixUITests
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zylix.app.uitests
+        INFOPLIST_FILE: ZylixUITests/Info.plist
+        TEST_HOST: ""
+        TEST_TARGET_NAME: Zylix
+        SWIFT_VERSION: "5.9"
+    dependencies:
+      - target: Zylix
+
 schemes:
   Zylix:
     build:
@@ -78,6 +94,26 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - ZylixUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  ZylixUITests:
+    build:
+      targets:
+        ZylixUITests: [test]
+        Zylix: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ZylixUITests
     profile:
       config: Release
     analyze:
