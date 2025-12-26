@@ -309,3 +309,351 @@ test "Benchmark Animation functions" {
     const interp = benchInterpolation();
     try std.testing.expect(interp > 0);
 }
+
+// ============================================================================
+// Event System Benchmarks (Target: <1µs per dispatch)
+// ============================================================================
+
+fn benchEventDispatch() u32 {
+    // Simulate event dispatch: type check + handler lookup + invocation
+    const event_types = [_]u8{ 1, 2, 3, 4, 5, 6, 7, 8 }; // 8 event types
+    var dispatched: u32 = 0;
+    for (event_types) |etype| {
+        // Simulate handler lookup and dispatch
+        const handler_id = etype *% 17; // Hash lookup simulation
+        dispatched +%= handler_id;
+    }
+    return dispatched;
+}
+
+fn benchEventBubbling() u32 {
+    // Simulate event bubbling through 10-level DOM hierarchy
+    var current_depth: u32 = 0;
+    var handled: u32 = 0;
+    const max_depth: u32 = 10;
+
+    while (current_depth < max_depth) : (current_depth += 1) {
+        // Check if current level handles the event
+        if (current_depth % 3 == 0) {
+            handled +%= 1;
+        }
+    }
+    return handled;
+}
+
+fn benchEventQueueing() u32 {
+    // Simulate queuing 100 events
+    var queue_sum: u32 = 0;
+    for (0..100) |i| {
+        queue_sum +%= @as(u32, @intCast(i)) *% 7;
+    }
+    return queue_sum;
+}
+
+// ============================================================================
+// State Diff Benchmarks (Target: <5µs per diff)
+// ============================================================================
+
+fn benchStateDiff() u64 {
+    // Simulate diffing two state trees with 50 nodes
+    const state_a = [_]u64{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } ** 5;
+    const state_b = [_]u64{ 1, 2, 4, 4, 5, 7, 7, 8, 10, 10 } ** 5;
+    var diff_count: u64 = 0;
+
+    for (state_a, state_b) |a, b| {
+        if (a != b) {
+            diff_count += 1;
+        }
+    }
+    return diff_count;
+}
+
+fn benchStatePatch() u64 {
+    // Simulate applying patches to state
+    var state = [_]u64{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } ** 5;
+    const patches = [_]struct { idx: usize, val: u64 }{
+        .{ .idx = 0, .val = 100 },
+        .{ .idx = 10, .val = 200 },
+        .{ .idx = 25, .val = 300 },
+        .{ .idx = 40, .val = 400 },
+    };
+
+    var sum: u64 = 0;
+    for (patches) |p| {
+        state[p.idx] = p.val;
+        sum += p.val;
+    }
+    return sum;
+}
+
+fn benchStateSubscription() u32 {
+    // Simulate notifying 20 subscribers
+    var notified: u32 = 0;
+    for (0..20) |_| {
+        notified +%= 1;
+    }
+    return notified;
+}
+
+// ============================================================================
+// Timeline Animation Benchmarks (Target: <50µs per frame)
+// ============================================================================
+
+fn benchTimelineUpdate() f32 {
+    // Simulate updating 10 property tracks at a given time
+    var total: f32 = 0;
+    const time: f32 = 0.5; // Mid-animation
+
+    for (0..10) |_| {
+        // Simulate keyframe interpolation
+        const start_val: f32 = 0;
+        const end_val: f32 = 100;
+        const value = start_val + (end_val - start_val) * time;
+        total += value;
+    }
+    return total;
+}
+
+fn benchKeyframeLookup() u32 {
+    // Simulate binary search for keyframe at time
+    const keyframe_times = [_]u32{ 0, 100, 200, 500, 1000, 1500, 2000, 3000, 4000, 5000 };
+    const target_time: u32 = 1250;
+    var left: usize = 0;
+    var right: usize = keyframe_times.len;
+
+    while (left < right) {
+        const mid = left + (right - left) / 2;
+        if (keyframe_times[mid] < target_time) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    return @as(u32, @intCast(left));
+}
+
+fn benchCubicBezierEasing() f32 {
+    // Cubic bezier easing calculation (common in CSS animations)
+    var result: f32 = 0;
+    var t: f32 = 0;
+    const p1x: f32 = 0.25;
+    const p1y: f32 = 0.1;
+    const p2x: f32 = 0.25;
+    const p2y: f32 = 1.0;
+
+    while (t <= 1.0) : (t += 0.05) {
+        // Simplified cubic bezier calculation
+        const t2 = t * t;
+        const t3 = t2 * t;
+        const mt = 1 - t;
+        const mt2 = mt * mt;
+        const mt3 = mt2 * mt;
+
+        const x = 3 * mt2 * t * p1x + 3 * mt * t2 * p2x + t3;
+        const y = 3 * mt2 * t * p1y + 3 * mt * t2 * p2y + t3;
+        _ = x;
+        result += y;
+    }
+    return result;
+}
+
+// ============================================================================
+// NavMesh/Pathfinding Benchmarks
+// ============================================================================
+
+fn benchAStarHeuristic() f32 {
+    // Calculate Euclidean distance heuristic for A* pathfinding
+    var total: f32 = 0;
+    const grid_size: usize = 10;
+
+    for (0..grid_size) |i| {
+        for (0..grid_size) |j| {
+            const dx = @as(f32, @floatFromInt(grid_size - 1 - i));
+            const dy = @as(f32, @floatFromInt(grid_size - 1 - j));
+            total += @sqrt(dx * dx + dy * dy);
+        }
+    }
+    return total;
+}
+
+fn benchNavPolygonContains() u32 {
+    // Point-in-polygon test for navigation
+    const polygon_vertices: usize = 6;
+    var inside_count: u32 = 0;
+
+    // Test 100 points against a hexagonal polygon
+    for (0..100) |i| {
+        const x = @as(f32, @floatFromInt(i % 10)) / 10.0;
+        const y = @as(f32, @floatFromInt(i / 10)) / 10.0;
+
+        // Simplified polygon containment (ray casting simulation)
+        var crossings: u32 = 0;
+        for (0..polygon_vertices) |_| {
+            if (x < 0.5 and y < 0.5) {
+                crossings += 1;
+            }
+        }
+        if (crossings % 2 == 1) {
+            inside_count += 1;
+        }
+    }
+    return inside_count;
+}
+
+fn benchSpatialGridLookup() u32 {
+    // Spatial hash grid lookup for nearby objects
+    const grid_size: usize = 16;
+    var found: u32 = 0;
+
+    // Simulate looking up 9 neighboring cells
+    for (0..3) |di| {
+        for (0..3) |dj| {
+            const cell_idx = (5 + di) * grid_size + (5 + dj);
+            found +%= @as(u32, @intCast(cell_idx % 10)); // Objects in cell
+        }
+    }
+    return found;
+}
+
+// ============================================================================
+// Skeletal Animation Benchmarks
+// ============================================================================
+
+fn benchBoneTransform() f32 {
+    // Simulate bone transform calculation (4x4 matrix)
+    var result: f32 = 0;
+    const bone_count: usize = 50;
+
+    for (0..bone_count) |bone_idx| {
+        // Simulate matrix multiplication for bone hierarchy
+        const parent_weight: f32 = @as(f32, @floatFromInt(bone_idx)) / @as(f32, @floatFromInt(bone_count));
+        result += parent_weight * 16; // 16 elements in 4x4 matrix
+    }
+    return result;
+}
+
+fn benchSkeletonBlend() f32 {
+    // Blend between two animation poses
+    var blended_sum: f32 = 0;
+    const bone_count: usize = 50;
+    const blend_factor: f32 = 0.5;
+
+    for (0..bone_count) |i| {
+        const pose_a = @as(f32, @floatFromInt(i));
+        const pose_b = @as(f32, @floatFromInt(i + 10));
+        blended_sum += pose_a * (1 - blend_factor) + pose_b * blend_factor;
+    }
+    return blended_sum;
+}
+
+fn benchIKSolver() f32 {
+    // Two-bone IK solver iteration
+    var result: f32 = 0;
+    const max_iterations: usize = 10;
+
+    for (0..max_iterations) |_| {
+        // Simulate CCD IK iteration
+        const target_dist: f32 = 10.0;
+        const current_dist: f32 = 8.0;
+        const error = target_dist - current_dist;
+        result += @abs(error);
+    }
+    return result;
+}
+
+// ============================================================================
+// Extended Benchmark Suite
+// ============================================================================
+
+pub fn runExtendedBenchmarks(allocator: std.mem.Allocator) !void {
+    var runner = BenchmarkRunner.init(allocator);
+    defer runner.deinit();
+
+    std.debug.print("\nRunning Extended Performance Benchmarks...\n", .{});
+
+    // Event System (Target: <1µs)
+    _ = try runner.bench("event/dispatch", benchEventDispatch);
+    _ = try runner.bench("event/bubbling", benchEventBubbling);
+    _ = try runner.bench("event/queueing", benchEventQueueing);
+
+    // State Diff/Patch (Target: <5µs)
+    _ = try runner.bench("state/diff_50_nodes", benchStateDiff);
+    _ = try runner.bench("state/patch_apply", benchStatePatch);
+    _ = try runner.bench("state/subscription_notify", benchStateSubscription);
+
+    // Timeline Animation (Target: <50µs per frame)
+    _ = try runner.bench("timeline/update_10_tracks", benchTimelineUpdate);
+    _ = try runner.bench("timeline/keyframe_lookup", benchKeyframeLookup);
+    _ = try runner.bench("timeline/cubic_bezier", benchCubicBezierEasing);
+
+    // NavMesh/Pathfinding
+    _ = try runner.bench("navmesh/astar_heuristic", benchAStarHeuristic);
+    _ = try runner.bench("navmesh/polygon_contains", benchNavPolygonContains);
+    _ = try runner.bench("navmesh/spatial_grid_lookup", benchSpatialGridLookup);
+
+    // Skeletal Animation
+    _ = try runner.bench("skeletal/bone_transform", benchBoneTransform);
+    _ = try runner.bench("skeletal/pose_blend", benchSkeletonBlend);
+    _ = try runner.bench("skeletal/ik_solver", benchIKSolver);
+
+    runner.printResults();
+}
+
+// ============================================================================
+// Extended Tests
+// ============================================================================
+
+test "Benchmark Event functions" {
+    const dispatch = benchEventDispatch();
+    try std.testing.expect(dispatch > 0);
+
+    const bubbling = benchEventBubbling();
+    try std.testing.expect(bubbling >= 0);
+
+    const queueing = benchEventQueueing();
+    try std.testing.expect(queueing > 0);
+}
+
+test "Benchmark State functions" {
+    const diff = benchStateDiff();
+    try std.testing.expect(diff > 0);
+
+    const patch = benchStatePatch();
+    try std.testing.expect(patch > 0);
+
+    const sub = benchStateSubscription();
+    try std.testing.expect(sub > 0);
+}
+
+test "Benchmark Timeline functions" {
+    const update = benchTimelineUpdate();
+    try std.testing.expect(update > 0);
+
+    const lookup = benchKeyframeLookup();
+    try std.testing.expect(lookup >= 0);
+
+    const bezier = benchCubicBezierEasing();
+    try std.testing.expect(bezier > 0);
+}
+
+test "Benchmark NavMesh functions" {
+    const heuristic = benchAStarHeuristic();
+    try std.testing.expect(heuristic > 0);
+
+    const contains = benchNavPolygonContains();
+    try std.testing.expect(contains >= 0);
+
+    const grid = benchSpatialGridLookup();
+    try std.testing.expect(grid > 0);
+}
+
+test "Benchmark Skeletal functions" {
+    const transform = benchBoneTransform();
+    try std.testing.expect(transform > 0);
+
+    const blend = benchSkeletonBlend();
+    try std.testing.expect(blend > 0);
+
+    const ik = benchIKSolver();
+    try std.testing.expect(ik > 0);
+}

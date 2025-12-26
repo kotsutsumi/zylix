@@ -20,9 +20,6 @@ pub const mbaas = @import("mbaas/mbaas.zig");
 pub const server = @import("server/server.zig");
 pub const edge = @import("edge/edge.zig");
 pub const perf = @import("perf/perf.zig");
-pub const markdown = @import("markdown/markdown.zig");
-pub const buffer = @import("buffer/buffer.zig");
-pub const editor = @import("editor/editor.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -95,31 +92,9 @@ pub const AnalyticsHook = perf.AnalyticsHook;
 pub const BundleAnalyzer = perf.BundleAnalyzer;
 pub const TreeShaker = perf.TreeShaker;
 
-// Re-export Markdown types
-pub const MarkdownParser = markdown.MarkdownParser;
-pub const MarkdownNode = markdown.Node;
-pub const MarkdownOptions = markdown.ParserOptions;
-pub const MarkdownRenderer = markdown.HtmlRenderer;
-
-// Re-export Buffer types
-pub const TextBuffer = buffer.TextBuffer;
-
-// Re-export Editor types
-pub const SyntaxHighlighter = editor.SyntaxHighlighter;
-pub const TokenType = editor.TokenType;
-pub const TokenSpan = editor.TokenSpan;
-pub const Theme = editor.Theme;
-pub const LanguageId = editor.LanguageId;
-
-// Re-export Vim types
-pub const VimMode = editor.VimMode;
-pub const VimState = editor.VimState;
-pub const VimAction = editor.VimAction;
-
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
     _ = abi;
-    _ = @import("buffer/abi.zig");
 }
 
 test {

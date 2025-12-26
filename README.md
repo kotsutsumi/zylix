@@ -128,6 +128,37 @@ Zylix uses a layered architecture:
 └─────────────────────────────────────────────────────────┘
 ```
 
+## Development
+
+### Build Commands
+
+```bash
+# Build the core library
+cd core && zig build
+
+# Run tests
+cd core && zig build test-lib --summary all
+
+# WASM build
+cd core && zig build -Dtarget=wasm32-freestanding
+
+# iOS build (aarch64)
+cd core && zig build -Dtarget=aarch64-macos
+
+# Android build (aarch64)
+cd core && zig build -Dtarget=aarch64-linux-android
+```
+
+### Zig 0.15 Notes
+
+This project uses **Zig 0.15.x**. Key API differences from older versions:
+
+- **ArrayList API**: Use `.{}` for initialization, pass allocator to `deinit()` and `append()`
+- **Memory patterns**: Structs with ArrayList fields store allocator for cleanup
+- **Error handling**: Use explicit error handling instead of `catch {}`
+
+See [CLAUDE.md](core/CLAUDE.md) for detailed Zig 0.15 patterns.
+
 ## Documentation
 
 - [Official Documentation](https://zylix.dev/en/docs)

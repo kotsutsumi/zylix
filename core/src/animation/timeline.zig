@@ -60,6 +60,8 @@ pub fn PropertyTrack(comptime T: type) type {
         cached_duration: TimeMs = 0,
         // Performance: last accessed keyframe index for temporal coherence
         last_keyframe_idx: usize = 0,
+        // Error tracking: set to true if any allocation fails
+        allocation_failed: bool = false,
 
         pub fn init(allocator: std.mem.Allocator, name: []const u8, initial_value: T) Self {
             var track = Self{
@@ -69,10 +71,18 @@ pub fn PropertyTrack(comptime T: type) type {
                 .allocator = allocator,
                 .cached_duration = 0,
                 .last_keyframe_idx = 0,
+                .allocation_failed = false,
             };
             // Add initial keyframe at time 0
-            track.keyframes.append(allocator, .{ .time = 0, .value = initial_value }) catch {};
+            track.keyframes.append(allocator, .{ .time = 0, .value = initial_value }) catch {
+                track.allocation_failed = true;
+            };
             return track;
+        }
+
+        /// Check if any allocation has failed
+        pub fn hasAllocationError(self: *const Self) bool {
+            return self.allocation_failed;
         }
 
         pub fn deinit(self: *Self) void {
@@ -81,7 +91,10 @@ pub fn PropertyTrack(comptime T: type) type {
 
         /// Add a keyframe at specified time
         pub fn addKeyframe(self: *Self, time: TimeMs, value: T) *Self {
-            self.keyframes.append(self.allocator, .{ .time = time, .value = value }) catch {};
+            self.keyframes.append(self.allocator, .{ .time = time, .value = value }) catch {
+                self.allocation_failed = true;
+                return self;
+            };
             self.updateCachedDuration();
             return self;
         }
@@ -92,7 +105,10 @@ pub fn PropertyTrack(comptime T: type) type {
                 .time = time,
                 .value = value,
                 .easing_fn = easing_fn,
-            }) catch {};
+            }) catch {
+                self.allocation_failed = true;
+                return self;
+            };
             self.updateCachedDuration();
             return self;
         }
@@ -255,7 +271,6 @@ pub const Timeline = struct {
     state: PlaybackState,
     current_time: TimeMs,
     previous_time: TimeMs, // Track previous time for marker detection
-    duration: TimeMs,
     speed: f32,
     loop_mode: LoopMode,
     loop_count: u32,
@@ -263,9 +278,8 @@ pub const Timeline = struct {
     direction: PlayDirection,
     start_time: ?i64,
     callbacks: std.ArrayList(*const fn (AnimationEvent) void),
-    // Performance: cached duration valid flag
-    duration_valid: bool = false,
-    cached_total_duration: TimeMs = 0,
+    // Error tracking: set to true if any allocation fails
+    allocation_failed: bool = false,
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
@@ -275,7 +289,6 @@ pub const Timeline = struct {
             .state = .stopped,
             .current_time = 0,
             .previous_time = 0,
-            .duration = 0,
             .speed = 1.0,
             .loop_mode = .none,
             .loop_count = 0,
@@ -283,8 +296,6 @@ pub const Timeline = struct {
             .direction = .forward,
             .start_time = null,
             .callbacks = .{},
-            .duration_valid = false,
-            .cached_total_duration = 0,
         };
     }
 
@@ -295,6 +306,11 @@ pub const Timeline = struct {
         self.tracks.deinit(self.allocator);
         self.markers.deinit(self.allocator);
         self.callbacks.deinit(self.allocator);
+    }
+
+    /// Check if any allocation has failed
+    pub fn hasAllocationError(self: *const Self) bool {
+        return self.allocation_failed;
     }
 
     /// Add a property track to the timeline
@@ -332,19 +348,24 @@ pub const Timeline = struct {
             self.allocator.destroy(track);
             return null;
         };
-        self.updateDuration();
         return track;
     }
 
     /// Add a marker at specified time
     pub fn addMarker(self: *Self, name: []const u8, time: TimeMs) *Self {
-        self.markers.append(self.allocator, .{ .name = name, .time = time }) catch {};
+        self.markers.append(self.allocator, .{ .name = name, .time = time }) catch {
+            self.allocation_failed = true;
+            return self;
+        };
         return self;
     }
 
     /// Add a marker with callback
     pub fn addMarkerWithCallback(self: *Self, name: []const u8, time: TimeMs, callback: *const fn () void) *Self {
-        self.markers.append(self.allocator, .{ .name = name, .time = time, .callback = callback }) catch {};
+        self.markers.append(self.allocator, .{ .name = name, .time = time, .callback = callback }) catch {
+            self.allocation_failed = true;
+            return self;
+        };
         return self;
     }
 
@@ -487,25 +508,6 @@ pub const Timeline = struct {
 
     // === Private Methods ===
 
-    fn updateDuration(self: *Self) void {
-        var max_duration: TimeMs = 0;
-        for (self.tracks.items) |track| {
-            const track_duration = track.get_duration_fn(track.ptr);
-            if (track_duration > max_duration) {
-                max_duration = track_duration;
-            }
-        }
-        self.duration = max_duration;
-        // Update cache
-        self.cached_total_duration = max_duration;
-        self.duration_valid = true;
-    }
-
-    /// Invalidate the cached duration (call when tracks change)
-    pub fn invalidateDurationCache(self: *Self) void {
-        self.duration_valid = false;
-    }
-
     fn updateTracks(self: *Self) void {
         for (self.tracks.items) |track| {
             track.update_fn(track.ptr, self.current_time);
@@ -565,9 +567,10 @@ pub const Timeline = struct {
     }
 
     pub fn getDuration(self: *const Self) TimeMs {
-        // Calculate duration dynamically from tracks
-        // Note: Each PropertyTrack has its own cached duration, so this is O(n) where n = track count
-        // Timeline-level caching is avoided because tracks can be modified independently
+        // Always calculate from tracks since tracks can be modified independently
+        // Note: Each PropertyTrack has its own cached duration, making this O(n) where n = track count
+        // Timeline-level caching is intentionally avoided because PropertyTrack.addKeyframe()
+        // doesn't have a reference to invalidate the parent Timeline's cache
         var max_duration: TimeMs = 0;
         for (self.tracks.items) |track| {
             const track_duration = track.get_duration_fn(track.ptr);
@@ -636,12 +639,15 @@ pub const ParallelGroup = struct {
     timelines: std.ArrayList(*Timeline),
     allocator: std.mem.Allocator,
     state: PlaybackState,
+    // Error tracking: set to true if any allocation fails
+    allocation_failed: bool = false,
 
     pub fn init(allocator: std.mem.Allocator) Self {
         return Self{
             .timelines = .{},
             .allocator = allocator,
             .state = .stopped,
+            .allocation_failed = false,
         };
     }
 
@@ -653,9 +659,17 @@ pub const ParallelGroup = struct {
         self.timelines.deinit(self.allocator);
     }
 
+    /// Check if any allocation has failed
+    pub fn hasAllocationError(self: *const Self) bool {
+        return self.allocation_failed;
+    }
+
     /// Add a timeline to the group
     pub fn add(self: *Self, timeline: *Timeline) *Self {
-        self.timelines.append(self.allocator, timeline) catch {};
+        self.timelines.append(self.allocator, timeline) catch {
+            self.allocation_failed = true;
+            return self;
+        };
         return self;
     }
 
