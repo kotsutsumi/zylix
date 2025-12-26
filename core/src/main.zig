@@ -21,6 +21,7 @@ pub const server = @import("server/server.zig");
 pub const edge = @import("edge/edge.zig");
 pub const perf = @import("perf/perf.zig");
 pub const markdown = @import("markdown/markdown.zig");
+pub const buffer = @import("buffer/buffer.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -99,9 +100,13 @@ pub const MarkdownNode = markdown.Node;
 pub const MarkdownOptions = markdown.ParserOptions;
 pub const MarkdownRenderer = markdown.HtmlRenderer;
 
+// Re-export Buffer types
+pub const TextBuffer = buffer.TextBuffer;
+
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
     _ = abi;
+    _ = @import("buffer/abi.zig");
 }
 
 test {
