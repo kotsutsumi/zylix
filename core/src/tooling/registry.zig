@@ -352,22 +352,27 @@ pub const Registry = struct {
 // ============================================================================
 
 var global_registry: Registry = undefined;
-var global_initialized: bool = false;
+// Thread-safe initialization flag using atomic operations
+var global_initialized: std.atomic.Value(bool) = std.atomic.Value(bool).init(false);
 
+/// Initialize global registry (thread-safe)
 pub fn initGlobal() void {
-    if (!global_initialized) {
+    if (!global_initialized.load(.acquire)) {
         global_registry = Registry.init();
-        global_initialized = true;
+        global_initialized.store(true, .release);
     }
 }
 
+/// Get global registry instance (thread-safe)
 pub fn getRegistry() *Registry {
-    if (!global_initialized) initGlobal();
+    if (!global_initialized.load(.acquire)) initGlobal();
     return &global_registry;
 }
 
+/// Reset global registry (not thread-safe, use only for testing)
 pub fn resetGlobal() void {
     global_registry = Registry.init();
+    global_initialized.store(true, .release);
 }
 
 // ============================================================================
@@ -390,7 +395,8 @@ pub const ABIComponentMeta = extern struct {
     property_count: u8,
 };
 
-var abi_meta_cache: ABIComponentMeta = undefined;
+// Thread-local storage for C ABI thread safety
+threadlocal var abi_meta_cache: ABIComponentMeta = undefined;
 
 /// Initialize the component registry
 pub fn zylix_registry_init() callconv(.c) i32 {
@@ -400,13 +406,13 @@ pub fn zylix_registry_init() callconv(.c) i32 {
 
 /// Get component count
 pub fn zylix_registry_count() callconv(.c) u32 {
-    if (!global_initialized) return 0;
+    if (!global_initialized.load(.acquire)) return 0;
     return global_registry.count;
 }
 
 /// Get component metadata by type
 pub fn zylix_registry_get_by_type(comp_type: u8) callconv(.c) ?*const ABIComponentMeta {
-    if (!global_initialized) return null;
+    if (!global_initialized.load(.acquire)) return null;
 
     const meta = global_registry.getByType(@enumFromInt(comp_type)) orelse return null;
 
@@ -430,7 +436,7 @@ pub fn zylix_registry_get_by_type(comp_type: u8) callconv(.c) ?*const ABICompone
 
 /// Get component metadata by ID
 pub fn zylix_registry_get_by_id(id: u32) callconv(.c) ?*const ABIComponentMeta {
-    if (!global_initialized) return null;
+    if (!global_initialized.load(.acquire)) return null;
 
     const meta = global_registry.getById(id) orelse return null;
 
@@ -458,7 +464,7 @@ pub fn zylix_registry_list_by_category(
     buffer: ?[*]u32,
     buffer_len: u32,
 ) callconv(.c) u32 {
-    if (!global_initialized or buffer == null) return 0;
+    if (!global_initialized.load(.acquire) or buffer == null) return 0;
 
     return global_registry.listByCategory(
         @enumFromInt(category),

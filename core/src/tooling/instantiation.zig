@@ -412,7 +412,11 @@ pub fn zylix_instantiate_child(parent_id: u32, spec: ?*const ABIComponentSpec) c
     return child_id;
 }
 
+/// Maximum text length for C ABI safety
+const MAX_ABI_TEXT_LEN: u16 = 4096;
+
 /// Create simple component by type
+/// Note: Caller must ensure text_ptr points to valid memory of at least text_len bytes
 pub fn zylix_instantiate_simple(
     comp_type: u8,
     text_ptr: ?[*]const u8,
@@ -421,9 +425,11 @@ pub fn zylix_instantiate_simple(
 ) callconv(.c) u32 {
     const tree = component.getTree();
 
+    // Cap text_len to prevent excessive reads (defensive C ABI boundary check)
+    const safe_len = @min(text_len, MAX_ABI_TEXT_LEN);
     const spec = ComponentSpec{
         .component_type = @enumFromInt(comp_type),
-        .text = if (text_ptr != null and text_len > 0) text_ptr.?[0..text_len] else null,
+        .text = if (text_ptr != null and safe_len > 0) text_ptr.?[0..safe_len] else null,
         .on_click = on_click,
     };
 

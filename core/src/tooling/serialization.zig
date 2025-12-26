@@ -86,12 +86,14 @@ pub const JsonWriter = struct {
     pub fn beginObject(self: *JsonWriter) bool {
         if (!self.maybeComma()) return false;
         if (!self.writeChar('{')) return false;
+        if (self.depth >= MAX_DEPTH) return false; // Overflow protection
         self.depth += 1;
         self.needs_comma = false;
         return true;
     }
 
     pub fn endObject(self: *JsonWriter) bool {
+        if (self.depth == 0) return false; // Underflow protection
         self.depth -= 1;
         if (!self.writeIndent()) return false;
         if (!self.writeChar('}')) return false;
@@ -102,12 +104,14 @@ pub const JsonWriter = struct {
     pub fn beginArray(self: *JsonWriter) bool {
         if (!self.maybeComma()) return false;
         if (!self.writeChar('[')) return false;
+        if (self.depth >= MAX_DEPTH) return false; // Overflow protection
         self.depth += 1;
         self.needs_comma = false;
         return true;
     }
 
     pub fn endArray(self: *JsonWriter) bool {
+        if (self.depth == 0) return false; // Underflow protection
         self.depth -= 1;
         if (!self.writeIndent()) return false;
         if (!self.writeChar(']')) return false;
@@ -132,7 +136,8 @@ pub const JsonWriter = struct {
     pub fn writeString(self: *JsonWriter, value: []const u8) bool {
         if (!self.maybeComma()) return false;
         if (!self.writeChar('"')) return false;
-        // Escape special characters
+        // Escape special characters (full JSON compliance)
+        const hex_chars = "0123456789abcdef";
         for (value) |c| {
             switch (c) {
                 '"' => {
@@ -149,6 +154,18 @@ pub const JsonWriter = struct {
                 },
                 '\t' => {
                     if (!self.write("\\t")) return false;
+                },
+                0x08 => { // backspace
+                    if (!self.write("\\b")) return false;
+                },
+                0x0C => { // formfeed
+                    if (!self.write("\\f")) return false;
+                },
+                0x00...0x07, 0x0B, 0x0E...0x1F => {
+                    // Other control characters: use \u00XX
+                    if (!self.write("\\u00")) return false;
+                    if (!self.writeChar(hex_chars[c >> 4])) return false;
+                    if (!self.writeChar(hex_chars[c & 0xF])) return false;
                 },
                 else => {
                     if (!self.writeChar(c)) return false;
@@ -619,8 +636,9 @@ fn elementTagName(tag: vdom.ElementTag) []const u8 {
 // C ABI Exports
 // ============================================================================
 
-var serialize_buffer: [MAX_JSON_SIZE]u8 = undefined;
-var output_len: usize = 0;
+// Thread-local storage for C ABI thread safety
+threadlocal var serialize_buffer: [MAX_JSON_SIZE]u8 = undefined;
+threadlocal var output_len: usize = 0;
 
 /// Serialize component tree to JSON
 pub fn zylix_serialize_tree(pretty: bool) callconv(.c) ?[*]const u8 {
