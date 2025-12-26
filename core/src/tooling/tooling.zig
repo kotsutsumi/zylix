@@ -31,6 +31,11 @@ pub const watcher = @import("watcher.zig");
 pub const ui = @import("ui.zig");
 pub const preview = @import("preview.zig");
 
+// P0 Tooling APIs (v0.20.0)
+pub const registry = @import("registry.zig");
+pub const serialization = @import("serialization.zig");
+pub const instantiation = @import("instantiation.zig");
+
 // C ABI exports for platform shell integration
 pub const abi = @import("tooling_abi.zig");
 
@@ -102,6 +107,37 @@ pub const PreviewConfig = preview.PreviewConfig;
 pub const DebugOverlay = preview.DebugOverlay;
 pub const DeviceInfo = preview.DeviceInfo;
 pub const PreviewError = preview.PreviewError;
+
+// Re-export common types from Registry (Issue #58)
+pub const ComponentRegistry = registry.Registry;
+pub const ComponentMeta = registry.ComponentMeta;
+pub const PropertyMeta = registry.PropertyMeta;
+pub const PropertyType = registry.PropertyType;
+pub const ComponentCategory = registry.ComponentCategory;
+
+// Re-export common types from Serialization (Issue #59)
+pub const SerializeOptions = serialization.SerializeOptions;
+pub const JsonWriter = serialization.JsonWriter;
+pub const serializeTree = serialization.serializeTree;
+pub const serializeVTree = serialization.serializeVTree;
+
+// Re-export common types from Instantiation (Issue #60)
+pub const ComponentSpec = instantiation.ComponentSpec;
+pub const VNodeSpec = instantiation.VNodeSpec;
+pub const ComponentTemplate = instantiation.ComponentTemplate;
+pub const createComponent = instantiation.createComponent;
+pub const createVNode = instantiation.createVNode;
+pub const instantiateInTree = instantiation.instantiateInTree;
+pub const instantiateTemplate = instantiation.instantiateTemplate;
+
+// Quick builders (Issue #60)
+pub const button = instantiation.button;
+pub const textElement = instantiation.textElement;
+pub const input = instantiation.input;
+pub const container = instantiation.container;
+pub const vstack = instantiation.vstack;
+pub const hstack = instantiation.hstack;
+pub const image = instantiation.image;
 
 /// Tooling Manager
 /// Provides unified access to all developer tooling services.
@@ -296,6 +332,10 @@ test "Tooling module imports" {
     _ = watcher;
     _ = ui;
     _ = preview;
+    // P0 Tooling APIs (v0.20.0)
+    _ = registry;
+    _ = serialization;
+    _ = instantiation;
 }
 
 test "ToolingManager creation" {

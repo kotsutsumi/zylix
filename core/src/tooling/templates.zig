@@ -386,6 +386,30 @@ const builtin_templates = [_]Template{
         .targets = &.{.android},
         .tags = &.{ "plugin", "native", "android" },
     },
+    // Issue #64: iOS XCUITest E2E Testing template
+    .{
+        .id = "test-ios-xcuitest",
+        .name = "iOS XCUITest Suite",
+        .description = "iOS/watchOS E2E testing template with XCUITest and WebDriverAgent integration",
+        .category = .example,
+        .source = .builtin,
+        .version = "1.0.0",
+        .author = "Zylix Team",
+        .targets = &.{.ios},
+        .tags = &.{ "test", "e2e", "xcuitest", "ios", "watchos", "automation" },
+    },
+    // Issue #65: Android Espresso E2E Testing template
+    .{
+        .id = "test-android-espresso",
+        .name = "Android Espresso Suite",
+        .description = "Android E2E testing template with Espresso/UIAutomator2 and Appium integration",
+        .category = .example,
+        .source = .builtin,
+        .version = "1.0.0",
+        .author = "Zylix Team",
+        .targets = &.{.android},
+        .tags = &.{ "test", "e2e", "espresso", "uiautomator", "android", "automation" },
+    },
 };
 
 // Get built-in template details
@@ -406,6 +430,12 @@ fn getFileStructure(template_id: []const u8) []const []const u8 {
     if (std.mem.eql(u8, template_id, "app")) {
         return &app_file_structure;
     }
+    if (std.mem.eql(u8, template_id, "test-ios-xcuitest")) {
+        return &ios_xcuitest_file_structure;
+    }
+    if (std.mem.eql(u8, template_id, "test-android-espresso")) {
+        return &android_espresso_file_structure;
+    }
     return &.{};
 }
 
@@ -417,6 +447,41 @@ const app_file_structure = [_][]const u8{
     "tests/",
     "build.zig",
     "build.zig.zon",
+};
+
+// Issue #64: iOS XCUITest E2E Testing file structure
+const ios_xcuitest_file_structure = [_][]const u8{
+    "tests/",
+    "tests/e2e/",
+    "tests/e2e/ios_test.zig",
+    "tests/e2e/watchos_test.zig",
+    "tests/fixtures/",
+    "tests/fixtures/test_data.json",
+    "tests/helpers/",
+    "tests/helpers/wda_client.zig",
+    "tests/helpers/assertions.zig",
+    "tests/README.md",
+    "scripts/",
+    "scripts/setup_wda.sh",
+    "scripts/run_ios_tests.sh",
+    "build.zig",
+};
+
+// Issue #65: Android Espresso E2E Testing file structure
+const android_espresso_file_structure = [_][]const u8{
+    "tests/",
+    "tests/e2e/",
+    "tests/e2e/android_test.zig",
+    "tests/fixtures/",
+    "tests/fixtures/test_data.json",
+    "tests/helpers/",
+    "tests/helpers/appium_client.zig",
+    "tests/helpers/assertions.zig",
+    "tests/README.md",
+    "scripts/",
+    "scripts/setup_appium.sh",
+    "scripts/run_android_tests.sh",
+    "build.zig",
 };
 
 fn getTemplateOptions(template_id: []const u8) []const TemplateOption {
