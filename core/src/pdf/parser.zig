@@ -37,7 +37,7 @@ pub const Parser = struct {
     data: []const u8,
     pos: usize,
     version: PdfVersion,
-    xref_table: std.AutoHashMap(u32, XrefEntry),
+    xref_table: std.AutoHashMapUnmanaged(u32, XrefEntry),
     trailer: ?PdfObject,
 
     pub const XrefEntry = struct {
@@ -72,7 +72,7 @@ pub const Parser = struct {
                 for (arr.items) |*item| {
                     freePdfObject(allocator, item);
                 }
-                arr.deinit();
+                arr.deinit(allocator);
             },
             .dictionary => |*dict| {
                 var iter = dict.valueIterator();
@@ -401,8 +401,8 @@ pub const Parser = struct {
         }
         self.pos += 1; // Skip [
 
-        var arr = std.ArrayList(PdfObject).init(self.allocator);
-        errdefer arr.deinit();
+        var arr: std.ArrayList(PdfObject) = .{};
+        errdefer arr.deinit(self.allocator);
 
         while (self.pos < self.data.len) {
             self.skipWhitespace();
@@ -413,7 +413,7 @@ pub const Parser = struct {
             }
 
             const obj = try self.parseObject();
-            try arr.append(obj);
+            try arr.append(self.allocator, obj);
         }
 
         return PdfObject{ .array = arr };
@@ -515,7 +515,7 @@ pub const Parser = struct {
     fn parseInteger(self: *Parser) !i64 {
         self.skipWhitespace();
 
-        var start = self.pos;
+        const start = self.pos;
         if (self.pos < self.data.len and (self.data[self.pos] == '+' or self.data[self.pos] == '-')) {
             self.pos += 1;
         }

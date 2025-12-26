@@ -7,6 +7,7 @@ const types = @import("types.zig");
 const page_mod = @import("page.zig");
 const writer_mod = @import("writer.zig");
 const font_mod = @import("font.zig");
+const parser_mod = @import("parser.zig");
 
 const PageSize = types.PageSize;
 const Metadata = types.Metadata;
@@ -18,6 +19,8 @@ const ObjectRef = types.ObjectRef;
 const Page = page_mod.Page;
 const Writer = writer_mod.Writer;
 const Font = font_mod.Font;
+const Parser = parser_mod.Parser;
+const PdfObject = parser_mod.PdfObject;
 
 /// PDF Document
 pub const Document = struct {
@@ -227,43 +230,141 @@ pub const Document = struct {
         return docs;
     }
 
-    /// Parse PDF data (internal)
+    /// Parse PDF data using the internal parser
     fn parse(self: *Document, data: []const u8) !void {
-        // Check PDF header
+        // Check minimum size
         if (data.len < 8) {
             return PdfError.InvalidPdf;
         }
 
-        if (!std.mem.startsWith(u8, data, "%PDF-")) {
-            return PdfError.InvalidPdf;
-        }
+        // Use the full parser for xref/trailer parsing
+        var parser = Parser.init(self.allocator, data);
+        defer parser.deinit();
 
-        // Parse version
-        if (data.len >= 8) {
-            const ver_str = data[5..8];
-            if (std.mem.eql(u8, ver_str, "1.0")) {
-                self.version = .v1_0;
-            } else if (std.mem.eql(u8, ver_str, "1.1")) {
-                self.version = .v1_1;
-            } else if (std.mem.eql(u8, ver_str, "1.2")) {
-                self.version = .v1_2;
-            } else if (std.mem.eql(u8, ver_str, "1.3")) {
-                self.version = .v1_3;
-            } else if (std.mem.eql(u8, ver_str, "1.4")) {
-                self.version = .v1_4;
-            } else if (std.mem.eql(u8, ver_str, "1.5")) {
-                self.version = .v1_5;
-            } else if (std.mem.eql(u8, ver_str, "1.6")) {
-                self.version = .v1_6;
-            } else if (std.mem.eql(u8, ver_str, "1.7")) {
-                self.version = .v1_7;
-            } else if (std.mem.eql(u8, ver_str, "2.0")) {
-                self.version = .v2_0;
+        try parser.parse();
+
+        // Extract version from parser
+        self.version = parser.getVersion();
+
+        // Extract metadata from trailer /Info dictionary if present
+        if (parser.trailer) |trailer| {
+            if (trailer == .dictionary) {
+                const dict = trailer.dictionary;
+
+                // Look for /Info reference and extract metadata
+                if (dict.get("Info")) |info_ref| {
+                    self.extractMetadataFromRef(&parser, info_ref);
+                }
             }
         }
 
-        // TODO: Full PDF parsing implementation
-        // For now, we only validate the header
+        // Extract page count using simple heuristic
+        const page_count = parser_mod.getPageCount(data) catch 0;
+        _ = page_count; // Page count available but pages not loaded for read-only access
+    }
+
+    /// Extract metadata from an Info dictionary reference
+    fn extractMetadataFromRef(self: *Document, parser: *Parser, info_ref: PdfObject) void {
+        if (info_ref != .reference) return;
+
+        const ref = info_ref.reference;
+
+        // Look up object in xref table
+        if (parser.xref_table.get(ref.object_number)) |entry| {
+            if (!entry.in_use) return;
+
+            // Parse object at offset (simplified - just extract strings)
+            self.parseInfoDictAt(parser.data, entry.offset);
+        }
+    }
+
+    /// Parse Info dictionary at a given offset
+    fn parseInfoDictAt(self: *Document, data: []const u8, offset: usize) void {
+        if (offset >= data.len) return;
+
+        // Search for common metadata fields starting from offset
+        const search_end = @min(offset + 2048, data.len); // Limit search range
+        const search_data = data[offset..search_end];
+
+        // Extract Title
+        if (findPdfString(search_data, "/Title")) |title| {
+            self.metadata.title = title;
+        }
+
+        // Extract Author
+        if (findPdfString(search_data, "/Author")) |author| {
+            self.metadata.author = author;
+        }
+
+        // Extract Subject
+        if (findPdfString(search_data, "/Subject")) |subject| {
+            self.metadata.subject = subject;
+        }
+
+        // Extract Creator
+        if (findPdfString(search_data, "/Creator")) |creator| {
+            self.metadata.creator = creator;
+        }
+
+        // Extract Producer
+        if (findPdfString(search_data, "/Producer")) |producer| {
+            self.metadata.producer = producer;
+        }
+    }
+
+    /// Find a PDF string value after a given key
+    fn findPdfString(data: []const u8, key: []const u8) ?[]const u8 {
+        // Find key position
+        var pos: usize = 0;
+        while (pos + key.len < data.len) : (pos += 1) {
+            if (std.mem.startsWith(u8, data[pos..], key)) {
+                pos += key.len;
+                break;
+            }
+        } else {
+            return null;
+        }
+
+        // Skip whitespace
+        while (pos < data.len and (data[pos] == ' ' or data[pos] == '\t' or data[pos] == '\r' or data[pos] == '\n')) {
+            pos += 1;
+        }
+
+        if (pos >= data.len) return null;
+
+        // Parse string (literal or hex)
+        if (data[pos] == '(') {
+            // Literal string
+            pos += 1;
+            const start = pos;
+            var paren_depth: u32 = 1;
+
+            while (pos < data.len and paren_depth > 0) {
+                if (data[pos] == '\\' and pos + 1 < data.len) {
+                    pos += 2;
+                } else if (data[pos] == '(') {
+                    paren_depth += 1;
+                    pos += 1;
+                } else if (data[pos] == ')') {
+                    paren_depth -= 1;
+                    if (paren_depth > 0) pos += 1;
+                } else {
+                    pos += 1;
+                }
+            }
+
+            return data[start..pos];
+        } else if (data[pos] == '<' and (pos + 1 >= data.len or data[pos + 1] != '<')) {
+            // Hex string
+            pos += 1;
+            const start = pos;
+            while (pos < data.len and data[pos] != '>') {
+                pos += 1;
+            }
+            return data[start..pos];
+        }
+
+        return null;
     }
 
     /// Add a standard font to the document
@@ -325,4 +426,59 @@ test "Set metadata" {
 
     try std.testing.expectEqualStrings("Test Document", doc.metadata.title.?);
     try std.testing.expectEqualStrings("Test Author", doc.metadata.author.?);
+}
+
+test "Parse PDF header and xref" {
+    const allocator = std.testing.allocator;
+
+    // Minimal valid PDF structure
+    const pdf_data =
+        \\%PDF-1.7
+        \\%âãÏÓ
+        \\1 0 obj
+        \\<< /Type /Catalog /Pages 2 0 R >>
+        \\endobj
+        \\2 0 obj
+        \\<< /Type /Pages /Kids [] /Count 0 >>
+        \\endobj
+        \\xref
+        \\0 3
+        \\0000000000 65535 f
+        \\0000000009 00000 n
+        \\0000000058 00000 n
+        \\trailer
+        \\<< /Root 1 0 R /Size 3 >>
+        \\startxref
+        \\114
+        \\%%EOF
+    ;
+
+    const doc = try Document.open(allocator, pdf_data);
+    defer doc.deinit();
+
+    try std.testing.expectEqual(doc.version, .v1_7);
+}
+
+test "findPdfString extracts literal strings" {
+    const data = "/Title (Test Document) /Author (John Doe)";
+    const title = Document.findPdfString(data, "/Title");
+    try std.testing.expect(title != null);
+    try std.testing.expectEqualStrings("Test Document", title.?);
+
+    const author = Document.findPdfString(data, "/Author");
+    try std.testing.expect(author != null);
+    try std.testing.expectEqualStrings("John Doe", author.?);
+}
+
+test "findPdfString handles nested parentheses" {
+    const data = "/Title (Test (Nested) Document)";
+    const title = Document.findPdfString(data, "/Title");
+    try std.testing.expect(title != null);
+    try std.testing.expectEqualStrings("Test (Nested) Document", title.?);
+}
+
+test "findPdfString returns null for missing key" {
+    const data = "/Title (Test)";
+    const author = Document.findPdfString(data, "/Author");
+    try std.testing.expect(author == null);
 }

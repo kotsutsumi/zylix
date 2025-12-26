@@ -14,6 +14,7 @@
 const std = @import("std");
 const component = @import("component.zig");
 const dsl = @import("dsl.zig");
+const simd = @import("perf/simd.zig");
 
 // ============================================================================
 // Virtual DOM Node
@@ -123,8 +124,9 @@ pub const VNodeProps = struct {
     }
 
     pub fn equals(self: *const VNodeProps, other: *const VNodeProps) bool {
+        // Field-by-field comparison with early exit is faster than byte comparison
         if (self.class_len != other.class_len) return false;
-        if (!std.mem.eql(u8, self.class[0..self.class_len], other.class[0..other.class_len])) return false;
+        if (!simd.simdMemEql(self.class[0..self.class_len], other.class[0..other.class_len])) return false;
         if (self.style_id != other.style_id) return false;
         if (self.on_click != other.on_click) return false;
         if (self.on_input != other.on_input) return false;
@@ -243,7 +245,8 @@ pub const VNode = struct {
     pub fn isSameKey(self: *const VNode, other: *const VNode) bool {
         if (self.key_len != other.key_len) return false;
         if (self.key_len == 0) return true; // Both have no key
-        return std.mem.eql(u8, self.key[0..self.key_len], other.key[0..other.key_len]);
+        // Use SIMD for key comparison
+        return simd.simdMemEql(self.key[0..self.key_len], other.key[0..other.key_len]);
     }
 };
 
@@ -556,18 +559,19 @@ pub const Differ = struct {
         switch (new.node_type) {
             .text => {
                 // Text node - check if content changed
-                if (!std.mem.eql(u8, old.getText(), new.getText())) {
+                // Use SIMD for text comparison
+                if (!simd.simdMemEql(old.getText(), new.getText())) {
                     _ = self.result.addPatch(Patch.updateText(dom_id, new.getText()));
                 }
             },
             .element => {
-                // Element - check props
+                // Element - check props (already uses SIMD via equals())
                 if (!old.props.equals(&new.props)) {
                     _ = self.result.addPatch(Patch.updateProps(dom_id, new.props));
                 }
 
-                // Check text content
-                if (!std.mem.eql(u8, old.getText(), new.getText())) {
+                // Check text content with SIMD
+                if (!simd.simdMemEql(old.getText(), new.getText())) {
                     _ = self.result.addPatch(Patch.updateText(dom_id, new.getText()));
                 }
 
@@ -651,7 +655,8 @@ pub const Differ = struct {
             if (old_tree.getConst(old_child_id)) |old_child| {
                 if (old_child.hasKey()) {
                     old_key_map[old_key_count] = .{
-                        .key_hash = hashKey(old_child.getKey()),
+                        // Use SIMD-accelerated hash
+                        .key_hash = simd.simdHashKey(old_child.getKey()),
                         .child_id = old_child_id,
                         .matched = false,
                     };
@@ -676,14 +681,15 @@ pub const Differ = struct {
 
             if (new_child.?.hasKey()) {
                 // Keyed child - find matching old child by key
-                const new_key_hash = hashKey(new_child.?.getKey());
+                // Use SIMD-accelerated hash
+                const new_key_hash = simd.simdHashKey(new_child.?.getKey());
                 var found_match = false;
 
                 for (old_key_map[0..old_key_count]) |*entry| {
                     if (!entry.matched and entry.key_hash == new_key_hash) {
-                        // Verify full key match (not just hash)
+                        // Verify full key match (not just hash) with SIMD
                         if (old_tree.getConst(entry.child_id)) |old_child| {
-                            if (std.mem.eql(u8, old_child.getKey(), new_child.?.getKey())) {
+                            if (simd.simdMemEql(old_child.getKey(), new_child.?.getKey())) {
                                 // Match found - diff the nodes
                                 entry.matched = true;
                                 found_match = true;
@@ -756,13 +762,9 @@ pub const Differ = struct {
         }
     }
 
-    /// Hash a key string for fast comparison
+    /// Hash a key string for fast comparison (SIMD-accelerated)
     fn hashKey(key: []const u8) u32 {
-        var hash: u32 = 5381;
-        for (key) |c| {
-            hash = ((hash << 5) +% hash) +% c;
-        }
-        return hash;
+        return simd.simdHashKey(key);
     }
 
     pub fn getPatchCount(self: *const Differ) u32 {
