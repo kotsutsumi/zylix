@@ -208,6 +208,23 @@ pub const FogSettings = postprocess.FogSettings;
 pub const OutlineSettings = postprocess.OutlineSettings;
 
 // ============================================================================
+// Navigation Mesh & Pathfinding
+// ============================================================================
+
+pub const navmesh = @import("navmesh.zig");
+
+pub const NavMesh = navmesh.NavMesh;
+pub const NavPolygon = navmesh.NavPolygon;
+pub const NavEdge = navmesh.NavEdge;
+pub const NavNode = navmesh.NavNode;
+pub const NavAgent = navmesh.NavAgent;
+pub const NavQueryFilter = navmesh.NavQueryFilter;
+pub const PathWaypoint = navmesh.PathWaypoint;
+pub const NavMeshBuilder = navmesh.NavMeshBuilder;
+pub const DynamicObstacle = navmesh.DynamicObstacle;
+pub const ObstacleManager = navmesh.ObstacleManager;
+
+// ============================================================================
 // Platform Backends
 // ============================================================================
 
@@ -245,9 +262,9 @@ pub const WebDepthState = backend_web.DepthState;
 /// Graphics3D module version
 pub const version = struct {
     pub const major = 0;
-    pub const minor = 12;
+    pub const minor = 13;
     pub const patch = 0;
-    pub const string = "0.12.0";
+    pub const string = "0.13.0";
 };
 
 /// Get module information
@@ -273,6 +290,7 @@ pub fn getInfo() struct {
             "Post-Processing (HDR, Bloom, SSAO, DoF)",
             "Metal Backend (iOS/macOS)",
             "WebGL2/WebGPU Backend (Web)",
+            "Navigation Mesh & Pathfinding",
         },
     };
 }
@@ -297,6 +315,7 @@ test "graphics3d module exports" {
     _ = postprocess;
     _ = backend_metal;
     _ = backend_web;
+    _ = navmesh;
 }
 
 test "graphics3d types accessible" {
@@ -312,7 +331,7 @@ test "graphics3d types accessible" {
 }
 
 test "graphics3d version" {
-    try std.testing.expectEqualStrings("0.12.0", version.string);
+    try std.testing.expectEqualStrings("0.13.0", version.string);
 
     const info = getInfo();
     try std.testing.expect(info.features.len > 0);
