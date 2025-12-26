@@ -80,10 +80,18 @@ jobs:
         id: build
         working-directory: core
         run: |
-          # Build the core library for Android ABIs (uses dedicated build steps)
-          zig build android-arm64
-          zig build android-x64
+          # Build the core library for all Android ABIs
+          zig build android
           echo "Core built successfully for Android targets"
+          # List built libraries
+          ls -la zig-out/android/
+
+      - name: Upload Android Libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-native-libs
+          path: core/zig-out/android/
+          retention-days: 1
 
   # ============================================================================
   # Run Espresso E2E Tests
@@ -111,6 +119,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Android Libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: android-native-libs
+          path: android-libs
+
+      - name: Install Native Libraries
+        run: |
+          # Copy built libraries to jniLibs directory
+          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
+          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+            if [ -d "android-libs/$abi" ]; then
+              mkdir -p "$JNILIBS/$abi"
+              cp android-libs/$abi/*.so "$JNILIBS/$abi/" || true
+              echo "Installed libraries for $abi"
+              ls -la "$JNILIBS/$abi/"
+            fi
+          done
 
       - name: Setup JDK
         uses: actions/setup-java@v4
