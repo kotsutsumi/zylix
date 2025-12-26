@@ -241,6 +241,22 @@ pub const BTActions = behavior_tree.Actions;
 pub const BTConditions = behavior_tree.Conditions;
 
 // ============================================================================
+// Level of Detail System
+// ============================================================================
+
+pub const lod = @import("lod.zig");
+
+pub const LODGroup = lod.LODGroup;
+pub const LODLevel = lod.LODLevel;
+pub const LODManager = lod.LODManager;
+pub const LODConfig = lod.LODConfig;
+pub const LODStats = lod.LODStats;
+pub const MeshSimplifier = lod.MeshSimplifier;
+pub const SimplifiedMesh = lod.SimplifiedMesh;
+pub const VirtualMesh = lod.VirtualMesh;
+pub const MeshChunk = lod.MeshChunk;
+
+// ============================================================================
 // Platform Backends
 // ============================================================================
 
@@ -278,9 +294,9 @@ pub const WebDepthState = backend_web.DepthState;
 /// Graphics3D module version
 pub const version = struct {
     pub const major = 0;
-    pub const minor = 14;
+    pub const minor = 15;
     pub const patch = 0;
-    pub const string = "0.14.0";
+    pub const string = "0.15.0";
 };
 
 /// Get module information
@@ -308,6 +324,7 @@ pub fn getInfo() struct {
             "WebGL2/WebGPU Backend (Web)",
             "Navigation Mesh & Pathfinding",
             "Behavior Tree System",
+            "LOD & Mesh Virtualization",
         },
     };
 }
@@ -334,6 +351,7 @@ test "graphics3d module exports" {
     _ = backend_web;
     _ = navmesh;
     _ = behavior_tree;
+    _ = lod;
 }
 
 test "graphics3d types accessible" {
@@ -349,7 +367,7 @@ test "graphics3d types accessible" {
 }
 
 test "graphics3d version" {
-    try std.testing.expectEqualStrings("0.14.0", version.string);
+    try std.testing.expectEqualStrings("0.15.0", version.string);
 
     const info = getInfo();
     try std.testing.expect(info.features.len > 0);
