@@ -225,6 +225,22 @@ pub const DynamicObstacle = navmesh.DynamicObstacle;
 pub const ObstacleManager = navmesh.ObstacleManager;
 
 // ============================================================================
+// Behavior Tree System
+// ============================================================================
+
+pub const behavior_tree = @import("behavior_tree.zig");
+
+pub const BehaviorTree = behavior_tree.BehaviorTree;
+pub const BehaviorNode = behavior_tree.BehaviorNode;
+pub const BTStatus = behavior_tree.Status;
+pub const BTNodeType = behavior_tree.NodeType;
+pub const Blackboard = behavior_tree.Blackboard;
+pub const NodeContext = behavior_tree.NodeContext;
+pub const TreeBuilder = behavior_tree.TreeBuilder;
+pub const BTActions = behavior_tree.Actions;
+pub const BTConditions = behavior_tree.Conditions;
+
+// ============================================================================
 // Platform Backends
 // ============================================================================
 
@@ -262,9 +278,9 @@ pub const WebDepthState = backend_web.DepthState;
 /// Graphics3D module version
 pub const version = struct {
     pub const major = 0;
-    pub const minor = 13;
+    pub const minor = 14;
     pub const patch = 0;
-    pub const string = "0.13.0";
+    pub const string = "0.14.0";
 };
 
 /// Get module information
@@ -291,6 +307,7 @@ pub fn getInfo() struct {
             "Metal Backend (iOS/macOS)",
             "WebGL2/WebGPU Backend (Web)",
             "Navigation Mesh & Pathfinding",
+            "Behavior Tree System",
         },
     };
 }
@@ -316,6 +333,7 @@ test "graphics3d module exports" {
     _ = backend_metal;
     _ = backend_web;
     _ = navmesh;
+    _ = behavior_tree;
 }
 
 test "graphics3d types accessible" {
@@ -331,7 +349,7 @@ test "graphics3d types accessible" {
 }
 
 test "graphics3d version" {
-    try std.testing.expectEqualStrings("0.13.0", version.string);
+    try std.testing.expectEqualStrings("0.14.0", version.string);
 
     const info = getInfo();
     try std.testing.expect(info.features.len > 0);
