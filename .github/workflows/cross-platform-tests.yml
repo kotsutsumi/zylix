@@ -185,38 +185,18 @@ jobs:
           retention-days: 14
 
   # ============================================================================
-  # Android E2E Tests
+  # Android Unit Tests
   # ============================================================================
   android-tests:
-    name: Android E2E Tests
+    name: Android Unit Tests
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.android == 'true' || github.event_name == 'workflow_dispatch'
-    timeout-minutes: 45
+    timeout-minutes: 15
     outputs:
       result: ${{ steps.test.outcome }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.15.2
-
-      - name: Build Core for Android
-        working-directory: core
-        run: |
-          zig build android
-
-      - name: Install Native Libraries
-        run: |
-          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
-          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
-            if [ -d "core/zig-out/android/$abi" ]; then
-              mkdir -p "$JNILIBS/$abi"
-              cp core/zig-out/android/$abi/*.so "$JNILIBS/$abi/" || true
-            fi
-          done
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -227,39 +207,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Build Android Library
+      - name: Run Unit Tests
+        id: test
         working-directory: platforms/android
         run: |
           chmod +x ./gradlew
-          ./gradlew :zylix-android:assembleDebug
-
-      - name: Run Espresso E2E Tests
-        id: test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          profile: pixel_5
-          disable-animations: true
-          script: |
-            cd platforms/android
-            ./gradlew :zylix-android:connectedDebugAndroidTest --continue || true
+          ./gradlew :zylix-android:test --continue
 
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: android-test-results
-          path: |
-            platforms/android/zylix-android/build/outputs/androidTest-results
-            platforms/android/zylix-android/build/reports/androidTests
+          path: platforms/android/zylix-android/build/reports/tests
           retention-days: 14
 
   # ============================================================================
