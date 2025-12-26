@@ -1,3 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Vibration for haptic feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Network access for hot reload and networking features -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Camera access (optional, declared by app if needed) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
 </manifest>
