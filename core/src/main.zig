@@ -22,6 +22,7 @@ pub const edge = @import("edge/edge.zig");
 pub const perf = @import("perf/perf.zig");
 pub const markdown = @import("markdown/markdown.zig");
 pub const buffer = @import("buffer/buffer.zig");
+pub const editor = @import("editor/editor.zig");
 
 // Re-export types for internal use
 pub const State = state.State;
@@ -102,6 +103,13 @@ pub const MarkdownRenderer = markdown.HtmlRenderer;
 
 // Re-export Buffer types
 pub const TextBuffer = buffer.TextBuffer;
+
+// Re-export Editor types
+pub const SyntaxHighlighter = editor.SyntaxHighlighter;
+pub const TokenType = editor.TokenType;
+pub const TokenSpan = editor.TokenSpan;
+pub const Theme = editor.Theme;
+pub const LanguageId = editor.LanguageId;
 
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
