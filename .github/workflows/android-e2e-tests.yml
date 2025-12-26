@@ -27,14 +27,65 @@ env:
 
 jobs:
   # ============================================================================
+  # Build Zylix Core for Android (shared by all jobs)
+  # ============================================================================
+  build-core:
+    name: Build Core
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Cache Zig Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            core/zig-cache
+            core/zig-out
+          key: zig-android-${{ runner.os }}-${{ hashFiles('core/**/*.zig') }}
+
+      - name: Build Core for Android
+        working-directory: core
+        run: zig build android
+
+      - name: Upload Android Libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-native-libs
+          path: core/zig-out/android/
+          retention-days: 1
+
+  # ============================================================================
   # Build Android Library
   # ============================================================================
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: build-core
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Native Libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: android-native-libs
+          path: core/zig-out/android/
+
+      - name: Install Native Libraries
+        run: |
+          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
+          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+            if [ -d "core/zig-out/android/$abi" ]; then
+              mkdir -p "$JNILIBS/$abi"
+              cp core/zig-out/android/$abi/*.so "$JNILIBS/$abi/" || true
+            fi
+          done
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -57,9 +108,26 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    needs: build-core
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Native Libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: android-native-libs
+          path: core/zig-out/android/
+
+      - name: Install Native Libraries
+        run: |
+          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
+          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+            if [ -d "core/zig-out/android/$abi" ]; then
+              mkdir -p "$JNILIBS/$abi"
+              cp core/zig-out/android/$abi/*.so "$JNILIBS/$abi/" || true
+            fi
+          done
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -91,9 +159,26 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: build-core
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Native Libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: android-native-libs
+          path: core/zig-out/android/
+
+      - name: Install Native Libraries
+        run: |
+          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
+          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+            if [ -d "core/zig-out/android/$abi" ]; then
+              mkdir -p "$JNILIBS/$abi"
+              cp core/zig-out/android/$abi/*.so "$JNILIBS/$abi/" || true
+            fi
+          done
 
       - name: Setup JDK
         uses: actions/setup-java@v4
