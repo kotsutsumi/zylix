@@ -111,6 +111,11 @@ pub const TokenSpan = editor.TokenSpan;
 pub const Theme = editor.Theme;
 pub const LanguageId = editor.LanguageId;
 
+// Re-export Vim types
+pub const VimMode = editor.VimMode;
+pub const VimState = editor.VimState;
+pub const VimAction = editor.VimAction;
+
 // Force the abi module to be analyzed (which triggers @export)
 comptime {
     _ = abi;

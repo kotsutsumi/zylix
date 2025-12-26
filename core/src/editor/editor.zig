@@ -8,6 +8,7 @@
 //! - **tokens**: Token types and styling for syntax highlighting
 //! - **languages**: Language grammar definitions
 //! - **syntax**: Incremental syntax highlighting engine
+//! - **vim**: Vim-style modal editing keybindings
 //!
 //! ## Example Usage
 //!
@@ -42,6 +43,7 @@ const std = @import("std");
 pub const tokens = @import("tokens.zig");
 pub const languages = @import("languages.zig");
 pub const syntax = @import("syntax.zig");
+pub const vim = @import("vim.zig");
 
 // Re-export main types for convenience
 
@@ -69,6 +71,18 @@ pub const NumberStyle = languages.NumberStyle;
 // Syntax highlighting
 pub const SyntaxHighlighter = syntax.SyntaxHighlighter;
 pub const ScannerState = syntax.ScannerState;
+
+// Vim keybindings
+pub const VimMode = vim.Mode;
+pub const VimOperator = vim.Operator;
+pub const VimMotion = vim.Motion;
+pub const VimTextObject = vim.TextObject;
+pub const VimRegister = vim.Register;
+pub const VimState = vim.VimState;
+pub const VimAction = vim.Action;
+pub const VimKeyResult = vim.KeyResult;
+pub const VimKeyModifiers = vim.KeyModifiers;
+pub const processVimKey = vim.processKey;
 
 // Convenience functions
 pub const getGrammar = languages.getGrammar;
