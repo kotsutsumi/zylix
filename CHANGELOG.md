@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Fiber rendering and animation blending for smooth visual transitions
+- SIMD optimization for performance-critical operations
+- Memory pool, LRU cache, and batch patching for improved performance
+- Navigation mesh and pathfinding system (Graphics3D)
+- Behavior tree system for AI (Graphics3D)
+- LOD & mesh virtualization system (Graphics3D)
+- Advanced skeletal animation system (Graphics3D)
+- Vim keybinding system (Editor)
+- Syntax highlighting engine (Editor)
+- LSP, DAP, and HotReload integration (Tooling)
+- Markdown parser with CommonMark + GFM + extensions
+- Piece Tree text buffer with O(log n) operations
+- Japanese documentation
+
+### Changed
+- Updated Android dependencies to latest stable versions
+- Simplified CI workflows for faster, more reliable builds
+- Improved code quality and API documentation
+- Enhanced test coverage across all platforms
+
+### Fixed
+- Android VIBRATE permission for haptic feedback
+- Kotlin 2.0 Compose compatibility in demo module
+- JNI bindings for core counter functions
+- Memory leaks in tests (now hermetic)
+- Cross-platform CI build failures
+
+### Removed
+- E2E tests from Android CI (replaced with stable unit tests)
+- Out-of-scope text editor features
+
 ## [0.21.0] - 2025-12-26
 
 ### Added
