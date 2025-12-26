@@ -4,10 +4,10 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
-summary: Platform-specific setup, integration patterns, and best practices for Web, iOS, watchOS, Android, macOS, Linux, and Windows.
+summary: Platform-specific setup, integration patterns, and best practices for Web, iOS, watchOS, Android, macOS, Linux, Windows, and M5Stack embedded systems.
 ---
 
-Zylix runs on seven platforms, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.
+Zylix runs on eight platforms, including embedded systems, each using native UI frameworks for authentic user experiences. This section provides platform-specific setup, integration patterns, and best practices.
 
 Platform status definitions follow the [Compatibility Reference](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md).
 
@@ -22,17 +22,18 @@ Platform status definitions follow the [Compatibility Reference](https://github.
 | **macOS** | SwiftUI | C ABI | `zig build` |
 | **Linux** | GTK4 | C ABI | `zig build linux` |
 | **Windows** | WinUI 3 | P/Invoke | `zig build windows-x64` |
+| **M5Stack** | Custom Zig UI | Direct | `zig build -Dtarget=xtensa-esp32s3` |
 
 ## Platform Comparison
 
-| Feature | Web | iOS | watchOS | Android | macOS | Linux | Windows |
-|---------|-----|-----|---------|---------|-------|-------|---------|
-| **UI Framework** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
-| **Language** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# |
-| **Binding** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke |
-| **Min Version** | Modern browsers | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
-| **Bundle Size** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
-| **Hot Reload** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| Feature | Web | iOS | watchOS | Android | macOS | Linux | Windows | M5Stack |
+|---------|-----|-----|---------|---------|-------|-------|---------|---------|
+| **UI Framework** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 | Zig UI |
+| **Language** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# | Zig |
+| **Binding** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke | Direct |
+| **Min Version** | Modern browsers | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ | ESP-IDF 5.0+ |
+| **Bundle Size** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB | ~200 KB |
+| **Hot Reload** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ## Architecture Per Platform
 
@@ -81,6 +82,43 @@ flowchart TB
 
         UI --> Bind
         Bind --> Core
+    end
+```
+
+### Embedded Systems Architecture (M5Stack)
+
+```mermaid
+flowchart TB
+    subgraph Device["M5Stack CoreS3"]
+        subgraph Hardware["Hardware Layer"]
+            SPI["SPI Bus"]
+            I2C["I2C Bus"]
+            GPIO["GPIO"]
+        end
+
+        subgraph HAL["Hardware Abstraction Layer"]
+            Display["ILI9342C Display Driver"]
+            Touch["FT6336U Touch Controller"]
+            Power["AXP2101 PMIC"]
+            Expander["AW9523B GPIO Expander"]
+        end
+
+        subgraph Core["Zylix Core"]
+            VDOM3["Virtual DOM"]
+            State3["State Management"]
+            Renderer["RGB565 Renderer"]
+            Gestures["Gesture Recognition"]
+        end
+
+        subgraph UI3["UI Components"]
+            Widgets["Widgets"]
+            Layout["Layout System"]
+            Styles["Styling"]
+        end
+
+        Hardware --> HAL
+        HAL --> Core
+        Core --> UI3
     end
 ```
 
@@ -377,6 +415,7 @@ cp zig-out/lib/zylix.dll ../platforms/windows/
 | **macOS** | Prefer native controls over custom drawing |
 | **Linux** | Use CSS classes over inline styles |
 | **Windows** | Enable compiled bindings for performance |
+| **M5Stack** | Use dirty rectangle rendering, minimize full redraws |
 
 ## Debugging
 
@@ -405,6 +444,7 @@ pub fn logStateChange(event: Event) void {
 | **macOS** | Xcode Instruments |
 | **Linux** | GTK Inspector, Valgrind |
 | **Windows** | Visual Studio Profiler, WinDbg |
+| **M5Stack** | ESP-IDF monitor, JTAG debugging, Serial output |
 
 ## Next Steps
 

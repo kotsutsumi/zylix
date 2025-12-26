@@ -4,10 +4,10 @@ weight: 4
 prev: architecture
 sidebar:
   open: true
-summary: Web、iOS、watchOS、Android、macOS、Linux、Windows の 7 プラットフォームでのセットアップ、統合パターン、ベストプラクティスを説明します。
+summary: Web、iOS、watchOS、Android、macOS、Linux、Windows、M5Stack 組み込みシステムの 8 プラットフォームでのセットアップ、統合パターン、ベストプラクティスを説明します。
 ---
 
-Zylix は 7 つのプラットフォームで動作し、それぞれネイティブ UI フレームワークを使用して本物のユーザー体験を提供します。このセクションでは、プラットフォーム固有のセットアップ、統合パターン、およびベストプラクティスを説明します。
+Zylix は組み込みシステムを含む 8 つのプラットフォームで動作し、それぞれネイティブ UI フレームワークを使用して本物のユーザー体験を提供します。このセクションでは、プラットフォーム固有のセットアップ、統合パターン、およびベストプラクティスを説明します。
 
 対応状況の定義は [互換性リファレンス](https://github.com/kotsutsumi/zylix/blob/main/docs/COMPATIBILITY.md) を参照してください。
 
@@ -22,17 +22,18 @@ Zylix は 7 つのプラットフォームで動作し、それぞれネイテ�
 | **macOS** | SwiftUI | Swift | C ABI | `zig build` |
 | **Linux** | GTK4 | C | C ABI | `zig build linux` |
 | **Windows** | WinUI 3 | C# | P/Invoke | `zig build windows-x64` |
+| **M5Stack** | カスタム Zig UI | Zig | 直接 | `zig build -Dtarget=xtensa-esp32s3` |
 
 ## プラットフォーム比較
 
-| 機能 | Web | iOS | watchOS | Android | macOS | Linux | Windows |
-|---------|-----|-----|---------|---------|-------|-------|---------|
-| **UI フレームワーク** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 |
-| **言語** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# |
-| **バインディング** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke |
-| **最小バージョン** | モダンブラウザ | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ |
-| **バンドルサイズ** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB |
-| **ホットリロード** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| 機能 | Web | iOS | watchOS | Android | macOS | Linux | Windows | M5Stack |
+|---------|-----|-----|---------|---------|-------|-------|---------|---------|
+| **UI フレームワーク** | HTML/JS | SwiftUI | SwiftUI | Compose | SwiftUI | GTK4 | WinUI 3 | Zig UI |
+| **言語** | JavaScript | Swift | Swift | Kotlin | Swift | C | C# | Zig |
+| **バインディング** | WASM | C ABI | C ABI | JNI | C ABI | C ABI | P/Invoke | 直接 |
+| **最小バージョン** | モダンブラウザ | iOS 15+ | watchOS 10+ | API 26+ | macOS 12+ | GTK 4.0+ | Win 10+ | ESP-IDF 5.0+ |
+| **バンドルサイズ** | ~50 KB | ~100 KB | ~80 KB | ~150 KB | ~100 KB | ~80 KB | ~120 KB | ~200 KB |
+| **ホットリロード** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ## プラットフォーム別アーキテクチャ
 
@@ -81,6 +82,43 @@ flowchart TB
 
         UI --> Bind
         Bind --> Core
+    end
+```
+
+### 組み込みシステムアーキテクチャ (M5Stack)
+
+```mermaid
+flowchart TB
+    subgraph Device["M5Stack CoreS3"]
+        subgraph Hardware["ハードウェア層"]
+            SPI["SPI バス"]
+            I2C["I2C バス"]
+            GPIO["GPIO"]
+        end
+
+        subgraph HAL["ハードウェア抽象化層"]
+            Display["ILI9342C ディスプレイドライバ"]
+            Touch["FT6336U タッチコントローラ"]
+            Power["AXP2101 PMIC"]
+            Expander["AW9523B GPIO エキスパンダ"]
+        end
+
+        subgraph Core["Zylix Core"]
+            VDOM3["Virtual DOM"]
+            State3["状態管理"]
+            Renderer["RGB565 レンダラー"]
+            Gestures["ジェスチャー認識"]
+        end
+
+        subgraph UI3["UI コンポーネント"]
+            Widgets["ウィジェット"]
+            Layout["レイアウトシステム"]
+            Styles["スタイリング"]
+        end
+
+        Hardware --> HAL
+        HAL --> Core
+        Core --> UI3
     end
 ```
 
@@ -377,6 +415,7 @@ cp zig-out/lib/zylix.dll ../platforms/windows/
 | **macOS** | カスタム描画よりネイティブコントロールを優先 |
 | **Linux** | インラインスタイルより CSS クラスを使用 |
 | **Windows** | パフォーマンス向けにコンパイル済みバインディングを有効化 |
+| **M5Stack** | ダーティ矩形レンダリングを使用し、全画面再描画を最小化 |
 
 ## デバッグ
 
@@ -405,6 +444,7 @@ pub fn logStateChange(event: Event) void {
 | **macOS** | Xcode Instruments |
 | **Linux** | GTK Inspector、Valgrind |
 | **Windows** | Visual Studio Profiler、WinDbg |
+| **M5Stack** | ESP-IDF モニター、JTAG デバッグ、シリアル出力 |
 
 ## 次のステップ
 
