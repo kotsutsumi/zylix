@@ -13,12 +13,12 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 ## Current Status
 
-**Version 0.19.3** is the current stable release with:
+**Version 0.20.0** is the current stable release with:
 
-- Zig 0.15 API compatibility (ArrayList → ArrayListUnmanaged migration)
-- Integration platform bindings for iOS and Android
-- CI/CD improvements and test infrastructure fixes
-- Tooling C ABI exports for cross-platform development
+- P0 Tooling APIs: Component Registry, UI Serialization, Component Instantiation
+- 27 official example repositories covering all major use cases
+- Thread-safety and security fixes (CodeRabbit review)
+- Zig 0.15 API compatibility
 
 ## Roadmap Overview
 
@@ -28,11 +28,11 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 | v0.7.0 | Component Library (40+ types) | Done |
 | v0.8.1 | Testing, watchOS, language bindings | Done |
 | v0.9.0 - v0.10.0 | AI, device APIs, animation, 3D, game | Done |
-| v0.18.0 - v0.19.0 | Tooling APIs, C ABI, cross-platform fixes | Done |
-| v0.19.1 - v0.19.3 | Integration bindings, CI fixes, Zig 0.15 compat | Current |
-| v0.20.0 | M5Stack CoreS3 embedded platform support | Next |
+| v0.18.0 - v0.19.3 | Tooling APIs, C ABI, Zig 0.15 compat | Done |
+| v0.20.0 | P0 Tooling APIs, 27 Example Repos | Current |
+| v0.21.0 | M5Stack CoreS3 embedded platform support | Next |
 
-## Upcoming: v0.20.0 - M5Stack Embedded Platform
+## Upcoming: v0.21.0 - M5Stack Embedded Platform
 
 Native Zig support for M5Stack CoreS3 SE (ESP32-S3):
 
@@ -44,6 +44,14 @@ Native Zig support for M5Stack CoreS3 SE (ESP32-S3):
 See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/docs/M5STACK_IMPLEMENTATION_PLAN.md) for details.
 
 ## Recent Releases
+
+### v0.20.0 - Tooling APIs & Example Repos (2025-12-26)
+
+- **Component Registry API** - IDE tooling for component discovery
+- **UI Layout Serialization** - .zy.ui file format support
+- **Component Instantiation** - Live Preview component factory
+- **27 Example Repositories** - Starter templates, feature showcase, real-world apps, games
+- Thread-safety and security fixes (CodeRabbit review)
 
 ### v0.19.3 - Zig 0.15 Compatibility (2025-12-26)
 
@@ -77,7 +85,7 @@ See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/
 
 ## Next
 
-**v0.20.0** will introduce M5Stack CoreS3 embedded platform support, enabling Zylix applications to run on ESP32-S3 based IoT devices.
+**v0.21.0** will introduce M5Stack CoreS3 embedded platform support, enabling Zylix applications to run on ESP32-S3 based IoT devices.
 
 ## Contributing
 

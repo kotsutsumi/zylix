@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-12-26
+
+### Added
+
+#### P0 Tooling APIs (Issues #58, #59, #60)
+
+**Component Registry API** (`core/src/tooling/registry.zig`)
+- Component type registration with metadata
+- Property schema definitions for IDE tooling
+- Component discovery and enumeration
+- C ABI exports for external tool integration
+- Thread-safe global registry with atomic operations
+
+**UI Layout Serialization API** (`core/src/tooling/serialization.zig`)
+- .zy.ui file format serialization and deserialization
+- VNode/VTree to JSON conversion
+- Streaming serializer for large documents
+- Security: JSON string escaping and depth limit (1024 levels)
+- C ABI exports with buffer management
+
+**Component Instantiation API** (`core/src/tooling/instantiation.zig`)
+- Dynamic component creation from property maps
+- Live Preview component factory
+- Property binding and event handler registration
+- C ABI exports for runtime instantiation
+
+#### Official Example Repositories (27 projects)
+
+**Starter Templates**
+- [zylix-example-blank-app](https://github.com/kotsutsumi/zylix-example-blank-app) - Minimal blank app template
+- [zylix-example-tab-navigation](https://github.com/kotsutsumi/zylix-example-tab-navigation) - Tab-based navigation
+- [zylix-example-drawer-navigation](https://github.com/kotsutsumi/zylix-example-drawer-navigation) - Side menu drawer
+- [zylix-example-dashboard-layout](https://github.com/kotsutsumi/zylix-example-dashboard-layout) - Business dashboard
+
+**Feature Showcase**
+- [zylix-example-component-gallery](https://github.com/kotsutsumi/zylix-example-component-gallery) - All 40+ UI components
+- [zylix-example-animation-studio](https://github.com/kotsutsumi/zylix-example-animation-studio) - 60fps animation showcase
+- [zylix-example-3d-viewer](https://github.com/kotsutsumi/zylix-example-3d-viewer) - 3D model viewer
+- [zylix-example-game-arcade](https://github.com/kotsutsumi/zylix-example-game-arcade) - Mini-games with physics
+- [zylix-example-ai-playground](https://github.com/kotsutsumi/zylix-example-ai-playground) - On-device AI demo
+- [zylix-example-device-lab](https://github.com/kotsutsumi/zylix-example-device-lab) - Hardware integration
+- [zylix-example-database-workshop](https://github.com/kotsutsumi/zylix-example-database-workshop) - Database connections
+
+**Real-World Apps**
+- [zylix-example-taskmaster](https://github.com/kotsutsumi/zylix-example-taskmaster) - Task/todo app with sync
+- [zylix-example-shop-demo](https://github.com/kotsutsumi/zylix-example-shop-demo) - E-commerce app
+- [zylix-example-chat-space](https://github.com/kotsutsumi/zylix-example-chat-space) - Real-time chat
+- [zylix-example-analytics-pro](https://github.com/kotsutsumi/zylix-example-analytics-pro) - Dashboard with charts
+- [zylix-example-media-box](https://github.com/kotsutsumi/zylix-example-media-box) - Media player
+- [zylix-example-note-flow](https://github.com/kotsutsumi/zylix-example-note-flow) - Rich text notes
+- [zylix-example-fit-track](https://github.com/kotsutsumi/zylix-example-fit-track) - Health/fitness tracker
+
+**Platform-Specific**
+- [zylix-example-ios-exclusive](https://github.com/kotsutsumi/zylix-example-ios-exclusive) - iOS exclusive features
+- [zylix-example-android-exclusive](https://github.com/kotsutsumi/zylix-example-android-exclusive) - Android exclusive features
+- [zylix-example-web-pwa](https://github.com/kotsutsumi/zylix-example-web-pwa) - Progressive Web App
+- [zylix-example-desktop-native](https://github.com/kotsutsumi/zylix-example-desktop-native) - Desktop native features
+- [zylix-example-watchos-companion](https://github.com/kotsutsumi/zylix-example-watchos-companion) - watchOS companion
+
+**Game Samples**
+- [zylix-example-platformer](https://github.com/kotsutsumi/zylix-example-platformer) - 2D platform game
+- [zylix-example-puzzle-world](https://github.com/kotsutsumi/zylix-example-puzzle-world) - Puzzle game
+- [zylix-example-space-shooter](https://github.com/kotsutsumi/zylix-example-space-shooter) - Arcade shooter
+- [zylix-example-vtuber-demo](https://github.com/kotsutsumi/zylix-example-vtuber-demo) - Live2D VTuber avatar
+
+### Fixed
+
+#### Security (CodeRabbit Review)
+- Thread-safety: Changed `global_initialized` to `std.atomic.Value(bool)` with proper `.load(.acquire)` and `.store(.release)` operations in registry.zig
+- Thread-safety: Added `threadlocal` for C ABI meta cache to prevent data races
+- Security: Added JSON string escaping in serialization.zig to prevent injection attacks
+- Security: Added depth limit check (1024 levels) to prevent stack overflow in deep hierarchies
+- C ABI safety: Added null-safety checks for all pointer parameters
+
 ## [0.19.3] - 2025-12-26
 
 ### Fixed
@@ -1273,7 +1347,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project planning documentation
 - Apache 2.0 license
 
-[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/kotsutsumi/zylix/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/kotsutsumi/zylix/compare/v0.19.3...v0.20.0
+[0.19.3]: https://github.com/kotsutsumi/zylix/compare/v0.19.2...v0.19.3
+[0.19.2]: https://github.com/kotsutsumi/zylix/compare/v0.19.1...v0.19.2
+[0.19.1]: https://github.com/kotsutsumi/zylix/compare/v0.19.0...v0.19.1
 [0.11.0]: https://github.com/kotsutsumi/zylix/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/kotsutsumi/zylix/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/kotsutsumi/zylix/compare/v0.8.1...v0.9.0
