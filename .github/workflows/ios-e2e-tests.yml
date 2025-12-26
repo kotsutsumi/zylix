@@ -23,32 +23,32 @@ on:
       device:
         description: 'iOS Simulator device'
         required: false
-        default: 'iPhone 15'
+        default: 'iPhone 16'
         type: choice
         options:
-          - 'iPhone 15'
-          - 'iPhone 15 Pro'
-          - 'iPhone 15 Pro Max'
-          - 'iPad Pro (12.9-inch) (6th generation)'
+          - 'iPhone 16'
+          - 'iPhone 16 Pro'
+          - 'iPhone 16 Pro Max'
+          - 'iPad Pro 13-inch (M4)'
       ios_version:
         description: 'iOS version'
         required: false
-        default: '17.5'
+        default: '18.1'
         type: choice
         options:
+          - '18.1'
+          - '18.0'
           - '17.5'
-          - '17.4'
-          - '17.2'
-          - '16.4'
 
 concurrency:
   group: ios-e2e-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  XCODE_VERSION: '15.4'
-  DEFAULT_DEVICE: 'iPhone 15'
-  DEFAULT_IOS_VERSION: '17.5'
+  # Use Xcode 16.1 which is available on macos-latest (macOS 14)
+  XCODE_VERSION: '16.1'
+  DEFAULT_DEVICE: 'iPhone 16'
+  DEFAULT_IOS_VERSION: '18.1'
 
 jobs:
   # ============================================================================
@@ -98,13 +98,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - device: 'iPhone 15'
-            ios: '17.5'
-          - device: 'iPhone 15 Pro'
-            ios: '17.5'
+          - device: 'iPhone 16'
+            ios: '18.1'
+          - device: 'iPhone 16 Pro'
+            ios: '18.1'
           # Add iPad testing for tablet layout verification
-          - device: 'iPad Pro (12.9-inch) (6th generation)'
-            ios: '17.5'
+          - device: 'iPad Pro 13-inch (M4)'
+            ios: '18.1'
     steps:
       - uses: actions/checkout@v4
 

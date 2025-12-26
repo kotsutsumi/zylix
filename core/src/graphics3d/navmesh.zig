@@ -1175,3 +1175,293 @@ test "NavMeshBuilder heightfield" {
     // Should have 4 quads (2x2 grid)
     try std.testing.expectEqual(@as(usize, 4), mesh.polygons.items.len);
 }
+
+test "NavNode fCost calculation" {
+    var node = NavNode{
+        .polygon = 0,
+        .position = Vec3.zero(),
+        .g_cost = 5.0,
+        .h_cost = 3.0,
+    };
+    try std.testing.expectApproxEqAbs(@as(f32, 8.0), node.fCost(), 0.01);
+
+    // Infinite g_cost should result in infinite fCost
+    node.g_cost = std.math.inf(f32);
+    try std.testing.expect(node.fCost() == std.math.inf(f32));
+}
+
+test "NavQueryFilter canTraverse" {
+    const filter = NavQueryFilter{
+        .include_flags = .{ .walkable = true },
+        .exclude_flags = .{ .disabled = true },
+    };
+
+    // Walkable polygon should be traversable
+    var walkable_poly = NavPolygon{
+        .vertices = undefined,
+        .edges = undefined,
+        .flags = .{ .walkable = true, .disabled = false },
+    };
+    try std.testing.expect(filter.canTraverse(&walkable_poly));
+
+    // Disabled polygon should not be traversable
+    var disabled_poly = NavPolygon{
+        .vertices = undefined,
+        .edges = undefined,
+        .flags = .{ .walkable = true, .disabled = true },
+    };
+    try std.testing.expect(!filter.canTraverse(&disabled_poly));
+
+    // Non-walkable polygon should not be traversable
+    var non_walkable = NavPolygon{
+        .vertices = undefined,
+        .edges = undefined,
+        .flags = .{ .walkable = false, .disabled = false },
+    };
+    try std.testing.expect(!filter.canTraverse(&non_walkable));
+}
+
+test "SpatialGrid operations" {
+    const allocator = std.testing.allocator;
+
+    var grid = NavMesh.SpatialGrid.init(allocator, 10.0);
+    defer grid.deinit();
+
+    // Insert polygon at position
+    try grid.insert(0, Vec3.init(5, 0, 5));
+    try grid.insert(1, Vec3.init(5, 0, 8));
+    try grid.insert(2, Vec3.init(25, 0, 5)); // Different cell
+
+    // Query same cell
+    const result1 = grid.query(Vec3.init(3, 0, 3));
+    try std.testing.expect(result1 != null);
+    try std.testing.expectEqual(@as(usize, 2), result1.?.len);
+
+    // Query different cell
+    const result2 = grid.query(Vec3.init(25, 0, 5));
+    try std.testing.expect(result2 != null);
+    try std.testing.expectEqual(@as(usize, 1), result2.?.len);
+
+    // Query empty cell
+    const result3 = grid.query(Vec3.init(100, 0, 100));
+    try std.testing.expect(result3 == null);
+
+    // Test getKey consistency
+    const key1 = grid.getKey(Vec3.init(5, 0, 5));
+    const key2 = grid.getKey(Vec3.init(8, 0, 8));
+    try std.testing.expectEqual(key1.x, key2.x);
+    try std.testing.expectEqual(key1.z, key2.z);
+}
+
+test "NavMesh smoothPath" {
+    const allocator = std.testing.allocator;
+
+    var mesh = NavMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Create a simple path
+    var path = [_]PathWaypoint{
+        .{ .position = Vec3.init(0, 0, 0), .polygon = 0 },
+        .{ .position = Vec3.init(5, 0, 5), .polygon = 0 },
+        .{ .position = Vec3.init(10, 0, 10), .polygon = 0 },
+    };
+
+    const smoothed = try mesh.smoothPath(&path, allocator);
+    defer allocator.free(smoothed);
+
+    // Smoothed path should have at least 2 points (start and end)
+    try std.testing.expect(smoothed.len >= 2);
+    // First point should be start
+    try std.testing.expectApproxEqAbs(@as(f32, 0), smoothed[0].position.x, 0.01);
+    // Last point should be end
+    try std.testing.expectApproxEqAbs(@as(f32, 10), smoothed[smoothed.len - 1].position.x, 0.01);
+}
+
+test "NavMesh getClosestPoint" {
+    const allocator = std.testing.allocator;
+
+    var mesh = NavMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Create a square polygon
+    _ = try mesh.addVertex(Vec3.init(0, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(10, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(10, 0, 10));
+    _ = try mesh.addVertex(Vec3.init(0, 0, 10));
+    _ = try mesh.addPolygon(&[_]u32{ 0, 1, 2, 3 });
+
+    // Point inside polygon
+    const inside_result = mesh.getClosestPoint(Vec3.init(5, 0, 5), null);
+    try std.testing.expect(inside_result != null);
+    try std.testing.expectEqual(@as(u32, 0), inside_result.?.polygon);
+
+    // Point outside polygon - should find closest point on edge
+    const outside_result = mesh.getClosestPoint(Vec3.init(15, 0, 5), null);
+    try std.testing.expect(outside_result != null);
+    // Closest point should be on the right edge (x=10)
+    try std.testing.expectApproxEqAbs(@as(f32, 10), outside_result.?.point.x, 0.01);
+}
+
+test "DynamicObstacle initialization" {
+    const allocator = std.testing.allocator;
+
+    var obstacle = DynamicObstacle.init(allocator, 42, Vec3.init(5, 0, 5), 2.0, 3.0);
+    defer obstacle.deinit();
+
+    try std.testing.expectEqual(@as(u32, 42), obstacle.id);
+    try std.testing.expectApproxEqAbs(@as(f32, 5), obstacle.position.x, 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 2.0), obstacle.radius, 0.01);
+    try std.testing.expectApproxEqAbs(@as(f32, 3.0), obstacle.height, 0.01);
+    try std.testing.expect(obstacle.active);
+    try std.testing.expectEqual(DynamicObstacle.Shape.cylinder, obstacle.shape);
+}
+
+test "ObstacleManager add and remove" {
+    const allocator = std.testing.allocator;
+
+    var mesh = NavMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Create a polygon
+    _ = try mesh.addVertex(Vec3.init(0, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(20, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(20, 0, 20));
+    _ = try mesh.addVertex(Vec3.init(0, 0, 20));
+    _ = try mesh.addPolygon(&[_]u32{ 0, 1, 2, 3 });
+
+    var manager = ObstacleManager.init(allocator, &mesh);
+    defer manager.deinit();
+
+    // Add obstacle
+    const obs_id = try manager.addObstacle(Vec3.init(10, 0, 10), 3.0, 2.0);
+    try std.testing.expectEqual(@as(u32, 0), obs_id);
+
+    // Polygon should be disabled
+    try std.testing.expect(mesh.polygons.items[0].flags.disabled);
+
+    // Remove obstacle
+    manager.removeObstacle(obs_id);
+
+    // Polygon should be enabled again
+    try std.testing.expect(!mesh.polygons.items[0].flags.disabled);
+}
+
+test "ObstacleManager update position" {
+    const allocator = std.testing.allocator;
+
+    var mesh = NavMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Create two separate polygons
+    _ = try mesh.addVertex(Vec3.init(0, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(10, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(10, 0, 10));
+    _ = try mesh.addVertex(Vec3.init(0, 0, 10));
+    _ = try mesh.addPolygon(&[_]u32{ 0, 1, 2, 3 });
+
+    _ = try mesh.addVertex(Vec3.init(50, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(60, 0, 0));
+    _ = try mesh.addVertex(Vec3.init(60, 0, 10));
+    _ = try mesh.addVertex(Vec3.init(50, 0, 10));
+    _ = try mesh.addPolygon(&[_]u32{ 4, 5, 6, 7 });
+
+    var manager = ObstacleManager.init(allocator, &mesh);
+    defer manager.deinit();
+
+    // Add obstacle near first polygon
+    const obs_id = try manager.addObstacle(Vec3.init(5, 0, 5), 2.0, 2.0);
+
+    // First polygon should be disabled
+    try std.testing.expect(mesh.polygons.items[0].flags.disabled);
+    // Second polygon should not be disabled
+    try std.testing.expect(!mesh.polygons.items[1].flags.disabled);
+
+    // Move obstacle to second polygon
+    try manager.updateObstacle(obs_id, Vec3.init(55, 0, 5));
+
+    // First polygon should now be enabled
+    try std.testing.expect(!mesh.polygons.items[0].flags.disabled);
+    // Second polygon should now be disabled
+    try std.testing.expect(mesh.polygons.items[1].flags.disabled);
+}
+
+test "NavMeshBuilder build from triangles" {
+    const allocator = std.testing.allocator;
+
+    var builder = NavMeshBuilder.init(allocator);
+
+    // Create a simple triangle (CCW winding when viewed from above)
+    // The vertex order is important: normal should point up for flat ground
+    const vertices = [_]Vec3{
+        Vec3.init(0, 0, 0),
+        Vec3.init(5, 0, 10),
+        Vec3.init(10, 0, 0),
+    };
+    // Indices in CCW order from above: 0, 1, 2 gives normal pointing up
+    const indices = [_]u32{ 0, 1, 2 };
+
+    var mesh = try builder.build(&vertices, &indices);
+    defer mesh.deinit();
+
+    // Should have 1 polygon (the triangle is flat, so walkable)
+    try std.testing.expectEqual(@as(usize, 1), mesh.polygons.items.len);
+    try std.testing.expectEqual(@as(usize, 3), mesh.vertices.items.len);
+}
+
+test "NavMesh buildAdjacency" {
+    const allocator = std.testing.allocator;
+
+    var mesh = NavMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Create two triangles sharing an edge
+    _ = try mesh.addVertex(Vec3.init(0, 0, 0)); // 0
+    _ = try mesh.addVertex(Vec3.init(10, 0, 0)); // 1
+    _ = try mesh.addVertex(Vec3.init(5, 0, 10)); // 2
+    _ = try mesh.addVertex(Vec3.init(15, 0, 10)); // 3
+
+    // First triangle: 0, 1, 2
+    _ = try mesh.addPolygon(&[_]u32{ 0, 1, 2 });
+    // Second triangle shares edge 1-2 (but reversed: 2, 1)
+    _ = try mesh.addPolygon(&[_]u32{ 1, 3, 2 });
+
+    mesh.buildAdjacency();
+
+    // Find the shared edge in polygon 0
+    var found_adj: bool = false;
+    for (mesh.polygons.items[0].edges) |edge| {
+        if (edge.adjacent != null and edge.adjacent.? == 1) {
+            found_adj = true;
+            break;
+        }
+    }
+    try std.testing.expect(found_adj);
+}
+
+test "PathWaypoint flags" {
+    const waypoint = PathWaypoint{
+        .position = Vec3.init(5, 0, 5),
+        .polygon = 0,
+        .flags = .{ .corner = true, .portal = false, .jump = true },
+    };
+
+    try std.testing.expect(waypoint.flags.corner);
+    try std.testing.expect(!waypoint.flags.portal);
+    try std.testing.expect(waypoint.flags.jump);
+}
+
+test "NavPolygon flags" {
+    const flags = NavPolygon.PolygonFlags{
+        .walkable = true,
+        .water = true,
+        .jump = false,
+        .ladder = true,
+        .disabled = false,
+    };
+
+    try std.testing.expect(flags.walkable);
+    try std.testing.expect(flags.water);
+    try std.testing.expect(!flags.jump);
+    try std.testing.expect(flags.ladder);
+    try std.testing.expect(!flags.disabled);
+}

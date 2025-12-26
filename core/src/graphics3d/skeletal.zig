@@ -1333,3 +1333,124 @@ test "MorphTarget weight application" {
     // Check morphed position
     try std.testing.expectApproxEqAbs(@as(f32, 0.5), manager.morphed_positions.items[0].y, 0.01);
 }
+
+test "SkinnedMesh vertex skinning" {
+    const allocator = std.testing.allocator;
+
+    var mesh = SkinnedMesh.init(allocator);
+    defer mesh.deinit();
+
+    // Add vertex with bone weights
+    var weights = BoneWeights{};
+    weights.bone_indices = .{ 0, 0, 0, 0 };
+    weights.weights = .{ 1.0, 0, 0, 0 };
+
+    try mesh.addVertex(Vec3.init(0, 0, 0), Vec3.up(), weights);
+    try std.testing.expectEqual(@as(usize, 1), mesh.vertexCount());
+
+    // Apply identity skinning (should not change position)
+    var bone_matrices = [_]Mat4{Mat4.identity()};
+    mesh.applySkinning(&bone_matrices);
+
+    try std.testing.expectApproxEqAbs(@as(f32, 0), mesh.skinned_positions.items[0].x, 0.01);
+}
+
+test "AnimationClip duration and sampling" {
+    const allocator = std.testing.allocator;
+
+    var clip = AnimationClip.init(allocator, "walk");
+    defer clip.deinit();
+
+    clip.duration = 1.0;
+
+    var channel = AnimationChannel.init(allocator, 0);
+    try channel.addKeyframe(.{ .time = 0.0, .value = .{ .translation = Vec3.zero() } });
+    try channel.addKeyframe(.{ .time = 1.0, .value = .{ .translation = Vec3.init(10, 0, 0) } });
+
+    try clip.addChannel(channel);
+
+    try std.testing.expectEqual(@as(usize, 1), clip.channels.items.len);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.0), clip.duration, 0.01);
+}
+
+test "AnimationBlender layer management" {
+    const allocator = std.testing.allocator;
+
+    var blender = AnimationBlender.init(allocator);
+    defer blender.deinit();
+
+    // Create a dummy clip for testing
+    var clip = AnimationClip.init(allocator, "idle");
+    defer clip.deinit();
+    clip.duration = 2.0;
+
+    try blender.addLayer(.{
+        .clip = &clip,
+        .weight = 0.5,
+        .speed = 1.0,
+    });
+
+    try std.testing.expectEqual(@as(usize, 1), blender.layers.items.len);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.5), blender.layers.items[0].weight, 0.01);
+
+    // Update should advance time
+    blender.update(0.1);
+    try std.testing.expectApproxEqAbs(@as(f32, 0.1), blender.layers.items[0].time, 0.01);
+}
+
+test "AnimationParameters boolean and float" {
+    const allocator = std.testing.allocator;
+
+    var params = AnimationParameters.init(allocator);
+    defer params.deinit();
+
+    try params.setBool("isRunning", true);
+    try params.setFloat("speed", 1.5);
+
+    const running = params.get("isRunning");
+    try std.testing.expect(running != null);
+    try std.testing.expectEqual(true, running.?.boolean);
+
+    const speed = params.get("speed");
+    try std.testing.expect(speed != null);
+    try std.testing.expectApproxEqAbs(@as(f32, 1.5), speed.?.float, 0.01);
+}
+
+test "TwoBoneIKSolver initialization" {
+    const solver = TwoBoneIKSolver{
+        .root_bone = 0,
+        .mid_bone = 1,
+        .end_bone = 2,
+        .pole_target = Vec3.init(0, 0, 1),
+    };
+
+    try std.testing.expectEqual(@as(u16, 0), solver.root_bone);
+    try std.testing.expectEqual(@as(u16, 1), solver.mid_bone);
+    try std.testing.expectEqual(@as(u16, 2), solver.end_bone);
+    try std.testing.expect(solver.pole_target != null);
+}
+
+test "AnimationLayer bone mask filtering" {
+    const allocator = std.testing.allocator;
+
+    var clip = AnimationClip.init(allocator, "test");
+    defer clip.deinit();
+    clip.duration = 1.0;
+
+    const mask = [_]u16{ 0, 2, 4 };
+    var layer = AnimationLayer{
+        .clip = &clip,
+        .weight = 1.0,
+        .bone_mask = &mask,
+    };
+
+    // Bones in mask should be affected
+    try std.testing.expect(layer.affectsBone(0));
+    try std.testing.expect(layer.affectsBone(2));
+    try std.testing.expect(layer.affectsBone(4));
+
+    // Bones not in mask should not be affected
+    try std.testing.expect(!layer.affectsBone(1));
+    try std.testing.expect(!layer.affectsBone(3));
+    try std.testing.expect(!layer.affectsBone(5));
+}
