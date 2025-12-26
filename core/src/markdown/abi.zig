@@ -242,17 +242,23 @@ pub fn zylix_markdown_render_html(
         return @intFromEnum(MarkdownResult.err_render_error);
     };
 
-    // Store globally for later retrieval
+    // Free previous output if any
     if (last_html_output) |old| {
         global_allocator.free(old);
     }
-    last_html_output = html;
+
+    // Duplicate the HTML so we don't alias the parser's cache
+    // This prevents use-after-free when the same cached HTML is returned
+    last_html_output = global_allocator.dupe(u8, html) catch {
+        last_error = .err_out_of_memory;
+        return @intFromEnum(MarkdownResult.err_out_of_memory);
+    };
 
     if (out_html) |ptr| {
-        ptr.* = html.ptr;
+        ptr.* = last_html_output.?.ptr;
     }
     if (out_len) |len| {
-        len.* = html.len;
+        len.* = last_html_output.?.len;
     }
 
     last_error = .ok;

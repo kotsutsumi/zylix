@@ -454,11 +454,9 @@ test "End-to-end workflow" {
     try std.testing.expect(tgt.supportsFeature(.ios, .metal));
     try std.testing.expect(tgt.supportsFeature(.android, .vulkan));
 
-    // 4. Start a build
+    // 4. Register a build (using hermetic test method instead of actual execution)
     const bld = try manager.getBuildOrchestrator();
-    const build_future = bld.start(project_id, .ios, .{ .mode = .release });
-    defer allocator.destroy(build_future);
-    const build_id = try build_future.get();
+    const build_id = try bld.registerBuildForTest(project_id.name, .ios, .{ .mode = .release });
     try std.testing.expect(build_id.isValid());
 
     // 5. Start preview

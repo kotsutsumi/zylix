@@ -530,6 +530,35 @@ pub const Build = struct {
     pub fn totalCount(self: *const Build) usize {
         return self.builds.count();
     }
+
+    /// Register a build without executing (for testing)
+    /// Returns the BuildId directly without going through the executor
+    pub fn registerBuildForTest(
+        self: *Build,
+        project_name: []const u8,
+        target: project.Target,
+        config: BuildConfig,
+    ) !BuildId {
+        const build_id = BuildId{
+            .id = self.next_id,
+            .project_name = project_name,
+            .target = target,
+            .started_at = std.time.timestamp(),
+        };
+        self.next_id += 1;
+
+        const entry = BuildEntry{
+            .id = build_id,
+            .config = config,
+            .status = .{
+                .state = .pending,
+                .progress = 0.0,
+            },
+        };
+
+        try self.builds.put(self.allocator, build_id.id, entry);
+        return build_id;
+    }
 };
 
 /// Create a build orchestrator
@@ -568,22 +597,13 @@ test "BuildState checks" {
     try std.testing.expect(!BuildState.failed.isSuccess());
 }
 
-test "Build start" {
+test "Build register for test" {
     const allocator = std.testing.allocator;
     var build = createBuildOrchestrator(allocator);
     defer build.deinit();
 
-    const project_id = project.ProjectId{
-        .id = 1,
-        .name = "test",
-        .path = "/tmp",
-    };
+    const build_id = try build.registerBuildForTest("test", .ios, .{});
 
-    const future = build.start(project_id, .ios, .{});
-    defer allocator.destroy(future);
-    try std.testing.expect(future.isCompleted());
-
-    const build_id = try future.get();
     try std.testing.expect(build_id.isValid());
     try std.testing.expectEqual(@as(usize, 1), build.totalCount());
 }
@@ -593,15 +613,7 @@ test "Build cancel" {
     var build = createBuildOrchestrator(allocator);
     defer build.deinit();
 
-    const project_id = project.ProjectId{
-        .id = 1,
-        .name = "test",
-        .path = "/tmp",
-    };
-
-    const future = build.start(project_id, .web, .{});
-    defer allocator.destroy(future);
-    const build_id = try future.get();
+    const build_id = try build.registerBuildForTest("test", .web, .{});
 
     build.cancel(build_id);
 
@@ -615,15 +627,7 @@ test "Build progress update" {
     var build = createBuildOrchestrator(allocator);
     defer build.deinit();
 
-    const project_id = project.ProjectId{
-        .id = 1,
-        .name = "test",
-        .path = "/tmp",
-    };
-
-    const future = build.start(project_id, .android, .{});
-    defer allocator.destroy(future);
-    const build_id = try future.get();
+    const build_id = try build.registerBuildForTest("test", .android, .{});
 
     build.updateProgress(build_id, .compiling, 0.5, "Compiling main.zig");
 

@@ -356,10 +356,14 @@ pub const InlineParser = struct {
                 // Update text content
                 if (opener.count == 0) {
                     opener.node.unlink();
+                    // Free the duplicated text content before destroying node
+                    self.allocator.free(opener.node.data.text.content);
                     self.allocator.destroy(opener.node);
                 }
                 if (closer.count == 0) {
                     closer.node.unlink();
+                    // Free the duplicated text content before destroying node
+                    self.allocator.free(closer.node.data.text.content);
                     self.allocator.destroy(closer.node);
                 }
 

@@ -68,12 +68,36 @@ pub fn getOptimizeFlag(mode: build_mod.BuildMode) []const u8 {
     };
 }
 
+/// Build command result with owned allocations
+pub const BuildCommandResult = struct {
+    args: std.ArrayListUnmanaged([]const u8),
+    owned_strings: std.ArrayListUnmanaged([]const u8),
+
+    pub fn deinit(self: *BuildCommandResult, allocator: std.mem.Allocator) void {
+        // Free all owned strings first
+        for (self.owned_strings.items) |str| {
+            allocator.free(str);
+        }
+        self.owned_strings.deinit(allocator);
+        self.args.deinit(allocator);
+    }
+};
+
 /// Build command arguments for zig build
 pub fn buildCommandArgs(
     allocator: std.mem.Allocator,
     ctx: BuildContext,
-) !std.ArrayListUnmanaged([]const u8) {
+) !BuildCommandResult {
     var args: std.ArrayListUnmanaged([]const u8) = .{};
+    var owned_strings: std.ArrayListUnmanaged([]const u8) = .{};
+
+    errdefer {
+        for (owned_strings.items) |str| {
+            allocator.free(str);
+        }
+        owned_strings.deinit(allocator);
+        args.deinit(allocator);
+    }
 
     // Base command
     try args.append(allocator, "zig");
@@ -81,6 +105,7 @@ pub fn buildCommandArgs(
 
     // Build file location
     const build_file = try std.fs.path.join(allocator, &.{ ctx.project_path, "build.zig" });
+    try owned_strings.append(allocator, build_file);
     try args.append(allocator, "--build-file");
     try args.append(allocator, build_file);
 
@@ -94,8 +119,8 @@ pub fn buildCommandArgs(
 
     // Parallel compilation jobs
     if (ctx.config.max_jobs > 0) {
-        var jobs_buf: [16]u8 = undefined;
-        const jobs_str = std.fmt.bufPrint(&jobs_buf, "-j{d}", .{ctx.config.max_jobs}) catch "-j4";
+        const jobs_str = try std.fmt.allocPrint(allocator, "-j{d}", .{ctx.config.max_jobs});
+        try owned_strings.append(allocator, jobs_str);
         try args.append(allocator, jobs_str);
     }
 
@@ -104,7 +129,7 @@ pub fn buildCommandArgs(
         try args.append(allocator, flag);
     }
 
-    return args;
+    return .{ .args = args, .owned_strings = owned_strings };
 }
 
 /// Execute build with progress tracking
@@ -122,16 +147,16 @@ pub fn executeBuild(
     }
 
     // Build the command arguments
-    var args = buildCommandArgs(allocator, ctx) catch {
+    var cmd_result = buildCommandArgs(allocator, ctx) catch {
         return .{ .err = ExecutorError.OutOfMemory };
     };
-    defer args.deinit(allocator);
+    defer cmd_result.deinit(allocator);
 
     // Log the command being executed
     if (log_callback) |cb| {
         var cmd_buf: [1024]u8 = undefined;
         var cmd_len: usize = 0;
-        for (args.items) |arg| {
+        for (cmd_result.args.items) |arg| {
             if (cmd_len + arg.len + 1 < cmd_buf.len) {
                 @memcpy(cmd_buf[cmd_len..][0..arg.len], arg);
                 cmd_len += arg.len;
@@ -161,7 +186,7 @@ pub fn executeBuild(
     }
 
     // Prepare child process
-    const args_slice = args.items;
+    const args_slice = cmd_result.args.items;
 
     var child = std.process.Child.init(args_slice, allocator);
     // Use project path as working directory
@@ -357,9 +382,7 @@ test "getOptimizeFlag" {
 }
 
 test "buildCommandArgs" {
-    // Use page_allocator for this test since we can't easily track
-    // the dynamically allocated path string for cleanup
-    const allocator = std.heap.page_allocator;
+    const allocator = std.testing.allocator;
 
     const ctx = BuildContext{
         .project_path = "/tmp/myproject",
@@ -374,12 +397,12 @@ test "buildCommandArgs" {
         },
     };
 
-    var args = try buildCommandArgs(allocator, ctx);
-    defer args.deinit(allocator);
+    var result = try buildCommandArgs(allocator, ctx);
+    defer result.deinit(allocator);
 
-    try std.testing.expect(args.items.len >= 7);
-    try std.testing.expect(std.mem.eql(u8, "zig", args.items[0]));
-    try std.testing.expect(std.mem.eql(u8, "build", args.items[1]));
+    try std.testing.expect(result.args.items.len >= 7);
+    try std.testing.expect(std.mem.eql(u8, "zig", result.args.items[0]));
+    try std.testing.expect(std.mem.eql(u8, "build", result.args.items[1]));
 }
 
 test "validateEnvironment" {
