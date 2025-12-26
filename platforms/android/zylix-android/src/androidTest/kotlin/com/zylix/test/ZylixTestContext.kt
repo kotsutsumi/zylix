@@ -562,7 +562,8 @@ class ZylixTestContext<T : Activity>(
         }
 
         return try {
-            onView(withTagValue(containsString(tag))).check(matches(isDisplayed()))
+            @Suppress("UNCHECKED_CAST")
+            onView(withTagValue(containsString(tag) as Matcher<Any>)).check(matches(isDisplayed()))
             true
         } catch (e: Exception) {
             false
