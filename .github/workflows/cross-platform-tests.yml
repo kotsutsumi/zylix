@@ -198,6 +198,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Build Core for Android
+        working-directory: core
+        run: |
+          zig build android
+
+      - name: Install Native Libraries
+        run: |
+          JNILIBS="platforms/android/zylix-android/src/main/jniLibs"
+          for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+            if [ -d "core/zig-out/android/$abi" ]; then
+              mkdir -p "$JNILIBS/$abi"
+              cp core/zig-out/android/$abi/*.so "$JNILIBS/$abi/" || true
+            fi
+          done
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
