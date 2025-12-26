@@ -50,7 +50,17 @@ zig build all
 
 ## ドキュメント
 
+### コンセプト
 - [コンセプト]({{< relref "concept" >}}) - 基本思想
 - [なぜJavaScriptではないのか？]({{< relref "why-not-js" >}}) - 技術比較
 - [アーキテクチャ]({{< relref "architecture" >}}) - システム設計
 - [ZigDom]({{< relref "zigdom" >}}) - Webプラットフォーム実装
+
+### APIリファレンス
+- [APIリファレンス]({{< relref "docs/api" >}}) - 完全なAPIドキュメント
+  - [C ABI]({{< relref "docs/api/abi" >}}) - プラットフォーム統合インターフェース
+  - [状態管理]({{< relref "docs/api/state" >}}) - アプリケーション状態
+  - [イベント]({{< relref "docs/api/events" >}}) - イベントディスパッチ
+  - [Virtual DOM]({{< relref "docs/api/vdom" >}}) - UI差分更新
+  - [アニメーション]({{< relref "docs/api/animation" >}}) - アニメーションシステム
+  - [AIモジュール]({{< relref "docs/api/ai" >}}) - AI/MLバックエンド

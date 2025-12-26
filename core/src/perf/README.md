@@ -72,27 +72,51 @@ zig run src/perf/benchmark.zig
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                    vdom.zig                      │
-│  ┌─────────────┐  ┌─────────────┐               │
-│  │   Differ    │  │ VNodeProps  │               │
-│  │  hashKey()  │  │  equals()   │               │
-│  └──────┬──────┘  └──────┬──────┘               │
-│         │                │                       │
-│         ▼                ▼                       │
-│  ┌─────────────────────────────────────────┐    │
-│  │              perf/simd.zig              │    │
-│  │  ┌───────────┐  ┌────────────────────┐  │    │
-│  │  │simdHashKey│  │   simdMemEql       │  │    │
-│  │  │(4B/iter)  │  │ (std.mem.eql)      │  │    │
-│  │  └───────────┘  └────────────────────┘  │    │
-│  │  ┌───────────────────────────────────┐  │    │
-│  │  │       simdFindDiffPos             │  │    │
-│  │  │    (16B vectors, 3x speedup)      │  │    │
-│  │  └───────────────────────────────────┘  │    │
-│  └─────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              vdom.zig                                    │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
+│  │     Differ       │  │   VNodeProps     │  │   VNodePool      │       │
+│  │ diff_cache       │  │   equals()       │  │ (O(1) alloc)     │       │
+│  │ temp_arena       │  │                  │  │                  │       │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
+│           │                     │                     │                  │
+│           ▼                     ▼                     ▼                  │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                        perf/ modules                              │   │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐  │   │
+│  │  │   simd.zig     │  │   cache.zig    │  │     pool.zig       │  │   │
+│  │  │ simdHashKey    │  │  DiffCache     │  │  ObjectPool(VNode) │  │   │
+│  │  │ simdMemEql     │  │  HashCache     │  │  ArenaPool         │  │   │
+│  │  │ simdFindDiff   │  │  LRUCache      │  │                    │  │   │
+│  │  └────────────────┘  └────────────────┘  └────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Integration in vdom.zig
+
+The VDOM module integrates all performance optimizations:
+
+```zig
+const simd = @import("perf/simd.zig");
+const cache = @import("perf/cache.zig");
+const pool = @import("perf/pool.zig");
+
+pub const Differ = struct {
+    diff_cache: cache.DiffCache,  // Caches diff results
+    temp_arena: pool.ArenaPool,   // Temporary allocations
+    // ...
+};
+
+pub const VNodePool = pool.ObjectPool(VNode, MAX_VNODES);
+```
+
+**Key Integration Points**:
+- `VNodeProps.equals()` uses SIMD for class comparison
+- `VNode.isSameKey()` uses SIMD for key comparison
+- `Differ` uses DiffCache to skip redundant comparisons
+- `Differ` uses ArenaPool for temporary allocations
+- Global `VNodePool` for efficient VNode allocation
 
 ## Platform Support
 

@@ -15,6 +15,8 @@ const std = @import("std");
 const component = @import("component.zig");
 const dsl = @import("dsl.zig");
 const simd = @import("perf/simd.zig");
+const cache = @import("perf/cache.zig");
+const pool = @import("perf/pool.zig");
 
 // ============================================================================
 // Virtual DOM Node
@@ -451,9 +453,18 @@ pub const DiffResult = struct {
     }
 };
 
+/// Size of temporary arena for diff operations
+const DIFF_ARENA_SIZE = 4096;
+
+/// VNode pool for efficient allocation/deallocation
+pub const VNodePool = pool.ObjectPool(VNode, MAX_VNODES);
+
 pub const Differ = struct {
     result: DiffResult = .{},
     next_dom_id: u32 = 1,
+    diff_cache: cache.DiffCache = cache.DiffCache.init(),
+    /// Arena for temporary allocations during diff
+    temp_arena: pool.ArenaPool(DIFF_ARENA_SIZE) = pool.ArenaPool(DIFF_ARENA_SIZE).init(),
 
     pub fn init() Differ {
         return .{};
@@ -462,6 +473,44 @@ pub const Differ = struct {
     pub fn reset(self: *Differ) void {
         self.result = .{};
         self.next_dom_id = 1;
+        self.temp_arena.reset();
+        // Note: cache is preserved across resets for better hit rate
+    }
+
+    /// Clear the diff cache (call periodically to free memory)
+    pub fn clearCache(self: *Differ) void {
+        self.diff_cache.clear();
+    }
+
+    /// Get cache statistics
+    pub fn getCacheStats(self: *const Differ) cache.CacheStats {
+        return self.diff_cache.getStats();
+    }
+
+    /// Get temporary arena memory usage
+    pub fn getArenaUsage(self: *const Differ) struct { used: usize, available: usize } {
+        return .{
+            .used = self.temp_arena.getBytesUsed(),
+            .available = self.temp_arena.getBytesAvailable(),
+        };
+    }
+
+    /// Compute hash for a VNode (for caching)
+    fn computeNodeHash(node: *const VNode) u32 {
+        // Combine key fields into a hash
+        var hash: u32 = @intFromEnum(node.node_type);
+        hash = hash *% 31 +% @intFromEnum(node.tag);
+        hash = hash *% 31 +% node.text_len;
+        hash = hash *% 31 +% node.child_count;
+        hash = hash *% 31 +% node.props.style_id;
+        hash = hash *% 31 +% node.props.on_click;
+        if (node.text_len > 0) {
+            hash = hash *% 31 +% simd.simdHashKey(node.text[0..node.text_len]);
+        }
+        if (node.props.class_len > 0) {
+            hash = hash *% 31 +% simd.simdHashKey(node.props.class[0..node.props.class_len]);
+        }
+        return hash;
     }
 
     /// Diff two virtual trees and produce patches
@@ -553,8 +602,23 @@ pub const Differ = struct {
             return;
         }
 
+        // Same type - check cache before doing expensive diff
+        const old_hash = computeNodeHash(old);
+        const new_hash = computeNodeHash(new);
+
+        // Check if we've already compared these nodes
+        if (self.diff_cache.lookup(old_hash, new_hash)) |cached| {
+            if (cached.equal) {
+                // Nodes are identical - no patches needed
+                return;
+            }
+            // Cache says nodes differ - continue with diff
+            // (we still need to generate patches even if we know they differ)
+        }
+
         // Same type - check for updates
         const dom_id = old.dom_id;
+        const patch_count_before = self.result.count;
 
         switch (new.node_type) {
             .text => {
@@ -586,6 +650,11 @@ pub const Differ = struct {
                 // Component diffing would go here
             },
         }
+
+        // Store result in cache for future lookups
+        const patches_generated = self.result.count - patch_count_before;
+        const nodes_equal = (patches_generated == 0);
+        self.diff_cache.store(old_hash, new_hash, nodes_equal, @intCast(patches_generated));
     }
 
     /// Key-based child reconciliation algorithm
@@ -832,11 +901,13 @@ pub const Reconciler = struct {
 // ============================================================================
 
 var global_reconciler: Reconciler = .{};
+var global_vnode_pool: VNodePool = VNodePool.init();
 var global_initialized: bool = false;
 
 pub fn initGlobal() void {
     if (!global_initialized) {
         global_reconciler.reset();
+        global_vnode_pool.reset();
         global_initialized = true;
     }
 }
@@ -845,8 +916,13 @@ pub fn getReconciler() *Reconciler {
     return &global_reconciler;
 }
 
+pub fn getVNodePool() *VNodePool {
+    return &global_vnode_pool;
+}
+
 pub fn resetGlobal() void {
     global_reconciler.reset();
+    global_vnode_pool.reset();
 }
 
 // ============================================================================
@@ -1809,4 +1885,177 @@ test "key-based diffing: update props on matched keyed node" {
     }
     try std.testing.expect(has_update_props);
     try std.testing.expect(!has_remove);
+}
+
+// === DiffCache Integration Tests ===
+
+test "diff cache: caches identical node comparisons" {
+    var differ = Differ.init();
+
+    // First diff - identical trees
+    var tree1 = VTree.init();
+    const id1 = tree1.create(VNode.element(.div).withClass("test"));
+    tree1.setRoot(id1);
+    if (tree1.get(id1)) |node| node.dom_id = 1;
+
+    var tree2 = VTree.init();
+    const id2 = tree2.create(VNode.element(.div).withClass("test"));
+    tree2.setRoot(id2);
+
+    // First diff - should miss cache
+    _ = differ.diff(&tree1, &tree2);
+    const stats1 = differ.getCacheStats();
+    try std.testing.expectEqual(@as(u64, 0), stats1.hits);
+
+    // Second diff of same structure - should hit cache
+    _ = differ.diff(&tree1, &tree2);
+    const stats2 = differ.getCacheStats();
+    try std.testing.expectEqual(@as(u64, 1), stats2.hits);
+}
+
+test "diff cache: clearCache resets statistics" {
+    var differ = Differ.init();
+
+    var tree1 = VTree.init();
+    const id1 = tree1.create(VNode.element(.div));
+    tree1.setRoot(id1);
+    if (tree1.get(id1)) |node| node.dom_id = 1;
+
+    var tree2 = VTree.init();
+    const id2 = tree2.create(VNode.element(.div));
+    tree2.setRoot(id2);
+
+    _ = differ.diff(&tree1, &tree2);
+    _ = differ.diff(&tree1, &tree2);
+
+    const stats_before = differ.getCacheStats();
+    try std.testing.expect(stats_before.hits > 0);
+
+    differ.clearCache();
+
+    // After clear, cache should be empty (miss on next lookup)
+    _ = differ.diff(&tree1, &tree2);
+    const stats_after = differ.getCacheStats();
+    // New cache, so hits reset to 0 and we have 1 miss
+    try std.testing.expectEqual(@as(u64, 0), stats_after.hits);
+}
+
+test "diff cache: cache preserved across differ reset" {
+    var differ = Differ.init();
+
+    var tree1 = VTree.init();
+    const id1 = tree1.create(VNode.element(.span));
+    tree1.setRoot(id1);
+    if (tree1.get(id1)) |node| node.dom_id = 1;
+
+    var tree2 = VTree.init();
+    const id2 = tree2.create(VNode.element(.span));
+    tree2.setRoot(id2);
+
+    _ = differ.diff(&tree1, &tree2);
+    differ.reset(); // Reset should NOT clear cache
+
+    // Re-set dom_id after reset
+    if (tree1.get(id1)) |node| node.dom_id = 1;
+
+    _ = differ.diff(&tree1, &tree2);
+    const stats = differ.getCacheStats();
+    // Cache should still be valid, so we get a hit
+    try std.testing.expectEqual(@as(u64, 1), stats.hits);
+}
+
+test "diff cache: computeNodeHash produces consistent hashes" {
+    const node1 = VNode.element(.div).withClass("test-class");
+    const node2 = VNode.element(.div).withClass("test-class");
+    const node3 = VNode.element(.div).withClass("different");
+
+    const hash1 = Differ.computeNodeHash(&node1);
+    const hash2 = Differ.computeNodeHash(&node2);
+    const hash3 = Differ.computeNodeHash(&node3);
+
+    try std.testing.expectEqual(hash1, hash2);
+    try std.testing.expect(hash1 != hash3);
+}
+
+// === Pool & Arena Integration Tests ===
+
+test "VNodePool basic allocation" {
+    var vnode_pool = VNodePool.init();
+
+    // Allocate nodes from pool
+    const node1 = vnode_pool.alloc();
+    try std.testing.expect(node1 != null);
+
+    const node2 = vnode_pool.alloc();
+    try std.testing.expect(node2 != null);
+
+    try std.testing.expectEqual(@as(usize, 2), vnode_pool.getAllocated());
+    try std.testing.expectEqual(@as(usize, MAX_VNODES - 2), vnode_pool.getAvailable());
+
+    // Free and reallocate
+    vnode_pool.free(node1.?);
+    try std.testing.expectEqual(@as(usize, 1), vnode_pool.getAllocated());
+
+    const node3 = vnode_pool.alloc();
+    try std.testing.expect(node3 != null);
+    try std.testing.expectEqual(@as(usize, 2), vnode_pool.getAllocated());
+}
+
+test "VNodePool reset" {
+    var vnode_pool = VNodePool.init();
+
+    _ = vnode_pool.alloc();
+    _ = vnode_pool.alloc();
+    _ = vnode_pool.alloc();
+
+    try std.testing.expectEqual(@as(usize, 3), vnode_pool.getAllocated());
+
+    vnode_pool.reset();
+    try std.testing.expect(vnode_pool.isEmpty());
+    try std.testing.expectEqual(@as(usize, MAX_VNODES), vnode_pool.getAvailable());
+}
+
+test "Differ arena usage" {
+    var differ = Differ.init();
+
+    // Initial arena should be empty
+    const usage1 = differ.getArenaUsage();
+    try std.testing.expectEqual(@as(usize, 0), usage1.used);
+    try std.testing.expectEqual(@as(usize, DIFF_ARENA_SIZE), usage1.available);
+
+    // After diff, arena should still be manageable
+    var tree1 = VTree.init();
+    const id1 = tree1.create(VNode.element(.div));
+    tree1.setRoot(id1);
+    if (tree1.get(id1)) |node| node.dom_id = 1;
+
+    var tree2 = VTree.init();
+    const id2 = tree2.create(VNode.element(.div));
+    tree2.setRoot(id2);
+
+    _ = differ.diff(&tree1, &tree2);
+
+    // Reset should clear arena
+    differ.reset();
+    const usage2 = differ.getArenaUsage();
+    try std.testing.expectEqual(@as(usize, 0), usage2.used);
+}
+
+test "global VNode pool" {
+    resetGlobal();
+    initGlobal();
+
+    const pool_ptr = getVNodePool();
+    try std.testing.expect(pool_ptr.isEmpty());
+
+    // Allocate from global pool
+    const node = pool_ptr.alloc();
+    try std.testing.expect(node != null);
+    node.?.* = VNode.element(.button);
+    try std.testing.expectEqual(ElementTag.button, node.?.tag);
+
+    try std.testing.expectEqual(@as(usize, 1), pool_ptr.getAllocated());
+
+    resetGlobal();
+    try std.testing.expect(pool_ptr.isEmpty());
 }

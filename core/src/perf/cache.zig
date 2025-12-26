@@ -7,6 +7,17 @@ const std = @import("std");
 const simd = @import("simd.zig");
 
 // ============================================================================
+// Common Types
+// ============================================================================
+
+/// Statistics for cache performance
+pub const CacheStats = struct {
+    hits: u64,
+    misses: u64,
+    hit_rate: f64,
+};
+
+// ============================================================================
 // LRU Cache
 // ============================================================================
 
@@ -158,7 +169,7 @@ pub fn LRUCache(comptime K: type, comptime V: type, comptime capacity: usize) ty
             }
         }
 
-        /// Clear all entries
+        /// Clear all entries and reset statistics
         pub fn clear(self: *Self) void {
             for (&self.entries) |*entry| {
                 entry.valid = false;
@@ -168,10 +179,12 @@ pub fn LRUCache(comptime K: type, comptime V: type, comptime capacity: usize) ty
             self.head = null;
             self.tail = null;
             self.count = 0;
+            self.hits = 0;
+            self.misses = 0;
         }
 
         /// Get cache statistics
-        pub fn getStats(self: *const Self) struct { hits: u64, misses: u64, hit_rate: f64 } {
+        pub fn getStats(self: *const Self) CacheStats {
             const total = self.hits + self.misses;
             const hit_rate = if (total > 0) @as(f64, @floatFromInt(self.hits)) / @as(f64, @floatFromInt(total)) else 0.0;
             return .{
@@ -253,16 +266,18 @@ pub fn HashCache(comptime V: type, comptime capacity: usize) type {
             self.putByHash(simd.simdHashKey(key), value);
         }
 
-        /// Clear all entries
+        /// Clear all entries and reset statistics
         pub fn clear(self: *Self) void {
             for (&self.entries) |*entry| {
                 entry.valid = false;
             }
             self.count = 0;
+            self.hits = 0;
+            self.misses = 0;
         }
 
         /// Get statistics
-        pub fn getStats(self: *const Self) struct { hits: u64, misses: u64, hit_rate: f64 } {
+        pub fn getStats(self: *const Self) CacheStats {
             const total = self.hits + self.misses;
             const hit_rate = if (total > 0) @as(f64, @floatFromInt(self.hits)) / @as(f64, @floatFromInt(total)) else 0.0;
             return .{
@@ -328,7 +343,7 @@ pub const DiffCache = struct {
     }
 
     /// Get statistics
-    pub fn getStats(self: *const DiffCache) struct { hits: u64, misses: u64, hit_rate: f64 } {
+    pub fn getStats(self: *const DiffCache) CacheStats {
         return self.cache.getStats();
     }
 };
