@@ -21,6 +21,10 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(lib);
 
+    // Explicit step to build only the library (no CLI deps required)
+    const lib_step = b.step("zylix", "Build only the core library (no llama.cpp/whisper.cpp deps)");
+    lib_step.dependOn(&lib.step);
+
     // === AI Module (shared between CLI and tests) ===
     const ai_mod = b.createModule(.{
         .root_source_file = b.path("src/ai/ai.zig"),
@@ -106,6 +110,12 @@ pub fn build(b: *std.Build) void {
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const run_cli_tests = b.addRunArtifact(cli_tests);
+
+    // Test step for library only (no CLI, no deps required)
+    const test_lib_step = b.step("test-lib", "Run library unit tests (no llama.cpp/whisper.cpp deps)");
+    test_lib_step.dependOn(&run_unit_tests.step);
+
+    // Full test step (requires llama.cpp/whisper.cpp deps)
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_cli_tests.step);
     test_step.dependOn(&run_unit_tests.step);
@@ -557,6 +567,15 @@ fn addCoreMLSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
         return;
     }
 
+    // For cross-compilation, skip Objective-C wrapper as it requires proper sysroot
+    const is_native = target.os.tag == @import("builtin").os.tag and
+        target.cpu.arch == @import("builtin").cpu.arch;
+
+    if (!is_native) {
+        // Cross-compilation: Core ML wrapper requires native build environment
+        return;
+    }
+
     // Add include path for Core ML wrapper
     compile.root_module.addIncludePath(b.path("src/ai"));
 
@@ -578,6 +597,6 @@ fn addCoreMLSupport(compile: *std.Build.Step.Compile, b: *std.Build) void {
     // Additional frameworks needed for Core ML
     compile.root_module.linkFramework("Foundation", .{});
 
-    // Link Objective-C runtime
+    // Link Objective-C runtime (only for native builds, not cross-compile)
     compile.root_module.linkSystemLibrary("objc", .{});
 }

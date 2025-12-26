@@ -82,7 +82,8 @@ jobs:
         id: build
         working-directory: core
         run: |
-          zig build -Dtarget=aarch64-macos
+          # Build the core library for iOS (uses the dedicated ios build step)
+          zig build ios
           echo "Core built successfully for iOS target"
 
   # ============================================================================

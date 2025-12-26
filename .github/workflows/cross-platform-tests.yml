@@ -100,14 +100,18 @@ jobs:
             core/zig-out
           key: zig-core-${{ runner.os }}-${{ hashFiles('core/**/*.zig') }}
 
-      - name: Build Core
+      - name: Build Core Library
         working-directory: core
-        run: zig build
+        run: |
+          # Build only the library (skip CLI which requires llama.cpp/whisper.cpp deps)
+          zig build zylix
 
       - name: Run Unit Tests
         id: test
         working-directory: core
-        run: zig build test --summary all
+        run: |
+          # Run tests for the core library only (not CLI tests which need deps)
+          zig build test-lib --summary all
 
       - name: Upload Test Results
         if: always()
@@ -138,7 +142,9 @@ jobs:
 
       - name: Build Core for iOS
         working-directory: core
-        run: zig build -Dtarget=aarch64-macos
+        run: |
+          # Build the core library for iOS (static library, no CLI deps)
+          zig build ios
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer

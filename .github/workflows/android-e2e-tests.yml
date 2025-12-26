@@ -80,8 +80,9 @@ jobs:
         id: build
         working-directory: core
         run: |
-          zig build -Dtarget=aarch64-linux-android
-          zig build -Dtarget=x86_64-linux-android
+          # Build the core library for Android ABIs (uses dedicated build steps)
+          zig build android-arm64
+          zig build android-x64
           echo "Core built successfully for Android targets"
 
   # ============================================================================
