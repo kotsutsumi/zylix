@@ -75,20 +75,26 @@ zig run src/perf/benchmark.zig
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                              vdom.zig                                    │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐       │
-│  │     Differ       │  │   VNodeProps     │  │   VNodePool      │       │
-│  │ diff_cache       │  │   equals()       │  │ (O(1) alloc)     │       │
+│  │     Differ       │  │   VNodeProps     │  │   PatchBatch     │       │
+│  │ diff_cache       │  │   equals()       │  │ (ordered apply)  │       │
 │  │ temp_arena       │  │                  │  │                  │       │
 │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘       │
 │           │                     │                     │                  │
 │           ▼                     ▼                     ▼                  │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
 │  │                        perf/ modules                              │   │
-│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────┐  │   │
-│  │  │   simd.zig     │  │   cache.zig    │  │     pool.zig       │  │   │
-│  │  │ simdHashKey    │  │  DiffCache     │  │  ObjectPool(VNode) │  │   │
-│  │  │ simdMemEql     │  │  HashCache     │  │  ArenaPool         │  │   │
-│  │  │ simdFindDiff   │  │  LRUCache      │  │                    │  │   │
-│  │  └────────────────┘  └────────────────┘  └────────────────────┘  │   │
+│  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────┐ │   │
+│  │  │ simd.zig   │ │ cache.zig  │ │ pool.zig   │ │   memo.zig     │ │   │
+│  │  │ SIMD hash  │ │ DiffCache  │ │ ObjectPool │ │  MemoCache     │ │   │
+│  │  │ FindDiff   │ │ LRUCache   │ │ ArenaPool  │ │  hashProps     │ │   │
+│  │  └────────────┘ └────────────┘ └────────────┘ └────────────────┘ │   │
+│  │  ┌──────────────────────────────────────────────────────────────┐│   │
+│  │  │                      fiber.zig                                ││   │
+│  │  │  ┌─────────────┐ ┌─────────────┐ ┌──────────────────────┐    ││   │
+│  │  │  │   Fiber     │ │  Scheduler  │ │ ConcurrentRenderer   │    ││   │
+│  │  │  │ work units  │ │ priority Q  │ │ multi-lane rendering │    ││   │
+│  │  │  └─────────────┘ └─────────────┘ └──────────────────────┘    ││   │
+│  │  └──────────────────────────────────────────────────────────────┘│   │
 │  └──────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -236,8 +242,64 @@ renderComponent();
 cache.cache(component_id, props_hash, state_hash, child_count);
 ```
 
+### fiber.zig - Fiber-based Rendering
+
+Implements React-like Fiber architecture for incremental, priority-based rendering.
+
+#### Components
+
+| Type | Purpose | Use Case |
+|------|---------|----------|
+| `Fiber` | Unit of work | Represents work to be done |
+| `FiberPool` | Fiber allocation | O(1) fiber management |
+| `Scheduler` | Priority queues | Work scheduling |
+| `ConcurrentRenderer` | Render orchestration | Multi-lane rendering |
+
+#### Priority Levels
+
+| Priority | Time Budget | Use Case |
+|----------|-------------|----------|
+| `sync` | 0ms (immediate) | Critical updates |
+| `immediate` | 1ms | Animations |
+| `user_blocking` | 5ms | User input |
+| `high` | 10ms | Hover/focus |
+| `normal` | 16ms | State changes |
+| `idle` | 50ms | Background work |
+
+#### Render Lanes
+
+| Lane | Priority | Description |
+|------|----------|-------------|
+| `sync` | Highest | Blocking render |
+| `concurrent` | Normal | Standard async |
+| `transition` | High | UI transitions |
+| `deferred` | Low | Can be interrupted |
+
+#### Usage
+
+```zig
+const fiber = @import("perf/fiber.zig");
+
+// Get global renderer
+const renderer = fiber.getRenderer();
+
+// Start a concurrent render
+const root = renderer.startRender(root_vnode_id, .concurrent);
+
+// Work loop (call each frame)
+const result = renderer.workLoop();
+if (result.completed) {
+    renderer.commit();
+}
+
+// Check if higher priority work can interrupt
+if (renderer.interrupt(.immediate)) {
+    // Handle urgent update
+}
+```
+
 ## Future Optimizations
 
-- [ ] Fiber-based incremental rendering
-- [ ] Priority-based scheduling
-- [ ] Concurrent mode support
+- [ ] WebGPU-accelerated diffing
+- [ ] Predictive prefetching
+- [ ] Streaming SSR support

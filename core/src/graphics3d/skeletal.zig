@@ -547,11 +547,23 @@ pub const AnimationBlender = struct {
 
     allocator: std.mem.Allocator,
 
+    /// Crossfade state
+    crossfade_active: bool = false,
+    crossfade_duration: f32 = 0,
+    crossfade_elapsed: f32 = 0,
+    crossfade_from_idx: ?usize = null,
+    crossfade_to_idx: ?usize = null,
+
     pub fn init(allocator: std.mem.Allocator) AnimationBlender {
         return .{
             .layers = .{},
             .cached_transforms = .{},
             .allocator = allocator,
+            .crossfade_active = false,
+            .crossfade_duration = 0,
+            .crossfade_elapsed = 0,
+            .crossfade_from_idx = null,
+            .crossfade_to_idx = null,
         };
     }
 
@@ -574,9 +586,61 @@ pub const AnimationBlender = struct {
 
     /// Update all layers
     pub fn update(self: *AnimationBlender, delta_time: f32) void {
+        // Update crossfade weights if active
+        if (self.crossfade_active) {
+            self.crossfade_elapsed += delta_time;
+            const t = @min(1.0, self.crossfade_elapsed / self.crossfade_duration);
+
+            // Smooth interpolation using ease-in-out curve
+            const smooth_t = t * t * (3.0 - 2.0 * t);
+
+            if (self.crossfade_from_idx) |from_idx| {
+                if (from_idx < self.layers.items.len) {
+                    self.layers.items[from_idx].weight = 1.0 - smooth_t;
+                }
+            }
+            if (self.crossfade_to_idx) |to_idx| {
+                if (to_idx < self.layers.items.len) {
+                    self.layers.items[to_idx].weight = smooth_t;
+                }
+            }
+
+            // Complete crossfade
+            if (t >= 1.0) {
+                self.completeCrossfade();
+            }
+        }
+
         for (self.layers.items) |*layer| {
             layer.update(delta_time);
         }
+    }
+
+    /// Complete the crossfade and cleanup
+    fn completeCrossfade(self: *AnimationBlender) void {
+        // Remove the faded-out layer
+        if (self.crossfade_from_idx) |from_idx| {
+            if (from_idx < self.layers.items.len) {
+                _ = self.layers.orderedRemove(from_idx);
+                // Adjust to_idx if it was after from_idx
+                if (self.crossfade_to_idx) |to_idx| {
+                    if (to_idx > from_idx) {
+                        self.crossfade_to_idx = to_idx - 1;
+                    }
+                }
+            }
+        }
+
+        // Set the target layer to full weight
+        if (self.crossfade_to_idx) |to_idx| {
+            if (to_idx < self.layers.items.len) {
+                self.layers.items[to_idx].weight = 1.0;
+            }
+        }
+
+        self.crossfade_active = false;
+        self.crossfade_from_idx = null;
+        self.crossfade_to_idx = null;
     }
 
     /// Blend all layers and apply to skeleton
@@ -652,12 +716,17 @@ pub const AnimationBlender = struct {
         fade_duration: f32,
         current_time: f32,
     ) !void {
+        // Store indices before adding layers
+        const from_idx = self.layers.items.len;
+
         // Add outgoing layer with decreasing weight
         try self.addLayer(.{
             .clip = from_clip,
             .weight = 1.0,
             .time = current_time,
         });
+
+        const to_idx = self.layers.items.len;
 
         // Add incoming layer with increasing weight
         try self.addLayer(.{
@@ -666,7 +735,30 @@ pub const AnimationBlender = struct {
             .time = 0,
         });
 
-        _ = fade_duration; // TODO: Implement weight interpolation over time
+        // Setup crossfade state for weight interpolation
+        self.crossfade_active = true;
+        self.crossfade_duration = fade_duration;
+        self.crossfade_elapsed = 0;
+        self.crossfade_from_idx = from_idx;
+        self.crossfade_to_idx = to_idx;
+    }
+
+    /// Check if a crossfade is currently in progress
+    pub fn isCrossfading(self: *const AnimationBlender) bool {
+        return self.crossfade_active;
+    }
+
+    /// Get crossfade progress (0.0 to 1.0)
+    pub fn getCrossfadeProgress(self: *const AnimationBlender) f32 {
+        if (!self.crossfade_active or self.crossfade_duration <= 0) return 0;
+        return @min(1.0, self.crossfade_elapsed / self.crossfade_duration);
+    }
+
+    /// Cancel ongoing crossfade
+    pub fn cancelCrossfade(self: *AnimationBlender) void {
+        self.crossfade_active = false;
+        self.crossfade_from_idx = null;
+        self.crossfade_to_idx = null;
     }
 };
 
@@ -1204,14 +1296,35 @@ pub const AnimationController = struct {
         }
     }
 
-    /// Transition to a state
+    /// Transition to a state with optional blending
     pub fn transitionTo(self: *AnimationController, state_name: []const u8, blend_time: f32) !void {
-        if (self.states.get(state_name)) |state| {
-            _ = state;
-            self.current_state = state_name;
-            self.current_time = 0;
-            _ = blend_time; // TODO: Implement blending
+        const new_state = self.states.get(state_name) orelse return;
+
+        // If we have a current state and blend time > 0, crossfade
+        if (blend_time > 0 and self.current_state != null) {
+            if (self.states.get(self.current_state.?)) |old_state| {
+                // Setup crossfade between old and new clips
+                try self.blender.crossFade(
+                    old_state.clip,
+                    new_state.clip,
+                    blend_time,
+                    self.current_time,
+                );
+            }
+        } else {
+            // Immediate transition - clear layers and add new one
+            while (self.blender.layers.items.len > 0) {
+                _ = self.blender.layers.pop();
+            }
+            try self.blender.addLayer(.{
+                .clip = new_state.clip,
+                .weight = 1.0,
+                .time = 0,
+            });
         }
+
+        self.current_state = state_name;
+        self.current_time = 0;
     }
 
     /// Update the controller

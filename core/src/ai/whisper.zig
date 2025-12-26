@@ -467,8 +467,76 @@ pub fn resampleAudio(audio: Audio, target_rate: u32, allocator: std.mem.Allocato
     const new_size = new_sample_count * bytes_per_sample * @as(usize, audio.channels);
     const new_data = try allocator.alloc(u8, new_size);
 
-    // TODO: Implement actual resampling (linear interpolation for now - placeholder)
-    @memset(new_data, 0);
+    // Linear interpolation resampling
+    switch (audio.sample_format) {
+        .f32 => {
+            const src_ptr: [*]const f32 = @ptrCast(@alignCast(audio.samples.ptr));
+            const dst_ptr: [*]f32 = @ptrCast(@alignCast(new_data.ptr));
+            const channels: usize = @intCast(audio.channels);
+
+            for (0..new_sample_count) |i| {
+                // Calculate source position with fractional part
+                const src_pos = @as(f64, @floatFromInt(i)) / ratio;
+                const src_idx: usize = @intFromFloat(src_pos);
+                const frac: f32 = @floatCast(src_pos - @as(f64, @floatFromInt(src_idx)));
+
+                for (0..channels) |ch| {
+                    const idx0 = src_idx * channels + ch;
+                    const idx1 = @min((src_idx + 1) * channels + ch, original_samples * channels - 1);
+                    const sample0 = if (idx0 < original_samples * channels) src_ptr[idx0] else 0;
+                    const sample1 = if (idx1 < original_samples * channels) src_ptr[idx1] else sample0;
+                    dst_ptr[i * channels + ch] = sample0 + frac * (sample1 - sample0);
+                }
+            }
+        },
+        .i16 => {
+            const channels: usize = @intCast(audio.channels);
+
+            for (0..new_sample_count) |i| {
+                const src_pos = @as(f64, @floatFromInt(i)) / ratio;
+                const src_idx: usize = @intFromFloat(src_pos);
+                const frac: f32 = @floatCast(src_pos - @as(f64, @floatFromInt(src_idx)));
+
+                for (0..channels) |ch| {
+                    const idx0 = (src_idx * channels + ch) * 2;
+                    const idx1 = @min((src_idx + 1) * channels + ch, original_samples * channels - 1) * 2;
+
+                    // Read i16 values (little-endian)
+                    const s0: i16 = if (idx0 + 1 < audio.samples.len)
+                        @bitCast(@as(u16, audio.samples[idx0]) | (@as(u16, audio.samples[idx0 + 1]) << 8))
+                    else
+                        0;
+                    const s1: i16 = if (idx1 + 1 < audio.samples.len)
+                        @bitCast(@as(u16, audio.samples[idx1]) | (@as(u16, audio.samples[idx1 + 1]) << 8))
+                    else
+                        s0;
+
+                    // Interpolate
+                    const result: i16 = @intFromFloat(@as(f32, @floatFromInt(s0)) + frac * @as(f32, @floatFromInt(s1 - s0)));
+                    const dst_idx = (i * channels + ch) * 2;
+                    new_data[dst_idx] = @truncate(@as(u16, @bitCast(result)));
+                    new_data[dst_idx + 1] = @truncate(@as(u16, @bitCast(result)) >> 8);
+                }
+            }
+        },
+        .u8 => {
+            const channels: usize = @intCast(audio.channels);
+
+            for (0..new_sample_count) |i| {
+                const src_pos = @as(f64, @floatFromInt(i)) / ratio;
+                const src_idx: usize = @intFromFloat(src_pos);
+                const frac: f32 = @floatCast(src_pos - @as(f64, @floatFromInt(src_idx)));
+
+                for (0..channels) |ch| {
+                    const idx0 = src_idx * channels + ch;
+                    const idx1 = @min((src_idx + 1) * channels + ch, original_samples * channels - 1);
+                    const s0: f32 = if (idx0 < audio.samples.len) @floatFromInt(audio.samples[idx0]) else 128;
+                    const s1: f32 = if (idx1 < audio.samples.len) @floatFromInt(audio.samples[idx1]) else s0;
+                    new_data[i * channels + ch] = @intFromFloat(s0 + frac * (s1 - s0));
+                }
+            }
+        },
+    }
 
     return Audio{
         .samples = new_data,
@@ -503,9 +571,48 @@ pub fn convertToMono(audio: Audio, allocator: std.mem.Allocator) !Audio {
     const new_size = stereo_sample_count * bytes_per_sample;
     const new_data = try allocator.alloc(u8, new_size);
 
-    // TODO: Implement actual stereo-to-mono conversion
-    // For now, just copy left channel (placeholder)
-    @memset(new_data, 0);
+    // Average left and right channels for mono conversion
+    const mono_samples = stereo_sample_count / 2; // stereo has 2x samples
+
+    switch (audio.sample_format) {
+        .f32 => {
+            const src_ptr: [*]const f32 = @ptrCast(@alignCast(audio.samples.ptr));
+            const dst_ptr: [*]f32 = @ptrCast(@alignCast(new_data.ptr));
+
+            for (0..mono_samples) |i| {
+                const left = src_ptr[i * 2];
+                const right = src_ptr[i * 2 + 1];
+                dst_ptr[i] = (left + right) * 0.5;
+            }
+        },
+        .i16 => {
+            for (0..mono_samples) |i| {
+                const src_idx = i * 4; // 2 channels * 2 bytes
+                // Read left channel
+                const left: i16 = if (src_idx + 1 < audio.samples.len)
+                    @bitCast(@as(u16, audio.samples[src_idx]) | (@as(u16, audio.samples[src_idx + 1]) << 8))
+                else
+                    0;
+                // Read right channel
+                const right: i16 = if (src_idx + 3 < audio.samples.len)
+                    @bitCast(@as(u16, audio.samples[src_idx + 2]) | (@as(u16, audio.samples[src_idx + 3]) << 8))
+                else
+                    left;
+                // Average and write
+                const mono: i16 = @intCast((@as(i32, left) + @as(i32, right)) >> 1);
+                const dst_idx = i * 2;
+                new_data[dst_idx] = @truncate(@as(u16, @bitCast(mono)));
+                new_data[dst_idx + 1] = @truncate(@as(u16, @bitCast(mono)) >> 8);
+            }
+        },
+        .u8 => {
+            for (0..mono_samples) |i| {
+                const left: u16 = audio.samples[i * 2];
+                const right: u16 = if (i * 2 + 1 < audio.samples.len) audio.samples[i * 2 + 1] else left;
+                new_data[i] = @intCast((left + right) >> 1);
+            }
+        },
+    }
 
     return Audio{
         .samples = new_data,
