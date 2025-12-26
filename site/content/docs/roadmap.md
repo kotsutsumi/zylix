@@ -13,12 +13,12 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 
 ## Current Status
 
-**Version 0.21.0** is the current stable release with:
+**Version 0.22.0** is the current stable release with:
 
-- M5Stack CoreS3 SE embedded platform support (ESP32-S3 Xtensa)
-- Complete hardware abstraction layer for embedded displays
-- Native Zig drivers for ILI9342C, FT6336U, AXP2101, AW9523B
-- Virtual DOM renderer optimized for embedded systems
+- P2 Tooling APIs for complete IDE integration
+- Component Tree Export, Live Preview Bridge, Hot Reload APIs
+- Language Server Protocol (LSP) and Debug Adapter Protocol (DAP) support
+- Full C ABI exports for external tooling
 
 ## Roadmap Overview
 
@@ -30,19 +30,31 @@ This page outlines the development roadmap for Zylix. Each phase introduces new 
 | v0.9.0 - v0.10.0 | AI, device APIs, animation, 3D, game | Done |
 | v0.18.0 - v0.19.3 | Tooling APIs, C ABI, Zig 0.15 compat | Done |
 | v0.20.0 | P0 Tooling APIs, 27 Example Repos | Done |
-| v0.21.0 | M5Stack CoreS3 embedded platform support | Current |
-| v0.22.0 | P2 Tooling APIs (Component Tree Export, Live Preview Bridge) | Next |
+| v0.21.0 | M5Stack CoreS3 embedded platform support | Done |
+| v0.22.0 | P2 Tooling APIs (IDE Integration) | Current |
+| v0.23.0 | Testing Frameworks (XCUITest, Espresso) | Next |
 
-## Upcoming: v0.22.0 - P2 Tooling APIs
+## Upcoming: v0.23.0 - Testing Frameworks
 
-Advanced tooling APIs for IDE integration:
+Native testing framework integrations:
+
+- **iOS XCUITest Integration**: Native E2E testing for iOS apps (Issue #64)
+- **Android Espresso Integration**: Native E2E testing for Android apps (Issue #65)
+- **Cross-Platform Test Orchestration**: CI/CD pipeline support (Issue #66)
+
+## Recent Releases
+
+### v0.22.0 - P2 Tooling APIs (2025-12-26)
+
+Complete IDE integration tooling:
 
 - **Component Tree Export API**: C ABI exports for UI hierarchy access (Issue #56)
 - **Live Preview Bridge API**: C ABI exports for preview session management (Issue #57)
 - **Hot Reload API**: Development preview with live updates (Issue #61)
 - **LSP Integration**: Language Server Protocol support (Issue #62)
-
-## Recent Releases
+- **DAP Integration**: Debug Adapter Protocol support (Issue #63)
+- Full C ABI exports for external tooling consumption
+- Comprehensive unit tests for all tooling APIs
 
 ### v0.21.0 - M5Stack Embedded Platform (2025-12-26)
 
@@ -94,7 +106,7 @@ See [M5Stack Implementation Plan](https://github.com/kotsutsumi/zylix/blob/main/
 
 ## Next
 
-**v0.22.0** will introduce P2 Tooling APIs including Component Tree Export, Live Preview Bridge, Hot Reload, and LSP integration for enhanced IDE tooling support.
+**v0.23.0** will introduce native testing framework integrations including iOS XCUITest, Android Espresso, and cross-platform test orchestration for comprehensive E2E testing support.
 
 ## Contributing
 

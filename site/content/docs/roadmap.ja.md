@@ -13,12 +13,12 @@ summary: Zylix の開発ロードマップ。パフォーマンス、シンプ�
 
 ## 現在の状況
 
-**バージョン 0.21.0** が現在の安定リリースです：
+**バージョン 0.22.0** が現在の安定リリースです：
 
-- M5Stack CoreS3 SE 組み込みプラットフォームサポート（ESP32-S3 Xtensa）
-- 組み込みディスプレイ向け完全なハードウェア抽象化レイヤー
-- ILI9342C、FT6336U、AXP2101、AW9523B 向けネイティブ Zig ドライバー
-- 組み込みシステム向け最適化 Virtual DOM レンダラー
+- 完全な IDE 統合向け P2 ツーリング API
+- Component Tree Export、Live Preview Bridge、Hot Reload API
+- Language Server Protocol (LSP) と Debug Adapter Protocol (DAP) サポート
+- 外部ツーリング向け完全な C ABI エクスポート
 
 ## ロードマップ概要
 
@@ -30,19 +30,31 @@ summary: Zylix の開発ロードマップ。パフォーマンス、シンプ�
 | v0.9.0 - v0.10.0 | AI、デバイスAPI、アニメーション、3D、ゲーム | 完了 |
 | v0.18.0 - v0.19.3 | ツーリング API、C ABI、Zig 0.15 互換性 | 完了 |
 | v0.20.0 | P0 ツーリング API、27個のサンプルリポジトリ | 完了 |
-| v0.21.0 | M5Stack CoreS3 組み込みプラットフォームサポート | 現在 |
-| v0.22.0 | P2 ツーリング API（Component Tree Export、Live Preview Bridge） | 次期 |
+| v0.21.0 | M5Stack CoreS3 組み込みプラットフォームサポート | 完了 |
+| v0.22.0 | P2 ツーリング API（IDE 統合） | 現在 |
+| v0.23.0 | テストフレームワーク（XCUITest、Espresso） | 次期 |
 
-## 次期リリース: v0.22.0 - P2 ツーリング API
+## 次期リリース: v0.23.0 - テストフレームワーク
 
-IDE 統合向け高度なツーリング API：
+ネイティブテストフレームワーク統合：
+
+- **iOS XCUITest 統合**: iOS アプリ向けネイティブ E2E テスト（Issue #64）
+- **Android Espresso 統合**: Android アプリ向けネイティブ E2E テスト（Issue #65）
+- **クロスプラットフォームテストオーケストレーション**: CI/CD パイプラインサポート（Issue #66）
+
+## 最近のリリース
+
+### v0.22.0 - P2 ツーリング API (2025-12-26)
+
+完全な IDE 統合ツーリング：
 
 - **Component Tree Export API**: UI 階層アクセス用 C ABI エクスポート（Issue #56）
 - **Live Preview Bridge API**: プレビューセッション管理用 C ABI エクスポート（Issue #57）
 - **Hot Reload API**: ライブアップデート対応開発プレビュー（Issue #61）
 - **LSP 統合**: Language Server Protocol サポート（Issue #62）
-
-## 最近のリリース
+- **DAP 統合**: Debug Adapter Protocol サポート（Issue #63）
+- 外部ツーリング利用向け完全な C ABI エクスポート
+- すべてのツーリング API の包括的なユニットテスト
 
 ### v0.21.0 - M5Stack 組み込みプラットフォーム (2025-12-26)
 
@@ -94,7 +106,7 @@ IDE 統合向け高度なツーリング API：
 
 ## 次のリリース
 
-**v0.22.0** では P2 ツーリング API（Component Tree Export、Live Preview Bridge、Hot Reload、LSP 統合）を導入し、IDE ツーリングサポートを強化します。
+**v0.23.0** では、iOS XCUITest、Android Espresso、クロスプラットフォームテストオーケストレーションなど、ネイティブテストフレームワーク統合を導入し、包括的な E2E テストサポートを提供します。
 
 ## コントリビュート
 

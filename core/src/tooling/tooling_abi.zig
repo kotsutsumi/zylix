@@ -10,6 +10,11 @@
 //! - Target Capability Matrix API (#51)
 //! - Template Catalog API (#52)
 //! - File Watcher API (#53)
+//! - Component Tree Export API (#56)
+//! - Live Preview Bridge API (#57)
+//! - Hot Reload API (#61)
+//! - LSP Integration API (#62)
+//! - DAP Integration API (#63)
 
 const std = @import("std");
 const project = @import("project.zig");
@@ -18,6 +23,11 @@ const artifacts = @import("artifacts.zig");
 const targets = @import("targets.zig");
 const templates = @import("templates.zig");
 const watcher = @import("watcher.zig");
+const ui = @import("ui.zig");
+const preview = @import("preview.zig");
+const hot_reload = @import("hot_reload.zig");
+const lsp = @import("lsp.zig");
+const dap = @import("dap.zig");
 
 /// Tooling ABI version
 pub const TOOLING_ABI_VERSION: u32 = 1;
@@ -50,6 +60,11 @@ var artifact_manager: ?artifacts.Artifacts = null;
 var target_manager: ?targets.Targets = null;
 var template_manager: ?templates.Templates = null;
 var file_watcher: ?watcher.FileWatcher = null;
+var ui_manager: ?ui.UI = null;
+var preview_manager: ?preview.Preview = null;
+var hot_reload_manager: ?hot_reload.HotReload = null;
+var lsp_manager: ?lsp.Lsp = null;
+var dap_manager: ?dap.Dap = null;
 
 // === Lifecycle Functions ===
 
@@ -64,6 +79,11 @@ pub fn zylix_tooling_init() callconv(.c) i32 {
     target_manager = targets.createTargetManager(allocator);
     template_manager = templates.createTemplateManager(allocator);
     file_watcher = watcher.createFileWatcher(allocator);
+    ui_manager = ui.createUIManager(allocator);
+    preview_manager = preview.createPreviewManager(allocator);
+    hot_reload_manager = hot_reload.createHotReloadManager(allocator);
+    lsp_manager = lsp.createLspManager(allocator);
+    dap_manager = dap.createDapManager(allocator);
 
     initialized = true;
     return @intFromEnum(ToolingResult.ok);
@@ -73,6 +93,11 @@ pub fn zylix_tooling_init() callconv(.c) i32 {
 pub fn zylix_tooling_deinit() callconv(.c) i32 {
     if (!initialized) return @intFromEnum(ToolingResult.ok);
 
+    if (dap_manager) |*d| d.deinit();
+    if (lsp_manager) |*l| l.deinit();
+    if (hot_reload_manager) |*h| h.deinit();
+    if (preview_manager) |*p| p.deinit();
+    if (ui_manager) |*u| u.deinit();
     if (file_watcher) |*w| w.deinit();
     if (template_manager) |*t| t.deinit();
     if (target_manager) |*t| t.deinit();
@@ -80,6 +105,11 @@ pub fn zylix_tooling_deinit() callconv(.c) i32 {
     if (build_orchestrator) |*b| b.deinit();
     if (project_manager) |*p| p.deinit();
 
+    dap_manager = null;
+    lsp_manager = null;
+    hot_reload_manager = null;
+    preview_manager = null;
+    ui_manager = null;
     file_watcher = null;
     template_manager = null;
     target_manager = null;
@@ -810,6 +840,1707 @@ pub fn zylix_fs_stop_all() callconv(.c) void {
 }
 
 // =============================================================================
+// COMPONENT TREE EXPORT API (#56)
+// =============================================================================
+
+/// C-compatible component identifier
+pub const CComponentId = extern struct {
+    id: u64,
+    name: [128]u8,
+    parent_id: u64, // 0 if root
+};
+
+/// C-compatible component information
+pub const CComponentInfo = extern struct {
+    id: CComponentId,
+    component_type: u8,
+    display_name: [128]u8,
+    custom_type: [64]u8,
+    source_file: [512]u8,
+    source_line: u32,
+    children_count: u32,
+    visible: bool,
+    enabled: bool,
+};
+
+// Static caches for C ABI returns
+var c_component_info_cache: CComponentInfo = undefined;
+var c_component_list_cache: [64]CComponentInfo = undefined;
+
+/// Export component tree for a project
+pub fn zylix_ui_export_tree(project_id: u64, format: u8) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var um = ui_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const pid = project.ProjectId{
+        .id = project_id,
+        .name = "",
+        .path = "",
+    };
+
+    const future = um.exportTree(pid);
+    defer allocator.destroy(future);
+
+    if (future.err != null) {
+        return @intFromEnum(ToolingResult.err_io_error);
+    }
+
+    // Format: 0=JSON, 1=YAML, 2=XML
+    _ = format;
+
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get component information by ID
+pub fn zylix_ui_get_component(component_id: u64) callconv(.c) ?*const CComponentInfo {
+    if (!initialized) return null;
+
+    const um = ui_manager orelse return null;
+
+    const cid = ui.ComponentId{
+        .id = component_id,
+        .name = "",
+    };
+
+    if (um.getComponentInfo(cid)) |info| {
+        // Clear and populate cache
+        @memset(&c_component_info_cache.id.name, 0);
+        @memset(&c_component_info_cache.display_name, 0);
+        @memset(&c_component_info_cache.custom_type, 0);
+        @memset(&c_component_info_cache.source_file, 0);
+
+        c_component_info_cache.id.id = info.id.id;
+        c_component_info_cache.id.parent_id = info.id.parent_id orelse 0;
+        c_component_info_cache.component_type = @intFromEnum(info.component_type);
+        c_component_info_cache.source_line = info.source_line orelse 0;
+        c_component_info_cache.children_count = info.children_count;
+        c_component_info_cache.visible = info.visible;
+        c_component_info_cache.enabled = info.enabled;
+
+        // Copy name
+        const name_len = @min(info.id.name.len, c_component_info_cache.id.name.len - 1);
+        @memcpy(c_component_info_cache.id.name[0..name_len], info.id.name[0..name_len]);
+
+        // Copy display name
+        if (info.display_name) |dn| {
+            const dn_len = @min(dn.len, c_component_info_cache.display_name.len - 1);
+            @memcpy(c_component_info_cache.display_name[0..dn_len], dn[0..dn_len]);
+        }
+
+        // Copy custom type
+        if (info.custom_type) |ct| {
+            const ct_len = @min(ct.len, c_component_info_cache.custom_type.len - 1);
+            @memcpy(c_component_info_cache.custom_type[0..ct_len], ct[0..ct_len]);
+        }
+
+        // Copy source file
+        if (info.source_file) |sf| {
+            const sf_len = @min(sf.len, c_component_info_cache.source_file.len - 1);
+            @memcpy(c_component_info_cache.source_file[0..sf_len], sf[0..sf_len]);
+        }
+
+        return &c_component_info_cache;
+    }
+
+    return null;
+}
+
+/// Get component count for a project
+pub fn zylix_ui_component_count(project_id: u64) callconv(.c) u32 {
+    if (!initialized) return 0;
+
+    const um = ui_manager orelse return 0;
+    _ = project_id; // Would filter by project in real implementation
+
+    return @intCast(um.count());
+}
+
+/// Find components by type
+pub fn zylix_ui_find_by_type(project_id: u64, component_type: u8, count: *u32) callconv(.c) ?*const CComponentInfo {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var um = ui_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    _ = project_id; // Would filter by project in real implementation
+
+    const comp_type: ui.ComponentType = @enumFromInt(component_type);
+    const components = um.findByType(comp_type) catch {
+        count.* = 0;
+        return null;
+    };
+    defer allocator.free(components);
+
+    if (components.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(components.len, c_component_list_cache.len);
+
+    for (components[0..max_count], 0..) |info, i| {
+        @memset(&c_component_list_cache[i].id.name, 0);
+        @memset(&c_component_list_cache[i].display_name, 0);
+        @memset(&c_component_list_cache[i].custom_type, 0);
+        @memset(&c_component_list_cache[i].source_file, 0);
+
+        c_component_list_cache[i].id.id = info.id.id;
+        c_component_list_cache[i].id.parent_id = info.id.parent_id orelse 0;
+        c_component_list_cache[i].component_type = @intFromEnum(info.component_type);
+        c_component_list_cache[i].source_line = info.source_line orelse 0;
+        c_component_list_cache[i].children_count = info.children_count;
+        c_component_list_cache[i].visible = info.visible;
+        c_component_list_cache[i].enabled = info.enabled;
+
+        const name_len = @min(info.id.name.len, c_component_list_cache[i].id.name.len - 1);
+        @memcpy(c_component_list_cache[i].id.name[0..name_len], info.id.name[0..name_len]);
+
+        if (info.display_name) |dn| {
+            const dn_len = @min(dn.len, c_component_list_cache[i].display_name.len - 1);
+            @memcpy(c_component_list_cache[i].display_name[0..dn_len], dn[0..dn_len]);
+        }
+    }
+
+    count.* = @intCast(max_count);
+    return &c_component_list_cache[0];
+}
+
+// =============================================================================
+// LIVE PREVIEW BRIDGE API (#57)
+// =============================================================================
+
+/// C-compatible preview identifier
+pub const CPreviewId = extern struct {
+    id: u64,
+    project_name: [128]u8,
+    target: u8,
+    started_at: i64,
+};
+
+/// C-compatible preview configuration
+pub const CPreviewConfig = extern struct {
+    device_id: [64]u8,
+    port: u16,
+    hot_reload: bool,
+    auto_open: bool,
+    remote_debug: bool,
+};
+
+/// C-compatible preview session
+pub const CPreviewSession = extern struct {
+    id: CPreviewId,
+    state: u8,
+    url: [256]u8,
+    reload_count: u32,
+    last_reload: i64,
+};
+
+/// Preview event callback type
+pub const CPreviewEventCallback = ?*const fn (u8, ?*const anyopaque) callconv(.c) void;
+
+// Static caches for preview API
+var c_preview_session_cache: CPreviewSession = undefined;
+var c_preview_callback: CPreviewEventCallback = null;
+
+/// Open a preview session
+pub fn zylix_preview_open(project_id: u64, target: u8, config: *const CPreviewConfig) callconv(.c) i64 {
+    if (!initialized) return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    var pm = preview_manager orelse return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    const pid = project.ProjectId{
+        .id = project_id,
+        .name = "",
+        .path = "",
+    };
+
+    const zig_config = preview.PreviewConfig{
+        .device_id = null, // Would parse from config.device_id
+        .port = config.port,
+        .hot_reload = config.hot_reload,
+        .auto_open = config.auto_open,
+        .remote_debug = config.remote_debug,
+    };
+
+    const future = pm.open(pid, @enumFromInt(target), zig_config);
+    defer allocator.destroy(future);
+
+    if (future.result) |preview_id| {
+        return @intCast(preview_id.id);
+    }
+
+    return -@as(i64, @intFromEnum(ToolingResult.err_io_error));
+}
+
+/// Close a preview session
+pub fn zylix_preview_close(preview_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var pm = preview_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const pid = preview.PreviewId{
+        .id = preview_id,
+        .project_name = "",
+        .target = .ios,
+        .started_at = 0,
+    };
+
+    pm.close(pid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Refresh a preview session
+pub fn zylix_preview_refresh(preview_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var pm = preview_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const pid = preview.PreviewId{
+        .id = preview_id,
+        .project_name = "",
+        .target = .ios,
+        .started_at = 0,
+    };
+
+    pm.refresh(pid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Set debug overlay for a preview session
+pub fn zylix_preview_set_debug_overlay(preview_id: u64, enabled: bool) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var pm = preview_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const pid = preview.PreviewId{
+        .id = preview_id,
+        .project_name = "",
+        .target = .ios,
+        .started_at = 0,
+    };
+
+    pm.setDebugOverlay(pid, enabled);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get preview session information
+pub fn zylix_preview_get_session(preview_id: u64) callconv(.c) ?*const CPreviewSession {
+    if (!initialized) return null;
+
+    const pm = preview_manager orelse return null;
+
+    const pid = preview.PreviewId{
+        .id = preview_id,
+        .project_name = "",
+        .target = .ios,
+        .started_at = 0,
+    };
+
+    if (pm.getSession(pid)) |session| {
+        // Clear and populate cache
+        @memset(&c_preview_session_cache.id.project_name, 0);
+        @memset(&c_preview_session_cache.url, 0);
+
+        c_preview_session_cache.id.id = session.id.id;
+        c_preview_session_cache.id.target = @intFromEnum(session.id.target);
+        c_preview_session_cache.id.started_at = session.id.started_at;
+        c_preview_session_cache.state = @intFromEnum(session.state);
+        c_preview_session_cache.reload_count = session.reload_count;
+        c_preview_session_cache.last_reload = session.last_reload;
+
+        // Copy project name
+        const pn_len = @min(session.id.project_name.len, c_preview_session_cache.id.project_name.len - 1);
+        @memcpy(c_preview_session_cache.id.project_name[0..pn_len], session.id.project_name[0..pn_len]);
+
+        // Copy URL
+        const url_len = @min(session.url.len, c_preview_session_cache.url.len - 1);
+        @memcpy(c_preview_session_cache.url[0..url_len], session.url[0..url_len]);
+
+        return &c_preview_session_cache;
+    }
+
+    return null;
+}
+
+/// Set preview event callback
+pub fn zylix_preview_set_callback(preview_id: u64, callback: CPreviewEventCallback) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    _ = preview_id; // Would register per-session in real implementation
+    c_preview_callback = callback;
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get active preview count
+pub fn zylix_preview_active_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const pm = preview_manager orelse return 0;
+    return @intCast(pm.activeCount());
+}
+
+// =============================================================================
+// HOT RELOAD API (#61)
+// =============================================================================
+
+/// C-compatible hot reload session identifier
+pub const CHotReloadSessionId = extern struct {
+    id: u64,
+    project_name: [128]u8,
+    started_at: i64,
+};
+
+/// C-compatible hot reload configuration
+pub const CHotReloadConfig = extern struct {
+    debounce_ms: u32,
+    preserve_state: bool,
+    incremental: bool,
+    auto_reload: bool,
+    notify_success: bool,
+    notify_error: bool,
+};
+
+/// C-compatible hot reload statistics
+pub const CHotReloadStats = extern struct {
+    total_reloads: u32,
+    successful_reloads: u32,
+    failed_reloads: u32,
+    average_duration_ms: u64,
+    last_reload_at: i64,
+    total_files_changed: u32,
+};
+
+/// C-compatible hot reload session
+pub const CHotReloadSession = extern struct {
+    id: CHotReloadSessionId,
+    state: u8,
+    target: u8,
+    stats: CHotReloadStats,
+    error_message: [256]u8,
+};
+
+/// C-compatible reload result
+pub const CReloadResult = extern struct {
+    success: bool,
+    duration_ms: u64,
+    changed_files: u32,
+    compiled_modules: u32,
+    preserved_state: bool,
+    error_message: [256]u8,
+};
+
+/// Hot reload event callback type
+pub const CHotReloadEventCallback = ?*const fn (u8, ?*const anyopaque) callconv(.c) void;
+
+// Static caches for hot reload API
+var c_hot_reload_session_cache: CHotReloadSession = undefined;
+var c_hot_reload_stats_cache: CHotReloadStats = undefined;
+var c_reload_result_cache: CReloadResult = undefined;
+var c_hot_reload_callback: CHotReloadEventCallback = null;
+
+/// Start a hot reload session
+pub fn zylix_hot_reload_start(project_id: u64, target: u8, config: *const CHotReloadConfig) callconv(.c) i64 {
+    if (!initialized) return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    var hrm = hot_reload_manager orelse return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    const pid = project.ProjectId{
+        .id = project_id,
+        .name = "",
+        .path = "",
+    };
+
+    const zig_config = hot_reload.HotReloadConfig{
+        .debounce_ms = config.debounce_ms,
+        .preserve_state = config.preserve_state,
+        .incremental = config.incremental,
+        .auto_reload = config.auto_reload,
+        .notify_success = config.notify_success,
+        .notify_error = config.notify_error,
+    };
+
+    const future = hrm.start(pid, @enumFromInt(target), zig_config);
+    defer allocator.destroy(future);
+
+    if (future.result) |session_id| {
+        return @intCast(session_id.id);
+    }
+
+    return -@as(i64, @intFromEnum(ToolingResult.err_io_error));
+}
+
+/// Stop a hot reload session
+pub fn zylix_hot_reload_stop(session_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var hrm = hot_reload_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    hrm.stop(sid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Trigger a reload
+pub fn zylix_hot_reload_trigger(session_id: u64) callconv(.c) ?*const CReloadResult {
+    if (!initialized) return null;
+
+    var hrm = hot_reload_manager orelse return null;
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    const future = hrm.reload(sid);
+    defer allocator.destroy(future);
+
+    if (future.result) |result| {
+        @memset(&c_reload_result_cache.error_message, 0);
+
+        c_reload_result_cache = .{
+            .success = result.success,
+            .duration_ms = result.duration_ms,
+            .changed_files = result.changed_files,
+            .compiled_modules = result.compiled_modules,
+            .preserved_state = result.preserved_state,
+            .error_message = undefined,
+        };
+        @memset(&c_reload_result_cache.error_message, 0);
+
+        if (result.error_message) |msg| {
+            const len = @min(msg.len, c_reload_result_cache.error_message.len - 1);
+            @memcpy(c_reload_result_cache.error_message[0..len], msg[0..len]);
+        }
+
+        return &c_reload_result_cache;
+    }
+
+    return null;
+}
+
+/// Pause hot reload watching
+pub fn zylix_hot_reload_pause(session_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var hrm = hot_reload_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    hrm.pause(sid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Resume hot reload watching
+pub fn zylix_hot_reload_resume(session_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var hrm = hot_reload_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    hrm.resumeWatch(sid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get hot reload session information
+pub fn zylix_hot_reload_get_session(session_id: u64) callconv(.c) ?*const CHotReloadSession {
+    if (!initialized) return null;
+
+    const hrm = hot_reload_manager orelse return null;
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    if (hrm.getSession(sid)) |session| {
+        @memset(&c_hot_reload_session_cache.id.project_name, 0);
+        @memset(&c_hot_reload_session_cache.error_message, 0);
+
+        c_hot_reload_session_cache.id.id = session.id.id;
+        c_hot_reload_session_cache.id.started_at = session.id.started_at;
+        c_hot_reload_session_cache.state = @intFromEnum(session.state);
+        c_hot_reload_session_cache.target = @intFromEnum(session.target);
+
+        c_hot_reload_session_cache.stats = .{
+            .total_reloads = session.stats.total_reloads,
+            .successful_reloads = session.stats.successful_reloads,
+            .failed_reloads = session.stats.failed_reloads,
+            .average_duration_ms = session.stats.average_duration_ms,
+            .last_reload_at = session.stats.last_reload_at orelse 0,
+            .total_files_changed = session.stats.total_files_changed,
+        };
+
+        const pn_len = @min(session.id.project_name.len, c_hot_reload_session_cache.id.project_name.len - 1);
+        @memcpy(c_hot_reload_session_cache.id.project_name[0..pn_len], session.id.project_name[0..pn_len]);
+
+        if (session.error_message) |msg| {
+            const len = @min(msg.len, c_hot_reload_session_cache.error_message.len - 1);
+            @memcpy(c_hot_reload_session_cache.error_message[0..len], msg[0..len]);
+        }
+
+        return &c_hot_reload_session_cache;
+    }
+
+    return null;
+}
+
+/// Get hot reload statistics
+pub fn zylix_hot_reload_get_stats(session_id: u64) callconv(.c) ?*const CHotReloadStats {
+    if (!initialized) return null;
+
+    const hrm = hot_reload_manager orelse return null;
+
+    const sid = hot_reload.SessionId{
+        .id = session_id,
+        .project_name = "",
+        .started_at = 0,
+    };
+
+    if (hrm.getStats(sid)) |stats| {
+        c_hot_reload_stats_cache = .{
+            .total_reloads = stats.total_reloads,
+            .successful_reloads = stats.successful_reloads,
+            .failed_reloads = stats.failed_reloads,
+            .average_duration_ms = stats.average_duration_ms,
+            .last_reload_at = stats.last_reload_at orelse 0,
+            .total_files_changed = stats.total_files_changed,
+        };
+        return &c_hot_reload_stats_cache;
+    }
+
+    return null;
+}
+
+/// Set hot reload event callback
+pub fn zylix_hot_reload_set_callback(session_id: u64, callback: CHotReloadEventCallback) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    _ = session_id; // Would register per-session in real implementation
+    c_hot_reload_callback = callback;
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get active hot reload session count
+pub fn zylix_hot_reload_active_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const hrm = hot_reload_manager orelse return 0;
+    return @intCast(hrm.activeCount());
+}
+
+/// Get total hot reload session count
+pub fn zylix_hot_reload_total_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const hrm = hot_reload_manager orelse return 0;
+    return @intCast(hrm.totalCount());
+}
+
+// =============================================================================
+// LSP INTEGRATION API (#62)
+// =============================================================================
+
+/// C-compatible LSP server identifier
+pub const CLspServerId = extern struct {
+    id: u64,
+    port: u16,
+    started_at: i64,
+};
+
+/// C-compatible LSP configuration
+pub const CLspConfig = extern struct {
+    port: u16,
+    completion: bool,
+    hover: bool,
+    definition: bool,
+    references: bool,
+    document_symbols: bool,
+    workspace_symbols: bool,
+    diagnostics: bool,
+    formatting: bool,
+    rename: bool,
+    code_actions: bool,
+};
+
+/// C-compatible LSP session
+pub const CLspSession = extern struct {
+    id: CLspServerId,
+    state: u8,
+    project_path: [512]u8,
+    open_documents: u32,
+    request_count: u64,
+    error_count: u32,
+    last_request_at: i64,
+};
+
+/// C-compatible server capabilities
+pub const CLspCapabilities = extern struct {
+    completion: bool,
+    hover: bool,
+    definition: bool,
+    references: bool,
+    document_symbols: bool,
+    workspace_symbols: bool,
+    diagnostics: bool,
+    formatting: bool,
+    rename: bool,
+    code_actions: bool,
+};
+
+/// C-compatible position
+pub const CLspPosition = extern struct {
+    line: u32,
+    character: u32,
+};
+
+/// C-compatible range
+pub const CLspRange = extern struct {
+    start_line: u32,
+    start_character: u32,
+    end_line: u32,
+    end_character: u32,
+};
+
+/// C-compatible location
+pub const CLspLocation = extern struct {
+    uri: [512]u8,
+    start_line: u32,
+    start_character: u32,
+    end_line: u32,
+    end_character: u32,
+};
+
+/// C-compatible completion item
+pub const CLspCompletionItem = extern struct {
+    label: [128]u8,
+    kind: u8,
+    detail: [256]u8,
+    documentation: [512]u8,
+    insert_text: [256]u8,
+};
+
+/// C-compatible hover result
+pub const CLspHoverResult = extern struct {
+    contents: [1024]u8,
+    has_range: bool,
+    range: CLspRange,
+};
+
+/// C-compatible document symbol
+pub const CLspDocumentSymbol = extern struct {
+    name: [128]u8,
+    kind: u8,
+    range: CLspRange,
+    selection_range: CLspRange,
+    detail: [256]u8,
+};
+
+/// LSP event callback type
+pub const CLspEventCallback = ?*const fn (u8, ?*const anyopaque) callconv(.c) void;
+
+// Static caches for LSP API
+var c_lsp_session_cache: CLspSession = undefined;
+var c_lsp_capabilities_cache: CLspCapabilities = undefined;
+var c_lsp_hover_cache: CLspHoverResult = undefined;
+var c_lsp_location_cache: CLspLocation = undefined;
+var c_lsp_completions_cache: [32]CLspCompletionItem = undefined;
+var c_lsp_symbols_cache: [64]CLspDocumentSymbol = undefined;
+var c_lsp_locations_cache: [64]CLspLocation = undefined;
+var c_lsp_callback: CLspEventCallback = null;
+
+/// Start LSP server
+pub fn zylix_lsp_start(project_id: u64, config: *const CLspConfig) callconv(.c) i64 {
+    if (!initialized) return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    var lm = lsp_manager orelse return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    const pid = project.ProjectId{
+        .id = project_id,
+        .name = "",
+        .path = "",
+    };
+
+    const zig_config = lsp.LspConfig{
+        .port = config.port,
+        .completion = config.completion,
+        .hover = config.hover,
+        .definition = config.definition,
+        .references = config.references,
+        .document_symbols = config.document_symbols,
+        .workspace_symbols = config.workspace_symbols,
+        .diagnostics = config.diagnostics,
+        .formatting = config.formatting,
+        .rename = config.rename,
+        .code_actions = config.code_actions,
+    };
+
+    const future = lm.start(pid, zig_config);
+    defer allocator.destroy(future);
+
+    if (future.result) |server_id| {
+        return @intCast(server_id.id);
+    }
+
+    return -@as(i64, @intFromEnum(ToolingResult.err_io_error));
+}
+
+/// Stop LSP server
+pub fn zylix_lsp_stop(server_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var lm = lsp_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    lm.stop(sid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get LSP session information
+pub fn zylix_lsp_get_session(server_id: u64) callconv(.c) ?*const CLspSession {
+    if (!initialized) return null;
+
+    const lm = lsp_manager orelse return null;
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    if (lm.getSession(sid)) |session| {
+        @memset(&c_lsp_session_cache.project_path, 0);
+
+        c_lsp_session_cache.id.id = session.id.id;
+        c_lsp_session_cache.id.port = session.id.port;
+        c_lsp_session_cache.id.started_at = session.id.started_at;
+        c_lsp_session_cache.state = @intFromEnum(session.state);
+        c_lsp_session_cache.open_documents = session.open_documents;
+        c_lsp_session_cache.request_count = session.request_count;
+        c_lsp_session_cache.error_count = session.error_count;
+        c_lsp_session_cache.last_request_at = session.last_request_at orelse 0;
+
+        const path_len = @min(session.project_path.len, c_lsp_session_cache.project_path.len - 1);
+        @memcpy(c_lsp_session_cache.project_path[0..path_len], session.project_path[0..path_len]);
+
+        return &c_lsp_session_cache;
+    }
+
+    return null;
+}
+
+/// Get LSP server capabilities
+pub fn zylix_lsp_get_capabilities(server_id: u64) callconv(.c) ?*const CLspCapabilities {
+    if (!initialized) return null;
+
+    const lm = lsp_manager orelse return null;
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    if (lm.getCapabilities(sid)) |caps| {
+        c_lsp_capabilities_cache = .{
+            .completion = caps.completion,
+            .hover = caps.hover,
+            .definition = caps.definition,
+            .references = caps.references,
+            .document_symbols = caps.document_symbols,
+            .workspace_symbols = caps.workspace_symbols,
+            .diagnostics = caps.diagnostics,
+            .formatting = caps.formatting,
+            .rename = caps.rename,
+            .code_actions = caps.code_actions,
+        };
+        return &c_lsp_capabilities_cache;
+    }
+
+    return null;
+}
+
+/// Get completion items
+pub fn zylix_lsp_get_completion(
+    server_id: u64,
+    uri: [*:0]const u8,
+    line: u32,
+    character: u32,
+    count: *u32,
+) callconv(.c) ?*const CLspCompletionItem {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var lm = lsp_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const uri_str = std.mem.span(uri);
+    const position = lsp.Position{ .line = line, .character = character };
+
+    const items = lm.getCompletion(sid, uri_str, position) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (items.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(items.len, c_lsp_completions_cache.len);
+
+    for (items[0..max_count], 0..) |item, i| {
+        @memset(&c_lsp_completions_cache[i].label, 0);
+        @memset(&c_lsp_completions_cache[i].detail, 0);
+        @memset(&c_lsp_completions_cache[i].documentation, 0);
+        @memset(&c_lsp_completions_cache[i].insert_text, 0);
+
+        const label_len = @min(item.label.len, c_lsp_completions_cache[i].label.len - 1);
+        @memcpy(c_lsp_completions_cache[i].label[0..label_len], item.label[0..label_len]);
+
+        c_lsp_completions_cache[i].kind = @intFromEnum(item.kind);
+
+        if (item.detail) |d| {
+            const d_len = @min(d.len, c_lsp_completions_cache[i].detail.len - 1);
+            @memcpy(c_lsp_completions_cache[i].detail[0..d_len], d[0..d_len]);
+        }
+    }
+
+    count.* = @intCast(max_count);
+    return &c_lsp_completions_cache[0];
+}
+
+/// Get hover information
+pub fn zylix_lsp_get_hover(
+    server_id: u64,
+    uri: [*:0]const u8,
+    line: u32,
+    character: u32,
+) callconv(.c) ?*const CLspHoverResult {
+    if (!initialized) return null;
+
+    var lm = lsp_manager orelse return null;
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const uri_str = std.mem.span(uri);
+    const position = lsp.Position{ .line = line, .character = character };
+
+    if (lm.getHover(sid, uri_str, position) catch null) |hover| {
+        @memset(&c_lsp_hover_cache.contents, 0);
+
+        const content_len = @min(hover.contents.len, c_lsp_hover_cache.contents.len - 1);
+        @memcpy(c_lsp_hover_cache.contents[0..content_len], hover.contents[0..content_len]);
+
+        c_lsp_hover_cache.has_range = hover.range != null;
+        if (hover.range) |r| {
+            c_lsp_hover_cache.range = .{
+                .start_line = r.start.line,
+                .start_character = r.start.character,
+                .end_line = r.end.line,
+                .end_character = r.end.character,
+            };
+        }
+
+        return &c_lsp_hover_cache;
+    }
+
+    return null;
+}
+
+/// Get definition location
+pub fn zylix_lsp_get_definition(
+    server_id: u64,
+    uri: [*:0]const u8,
+    line: u32,
+    character: u32,
+) callconv(.c) ?*const CLspLocation {
+    if (!initialized) return null;
+
+    var lm = lsp_manager orelse return null;
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const uri_str = std.mem.span(uri);
+    const position = lsp.Position{ .line = line, .character = character };
+
+    if (lm.getDefinition(sid, uri_str, position) catch null) |loc| {
+        @memset(&c_lsp_location_cache.uri, 0);
+
+        const uri_len = @min(loc.uri.len, c_lsp_location_cache.uri.len - 1);
+        @memcpy(c_lsp_location_cache.uri[0..uri_len], loc.uri[0..uri_len]);
+
+        c_lsp_location_cache.start_line = loc.range.start.line;
+        c_lsp_location_cache.start_character = loc.range.start.character;
+        c_lsp_location_cache.end_line = loc.range.end.line;
+        c_lsp_location_cache.end_character = loc.range.end.character;
+
+        return &c_lsp_location_cache;
+    }
+
+    return null;
+}
+
+/// Get references
+pub fn zylix_lsp_get_references(
+    server_id: u64,
+    uri: [*:0]const u8,
+    line: u32,
+    character: u32,
+    count: *u32,
+) callconv(.c) ?*const CLspLocation {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var lm = lsp_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const uri_str = std.mem.span(uri);
+    const position = lsp.Position{ .line = line, .character = character };
+
+    const refs = lm.getReferences(sid, uri_str, position) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (refs.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(refs.len, c_lsp_locations_cache.len);
+
+    for (refs[0..max_count], 0..) |loc, i| {
+        @memset(&c_lsp_locations_cache[i].uri, 0);
+
+        const u_len = @min(loc.uri.len, c_lsp_locations_cache[i].uri.len - 1);
+        @memcpy(c_lsp_locations_cache[i].uri[0..u_len], loc.uri[0..u_len]);
+
+        c_lsp_locations_cache[i].start_line = loc.range.start.line;
+        c_lsp_locations_cache[i].start_character = loc.range.start.character;
+        c_lsp_locations_cache[i].end_line = loc.range.end.line;
+        c_lsp_locations_cache[i].end_character = loc.range.end.character;
+    }
+
+    count.* = @intCast(max_count);
+    return &c_lsp_locations_cache[0];
+}
+
+/// Get document symbols
+pub fn zylix_lsp_get_document_symbols(
+    server_id: u64,
+    uri: [*:0]const u8,
+    count: *u32,
+) callconv(.c) ?*const CLspDocumentSymbol {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var lm = lsp_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const sid = lsp.ServerId{
+        .id = server_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const uri_str = std.mem.span(uri);
+
+    const symbols = lm.getDocumentSymbols(sid, uri_str) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (symbols.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(symbols.len, c_lsp_symbols_cache.len);
+
+    for (symbols[0..max_count], 0..) |sym, i| {
+        @memset(&c_lsp_symbols_cache[i].name, 0);
+        @memset(&c_lsp_symbols_cache[i].detail, 0);
+
+        const name_len = @min(sym.name.len, c_lsp_symbols_cache[i].name.len - 1);
+        @memcpy(c_lsp_symbols_cache[i].name[0..name_len], sym.name[0..name_len]);
+
+        c_lsp_symbols_cache[i].kind = @intFromEnum(sym.kind);
+        c_lsp_symbols_cache[i].range = .{
+            .start_line = sym.range.start.line,
+            .start_character = sym.range.start.character,
+            .end_line = sym.range.end.line,
+            .end_character = sym.range.end.character,
+        };
+        c_lsp_symbols_cache[i].selection_range = .{
+            .start_line = sym.selection_range.start.line,
+            .start_character = sym.selection_range.start.character,
+            .end_line = sym.selection_range.end.line,
+            .end_character = sym.selection_range.end.character,
+        };
+
+        if (sym.detail) |d| {
+            const d_len = @min(d.len, c_lsp_symbols_cache[i].detail.len - 1);
+            @memcpy(c_lsp_symbols_cache[i].detail[0..d_len], d[0..d_len]);
+        }
+    }
+
+    count.* = @intCast(max_count);
+    return &c_lsp_symbols_cache[0];
+}
+
+/// Set LSP event callback
+pub fn zylix_lsp_set_callback(server_id: u64, callback: CLspEventCallback) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    _ = server_id; // Would register per-server in real implementation
+    c_lsp_callback = callback;
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get active LSP server count
+pub fn zylix_lsp_active_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const lm = lsp_manager orelse return 0;
+    return @intCast(lm.activeCount());
+}
+
+/// Get total LSP server count
+pub fn zylix_lsp_total_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const lm = lsp_manager orelse return 0;
+    return @intCast(lm.totalCount());
+}
+
+// =============================================================================
+// DAP INTEGRATION API (#63)
+// =============================================================================
+
+/// C-compatible DAP adapter identifier
+pub const CDapAdapterId = extern struct {
+    id: u64,
+    port: u16,
+    started_at: i64,
+};
+
+/// C-compatible DAP configuration
+pub const CDapConfig = extern struct {
+    port: u16,
+    stop_at_entry: bool,
+    source_maps: bool,
+    logging: bool,
+    exception_breakpoints: bool,
+};
+
+/// C-compatible DAP session
+pub const CDapSession = extern struct {
+    id: CDapAdapterId,
+    state: u8,
+    project_path: [512]u8,
+    breakpoint_count: u32,
+    thread_count: u32,
+    current_thread_id: u64,
+    current_frame_id: u64,
+    stop_reason: u8,
+};
+
+/// C-compatible debug capabilities
+pub const CDapCapabilities = extern struct {
+    supports_configuration_done: bool,
+    supports_function_breakpoints: bool,
+    supports_conditional_breakpoints: bool,
+    supports_hit_conditional_breakpoints: bool,
+    supports_evaluate_for_hovers: bool,
+    supports_step_back: bool,
+    supports_set_variable: bool,
+    supports_restart_frame: bool,
+    supports_stepping_granularity: bool,
+    supports_exception_breakpoints: bool,
+    supports_value_formatting: bool,
+    supports_terminate_debuggee: bool,
+    supports_log_points: bool,
+};
+
+/// C-compatible breakpoint
+pub const CDapBreakpoint = extern struct {
+    id: u64,
+    breakpoint_type: u8,
+    verified: bool,
+    source_path: [512]u8,
+    line: u32,
+    column: u32,
+    condition: [256]u8,
+    hit_count: u32,
+};
+
+/// C-compatible thread
+pub const CDapThread = extern struct {
+    id: u64,
+    name: [128]u8,
+};
+
+/// C-compatible stack frame
+pub const CDapStackFrame = extern struct {
+    id: u64,
+    name: [128]u8,
+    source_path: [512]u8,
+    line: u32,
+    column: u32,
+    end_line: u32,
+    end_column: u32,
+};
+
+/// C-compatible variable
+pub const CDapVariable = extern struct {
+    name: [128]u8,
+    value: [512]u8,
+    variable_type: [64]u8,
+    variables_reference: u64,
+};
+
+/// DAP event callback type
+pub const CDapEventCallback = ?*const fn (u8, ?*const anyopaque) callconv(.c) void;
+
+// Static caches for DAP API
+var c_dap_session_cache: CDapSession = undefined;
+var c_dap_capabilities_cache: CDapCapabilities = undefined;
+var c_dap_breakpoint_cache: CDapBreakpoint = undefined;
+var c_dap_threads_cache: [32]CDapThread = undefined;
+var c_dap_frames_cache: [64]CDapStackFrame = undefined;
+var c_dap_variables_cache: [64]CDapVariable = undefined;
+var c_dap_callback: CDapEventCallback = null;
+
+/// Start DAP adapter
+pub fn zylix_dap_start(project_id: u64, config: *const CDapConfig) callconv(.c) i64 {
+    if (!initialized) return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    var dm = dap_manager orelse return -@as(i64, @intFromEnum(ToolingResult.err_not_initialized));
+
+    const pid = project.ProjectId{
+        .id = project_id,
+        .name = "",
+        .path = "",
+    };
+
+    const zig_config = dap.DapConfig{
+        .port = config.port,
+        .stop_at_entry = config.stop_at_entry,
+        .source_maps = config.source_maps,
+        .logging = config.logging,
+        .exception_breakpoints = config.exception_breakpoints,
+    };
+
+    const future = dm.start(pid, zig_config);
+    defer allocator.destroy(future);
+
+    if (future.result) |adapter_id| {
+        return @intCast(adapter_id.id);
+    }
+
+    return -@as(i64, @intFromEnum(ToolingResult.err_io_error));
+}
+
+/// Stop DAP adapter
+pub fn zylix_dap_stop(adapter_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.stop(aid);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Launch debuggee
+pub fn zylix_dap_launch(adapter_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const future = dm.launch(aid);
+    defer allocator.destroy(future);
+
+    if (future.err != null) {
+        return @intFromEnum(ToolingResult.err_io_error);
+    }
+
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Attach to running process
+pub fn zylix_dap_attach(adapter_id: u64, process_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const future = dm.attach(aid, process_id);
+    defer allocator.destroy(future);
+
+    if (future.err != null) {
+        return @intFromEnum(ToolingResult.err_io_error);
+    }
+
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get DAP session information
+pub fn zylix_dap_get_session(adapter_id: u64) callconv(.c) ?*const CDapSession {
+    if (!initialized) return null;
+
+    const dm = dap_manager orelse return null;
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    if (dm.getSession(aid)) |session| {
+        @memset(&c_dap_session_cache.project_path, 0);
+
+        c_dap_session_cache.id.id = session.id.id;
+        c_dap_session_cache.id.port = session.id.port;
+        c_dap_session_cache.id.started_at = session.id.started_at;
+        c_dap_session_cache.state = @intFromEnum(session.state);
+        c_dap_session_cache.breakpoint_count = session.breakpoint_count;
+        c_dap_session_cache.thread_count = session.thread_count;
+        c_dap_session_cache.current_thread_id = session.current_thread_id orelse 0;
+        c_dap_session_cache.current_frame_id = session.current_frame_id orelse 0;
+        c_dap_session_cache.stop_reason = if (session.stop_reason) |r| @intFromEnum(r) else 0;
+
+        const path_len = @min(session.project_path.len, c_dap_session_cache.project_path.len - 1);
+        @memcpy(c_dap_session_cache.project_path[0..path_len], session.project_path[0..path_len]);
+
+        return &c_dap_session_cache;
+    }
+
+    return null;
+}
+
+/// Get DAP capabilities
+pub fn zylix_dap_get_capabilities(adapter_id: u64) callconv(.c) ?*const CDapCapabilities {
+    if (!initialized) return null;
+
+    const dm = dap_manager orelse return null;
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    if (dm.getCapabilities(aid)) |caps| {
+        c_dap_capabilities_cache = .{
+            .supports_configuration_done = caps.supports_configuration_done,
+            .supports_function_breakpoints = caps.supports_function_breakpoints,
+            .supports_conditional_breakpoints = caps.supports_conditional_breakpoints,
+            .supports_hit_conditional_breakpoints = caps.supports_hit_conditional_breakpoints,
+            .supports_evaluate_for_hovers = caps.supports_evaluate_for_hovers,
+            .supports_step_back = caps.supports_step_back,
+            .supports_set_variable = caps.supports_set_variable,
+            .supports_restart_frame = caps.supports_restart_frame,
+            .supports_stepping_granularity = caps.supports_stepping_granularity,
+            .supports_exception_breakpoints = caps.supports_exception_breakpoints,
+            .supports_value_formatting = caps.supports_value_formatting,
+            .supports_terminate_debuggee = caps.supports_terminate_debuggee,
+            .supports_log_points = caps.supports_log_points,
+        };
+        return &c_dap_capabilities_cache;
+    }
+
+    return null;
+}
+
+/// Set breakpoint
+pub fn zylix_dap_set_breakpoint(
+    adapter_id: u64,
+    source_path: [*:0]const u8,
+    line: u32,
+    condition: [*:0]const u8,
+) callconv(.c) ?*const CDapBreakpoint {
+    if (!initialized) return null;
+
+    var dm = dap_manager orelse return null;
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const source_str = std.mem.span(source_path);
+    const cond_str = std.mem.span(condition);
+    const cond_opt: ?[]const u8 = if (cond_str.len > 0) cond_str else null;
+
+    const future = dm.setBreakpoint(aid, source_str, line, cond_opt);
+    defer allocator.destroy(future);
+
+    if (future.result) |bp| {
+        @memset(&c_dap_breakpoint_cache.source_path, 0);
+        @memset(&c_dap_breakpoint_cache.condition, 0);
+
+        c_dap_breakpoint_cache.id = bp.id;
+        c_dap_breakpoint_cache.breakpoint_type = @intFromEnum(bp.breakpoint_type);
+        c_dap_breakpoint_cache.verified = bp.verified;
+        c_dap_breakpoint_cache.line = bp.line orelse 0;
+        c_dap_breakpoint_cache.column = bp.column orelse 0;
+        c_dap_breakpoint_cache.hit_count = bp.hit_count;
+
+        if (bp.source_path) |sp| {
+            const sp_len = @min(sp.len, c_dap_breakpoint_cache.source_path.len - 1);
+            @memcpy(c_dap_breakpoint_cache.source_path[0..sp_len], sp[0..sp_len]);
+        }
+
+        if (bp.condition) |c| {
+            const c_len = @min(c.len, c_dap_breakpoint_cache.condition.len - 1);
+            @memcpy(c_dap_breakpoint_cache.condition[0..c_len], c[0..c_len]);
+        }
+
+        return &c_dap_breakpoint_cache;
+    }
+
+    return null;
+}
+
+/// Remove breakpoint
+pub fn zylix_dap_remove_breakpoint(adapter_id: u64, breakpoint_id: u64) callconv(.c) bool {
+    if (!initialized) return false;
+
+    var dm = dap_manager orelse return false;
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    return dm.removeBreakpoint(aid, breakpoint_id);
+}
+
+/// Continue execution
+pub fn zylix_dap_continue(adapter_id: u64, thread_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.continueExecution(aid, thread_id);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Pause execution
+pub fn zylix_dap_pause(adapter_id: u64, thread_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.pause(aid, thread_id);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Step into
+pub fn zylix_dap_step_into(adapter_id: u64, thread_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.stepInto(aid, thread_id);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Step over
+pub fn zylix_dap_step_over(adapter_id: u64, thread_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.stepOver(aid, thread_id);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Step out
+pub fn zylix_dap_step_out(adapter_id: u64, thread_id: u64) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    var dm = dap_manager orelse return @intFromEnum(ToolingResult.err_not_initialized);
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    dm.stepOut(aid, thread_id);
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get threads
+pub fn zylix_dap_get_threads(adapter_id: u64, count: *u32) callconv(.c) ?*const CDapThread {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var dm = dap_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const threads = dm.getThreads(aid) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (threads.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(threads.len, c_dap_threads_cache.len);
+
+    for (threads[0..max_count], 0..) |t, i| {
+        @memset(&c_dap_threads_cache[i].name, 0);
+        c_dap_threads_cache[i].id = t.id;
+
+        const name_len = @min(t.name.len, c_dap_threads_cache[i].name.len - 1);
+        @memcpy(c_dap_threads_cache[i].name[0..name_len], t.name[0..name_len]);
+    }
+
+    count.* = @intCast(max_count);
+    return &c_dap_threads_cache[0];
+}
+
+/// Get stack trace
+pub fn zylix_dap_get_stack_trace(adapter_id: u64, thread_id: u64, count: *u32) callconv(.c) ?*const CDapStackFrame {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var dm = dap_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const frames = dm.getStackTrace(aid, thread_id) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (frames.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(frames.len, c_dap_frames_cache.len);
+
+    for (frames[0..max_count], 0..) |f, i| {
+        @memset(&c_dap_frames_cache[i].name, 0);
+        @memset(&c_dap_frames_cache[i].source_path, 0);
+
+        c_dap_frames_cache[i].id = f.id;
+        c_dap_frames_cache[i].line = f.line;
+        c_dap_frames_cache[i].column = f.column;
+        c_dap_frames_cache[i].end_line = f.end_line orelse 0;
+        c_dap_frames_cache[i].end_column = f.end_column orelse 0;
+
+        const name_len = @min(f.name.len, c_dap_frames_cache[i].name.len - 1);
+        @memcpy(c_dap_frames_cache[i].name[0..name_len], f.name[0..name_len]);
+
+        if (f.source_path) |sp| {
+            const sp_len = @min(sp.len, c_dap_frames_cache[i].source_path.len - 1);
+            @memcpy(c_dap_frames_cache[i].source_path[0..sp_len], sp[0..sp_len]);
+        }
+    }
+
+    count.* = @intCast(max_count);
+    return &c_dap_frames_cache[0];
+}
+
+/// Get variables
+pub fn zylix_dap_get_variables(adapter_id: u64, variables_reference: u64, count: *u32) callconv(.c) ?*const CDapVariable {
+    if (!initialized) {
+        count.* = 0;
+        return null;
+    }
+
+    var dm = dap_manager orelse {
+        count.* = 0;
+        return null;
+    };
+
+    const aid = dap.AdapterId{
+        .id = adapter_id,
+        .port = 0,
+        .started_at = 0,
+    };
+
+    const vars = dm.getVariables(aid, variables_reference) catch {
+        count.* = 0;
+        return null;
+    };
+
+    if (vars.len == 0) {
+        count.* = 0;
+        return null;
+    }
+
+    const max_count = @min(vars.len, c_dap_variables_cache.len);
+
+    for (vars[0..max_count], 0..) |v, i| {
+        @memset(&c_dap_variables_cache[i].name, 0);
+        @memset(&c_dap_variables_cache[i].value, 0);
+        @memset(&c_dap_variables_cache[i].variable_type, 0);
+
+        c_dap_variables_cache[i].variables_reference = v.variables_reference;
+
+        const name_len = @min(v.name.len, c_dap_variables_cache[i].name.len - 1);
+        @memcpy(c_dap_variables_cache[i].name[0..name_len], v.name[0..name_len]);
+
+        const val_len = @min(v.value.len, c_dap_variables_cache[i].value.len - 1);
+        @memcpy(c_dap_variables_cache[i].value[0..val_len], v.value[0..val_len]);
+
+        if (v.variable_type) |vt| {
+            const vt_len = @min(vt.len, c_dap_variables_cache[i].variable_type.len - 1);
+            @memcpy(c_dap_variables_cache[i].variable_type[0..vt_len], vt[0..vt_len]);
+        }
+    }
+
+    count.* = @intCast(max_count);
+    return &c_dap_variables_cache[0];
+}
+
+/// Set DAP event callback
+pub fn zylix_dap_set_callback(adapter_id: u64, callback: CDapEventCallback) callconv(.c) i32 {
+    if (!initialized) return @intFromEnum(ToolingResult.err_not_initialized);
+
+    _ = adapter_id; // Would register per-adapter in real implementation
+    c_dap_callback = callback;
+    return @intFromEnum(ToolingResult.ok);
+}
+
+/// Get active DAP adapter count
+pub fn zylix_dap_active_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const dm = dap_manager orelse return 0;
+    return @intCast(dm.activeCount());
+}
+
+/// Get total DAP adapter count
+pub fn zylix_dap_total_count() callconv(.c) u32 {
+    if (!initialized) return 0;
+    const dm = dap_manager orelse return 0;
+    return @intCast(dm.totalCount());
+}
+
+// =============================================================================
 // SYMBOL EXPORTS
 // =============================================================================
 
@@ -865,6 +2596,68 @@ comptime {
     @export(&zylix_fs_total_count, .{ .name = "zylix_fs_total_count" });
     @export(&zylix_fs_is_watching, .{ .name = "zylix_fs_is_watching" });
     @export(&zylix_fs_stop_all, .{ .name = "zylix_fs_stop_all" });
+
+    // Component Tree Export (#56)
+    @export(&zylix_ui_export_tree, .{ .name = "zylix_ui_export_tree" });
+    @export(&zylix_ui_get_component, .{ .name = "zylix_ui_get_component" });
+    @export(&zylix_ui_component_count, .{ .name = "zylix_ui_component_count" });
+    @export(&zylix_ui_find_by_type, .{ .name = "zylix_ui_find_by_type" });
+
+    // Live Preview Bridge (#57)
+    @export(&zylix_preview_open, .{ .name = "zylix_preview_open" });
+    @export(&zylix_preview_close, .{ .name = "zylix_preview_close" });
+    @export(&zylix_preview_refresh, .{ .name = "zylix_preview_refresh" });
+    @export(&zylix_preview_set_debug_overlay, .{ .name = "zylix_preview_set_debug_overlay" });
+    @export(&zylix_preview_get_session, .{ .name = "zylix_preview_get_session" });
+    @export(&zylix_preview_set_callback, .{ .name = "zylix_preview_set_callback" });
+    @export(&zylix_preview_active_count, .{ .name = "zylix_preview_active_count" });
+
+    // Hot Reload (#61)
+    @export(&zylix_hot_reload_start, .{ .name = "zylix_hot_reload_start" });
+    @export(&zylix_hot_reload_stop, .{ .name = "zylix_hot_reload_stop" });
+    @export(&zylix_hot_reload_trigger, .{ .name = "zylix_hot_reload_trigger" });
+    @export(&zylix_hot_reload_pause, .{ .name = "zylix_hot_reload_pause" });
+    @export(&zylix_hot_reload_resume, .{ .name = "zylix_hot_reload_resume" });
+    @export(&zylix_hot_reload_get_session, .{ .name = "zylix_hot_reload_get_session" });
+    @export(&zylix_hot_reload_get_stats, .{ .name = "zylix_hot_reload_get_stats" });
+    @export(&zylix_hot_reload_set_callback, .{ .name = "zylix_hot_reload_set_callback" });
+    @export(&zylix_hot_reload_active_count, .{ .name = "zylix_hot_reload_active_count" });
+    @export(&zylix_hot_reload_total_count, .{ .name = "zylix_hot_reload_total_count" });
+
+    // LSP Integration (#62)
+    @export(&zylix_lsp_start, .{ .name = "zylix_lsp_start" });
+    @export(&zylix_lsp_stop, .{ .name = "zylix_lsp_stop" });
+    @export(&zylix_lsp_get_session, .{ .name = "zylix_lsp_get_session" });
+    @export(&zylix_lsp_get_capabilities, .{ .name = "zylix_lsp_get_capabilities" });
+    @export(&zylix_lsp_get_completion, .{ .name = "zylix_lsp_get_completion" });
+    @export(&zylix_lsp_get_hover, .{ .name = "zylix_lsp_get_hover" });
+    @export(&zylix_lsp_get_definition, .{ .name = "zylix_lsp_get_definition" });
+    @export(&zylix_lsp_get_references, .{ .name = "zylix_lsp_get_references" });
+    @export(&zylix_lsp_get_document_symbols, .{ .name = "zylix_lsp_get_document_symbols" });
+    @export(&zylix_lsp_set_callback, .{ .name = "zylix_lsp_set_callback" });
+    @export(&zylix_lsp_active_count, .{ .name = "zylix_lsp_active_count" });
+    @export(&zylix_lsp_total_count, .{ .name = "zylix_lsp_total_count" });
+
+    // DAP Integration (#63)
+    @export(&zylix_dap_start, .{ .name = "zylix_dap_start" });
+    @export(&zylix_dap_stop, .{ .name = "zylix_dap_stop" });
+    @export(&zylix_dap_launch, .{ .name = "zylix_dap_launch" });
+    @export(&zylix_dap_attach, .{ .name = "zylix_dap_attach" });
+    @export(&zylix_dap_get_session, .{ .name = "zylix_dap_get_session" });
+    @export(&zylix_dap_get_capabilities, .{ .name = "zylix_dap_get_capabilities" });
+    @export(&zylix_dap_set_breakpoint, .{ .name = "zylix_dap_set_breakpoint" });
+    @export(&zylix_dap_remove_breakpoint, .{ .name = "zylix_dap_remove_breakpoint" });
+    @export(&zylix_dap_continue, .{ .name = "zylix_dap_continue" });
+    @export(&zylix_dap_pause, .{ .name = "zylix_dap_pause" });
+    @export(&zylix_dap_step_into, .{ .name = "zylix_dap_step_into" });
+    @export(&zylix_dap_step_over, .{ .name = "zylix_dap_step_over" });
+    @export(&zylix_dap_step_out, .{ .name = "zylix_dap_step_out" });
+    @export(&zylix_dap_get_threads, .{ .name = "zylix_dap_get_threads" });
+    @export(&zylix_dap_get_stack_trace, .{ .name = "zylix_dap_get_stack_trace" });
+    @export(&zylix_dap_get_variables, .{ .name = "zylix_dap_get_variables" });
+    @export(&zylix_dap_set_callback, .{ .name = "zylix_dap_set_callback" });
+    @export(&zylix_dap_active_count, .{ .name = "zylix_dap_active_count" });
+    @export(&zylix_dap_total_count, .{ .name = "zylix_dap_total_count" });
 }
 
 // =============================================================================
@@ -909,4 +2702,403 @@ test "target compatibility" {
     try std.testing.expect(zylix_targets_are_compatible(0, 1));
     // macOS and Windows are compatible (both desktop)
     try std.testing.expect(zylix_targets_are_compatible(3, 4));
+}
+
+// Component Tree Export API (#56) Tests
+test "ui component count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no components are registered
+    try std.testing.expectEqual(@as(u32, 0), zylix_ui_component_count(1));
+}
+
+test "ui export tree" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should succeed even with no components (exports empty tree)
+    try std.testing.expectEqual(@as(i32, 0), zylix_ui_export_tree(1, 0)); // JSON format
+}
+
+test "ui get component returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_ui_get_component(999) == null);
+}
+
+test "ui find by type returns null when none found" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_ui_find_by_type(1, 0, &count); // Button type
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+// Live Preview Bridge API (#57) Tests
+test "preview active count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no previews are active
+    try std.testing.expectEqual(@as(u32, 0), zylix_preview_active_count());
+}
+
+test "preview get session returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_preview_get_session(999) == null);
+}
+
+test "preview set callback" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should succeed
+    try std.testing.expectEqual(@as(i32, 0), zylix_preview_set_callback(1, null));
+}
+
+test "preview close invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_preview_close(999));
+}
+
+test "preview refresh invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_preview_refresh(999));
+}
+
+test "preview set debug overlay" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_preview_set_debug_overlay(999, true));
+}
+
+// Hot Reload API (#61) Tests
+test "hot reload active count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no sessions are active
+    try std.testing.expectEqual(@as(u32, 0), zylix_hot_reload_active_count());
+}
+
+test "hot reload total count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no sessions exist
+    try std.testing.expectEqual(@as(u32, 0), zylix_hot_reload_total_count());
+}
+
+test "hot reload get session returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_hot_reload_get_session(999) == null);
+}
+
+test "hot reload get stats returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_hot_reload_get_stats(999) == null);
+}
+
+test "hot reload set callback" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should succeed
+    try std.testing.expectEqual(@as(i32, 0), zylix_hot_reload_set_callback(1, null));
+}
+
+test "hot reload stop invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_hot_reload_stop(999));
+}
+
+test "hot reload pause invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_hot_reload_pause(999));
+}
+
+test "hot reload resume invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_hot_reload_resume(999));
+}
+
+test "hot reload trigger returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_hot_reload_trigger(999) == null);
+}
+
+// LSP Integration API (#62) Tests
+test "lsp active count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no servers are active
+    try std.testing.expectEqual(@as(u32, 0), zylix_lsp_active_count());
+}
+
+test "lsp total count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no servers exist
+    try std.testing.expectEqual(@as(u32, 0), zylix_lsp_total_count());
+}
+
+test "lsp get session returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_lsp_get_session(999) == null);
+}
+
+test "lsp get capabilities returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_lsp_get_capabilities(999) == null);
+}
+
+test "lsp set callback" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should succeed
+    try std.testing.expectEqual(@as(i32, 0), zylix_lsp_set_callback(1, null));
+}
+
+test "lsp stop invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_lsp_stop(999));
+}
+
+test "lsp get hover returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_lsp_get_hover(999, "file:///test.zy", 0, 0) == null);
+}
+
+test "lsp get definition returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_lsp_get_definition(999, "file:///test.zy", 0, 0) == null);
+}
+
+test "lsp get completion returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_lsp_get_completion(999, "file:///test.zy", 0, 0, &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+test "lsp get references returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_lsp_get_references(999, "file:///test.zy", 0, 0, &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+test "lsp get document symbols returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_lsp_get_document_symbols(999, "file:///test.zy", &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+// DAP Integration API (#63) Tests
+test "dap active count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no adapters are active
+    try std.testing.expectEqual(@as(u32, 0), zylix_dap_active_count());
+}
+
+test "dap total count" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return 0 when no adapters exist
+    try std.testing.expectEqual(@as(u32, 0), zylix_dap_total_count());
+}
+
+test "dap get session returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_dap_get_session(999) == null);
+}
+
+test "dap get capabilities returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_dap_get_capabilities(999) == null);
+}
+
+test "dap set callback" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should succeed
+    try std.testing.expectEqual(@as(i32, 0), zylix_dap_set_callback(1, null));
+}
+
+test "dap stop invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should still return OK (idempotent)
+    try std.testing.expectEqual(@as(i32, 0), zylix_dap_stop(999));
+}
+
+test "dap continue invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_continue(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap pause invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_pause(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap step into invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_step_into(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap step over invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_step_over(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap step out invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_step_out(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap get threads returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_dap_get_threads(999, &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+test "dap get stack trace returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_dap_get_stack_trace(999, 1, &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+test "dap get variables returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    var count: u32 = 0;
+    const result = zylix_dap_get_variables(999, 1, &count);
+    try std.testing.expect(result == null);
+    try std.testing.expectEqual(@as(u32, 0), count);
+}
+
+test "dap set breakpoint returns null for invalid id" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    try std.testing.expect(zylix_dap_set_breakpoint(999, "test.zy", 10, null) == null);
+}
+
+test "dap remove breakpoint invalid adapter" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_remove_breakpoint(999, 1);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap launch invalid adapter" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_launch(999, "/path/to/app", null, null);
+    try std.testing.expect(result != @as(i32, 0));
+}
+
+test "dap attach invalid adapter" {
+    _ = zylix_tooling_init();
+    defer _ = zylix_tooling_deinit();
+
+    // Should return error for invalid adapter
+    const result = zylix_dap_attach(999, 12345);
+    try std.testing.expect(result != @as(i32, 0));
 }
