@@ -1,13 +1,13 @@
 ---
 title: "Terms of Use"
 description: "Terms of Use for Zylix - Cross-platform UI framework powered by Zig"
-date: 2024-01-01
+date: 2025-01-01
 layout: simple
 ---
 
 ## Terms of Use
 
-**Last Updated:** January 2024
+**Last Updated:** January 2025
 
 ### Open Source License
 

@@ -1,13 +1,13 @@
 ---
 title: "Privacy Policy"
 description: "Privacy Policy for Zylix - Cross-platform UI framework powered by Zig"
-date: 2024-01-01
+date: 2025-01-01
 layout: simple
 ---
 
 ## Privacy Policy
 
-**Last Updated:** January 2024
+**Last Updated:** January 2025
 
 Zylix is an open-source project. This privacy policy explains how we handle your information when you visit our website.
 
