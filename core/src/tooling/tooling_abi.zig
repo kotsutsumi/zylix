@@ -1152,15 +1152,16 @@ pub fn zylix_preview_get_session(preview_id: u64) callconv(.c) ?*const CPreviewS
         c_preview_session_cache.id.started_at = session.id.started_at;
         c_preview_session_cache.state = @intFromEnum(session.state);
         c_preview_session_cache.reload_count = session.reload_count;
-        c_preview_session_cache.last_reload = session.last_reload;
+        c_preview_session_cache.last_reload = session.last_reload orelse 0;
 
         // Copy project name
         const pn_len = @min(session.id.project_name.len, c_preview_session_cache.id.project_name.len - 1);
         @memcpy(c_preview_session_cache.id.project_name[0..pn_len], session.id.project_name[0..pn_len]);
 
         // Copy URL
-        const url_len = @min(session.url.len, c_preview_session_cache.url.len - 1);
-        @memcpy(c_preview_session_cache.url[0..url_len], session.url[0..url_len]);
+        const url = session.url orelse "";
+        const url_len = @min(url.len, c_preview_session_cache.url.len - 1);
+        @memcpy(c_preview_session_cache.url[0..url_len], url[0..url_len]);
 
         return &c_preview_session_cache;
     }

@@ -666,8 +666,8 @@ fn stopServers(platforms: []const Platform) ExitCode {
 fn killProcess(pid: u32) bool {
     // Use POSIX kill signal
     // Note: This is Unix-specific, Windows would need different approach
-    const result = std.posix.kill(@intCast(pid), std.posix.SIG.TERM);
-    return result == 0;
+    std.posix.kill(@intCast(pid), std.posix.SIG.TERM) catch return false;
+    return true;
 }
 
 fn showServerStatus(platforms: []const Platform) ExitCode {
