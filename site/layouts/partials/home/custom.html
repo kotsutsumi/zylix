@@ -386,6 +386,7 @@
   .zylix-compare-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
+    align-items: start;
   }
 }
 .zylix-compare-card {
@@ -394,6 +395,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 .zylix-compare-card:hover {
   transform: translateY(-2px);
@@ -406,9 +409,9 @@
 .zylix-compare-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
+  min-height: 2.5rem;
 }
 .zylix-compare-icon {
   font-size: 1.5rem;
@@ -418,12 +421,13 @@
   font-weight: 700;
 }
 .zylix-compare-badge {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.5rem;
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
   border-radius: 9999px;
+  white-space: nowrap;
 }
 .zylix-compare-stats {
   display: flex;
