@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - E2E tests from Android CI (replaced with stable unit tests)
 - Out-of-scope text editor features
 
+## [0.24.2] - 2025-12-27
+
+### Fixed
+- **tooling_abi.zig**: Handle optional fields (`last_reload`, `url`) when converting `PreviewSession` to `CPreviewSession` for C ABI compatibility
+- **commands.zig**: Fix `std.posix.kill` return type handling for Zig 0.15.x API compatibility (returns `!void`, not integer)
+- **release.yml**: Use `zig build zylix` step to skip AI dependencies (llama.cpp/whisper.cpp) in CI environment
+
 ## [0.21.0] - 2025-12-26
 
 ### Added
