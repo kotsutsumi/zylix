@@ -69,7 +69,7 @@ jobs:
 
       - name: Build Core
         working-directory: core
-        run: zig build -Doptimize=ReleaseFast
+        run: zig build zylix -Doptimize=ReleaseFast
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v6
