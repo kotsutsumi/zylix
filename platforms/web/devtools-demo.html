@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix DevTools Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: #1a1a2e;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: #a1a1aa;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      color: #3b82f6;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.25rem;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 14px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    button.secondary {
+      background: #4b5563;
+    }
+    button.secondary:hover {
+      background: #6b7280;
+    }
+    button.success {
+      background: #10b981;
+    }
+    button.success:hover {
+      background: #059669;
+    }
+    button.danger {
+      background: #ef4444;
+    }
+    button.danger:hover {
+      background: #dc2626;
+    }
+    .counter-display {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .count {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #3b82f6;
+      min-width: 100px;
+      text-align: center;
+    }
+    .counter-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .counter-buttons button {
+      font-size: 1.5rem;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .keyboard-shortcut {
+      display: inline-block;
+      background: #374151;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .state-display {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 13px;
+      overflow: auto;
+      max-height: 200px;
+    }
+    .state-display .key {
+      color: #3b82f6;
+    }
+    .state-display .string {
+      color: #10b981;
+    }
+    .state-display .number {
+      color: #f59e0b;
+    }
+    .state-display .boolean {
+      color: #ef4444;
+    }
+    .actions-log {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow: auto;
+    }
+    .action-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+    }
+    .action-item:last-child {
+      border-bottom: none;
+    }
+    .action-type {
+      color: #a855f7;
+    }
+    .action-time {
+      color: #6b7280;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+    }
+    .metric {
+      background: #0f172a;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3b82f6;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+    .hint {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+    .network-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .network-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      background: #0f172a;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .network-method {
+      font-weight: bold;
+      min-width: 40px;
+    }
+    .network-method.GET { color: #10b981; }
+    .network-method.POST { color: #3b82f6; }
+    .network-status {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .network-status.success { background: #10b98120; color: #10b981; }
+    .network-status.error { background: #ef444420; color: #ef4444; }
+    .todo-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #0f172a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .todo-item.completed span {
+      text-decoration: line-through;
+      color: #6b7280;
+    }
+    .todo-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+    .todo-item span {
+      flex: 1;
+    }
+    .todo-item button {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    .todo-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .todo-input input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #e4e4e7;
+      font-size: 14px;
+    }
+    .todo-input input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Zylix DevTools Demo</h1>
+    <p class="subtitle">Interactive demonstration of developer experience tools</p>
+
+    <!-- DevTools Control -->
+    <div class="card">
+      <h2>DevTools Panel</h2>
+      <div class="buttons">
+        <button onclick="toggleDevTools()">Toggle DevTools</button>
+        <button class="secondary" onclick="showDevTools()">Show Panel</button>
+        <button class="secondary" onclick="hideDevTools()">Hide Panel</button>
+      </div>
+      <p class="hint">
+        Keyboard shortcut: <span class="keyboard-shortcut">Cmd/Ctrl + Shift + Z</span>
+      </p>
+    </div>
+
+    <!-- Counter Demo -->
+    <div class="card">
+      <h2>Counter (State Management Demo)</h2>
+      <div class="counter-display">
+        <div class="count" id="count">0</div>
+        <div class="counter-buttons">
+          <button onclick="decrement()">-</button>
+          <button onclick="increment()">+</button>
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="secondary" onclick="resetCounter()">Reset</button>
+        <button class="secondary" onclick="setCount(10)">Set to 10</button>
+        <button class="secondary" onclick="setCount(100)">Set to 100</button>
+      </div>
+      <p class="hint">Each action is recorded in DevTools. Try using Undo/Redo!</p>
+    </div>
+
+    <!-- Todo Demo -->
+    <div class="card">
+      <h2>Todo List (Complex State Demo)</h2>
+      <div class="todo-input">
+        <input type="text" id="todoInput" placeholder="What needs to be done?" onkeypress="if(event.key==='Enter')addTodo()">
+        <button onclick="addTodo()">Add</button>
+      </div>
+      <ul class="todo-list" id="todoList"></ul>
+      <div class="buttons" style="margin-top: 16px;">
+        <button class="secondary" onclick="clearCompleted()">Clear Completed</button>
+        <button class="secondary" onclick="clearAllTodos()">Clear All</button>
+      </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="card">
+      <h2>Performance Metrics</h2>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-value" id="fps">60</div>
+          <div class="metric-label">FPS</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="renders">0</div>
+          <div class="metric-label">Renders</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="avgRender">0ms</div>
+          <div class="metric-label">Avg Render</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value" id="memory">--</div>
+          <div class="metric-label">Memory</div>
+        </div>
+      </div>
+      <div class="buttons" style="margin-top: 16px;">
+        <button onclick="simulateRender()">Simulate Render</button>
+        <button class="secondary" onclick="simulateHeavyRender()">Heavy Render</button>
+      </div>
+    </div>
+
+    <!-- Network Requests -->
+    <div class="card">
+      <h2>Network Requests</h2>
+      <ul class="network-list" id="networkList">
+        <li class="network-item" style="color: #6b7280; justify-content: center;">No requests yet</li>
+      </ul>
+      <div class="buttons" style="margin-top: 16px;">
+        <button onclick="simulateRequest('GET', '/api/users', 200)">GET /users</button>
+        <button onclick="simulateRequest('POST', '/api/todos', 201)">POST /todos</button>
+        <button class="danger" onclick="simulateRequest('GET', '/api/error', 500)">Simulate Error</button>
+      </div>
+    </div>
+
+    <!-- State Inspector -->
+    <div class="card">
+      <h2>Current State</h2>
+      <div class="state-display" id="stateDisplay">
+        <pre>{}</pre>
+      </div>
+    </div>
+
+    <!-- Actions Log -->
+    <div class="card">
+      <h2>Actions History</h2>
+      <div class="actions-log" id="actionsLog">
+        <div style="color: #6b7280; text-align: center;">No actions yet</div>
+      </div>
+      <div class="buttons" style="margin-top: 16px;">
+        <button onclick="undo()">Undo</button>
+        <button onclick="redo()">Redo</button>
+        <button class="secondary" onclick="clearHistory()">Clear History</button>
+        <button class="secondary" onclick="exportState()">Export State</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ==========================================================================
+    // DevTools Implementation (Inline for Demo)
+    // ==========================================================================
+
+    class ZylixDevTools {
+      constructor(config = {}) {
+        this.config = {
+          maxHistory: config.maxHistory || 50,
+          trace: config.trace !== false,
+          position: config.position || 'bottom-right',
+          theme: config.theme || 'auto',
+        };
+        this.stores = new Map();
+        this.actionHistory = [];
+        this.actionIdCounter = 0;
+        this.performanceMetrics = {
+          renders: 0,
+          lastRenderTime: 0,
+          averageRenderTime: 0,
+          peakRenderTime: 0,
+          totalRenderTime: 0,
+          fps: 60,
+        };
+        this.networkRequests = [];
+        this.state = {
+          enabled: false,
+          visible: false,
+          activeTab: 'state',
+          selectedStore: null,
+          historyIndex: -1,
+        };
+        this.listeners = new Set();
+        this.panel = null;
+        this.frameCount = 0;
+        this.lastFpsUpdate = performance.now();
+
+        this.startFpsMonitoring();
+      }
+
+      enable() {
+        this.state.enabled = true;
+        this.notify();
+        console.log('%c[Zylix DevTools] Enabled', 'color: #3b82f6; font-weight: bold;');
+      }
+
+      toggle() {
+        this.state.visible ? this.hidePanel() : this.showPanel();
+      }
+
+      showPanel() {
+        if (!this.state.enabled) this.enable();
+        this.state.visible = true;
+        this.renderPanel();
+        this.notify();
+      }
+
+      hidePanel() {
+        this.state.visible = false;
+        if (this.panel) {
+          this.panel.remove();
+          this.panel = null;
+        }
+        this.notify();
+      }
+
+      connectStore(name, store) {
+        this.stores.set(name, store);
+        if (!this.state.selectedStore) {
+          this.state.selectedStore = name;
+        }
+        this.notify();
+        return () => this.stores.delete(name);
+      }
+
+      recordAction(type, payload, stateBefore, stateAfter, duration) {
+        if (!this.state.enabled) return;
+
+        const record = {
+          id: ++this.actionIdCounter,
+          type,
+          payload,
+          timestamp: Date.now(),
+          stateBefore,
+          stateAfter,
+          duration,
+        };
+
+        this.actionHistory.push(record);
+        while (this.actionHistory.length > this.config.maxHistory) {
+          this.actionHistory.shift();
+        }
+
+        this.state.historyIndex = this.actionHistory.length - 1;
+
+        if (this.config.trace) {
+          console.log(`%c[Zylix DevTools] Action: ${type}`, 'color: #3b82f6; font-weight: bold;', { payload, duration: `${duration.toFixed(2)}ms` });
+        }
+
+        this.notify();
+      }
+
+      jumpTo(actionId) {
+        const index = this.actionHistory.findIndex(a => a.id === actionId);
+        if (index === -1) return;
+
+        const action = this.actionHistory[index];
+        const storeName = this.state.selectedStore;
+        const store = this.stores.get(storeName);
+        if (store && store.setState) {
+          store.setState(action.stateAfter);
+          this.state.historyIndex = index;
+          this.notify();
+        }
+      }
+
+      undo() {
+        if (this.state.historyIndex <= 0) return;
+        const prevAction = this.actionHistory[this.state.historyIndex - 1];
+        const store = this.stores.get(this.state.selectedStore);
+        if (store && store.setState) {
+          store.setState(prevAction.stateAfter);
+          this.state.historyIndex--;
+          this.notify();
+        }
+      }
+
+      redo() {
+        if (this.state.historyIndex >= this.actionHistory.length - 1) return;
+        const nextAction = this.actionHistory[this.state.historyIndex + 1];
+        const store = this.stores.get(this.state.selectedStore);
+        if (store && store.setState) {
+          store.setState(nextAction.stateAfter);
+          this.state.historyIndex++;
+          this.notify();
+        }
+      }
+
+      clearHistory() {
+        this.actionHistory = [];
+        this.state.historyIndex = -1;
+        this.notify();
+      }
+
+      recordRender(duration) {
+        this.performanceMetrics.renders++;
+        this.performanceMetrics.lastRenderTime = duration;
+        this.performanceMetrics.totalRenderTime += duration;
+        this.performanceMetrics.averageRenderTime =
+          this.performanceMetrics.totalRenderTime / this.performanceMetrics.renders;
+        if (duration > this.performanceMetrics.peakRenderTime) {
+          this.performanceMetrics.peakRenderTime = duration;
+        }
+        this.notify();
+      }
+
+      recordNetworkRequest(method, url, status, duration) {
+        this.networkRequests.push({
+          id: Date.now(),
+          method,
+          url,
+          status,
+          duration,
+          timestamp: Date.now(),
+        });
+        while (this.networkRequests.length > 50) {
+          this.networkRequests.shift();
+        }
+        this.notify();
+      }
+
+      getHistory() {
+        return [...this.actionHistory];
+      }
+
+      getPerformanceMetrics() {
+        return { ...this.performanceMetrics };
+      }
+
+      getStoreState(name) {
+        const store = this.stores.get(name);
+        return store ? store.getState() : null;
+      }
+
+      subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+      }
+
+      exportState() {
+        const data = {
+          stores: Object.fromEntries(
+            Array.from(this.stores.entries()).map(([name, store]) => [name, store.getState()])
+          ),
+          actions: this.actionHistory,
+          performance: this.performanceMetrics,
+          network: this.networkRequests,
+        };
+        return JSON.stringify(data, null, 2);
+      }
+
+      notify() {
+        this.listeners.forEach(l => l());
+        if (this.state.visible) this.renderPanel();
+      }
+
+      startFpsMonitoring() {
+        const measure = (timestamp) => {
+          this.frameCount++;
+          if (timestamp - this.lastFpsUpdate >= 1000) {
+            this.performanceMetrics.fps = Math.round(this.frameCount * 1000 / (timestamp - this.lastFpsUpdate));
+            this.frameCount = 0;
+            this.lastFpsUpdate = timestamp;
+          }
+          if (this.state.enabled) {
+            requestAnimationFrame(measure);
+          }
+        };
+        requestAnimationFrame(measure);
+      }
+
+      getTheme() {
+        if (this.config.theme === 'auto') {
+          return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return this.config.theme;
+      }
+
+      renderPanel() {
+        if (!this.panel) {
+          this.panel = document.createElement('div');
+          this.panel.id = 'zylix-devtools';
+          document.body.appendChild(this.panel);
+        }
+
+        const isDark = this.getTheme() === 'dark';
+        const colors = isDark
+          ? { bg: '#1e1e1e', surface: '#252526', border: '#3c3c3c', text: '#cccccc', textMuted: '#858585', accent: '#3b82f6' }
+          : { bg: '#ffffff', surface: '#f5f5f5', border: '#e0e0e0', text: '#333333', textMuted: '#666666', accent: '#3b82f6' };
+
+        const tabs = [
+          { id: 'state', icon: '📊', label: 'State' },
+          { id: 'actions', icon: '🔄', label: 'Actions' },
+          { id: 'performance', icon: '⚡', label: 'Performance' },
+          { id: 'network', icon: '🌐', label: 'Network' },
+        ];
+
+        this.panel.innerHTML = `
+          <style>
+            #zylix-devtools {
+              position: fixed;
+              bottom: 16px;
+              right: 16px;
+              width: 380px;
+              max-height: 450px;
+              background: ${colors.bg};
+              border: 1px solid ${colors.border};
+              border-radius: 8px;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+              font-size: 12px;
+              color: ${colors.text};
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              z-index: 999999;
+              display: flex;
+              flex-direction: column;
+              overflow: hidden;
+            }
+            .zdt-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 8px 12px;
+              background: ${colors.surface};
+              border-bottom: 1px solid ${colors.border};
+            }
+            .zdt-title { font-weight: 600; color: ${colors.accent}; }
+            .zdt-close {
+              background: none;
+              border: none;
+              color: ${colors.textMuted};
+              cursor: pointer;
+              font-size: 16px;
+              padding: 0 4px;
+            }
+            .zdt-close:hover { color: ${colors.text}; }
+            .zdt-tabs {
+              display: flex;
+              border-bottom: 1px solid ${colors.border};
+              background: ${colors.surface};
+            }
+            .zdt-tab {
+              flex: 1;
+              padding: 8px;
+              text-align: center;
+              cursor: pointer;
+              border: none;
+              background: none;
+              color: ${colors.textMuted};
+              border-bottom: 2px solid transparent;
+              font-size: 11px;
+            }
+            .zdt-tab:hover { color: ${colors.text}; }
+            .zdt-tab.active { color: ${colors.accent}; border-bottom-color: ${colors.accent}; }
+            .zdt-content {
+              flex: 1;
+              overflow: auto;
+              padding: 12px;
+              max-height: 350px;
+            }
+            .zdt-tree {
+              font-family: monospace;
+              font-size: 11px;
+              line-height: 1.5;
+              white-space: pre-wrap;
+              word-break: break-all;
+            }
+            .zdt-key { color: ${colors.accent}; }
+            .zdt-string { color: #10b981; }
+            .zdt-number { color: #f59e0b; }
+            .zdt-boolean { color: #ef4444; }
+            .zdt-action-list { list-style: none; margin: 0; padding: 0; }
+            .zdt-action-item {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 6px 8px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-bottom: 4px;
+              background: ${colors.surface};
+            }
+            .zdt-action-item:hover { background: ${colors.border}; }
+            .zdt-action-item.active { background: ${colors.accent}20; border-left: 3px solid ${colors.accent}; }
+            .zdt-action-id { color: ${colors.textMuted}; font-size: 10px; min-width: 24px; }
+            .zdt-action-type { flex: 1; font-weight: 500; }
+            .zdt-action-time { color: ${colors.textMuted}; font-size: 10px; }
+            .zdt-toolbar { display: flex; gap: 4px; margin-bottom: 8px; }
+            .zdt-btn {
+              padding: 4px 8px;
+              border: 1px solid ${colors.border};
+              border-radius: 4px;
+              background: ${colors.surface};
+              color: ${colors.text};
+              cursor: pointer;
+              font-size: 11px;
+            }
+            .zdt-btn:hover { background: ${colors.bg}; }
+            .zdt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+            .zdt-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .zdt-metric { background: ${colors.surface}; padding: 12px; border-radius: 4px; }
+            .zdt-metric-value { font-size: 18px; font-weight: 600; color: ${colors.accent}; }
+            .zdt-metric-label { font-size: 10px; color: ${colors.textMuted}; text-transform: uppercase; }
+            .zdt-network-list { list-style: none; margin: 0; padding: 0; }
+            .zdt-network-item {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 6px 8px;
+              border-radius: 4px;
+              margin-bottom: 4px;
+              background: ${colors.surface};
+              font-size: 11px;
+            }
+            .zdt-network-method { font-weight: 600; min-width: 40px; }
+            .zdt-network-method.GET { color: #10b981; }
+            .zdt-network-method.POST { color: ${colors.accent}; }
+            .zdt-network-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .zdt-network-status { padding: 2px 6px; border-radius: 3px; font-size: 10px; }
+            .zdt-network-status.success { background: #10b98120; color: #10b981; }
+            .zdt-network-status.error { background: #ef444420; color: #ef4444; }
+            .zdt-empty { text-align: center; color: ${colors.textMuted}; padding: 20px; }
+          </style>
+          <div class="zdt-header">
+            <span class="zdt-title">Zylix DevTools</span>
+            <button class="zdt-close" onclick="window.devtools.hidePanel()">×</button>
+          </div>
+          <div class="zdt-tabs">
+            ${tabs.map(tab => `
+              <button class="zdt-tab ${this.state.activeTab === tab.id ? 'active' : ''}"
+                      onclick="window.devtools.state.activeTab = '${tab.id}'; window.devtools.notify();">
+                ${tab.icon} ${tab.label}
+              </button>
+            `).join('')}
+          </div>
+          <div class="zdt-content">
+            ${this.renderTabContent(colors)}
+          </div>
+        `;
+      }
+
+      renderTabContent(colors) {
+        switch (this.state.activeTab) {
+          case 'state': return this.renderStateTab();
+          case 'actions': return this.renderActionsTab();
+          case 'performance': return this.renderPerformanceTab();
+          case 'network': return this.renderNetworkTab();
+          default: return '';
+        }
+      }
+
+      renderStateTab() {
+        const storeNames = Array.from(this.stores.keys());
+        if (storeNames.length === 0) {
+          return '<div class="zdt-empty">No stores connected</div>';
+        }
+        const selectedStore = this.state.selectedStore || storeNames[0];
+        const state = this.getStoreState(selectedStore);
+        return `<div class="zdt-tree">${this.formatValue(state)}</div>`;
+      }
+
+      renderActionsTab() {
+        if (this.actionHistory.length === 0) {
+          return '<div class="zdt-empty">No actions recorded</div>';
+        }
+        const canUndo = this.state.historyIndex > 0;
+        const canRedo = this.state.historyIndex < this.actionHistory.length - 1;
+        return `
+          <div class="zdt-toolbar">
+            <button class="zdt-btn" ${canUndo ? '' : 'disabled'} onclick="window.devtools.undo()">⟲ Undo</button>
+            <button class="zdt-btn" ${canRedo ? '' : 'disabled'} onclick="window.devtools.redo()">↺ Redo</button>
+            <button class="zdt-btn" onclick="window.devtools.clearHistory()">🗑 Clear</button>
+          </div>
+          <ul class="zdt-action-list">
+            ${this.actionHistory.slice().reverse().map((action, idx) => {
+              const realIdx = this.actionHistory.length - 1 - idx;
+              return `
+                <li class="zdt-action-item ${realIdx === this.state.historyIndex ? 'active' : ''}"
+                    onclick="window.devtools.jumpTo(${action.id})">
+                  <span class="zdt-action-id">#${action.id}</span>
+                  <span class="zdt-action-type">${action.type}</span>
+                  <span class="zdt-action-time">${action.duration.toFixed(1)}ms</span>
+                </li>
+              `;
+            }).join('')}
+          </ul>
+        `;
+      }
+
+      renderPerformanceTab() {
+        const m = this.performanceMetrics;
+        return `
+          <div class="zdt-metrics">
+            <div class="zdt-metric">
+              <div class="zdt-metric-value">${m.fps}</div>
+              <div class="zdt-metric-label">FPS</div>
+            </div>
+            <div class="zdt-metric">
+              <div class="zdt-metric-value">${m.renders}</div>
+              <div class="zdt-metric-label">Renders</div>
+            </div>
+            <div class="zdt-metric">
+              <div class="zdt-metric-value">${m.lastRenderTime.toFixed(2)}ms</div>
+              <div class="zdt-metric-label">Last Render</div>
+            </div>
+            <div class="zdt-metric">
+              <div class="zdt-metric-value">${m.averageRenderTime.toFixed(2)}ms</div>
+              <div class="zdt-metric-label">Avg Render</div>
+            </div>
+          </div>
+        `;
+      }
+
+      renderNetworkTab() {
+        if (this.networkRequests.length === 0) {
+          return '<div class="zdt-empty">No network requests</div>';
+        }
+        return `
+          <ul class="zdt-network-list">
+            ${this.networkRequests.slice().reverse().map(req => `
+              <li class="zdt-network-item">
+                <span class="zdt-network-method ${req.method}">${req.method}</span>
+                <span class="zdt-network-url">${req.url}</span>
+                <span class="zdt-network-status ${req.status >= 200 && req.status < 300 ? 'success' : 'error'}">${req.status}</span>
+                <span>${req.duration.toFixed(0)}ms</span>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+      }
+
+      formatValue(value, depth = 0) {
+        if (depth > 5) return '<span style="color:#858585">...</span>';
+        if (value === null) return '<span style="color:#858585">null</span>';
+        if (value === undefined) return '<span style="color:#858585">undefined</span>';
+        if (typeof value === 'string') return `<span class="zdt-string">"${this.escapeHtml(value)}"</span>`;
+        if (typeof value === 'number') return `<span class="zdt-number">${value}</span>`;
+        if (typeof value === 'boolean') return `<span class="zdt-boolean">${value}</span>`;
+        if (Array.isArray(value)) {
+          if (value.length === 0) return '[]';
+          const items = value.map((v, i) => `${i}: ${this.formatValue(v, depth + 1)}`).join(',\n');
+          return `[\n${items}\n]`;
+        }
+        if (typeof value === 'object') {
+          const entries = Object.entries(value);
+          if (entries.length === 0) return '{}';
+          const items = entries.map(([k, v]) =>
+            `<span class="zdt-key">"${this.escapeHtml(k)}"</span>: ${this.formatValue(v, depth + 1)}`
+          ).join(',\n');
+          return `{\n${items}\n}`;
+        }
+        return String(value);
+      }
+
+      escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+    }
+
+    // ==========================================================================
+    // Demo App State
+    // ==========================================================================
+
+    // Create DevTools instance
+    const devtools = new ZylixDevTools({ trace: true });
+    window.devtools = devtools;
+    devtools.enable();
+
+    // Counter store
+    let counterState = { count: 0 };
+    const counterStore = {
+      getState: () => counterState,
+      setState: (newState) => {
+        counterState = newState;
+        updateUI();
+      },
+    };
+
+    // Todo store
+    let todoState = { todos: [], filter: 'all' };
+    const todoStore = {
+      getState: () => todoState,
+      setState: (newState) => {
+        todoState = newState;
+        updateUI();
+      },
+    };
+
+    // Connect stores
+    devtools.connectStore('counter', counterStore);
+    devtools.connectStore('todos', todoStore);
+
+    // ==========================================================================
+    // Counter Actions
+    // ==========================================================================
+
+    window.increment = function() {
+      const start = performance.now();
+      const before = { ...counterState };
+      counterState = { count: counterState.count + 1 };
+      const duration = performance.now() - start;
+      devtools.recordAction('increment', {}, before, counterState, duration);
+      updateUI();
+    };
+
+    window.decrement = function() {
+      const start = performance.now();
+      const before = { ...counterState };
+      counterState = { count: counterState.count - 1 };
+      const duration = performance.now() - start;
+      devtools.recordAction('decrement', {}, before, counterState, duration);
+      updateUI();
+    };
+
+    window.resetCounter = function() {
+      const start = performance.now();
+      const before = { ...counterState };
+      counterState = { count: 0 };
+      const duration = performance.now() - start;
+      devtools.recordAction('reset', {}, before, counterState, duration);
+      updateUI();
+    };
+
+    window.setCount = function(value) {
+      const start = performance.now();
+      const before = { ...counterState };
+      counterState = { count: value };
+      const duration = performance.now() - start;
+      devtools.recordAction('setCount', { value }, before, counterState, duration);
+      updateUI();
+    };
+
+    // ==========================================================================
+    // Todo Actions
+    // ==========================================================================
+
+    window.addTodo = function() {
+      const input = document.getElementById('todoInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const start = performance.now();
+      const before = JSON.parse(JSON.stringify(todoState));
+      todoState = {
+        ...todoState,
+        todos: [...todoState.todos, { id: Date.now(), text, completed: false }],
+      };
+      const duration = performance.now() - start;
+      devtools.recordAction('addTodo', { text }, before, todoState, duration);
+      input.value = '';
+      updateUI();
+    };
+
+    window.toggleTodo = function(id) {
+      const start = performance.now();
+      const before = JSON.parse(JSON.stringify(todoState));
+      todoState = {
+        ...todoState,
+        todos: todoState.todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t),
+      };
+      const duration = performance.now() - start;
+      devtools.recordAction('toggleTodo', { id }, before, todoState, duration);
+      updateUI();
+    };
+
+    window.deleteTodo = function(id) {
+      const start = performance.now();
+      const before = JSON.parse(JSON.stringify(todoState));
+      todoState = {
+        ...todoState,
+        todos: todoState.todos.filter(t => t.id !== id),
+      };
+      const duration = performance.now() - start;
+      devtools.recordAction('deleteTodo', { id }, before, todoState, duration);
+      updateUI();
+    };
+
+    window.clearCompleted = function() {
+      const start = performance.now();
+      const before = JSON.parse(JSON.stringify(todoState));
+      todoState = {
+        ...todoState,
+        todos: todoState.todos.filter(t => !t.completed),
+      };
+      const duration = performance.now() - start;
+      devtools.recordAction('clearCompleted', {}, before, todoState, duration);
+      updateUI();
+    };
+
+    window.clearAllTodos = function() {
+      const start = performance.now();
+      const before = JSON.parse(JSON.stringify(todoState));
+      todoState = { ...todoState, todos: [] };
+      const duration = performance.now() - start;
+      devtools.recordAction('clearAllTodos', {}, before, todoState, duration);
+      updateUI();
+    };
+
+    // ==========================================================================
+    // DevTools Controls
+    // ==========================================================================
+
+    window.toggleDevTools = () => devtools.toggle();
+    window.showDevTools = () => devtools.showPanel();
+    window.hideDevTools = () => devtools.hidePanel();
+    window.undo = () => devtools.undo();
+    window.redo = () => devtools.redo();
+    window.clearHistory = () => devtools.clearHistory();
+    window.exportState = () => {
+      const data = devtools.exportState();
+      console.log('Exported State:', data);
+      alert('State exported to console. Check developer tools.');
+    };
+
+    // ==========================================================================
+    // Performance Simulation
+    // ==========================================================================
+
+    window.simulateRender = function() {
+      const duration = Math.random() * 5 + 1;
+      devtools.recordRender(duration);
+      updateMetrics();
+    };
+
+    window.simulateHeavyRender = function() {
+      const duration = Math.random() * 50 + 20;
+      devtools.recordRender(duration);
+      updateMetrics();
+    };
+
+    // ==========================================================================
+    // Network Simulation
+    // ==========================================================================
+
+    window.simulateRequest = function(method, url, status) {
+      const duration = Math.random() * 200 + 50;
+      devtools.recordNetworkRequest(method, url, status, duration);
+      updateNetworkList();
+    };
+
+    // ==========================================================================
+    // UI Updates
+    // ==========================================================================
+
+    function updateUI() {
+      // Update counter display
+      document.getElementById('count').textContent = counterState.count;
+
+      // Update todo list
+      const todoList = document.getElementById('todoList');
+      if (todoState.todos.length === 0) {
+        todoList.innerHTML = '<li style="color: #6b7280; text-align: center; padding: 20px;">No todos yet</li>';
+      } else {
+        todoList.innerHTML = todoState.todos.map(todo => `
+          <li class="todo-item ${todo.completed ? 'completed' : ''}">
+            <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+            <span>${todo.text}</span>
+            <button class="danger" onclick="deleteTodo(${todo.id})">×</button>
+          </li>
+        `).join('');
+      }
+
+      // Update state display
+      const fullState = {
+        counter: counterState,
+        todos: todoState,
+      };
+      document.getElementById('stateDisplay').innerHTML = `<pre>${formatJSON(fullState)}</pre>`;
+
+      // Update actions log
+      updateActionsLog();
+
+      // Update metrics
+      updateMetrics();
+    }
+
+    function updateActionsLog() {
+      const history = devtools.getHistory();
+      const actionsLog = document.getElementById('actionsLog');
+      if (history.length === 0) {
+        actionsLog.innerHTML = '<div style="color: #6b7280; text-align: center;">No actions yet</div>';
+      } else {
+        actionsLog.innerHTML = history.slice().reverse().map(action => `
+          <div class="action-item">
+            <span><span class="action-type">${action.type}</span> #${action.id}</span>
+            <span class="action-time">${action.duration.toFixed(2)}ms</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateMetrics() {
+      const m = devtools.getPerformanceMetrics();
+      document.getElementById('fps').textContent = m.fps;
+      document.getElementById('renders').textContent = m.renders;
+      document.getElementById('avgRender').textContent = m.averageRenderTime.toFixed(2) + 'ms';
+
+      // Try to get memory usage
+      if (performance.memory) {
+        document.getElementById('memory').textContent =
+          (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1) + 'MB';
+      }
+    }
+
+    function updateNetworkList() {
+      const list = document.getElementById('networkList');
+      const requests = devtools.networkRequests;
+      if (requests.length === 0) {
+        list.innerHTML = '<li class="network-item" style="color: #6b7280; justify-content: center;">No requests yet</li>';
+      } else {
+        list.innerHTML = requests.slice().reverse().map(req => `
+          <li class="network-item">
+            <span class="network-method ${req.method}">${req.method}</span>
+            <span class="network-url">${req.url}</span>
+            <span class="network-status ${req.status >= 200 && req.status < 300 ? 'success' : 'error'}">${req.status}</span>
+            <span>${req.duration.toFixed(0)}ms</span>
+          </li>
+        `).join('');
+      }
+    }
+
+    function formatJSON(obj) {
+      return JSON.stringify(obj, null, 2)
+        .replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:')
+        .replace(/: "([^"]+)"/g, ': <span class="string">"$1"</span>')
+        .replace(/: (\d+)/g, ': <span class="number">$1</span>')
+        .replace(/: (true|false)/g, ': <span class="boolean">$1</span>');
+    }
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Z') {
+        e.preventDefault();
+        devtools.toggle();
+      }
+    });
+
+    // Initial UI update
+    updateUI();
+
+    // Periodic FPS update
+    setInterval(updateMetrics, 1000);
+
+    console.log('%c[Zylix DevTools Demo] Ready! Press Cmd/Ctrl+Shift+Z to toggle DevTools.', 'color: #3b82f6; font-weight: bold;');
+  </script>
+</body>
+</html>

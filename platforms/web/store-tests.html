@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Store Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .summary {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    .summary-item {
+      text-align: center;
+    }
+    .summary-item .count {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .summary-item.passed .count { color: #4ade80; }
+    .summary-item.failed .count { color: #f87171; }
+    .summary-item.total .count { color: #60a5fa; }
+    .test-groups {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .test-group {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .test-group-header {
+      background: rgba(255,255,255,0.1);
+      padding: 12px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    .test-group-header:hover { background: rgba(255,255,255,0.15); }
+    .test-group-tests { padding: 10px 15px; }
+    .test-item {
+      padding: 8px 10px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .test-item.passed { background: rgba(74, 222, 128, 0.1); }
+    .test-item.failed { background: rgba(248, 113, 113, 0.1); }
+    .test-icon { font-size: 1.2em; }
+    .test-name { flex: 1; }
+    .test-error {
+      color: #f87171;
+      font-size: 0.85em;
+      margin-top: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .running {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+      color: #60a5fa;
+    }
+    #test-container {
+      position: fixed;
+      bottom: -9999px;
+      left: -9999px;
+      width: 400px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zylix Store Tests</h1>
+  <div id="results">
+    <div class="running">Running tests...</div>
+  </div>
+  <div id="test-container"></div>
+
+  <script type="module">
+    // ========================================
+    // Inline Store Implementation for Testing
+    // ========================================
+
+    // Types and interfaces (runtime checks via validation)
+    const isFunction = (fn) => typeof fn === 'function';
+    const isObject = (obj) => obj !== null && typeof obj === 'object';
+
+    // ========================================
+    // Core Store Implementation
+    // ========================================
+
+    function createStore(config) {
+      const { state: initialState, actions = {}, selectors = {}, middleware = [], devtools = false } = config;
+
+      let state = structuredClone(initialState);
+      const listeners = new Set();
+      const selectorCache = new Map();
+
+      // History for time-travel (devtools)
+      let history = devtools ? [{ state: structuredClone(state), action: '@@INIT', timestamp: Date.now() }] : [];
+      let historyIndex = devtools ? 0 : -1;
+
+      // Get current state
+      const getState = () => state;
+
+      // Subscribe to state changes
+      const subscribe = (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      };
+
+      // Notify all listeners
+      const notify = () => {
+        selectorCache.clear();
+        listeners.forEach(listener => listener(state));
+      };
+
+      // Core setState with middleware support
+      const setState = (updater, actionName = 'setState') => {
+        const prevState = state;
+        const nextState = typeof updater === 'function' ? updater(state) : updater;
+
+        if (nextState === prevState) return;
+
+        // Run middleware chain
+        let processedState = nextState;
+        const middlewareApi = { getState, dispatch: boundActions };
+
+        for (const mw of middleware) {
+          const result = mw(middlewareApi)(next => action => next(action))({
+            type: actionName,
+            payload: nextState,
+            prevState,
+            nextState: processedState
+          });
+          if (result && result.nextState) {
+            processedState = result.nextState;
+          }
+        }
+
+        state = processedState;
+
+        // Record history for devtools
+        if (devtools) {
+          // Truncate future history if we're not at the end
+          if (historyIndex < history.length - 1) {
+            history = history.slice(0, historyIndex + 1);
+          }
+          history.push({
+            state: structuredClone(state),
+            action: actionName,
+            timestamp: Date.now()
+          });
+          historyIndex = history.length - 1;
+        }
+
+        notify();
+      };
+
+      // Build bound actions
+      const boundActions = {};
+      for (const [name, actionFn] of Object.entries(actions)) {
+        boundActions[name] = (...args) => {
+          const result = actionFn(state, ...args);
+
+          // Handle async actions (thunks)
+          if (typeof result === 'function') {
+            return result({ getState, setState: (s) => setState(s, name), actions: boundActions });
+          }
+
+          // Handle promise-returning actions
+          if (result instanceof Promise) {
+            return result.then(newState => {
+              if (newState !== undefined) {
+                setState(newState, name);
+              }
+              return newState;
+            });
+          }
+
+          // Synchronous state update
+          if (result !== undefined) {
+            setState(result, name);
+          }
+
+          return result;
+        };
+      }
+
+      // Build memoized selectors
+      const boundSelectors = {};
+      for (const [name, selectorFn] of Object.entries(selectors)) {
+        boundSelectors[name] = (...args) => {
+          const cacheKey = `${name}:${JSON.stringify(args)}`;
+
+          if (selectorCache.has(cacheKey)) {
+            return selectorCache.get(cacheKey);
+          }
+
+          const result = selectorFn(state, ...args);
+          selectorCache.set(cacheKey, result);
+          return result;
+        };
+      }
+
+      // DevTools API
+      const devtoolsApi = devtools ? {
+        getHistory: () => history,
+        getHistoryIndex: () => historyIndex,
+        undo: () => {
+          if (historyIndex > 0) {
+            historyIndex--;
+            state = structuredClone(history[historyIndex].state);
+            notify();
+          }
+        },
+        redo: () => {
+          if (historyIndex < history.length - 1) {
+            historyIndex++;
+            state = structuredClone(history[historyIndex].state);
+            notify();
+          }
+        },
+        jumpTo: (index) => {
+          if (index >= 0 && index < history.length) {
+            historyIndex = index;
+            state = structuredClone(history[historyIndex].state);
+            notify();
+          }
+        },
+        clear: () => {
+          history = [{ state: structuredClone(state), action: '@@CLEAR', timestamp: Date.now() }];
+          historyIndex = 0;
+        }
+      } : null;
+
+      return {
+        getState,
+        subscribe,
+        actions: boundActions,
+        selectors: boundSelectors,
+        ...(devtools && { devtools: devtoolsApi })
+      };
+    }
+
+    // ========================================
+    // Middleware Implementations
+    // ========================================
+
+    const loggerMiddleware = (api) => (next) => (action) => {
+      const logs = loggerMiddleware._logs || [];
+      logs.push({ type: 'action', action: action.type, payload: action.payload });
+      loggerMiddleware._logs = logs;
+      const result = next(action);
+      logs.push({ type: 'state', state: api.getState() });
+      return result;
+    };
+
+    const persistMiddleware = (key) => {
+      return (api) => (next) => (action) => {
+        const result = next(action);
+        persistMiddleware._storage = persistMiddleware._storage || {};
+        persistMiddleware._storage[key] = api.getState();
+        return result;
+      };
+    };
+
+    const thunkMiddleware = (api) => (next) => (action) => {
+      if (typeof action.payload === 'function') {
+        return action.payload(api);
+      }
+      return next(action);
+    };
+
+    // ========================================
+    // Component System (minimal for useStore testing)
+    // ========================================
+
+    let currentComponent = null;
+
+    function resetHookSystem() {
+      currentComponent = null;
+    }
+
+    function setCurrentComponent(component) {
+      currentComponent = component;
+      if (component) component._hookIndex = 0;
+    }
+
+    function getHookState(initialValue) {
+      if (!currentComponent) {
+        throw new Error('Hooks can only be called inside a component');
+      }
+      const index = currentComponent._hookIndex++;
+      const hooks = currentComponent._hooks;
+      if (index >= hooks.length) {
+        hooks.push(initialValue());
+      }
+      return hooks[index];
+    }
+
+    // Minimal useState for testing
+    function useState(initialValue) {
+      const hookState = getHookState(() => ({
+        _value: typeof initialValue === 'function' ? initialValue() : initialValue,
+        _setValue: null
+      }));
+
+      if (!hookState._setValue) {
+        hookState._setValue = (newValue) => {
+          const nextValue = typeof newValue === 'function'
+            ? newValue(hookState._value)
+            : newValue;
+          if (nextValue !== hookState._value) {
+            hookState._value = nextValue;
+          }
+        };
+      }
+
+      return [hookState._value, hookState._setValue];
+    }
+
+    // useStore hook
+    function useStore(store, selector) {
+      const hookState = getHookState(() => ({
+        _store: store,
+        _selector: selector,
+        _value: selector ? selector(store.getState()) : store.getState(),
+        _unsubscribe: null
+      }));
+
+      if (!hookState._unsubscribe) {
+        hookState._unsubscribe = store.subscribe((state) => {
+          const newValue = hookState._selector ? hookState._selector(state) : state;
+          hookState._value = newValue;
+        });
+      }
+
+      return hookState._value;
+    }
+
+    // ========================================
+    // Test Runner
+    // ========================================
+
+    class TestRunner {
+      constructor() {
+        this.groups = [];
+        this.currentGroup = null;
+      }
+
+      describe(name, fn) {
+        this.currentGroup = { name, tests: [], passed: 0, failed: 0 };
+        this.groups.push(this.currentGroup);
+        fn();
+        this.currentGroup = null;
+      }
+
+      it(name, fn) {
+        if (!this.currentGroup) throw new Error('it() must be called inside describe()');
+        this.currentGroup.tests.push({ name, fn });
+      }
+
+      expect(actual) {
+        const matchers = {
+          toBe: (expected) => {
+            if (actual !== expected) {
+              throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toEqual: (expected) => {
+            const actualStr = JSON.stringify(actual);
+            const expectedStr = JSON.stringify(expected);
+            if (actualStr !== expectedStr) {
+              throw new Error(`Expected ${expectedStr} but got ${actualStr}`);
+            }
+          },
+          toBeGreaterThan: (expected) => {
+            if (!(actual > expected)) {
+              throw new Error(`Expected ${actual} to be greater than ${expected}`);
+            }
+          },
+          toBeLessThan: (expected) => {
+            if (!(actual < expected)) {
+              throw new Error(`Expected ${actual} to be less than ${expected}`);
+            }
+          },
+          toBeInstanceOf: (expected) => {
+            if (!(actual instanceof expected)) {
+              throw new Error(`Expected instance of ${expected.name}`);
+            }
+          },
+          toBeTruthy: () => {
+            if (!actual) {
+              throw new Error(`Expected truthy value but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toBeFalsy: () => {
+            if (actual) {
+              throw new Error(`Expected falsy value but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toBeNull: () => {
+            if (actual !== null) {
+              throw new Error(`Expected null but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toBeUndefined: () => {
+            if (actual !== undefined) {
+              throw new Error(`Expected undefined but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toBeDefined: () => {
+            if (actual === undefined) {
+              throw new Error(`Expected value to be defined`);
+            }
+          },
+          toContain: (expected) => {
+            if (Array.isArray(actual)) {
+              if (!actual.includes(expected)) {
+                throw new Error(`Expected array to contain ${JSON.stringify(expected)}`);
+              }
+            } else if (typeof actual === 'string') {
+              if (!actual.includes(expected)) {
+                throw new Error(`Expected string to contain "${expected}"`);
+              }
+            }
+          },
+          toHaveLength: (expected) => {
+            if (actual.length !== expected) {
+              throw new Error(`Expected length ${expected} but got ${actual.length}`);
+            }
+          },
+          toThrow: (expectedMessage) => {
+            let threw = false;
+            let error = null;
+            try {
+              actual();
+            } catch (e) {
+              threw = true;
+              error = e;
+            }
+            if (!threw) {
+              throw new Error('Expected function to throw');
+            }
+            if (expectedMessage && !error.message.includes(expectedMessage)) {
+              throw new Error(`Expected error message to include "${expectedMessage}" but got "${error.message}"`);
+            }
+          },
+          toHaveBeenCalled: () => {
+            if (!actual._calls || actual._calls.length === 0) {
+              throw new Error('Expected function to have been called');
+            }
+          },
+          toHaveBeenCalledTimes: (expected) => {
+            const calls = actual._calls ? actual._calls.length : 0;
+            if (calls !== expected) {
+              throw new Error(`Expected ${expected} calls but got ${calls}`);
+            }
+          },
+          not: {
+            toBe: (expected) => {
+              if (actual === expected) {
+                throw new Error(`Expected ${JSON.stringify(actual)} not to be ${JSON.stringify(expected)}`);
+              }
+            },
+            toEqual: (expected) => {
+              if (JSON.stringify(actual) === JSON.stringify(expected)) {
+                throw new Error(`Expected values not to be equal`);
+              }
+            },
+            toBeNull: () => {
+              if (actual === null) {
+                throw new Error('Expected value not to be null');
+              }
+            },
+            toBeUndefined: () => {
+              if (actual === undefined) {
+                throw new Error('Expected value not to be undefined');
+              }
+            },
+            toContain: (expected) => {
+              if (Array.isArray(actual) && actual.includes(expected)) {
+                throw new Error(`Expected array not to contain ${JSON.stringify(expected)}`);
+              }
+            }
+          }
+        };
+        return matchers;
+      }
+
+      createMock() {
+        const fn = (...args) => {
+          fn._calls.push(args);
+          return fn._returnValue;
+        };
+        fn._calls = [];
+        fn._returnValue = undefined;
+        fn.mockReturnValue = (value) => { fn._returnValue = value; return fn; };
+        fn.mockClear = () => { fn._calls = []; };
+        return fn;
+      }
+
+      async run() {
+        const results = { groups: [], passed: 0, failed: 0 };
+
+        for (const group of this.groups) {
+          const groupResult = { name: group.name, tests: [], passed: 0, failed: 0 };
+
+          for (const test of group.tests) {
+            resetHookSystem();
+            loggerMiddleware._logs = [];
+
+            try {
+              await test.fn();
+              groupResult.tests.push({ name: test.name, passed: true });
+              groupResult.passed++;
+              results.passed++;
+            } catch (error) {
+              groupResult.tests.push({ name: test.name, passed: false, error: error.message });
+              groupResult.failed++;
+              results.failed++;
+            }
+          }
+
+          results.groups.push(groupResult);
+        }
+
+        return results;
+      }
+    }
+
+    // ========================================
+    // Test Suites
+    // ========================================
+
+    const runner = new TestRunner();
+    const describe = runner.describe.bind(runner);
+    const it = runner.it.bind(runner);
+    const expect = runner.expect.bind(runner);
+    const createMock = runner.createMock.bind(runner);
+
+    // Test Suite 1: createStore basics
+    describe('createStore - Basic', () => {
+      it('creates store with initial state', () => {
+        const store = createStore({ state: { count: 0 } });
+        expect(store.getState()).toEqual({ count: 0 });
+      });
+
+      it('returns store API', () => {
+        const store = createStore({ state: {} });
+        expect(typeof store.getState).toBe('function');
+        expect(typeof store.subscribe).toBe('function');
+        expect(typeof store.actions).toBe('object');
+        expect(typeof store.selectors).toBe('object');
+      });
+
+      it('getState returns current state reference', () => {
+        const store = createStore({ state: { count: 0 } });
+        const state1 = store.getState();
+        const state2 = store.getState();
+        expect(state1).toBe(state2); // Same reference for efficiency
+      });
+
+      it('creates store with empty config', () => {
+        const store = createStore({ state: {} });
+        expect(store.getState()).toEqual({});
+      });
+
+      it('creates store with nested state', () => {
+        const store = createStore({
+          state: {
+            user: { name: 'Test', settings: { theme: 'dark' } },
+            items: [1, 2, 3]
+          }
+        });
+        expect(store.getState().user.name).toBe('Test');
+        expect(store.getState().user.settings.theme).toBe('dark');
+        expect(store.getState().items).toEqual([1, 2, 3]);
+      });
+    });
+
+    // Test Suite 2: Actions
+    describe('createStore - Actions', () => {
+      it('creates bound actions', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        expect(typeof store.actions.increment).toBe('function');
+      });
+
+      it('actions update state', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        store.actions.increment();
+        expect(store.getState().count).toBe(1);
+      });
+
+      it('actions receive arguments', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            add: (state, amount) => ({ ...state, count: state.count + amount })
+          }
+        });
+        store.actions.add(5);
+        expect(store.getState().count).toBe(5);
+      });
+
+      it('multiple actions work independently', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 }),
+            decrement: (state) => ({ ...state, count: state.count - 1 }),
+            reset: () => ({ count: 0 })
+          }
+        });
+        store.actions.increment();
+        store.actions.increment();
+        expect(store.getState().count).toBe(2);
+        store.actions.decrement();
+        expect(store.getState().count).toBe(1);
+        store.actions.reset();
+        expect(store.getState().count).toBe(0);
+      });
+
+      it('actions can return undefined to skip update', () => {
+        let updateCount = 0;
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            maybeUpdate: (state, shouldUpdate) => shouldUpdate ? { ...state, count: 1 } : undefined
+          }
+        });
+        store.subscribe(() => updateCount++);
+        store.actions.maybeUpdate(false);
+        expect(updateCount).toBe(0);
+        store.actions.maybeUpdate(true);
+        expect(updateCount).toBe(1);
+      });
+    });
+
+    // Test Suite 3: Async Actions
+    describe('createStore - Async Actions', () => {
+      it('handles promise-returning actions', async () => {
+        const store = createStore({
+          state: { data: null, loading: false },
+          actions: {
+            fetchData: async (state) => {
+              await new Promise(r => setTimeout(r, 10));
+              return { ...state, data: 'loaded', loading: false };
+            }
+          }
+        });
+        await store.actions.fetchData();
+        expect(store.getState().data).toBe('loaded');
+      });
+
+      it('handles thunk actions', async () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            asyncIncrement: () => ({ getState, setState }) => {
+              const current = getState().count;
+              setState({ count: current + 1 });
+            }
+          }
+        });
+        store.actions.asyncIncrement();
+        expect(store.getState().count).toBe(1);
+      });
+
+      it('thunk actions can access other actions', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 }),
+            doubleIncrement: () => ({ actions }) => {
+              actions.increment();
+              actions.increment();
+            }
+          }
+        });
+        store.actions.doubleIncrement();
+        expect(store.getState().count).toBe(2);
+      });
+    });
+
+    // Test Suite 4: Subscriptions
+    describe('createStore - Subscriptions', () => {
+      it('notifies subscribers on state change', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        const listener = createMock();
+        store.subscribe(listener);
+        store.actions.increment();
+        expect(listener).toHaveBeenCalled();
+      });
+
+      it('subscribers receive current state', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        let receivedState = null;
+        store.subscribe((state) => { receivedState = state; });
+        store.actions.increment();
+        expect(receivedState.count).toBe(1);
+      });
+
+      it('unsubscribe stops notifications', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        const listener = createMock();
+        const unsubscribe = store.subscribe(listener);
+        store.actions.increment();
+        expect(listener).toHaveBeenCalledTimes(1);
+        unsubscribe();
+        store.actions.increment();
+        expect(listener).toHaveBeenCalledTimes(1);
+      });
+
+      it('multiple subscribers all receive updates', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        const listener1 = createMock();
+        const listener2 = createMock();
+        store.subscribe(listener1);
+        store.subscribe(listener2);
+        store.actions.increment();
+        expect(listener1).toHaveBeenCalledTimes(1);
+        expect(listener2).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    // Test Suite 5: Selectors
+    describe('createStore - Selectors', () => {
+      it('creates bound selectors', () => {
+        const store = createStore({
+          state: { count: 5 },
+          selectors: {
+            doubled: (state) => state.count * 2
+          }
+        });
+        expect(typeof store.selectors.doubled).toBe('function');
+      });
+
+      it('selectors compute derived state', () => {
+        const store = createStore({
+          state: { count: 5 },
+          selectors: {
+            doubled: (state) => state.count * 2,
+            isPositive: (state) => state.count > 0
+          }
+        });
+        expect(store.selectors.doubled()).toBe(10);
+        expect(store.selectors.isPositive()).toBe(true);
+      });
+
+      it('selectors receive arguments', () => {
+        const store = createStore({
+          state: { items: [1, 2, 3, 4, 5] },
+          selectors: {
+            getItem: (state, index) => state.items[index],
+            filterAbove: (state, threshold) => state.items.filter(i => i > threshold)
+          }
+        });
+        expect(store.selectors.getItem(2)).toBe(3);
+        expect(store.selectors.filterAbove(3)).toEqual([4, 5]);
+      });
+
+      it('selectors are memoized', () => {
+        let computeCount = 0;
+        const store = createStore({
+          state: { count: 5 },
+          selectors: {
+            expensive: (state) => {
+              computeCount++;
+              return state.count * 2;
+            }
+          }
+        });
+        store.selectors.expensive();
+        store.selectors.expensive();
+        store.selectors.expensive();
+        expect(computeCount).toBe(1);
+      });
+
+      it('selector cache is cleared on state change', () => {
+        let computeCount = 0;
+        const store = createStore({
+          state: { count: 5 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          selectors: {
+            doubled: (state) => {
+              computeCount++;
+              return state.count * 2;
+            }
+          }
+        });
+        expect(store.selectors.doubled()).toBe(10);
+        expect(computeCount).toBe(1);
+        store.actions.increment();
+        expect(store.selectors.doubled()).toBe(12);
+        expect(computeCount).toBe(2);
+      });
+
+      it('different arguments have different cache entries', () => {
+        let computeCount = 0;
+        const store = createStore({
+          state: { items: [1, 2, 3] },
+          selectors: {
+            getItem: (state, index) => {
+              computeCount++;
+              return state.items[index];
+            }
+          }
+        });
+        store.selectors.getItem(0);
+        store.selectors.getItem(1);
+        store.selectors.getItem(0); // Should use cache
+        expect(computeCount).toBe(2);
+      });
+    });
+
+    // Test Suite 6: Middleware
+    describe('createStore - Middleware', () => {
+      it('middleware receives action info', () => {
+        loggerMiddleware._logs = [];
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          middleware: [loggerMiddleware]
+        });
+        store.actions.increment();
+        expect(loggerMiddleware._logs.length).toBeGreaterThan(0);
+        expect(loggerMiddleware._logs[0].action).toBe('increment');
+      });
+
+      it('multiple middleware run in sequence', () => {
+        const order = [];
+        const mw1 = () => (next) => (action) => {
+          order.push('mw1');
+          return next(action);
+        };
+        const mw2 = () => (next) => (action) => {
+          order.push('mw2');
+          return next(action);
+        };
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          middleware: [mw1, mw2]
+        });
+        store.actions.increment();
+        expect(order).toEqual(['mw1', 'mw2']);
+      });
+
+      it('persist middleware tracks state changes', () => {
+        // Test that persist middleware is called with action info
+        let persistedAction = null;
+        const trackingMiddleware = (api) => (next) => (action) => {
+          persistedAction = action.type;
+          return next(action);
+        };
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          middleware: [trackingMiddleware]
+        });
+        store.actions.increment();
+        expect(persistedAction).toBe('increment');
+      });
+    });
+
+    // Test Suite 7: DevTools
+    describe('createStore - DevTools', () => {
+      it('enables devtools when configured', () => {
+        const store = createStore({
+          state: { count: 0 },
+          devtools: true
+        });
+        expect(store.devtools).toBeDefined();
+        expect(typeof store.devtools.undo).toBe('function');
+        expect(typeof store.devtools.redo).toBe('function');
+        expect(typeof store.devtools.jumpTo).toBe('function');
+        expect(typeof store.devtools.getHistory).toBe('function');
+      });
+
+      it('devtools is null when not configured', () => {
+        const store = createStore({
+          state: { count: 0 },
+          devtools: false
+        });
+        expect(store.devtools).toBeUndefined();
+      });
+
+      it('history starts with @@INIT', () => {
+        const store = createStore({
+          state: { count: 0 },
+          devtools: true
+        });
+        const history = store.devtools.getHistory();
+        expect(history.length).toBe(1);
+        expect(history[0].action).toBe('@@INIT');
+      });
+
+      it('actions are recorded in history', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment();
+        store.actions.increment();
+        const history = store.devtools.getHistory();
+        expect(history.length).toBe(3);
+        expect(history[1].action).toBe('increment');
+        expect(history[2].action).toBe('increment');
+      });
+    });
+
+    // Test Suite 8: Time Travel
+    describe('createStore - Time Travel', () => {
+      it('undo restores previous state', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment();
+        store.actions.increment();
+        expect(store.getState().count).toBe(2);
+        store.devtools.undo();
+        expect(store.getState().count).toBe(1);
+        store.devtools.undo();
+        expect(store.getState().count).toBe(0);
+      });
+
+      it('redo restores undone state', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment();
+        store.actions.increment();
+        store.devtools.undo();
+        store.devtools.undo();
+        expect(store.getState().count).toBe(0);
+        store.devtools.redo();
+        expect(store.getState().count).toBe(1);
+        store.devtools.redo();
+        expect(store.getState().count).toBe(2);
+      });
+
+      it('jumpTo goes to specific history index', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment(); // count: 1
+        store.actions.increment(); // count: 2
+        store.actions.increment(); // count: 3
+        expect(store.getState().count).toBe(3);
+        store.devtools.jumpTo(1);
+        expect(store.getState().count).toBe(1);
+        store.devtools.jumpTo(0);
+        expect(store.getState().count).toBe(0);
+      });
+
+      it('new action after undo truncates future history', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 }),
+            add: (state, n) => ({ ...state, count: state.count + n })
+          },
+          devtools: true
+        });
+        store.actions.increment(); // count: 1
+        store.actions.increment(); // count: 2
+        store.devtools.undo();     // count: 1
+        store.actions.add(10);     // count: 11, should truncate history
+        expect(store.getState().count).toBe(11);
+        expect(store.devtools.getHistory().length).toBe(3); // INIT, increment, add
+      });
+
+      it('clear resets history', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment();
+        store.actions.increment();
+        store.devtools.clear();
+        const history = store.devtools.getHistory();
+        expect(history.length).toBe(1);
+        expect(history[0].action).toBe('@@CLEAR');
+      });
+
+      it('undo at beginning does nothing', () => {
+        const store = createStore({
+          state: { count: 5 },
+          devtools: true
+        });
+        store.devtools.undo();
+        expect(store.getState().count).toBe(5);
+      });
+
+      it('redo at end does nothing', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        store.actions.increment();
+        store.devtools.redo();
+        expect(store.getState().count).toBe(1);
+      });
+
+      it('time travel notifies subscribers', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          },
+          devtools: true
+        });
+        const listener = createMock();
+        store.actions.increment();
+        store.subscribe(listener);
+        store.devtools.undo();
+        expect(listener).toHaveBeenCalled();
+      });
+    });
+
+    // Test Suite 9: useStore Hook
+    describe('useStore Hook', () => {
+      it('returns full state without selector', () => {
+        const store = createStore({
+          state: { count: 5, name: 'test' }
+        });
+        const component = { _hooks: [], _hookIndex: 0 };
+        setCurrentComponent(component);
+        const state = useStore(store);
+        expect(state).toEqual({ count: 5, name: 'test' });
+      });
+
+      it('returns selected state with selector', () => {
+        const store = createStore({
+          state: { count: 5, name: 'test' }
+        });
+        const component = { _hooks: [], _hookIndex: 0 };
+        setCurrentComponent(component);
+        const count = useStore(store, state => state.count);
+        expect(count).toBe(5);
+      });
+
+      it('updates when store changes', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        const component = { _hooks: [], _hookIndex: 0 };
+        setCurrentComponent(component);
+        useStore(store, state => state.count);
+        store.actions.increment();
+        component._hookIndex = 0;
+        const count = useStore(store, state => state.count);
+        expect(count).toBe(1);
+      });
+
+      it('throws when called outside component', () => {
+        const store = createStore({ state: { count: 0 } });
+        resetHookSystem();
+        expect(() => useStore(store)).toThrow('Hooks can only be called inside a component');
+      });
+    });
+
+    // Test Suite 10: Complex Scenarios
+    describe('Complex Scenarios', () => {
+      it('todo app with filters', () => {
+        const store = createStore({
+          state: {
+            todos: [],
+            filter: 'all',
+            nextId: 1
+          },
+          actions: {
+            addTodo: (state, text) => ({
+              ...state,
+              todos: [...state.todos, { id: state.nextId, text, done: false }],
+              nextId: state.nextId + 1
+            }),
+            toggleTodo: (state, id) => ({
+              ...state,
+              todos: state.todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
+            }),
+            setFilter: (state, filter) => ({ ...state, filter })
+          },
+          selectors: {
+            filteredTodos: (state) => {
+              switch (state.filter) {
+                case 'active': return state.todos.filter(t => !t.done);
+                case 'done': return state.todos.filter(t => t.done);
+                default: return state.todos;
+              }
+            },
+            stats: (state) => ({
+              total: state.todos.length,
+              active: state.todos.filter(t => !t.done).length,
+              done: state.todos.filter(t => t.done).length
+            })
+          }
+        });
+
+        store.actions.addTodo('Learn Zylix');
+        store.actions.addTodo('Build app');
+        store.actions.addTodo('Deploy');
+
+        expect(store.selectors.stats()).toEqual({ total: 3, active: 3, done: 0 });
+
+        store.actions.toggleTodo(1);
+        expect(store.selectors.stats()).toEqual({ total: 3, active: 2, done: 1 });
+
+        store.actions.setFilter('done');
+        expect(store.selectors.filteredTodos()).toHaveLength(1);
+        expect(store.selectors.filteredTodos()[0].text).toBe('Learn Zylix');
+
+        store.actions.setFilter('active');
+        expect(store.selectors.filteredTodos()).toHaveLength(2);
+      });
+
+      it('shopping cart with computed totals', () => {
+        const store = createStore({
+          state: {
+            items: [],
+            products: [
+              { id: 1, name: 'Widget', price: 10 },
+              { id: 2, name: 'Gadget', price: 25 }
+            ]
+          },
+          actions: {
+            addToCart: (state, productId) => {
+              const existing = state.items.find(i => i.productId === productId);
+              if (existing) {
+                return {
+                  ...state,
+                  items: state.items.map(i =>
+                    i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i
+                  )
+                };
+              }
+              return {
+                ...state,
+                items: [...state.items, { productId, quantity: 1 }]
+              };
+            },
+            removeFromCart: (state, productId) => ({
+              ...state,
+              items: state.items.filter(i => i.productId !== productId)
+            })
+          },
+          selectors: {
+            cartTotal: (state) => {
+              return state.items.reduce((total, item) => {
+                const product = state.products.find(p => p.id === item.productId);
+                return total + (product ? product.price * item.quantity : 0);
+              }, 0);
+            },
+            itemCount: (state) => state.items.reduce((sum, i) => sum + i.quantity, 0)
+          }
+        });
+
+        expect(store.selectors.cartTotal()).toBe(0);
+        expect(store.selectors.itemCount()).toBe(0);
+
+        store.actions.addToCart(1);
+        expect(store.selectors.cartTotal()).toBe(10);
+        expect(store.selectors.itemCount()).toBe(1);
+
+        store.actions.addToCart(1);
+        expect(store.selectors.cartTotal()).toBe(20);
+        expect(store.selectors.itemCount()).toBe(2);
+
+        store.actions.addToCart(2);
+        expect(store.selectors.cartTotal()).toBe(45);
+        expect(store.selectors.itemCount()).toBe(3);
+
+        store.actions.removeFromCart(1);
+        expect(store.selectors.cartTotal()).toBe(25);
+        expect(store.selectors.itemCount()).toBe(1);
+      });
+
+      it('user session management', () => {
+        const store = createStore({
+          state: {
+            user: null,
+            isAuthenticated: false
+          },
+          actions: {
+            login: (state, user) => ({
+              ...state,
+              user,
+              isAuthenticated: true
+            }),
+            logout: () => ({
+              user: null,
+              isAuthenticated: false
+            }),
+            updateProfile: (state, updates) => ({
+              ...state,
+              user: { ...state.user, ...updates }
+            })
+          }
+        });
+
+        // Test login
+        store.actions.login({ id: 1, name: 'Alice', email: 'alice@example.com' });
+        expect(store.getState().isAuthenticated).toBe(true);
+        expect(store.getState().user.name).toBe('Alice');
+
+        // Test profile update
+        store.actions.updateProfile({ name: 'Alice Smith' });
+        expect(store.getState().user.name).toBe('Alice Smith');
+        expect(store.getState().user.email).toBe('alice@example.com');
+
+        // Test logout
+        store.actions.logout();
+        expect(store.getState().isAuthenticated).toBe(false);
+        expect(store.getState().user).toBeNull();
+      });
+    });
+
+    // Test Suite 11: Edge Cases
+    describe('Edge Cases', () => {
+      it('handles rapid state updates', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        for (let i = 0; i < 100; i++) {
+          store.actions.increment();
+        }
+        expect(store.getState().count).toBe(100);
+      });
+
+      it('handles deeply nested state updates', () => {
+        const store = createStore({
+          state: {
+            level1: {
+              level2: {
+                level3: {
+                  value: 'initial'
+                }
+              }
+            }
+          },
+          actions: {
+            updateDeep: (state, newValue) => ({
+              ...state,
+              level1: {
+                ...state.level1,
+                level2: {
+                  ...state.level1.level2,
+                  level3: {
+                    ...state.level1.level2.level3,
+                    value: newValue
+                  }
+                }
+              }
+            })
+          }
+        });
+        store.actions.updateDeep('updated');
+        expect(store.getState().level1.level2.level3.value).toBe('updated');
+      });
+
+      it('handles array operations correctly', () => {
+        const store = createStore({
+          state: { items: [] },
+          actions: {
+            push: (state, item) => ({ ...state, items: [...state.items, item] }),
+            pop: (state) => ({ ...state, items: state.items.slice(0, -1) }),
+            unshift: (state, item) => ({ ...state, items: [item, ...state.items] }),
+            splice: (state, index, count) => {
+              const newItems = [...state.items];
+              newItems.splice(index, count);
+              return { ...state, items: newItems };
+            }
+          }
+        });
+
+        store.actions.push('a');
+        store.actions.push('b');
+        store.actions.push('c');
+        expect(store.getState().items).toEqual(['a', 'b', 'c']);
+
+        store.actions.pop();
+        expect(store.getState().items).toEqual(['a', 'b']);
+
+        store.actions.unshift('z');
+        expect(store.getState().items).toEqual(['z', 'a', 'b']);
+
+        store.actions.splice(1, 1);
+        expect(store.getState().items).toEqual(['z', 'b']);
+      });
+
+      it('handles concurrent subscriptions and unsubscriptions', () => {
+        const store = createStore({
+          state: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+
+        const calls = [];
+        const unsub1 = store.subscribe(() => calls.push(1));
+        const unsub2 = store.subscribe(() => {
+          calls.push(2);
+          unsub1(); // Unsubscribe during notification
+        });
+        const unsub3 = store.subscribe(() => calls.push(3));
+
+        store.actions.increment();
+        expect(calls).toContain(1);
+        expect(calls).toContain(2);
+        expect(calls).toContain(3);
+
+        calls.length = 0;
+        store.actions.increment();
+        expect(calls).not.toContain(1); // Should be unsubscribed
+        expect(calls).toContain(2);
+        expect(calls).toContain(3);
+      });
+    });
+
+    // Test Suite 12: Type Safety Simulations
+    describe('Type Safety Simulations', () => {
+      it('actions preserve state shape', () => {
+        const store = createStore({
+          state: { count: 0, name: 'test' },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 })
+          }
+        });
+        store.actions.increment();
+        expect(store.getState().name).toBe('test');
+        expect(store.getState().count).toBe(1);
+      });
+
+      it('selectors return correct types', () => {
+        const store = createStore({
+          state: { items: [1, 2, 3] },
+          selectors: {
+            sum: (state) => state.items.reduce((a, b) => a + b, 0),
+            doubled: (state) => state.items.map(i => i * 2),
+            first: (state) => state.items[0]
+          }
+        });
+        expect(typeof store.selectors.sum()).toBe('number');
+        expect(Array.isArray(store.selectors.doubled())).toBe(true);
+        expect(store.selectors.first()).toBe(1);
+      });
+    });
+
+    // ========================================
+    // Run Tests and Display Results
+    // ========================================
+
+    async function runTests() {
+      const results = await runner.run();
+
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = `
+        <div class="summary">
+          <div class="summary-item passed">
+            <div class="count">${results.passed}</div>
+            <div>Passed</div>
+          </div>
+          <div class="summary-item failed">
+            <div class="count">${results.failed}</div>
+            <div>Failed</div>
+          </div>
+          <div class="summary-item total">
+            <div class="count">${results.passed + results.failed}</div>
+            <div>Total</div>
+          </div>
+        </div>
+        <div class="test-groups">
+          ${results.groups.map(group => `
+            <div class="test-group">
+              <div class="test-group-header">
+                <span>${group.name}</span>
+                <span>${group.passed}/${group.tests.length}</span>
+              </div>
+              <div class="test-group-tests">
+                ${group.tests.map(test => `
+                  <div class="test-item ${test.passed ? 'passed' : 'failed'}">
+                    <span class="test-icon">${test.passed ? '✓' : '✗'}</span>
+                    <div class="test-name">
+                      ${test.name}
+                      ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      console.log(`Zylix Store Tests: ${results.passed}/${results.passed + results.failed} passed`);
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

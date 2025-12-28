@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Hooks Demo - React-like Component Framework</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    h1 { color: #38bdf8; margin-bottom: 0.5rem; }
+    .subtitle { color: #64748b; margin-bottom: 2rem; }
+    .demo-section {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .demo-section h2 {
+      color: #f1f5f9;
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #2563eb; }
+    button:active { background: #1d4ed8; }
+    button.secondary { background: #475569; }
+    button.secondary:hover { background: #64748b; }
+    button.danger { background: #ef4444; }
+    button.danger:hover { background: #dc2626; }
+    .counter-display {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #38bdf8;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    input[type="text"] {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    .todo-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      background: #0f172a;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+    }
+    .todo-item.completed span {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+    .todo-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 18px;
+      height: 18px;
+    }
+    .todo-item span { flex: 1; }
+    .todo-item button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    .stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+    .stats strong { color: #38bdf8; }
+    .effect-log {
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.875rem;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .effect-log div {
+      color: #94a3b8;
+      margin-bottom: 0.25rem;
+    }
+    .effect-log div:last-child { color: #38bdf8; }
+    .perf-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+    .perf-metric {
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+    .perf-metric .value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #10b981;
+    }
+    .perf-metric .label {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+    .code-block {
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      color: #94a3b8;
+    }
+    .code-block .keyword { color: #c792ea; }
+    .code-block .function { color: #82aaff; }
+    .code-block .string { color: #c3e88d; }
+    .code-block .number { color: #f78c6c; }
+  </style>
+</head>
+<body>
+  <h1>Zylix Hooks Demo</h1>
+  <p class="subtitle">React-like hooks with pure JavaScript - no build step required</p>
+
+  <div id="app"></div>
+
+  <script type="module">
+    // =========================================================================
+    // ZYLIX COMPONENT FRAMEWORK (Minimal Runtime)
+    // =========================================================================
+
+    const Fragment = Symbol.for('zylix.fragment');
+    let currentComponent = null;
+    let rerenderQueue = [];
+    let isBatching = false;
+    let pendingEffects = [];
+
+    // Hyperscript
+    function h(type, props, ...children) {
+      const normalizedProps = props ? { ...props } : {};
+      const flatChildren = flattenChildren(children);
+      if (flatChildren.length > 0) {
+        normalizedProps.children = flatChildren.length === 1 ? flatChildren[0] : flatChildren;
+      }
+      const key = normalizedProps.key ?? null;
+      delete normalizedProps.key;
+      return { type, props: normalizedProps, key, _dom: null, _component: null, _children: null };
+    }
+
+    function flattenChildren(children) {
+      const result = [];
+      for (const child of children) {
+        if (child == null || typeof child === 'boolean') continue;
+        if (Array.isArray(child)) {
+          result.push(...flattenChildren(child));
+        } else if (typeof child === 'string' || typeof child === 'number') {
+          result.push({ type: null, props: { textContent: String(child) }, key: null, _dom: null });
+        } else if (child.type !== undefined) {
+          result.push(child);
+        }
+      }
+      return result;
+    }
+
+    // Render
+    function render(vnode, container) {
+      const oldVNode = container._vnode;
+      diff(container, vnode, oldVNode, 0);
+      container._vnode = vnode;
+      flushEffects();
+    }
+
+    function diff(parentDom, newVNode, oldVNode, depth) {
+      if (newVNode === oldVNode) return;
+      if (newVNode == null) {
+        if (oldVNode != null) unmount(oldVNode);
+        return;
+      }
+      newVNode._depth = depth;
+      if (oldVNode == null || oldVNode.type !== newVNode.type) {
+        if (oldVNode != null) unmount(oldVNode);
+        mount(parentDom, newVNode, null, depth);
+        return;
+      }
+      if (typeof newVNode.type === 'function') {
+        diffComponent(parentDom, newVNode, oldVNode, depth);
+      } else if (newVNode.type === Fragment) {
+        diffChildren(parentDom, newVNode, oldVNode, depth);
+      } else if (newVNode.props.textContent !== undefined) {
+        if (newVNode.props.textContent !== oldVNode.props.textContent) {
+          oldVNode._dom.textContent = newVNode.props.textContent;
+        }
+        newVNode._dom = oldVNode._dom;
+      } else {
+        const dom = oldVNode._dom;
+        newVNode._dom = dom;
+        setProps(dom, newVNode.props, oldVNode.props);
+        diffChildren(dom, newVNode, oldVNode, depth);
+      }
+    }
+
+    function mount(parentDom, vnode, beforeNode, depth) {
+      vnode._depth = depth;
+      if (typeof vnode.type === 'function') {
+        const component = {
+          _hooks: [],
+          _hookIndex: 0,
+          _vnode: vnode,
+          _parentDom: parentDom,
+          _pendingEffects: [],
+          _depth: depth,
+        };
+        vnode._component = component;
+        currentComponent = component;
+        component._hookIndex = 0;
+        const rendered = vnode.type(vnode.props);
+        currentComponent = null;
+        if (rendered) {
+          rendered._parent = vnode;
+          vnode._children = [rendered];
+          mount(parentDom, rendered, beforeNode, depth + 1);
+        } else {
+          vnode._children = [];
+        }
+        for (const effect of component._pendingEffects) {
+          pendingEffects.push(effect);
+        }
+        component._pendingEffects = [];
+      } else if (vnode.type === Fragment) {
+        const children = normalizeChildren(vnode.props.children);
+        vnode._children = children;
+        for (const child of children) {
+          child._parent = vnode;
+          mount(parentDom, child, beforeNode, depth + 1);
+        }
+      } else if (vnode.props.textContent !== undefined) {
+        const textNode = document.createTextNode(vnode.props.textContent);
+        vnode._dom = textNode;
+        parentDom.insertBefore(textNode, beforeNode);
+      } else {
+        const dom = document.createElement(vnode.type);
+        vnode._dom = dom;
+        setProps(dom, vnode.props, {});
+        const children = normalizeChildren(vnode.props.children);
+        vnode._children = children;
+        for (const child of children) {
+          child._parent = vnode;
+          mount(dom, child, null, depth + 1);
+        }
+        if (vnode.props.ref) vnode.props.ref.current = dom;
+        parentDom.insertBefore(dom, beforeNode);
+      }
+    }
+
+    function diffComponent(parentDom, newVNode, oldVNode, depth) {
+      const component = oldVNode._component;
+      component._vnode = newVNode;
+      newVNode._component = component;
+      currentComponent = component;
+      component._hookIndex = 0;
+      const rendered = newVNode.type(newVNode.props);
+      currentComponent = null;
+      const oldChildren = oldVNode._children || [];
+      const oldChild = oldChildren[0] || null;
+      if (rendered) {
+        rendered._parent = newVNode;
+        newVNode._children = [rendered];
+        diff(parentDom, rendered, oldChild, depth + 1);
+      } else {
+        newVNode._children = [];
+        if (oldChild) unmount(oldChild);
+      }
+      for (const effect of component._pendingEffects) {
+        pendingEffects.push(effect);
+      }
+      component._pendingEffects = [];
+    }
+
+    function diffChildren(parentDom, newVNode, oldVNode, depth) {
+      const newChildren = normalizeChildren(newVNode.props.children);
+      const oldChildren = oldVNode._children || [];
+      newVNode._children = newChildren;
+
+      const oldKeyMap = new Map();
+      const matchedOld = new Set();
+      for (let i = 0; i < oldChildren.length; i++) {
+        if (oldChildren[i].key != null) oldKeyMap.set(oldChildren[i].key, oldChildren[i]);
+      }
+
+      const matches = [];
+      for (let i = 0; i < newChildren.length; i++) {
+        const newChild = newChildren[i];
+        newChild._parent = newVNode;
+        let oldChild = null;
+        if (newChild.key != null && oldKeyMap.has(newChild.key)) {
+          oldChild = oldKeyMap.get(newChild.key);
+          if (oldChild.type === newChild.type) matchedOld.add(oldChild);
+          else oldChild = null;
+        }
+        if (!oldChild && i < oldChildren.length) {
+          const candidate = oldChildren[i];
+          if (!matchedOld.has(candidate) && candidate.key == null && newChild.key == null && candidate.type === newChild.type) {
+            oldChild = candidate;
+            matchedOld.add(oldChild);
+          }
+        }
+        matches.push({ newChild, oldChild });
+      }
+
+      for (const oldChild of oldChildren) {
+        if (!matchedOld.has(oldChild)) unmount(oldChild);
+      }
+
+      let lastDom = null;
+      for (const { newChild, oldChild } of matches) {
+        if (oldChild) {
+          diff(parentDom, newChild, oldChild, depth + 1);
+          const dom = getDom(newChild);
+          if (dom && lastDom && dom.previousSibling !== lastDom) {
+            parentDom.insertBefore(dom, lastDom.nextSibling);
+          }
+          lastDom = dom || lastDom;
+        } else {
+          const beforeNode = lastDom ? lastDom.nextSibling : parentDom.firstChild;
+          mount(parentDom, newChild, beforeNode, depth + 1);
+          lastDom = getDom(newChild) || lastDom;
+        }
+      }
+    }
+
+    function unmount(vnode) {
+      if (vnode._component) {
+        for (const hook of vnode._component._hooks) {
+          if (hook._cleanup) hook._cleanup();
+        }
+      }
+      if (vnode.props.ref) vnode.props.ref.current = null;
+      if (vnode._children) {
+        for (const child of vnode._children) unmount(child);
+      }
+      if (vnode._dom && vnode._dom.parentNode) {
+        vnode._dom.parentNode.removeChild(vnode._dom);
+      }
+    }
+
+    function getDom(vnode) {
+      if (vnode._dom) return vnode._dom;
+      if (vnode._children && vnode._children.length > 0) return getDom(vnode._children[0]);
+      return null;
+    }
+
+    function normalizeChildren(children) {
+      if (children == null) return [];
+      if (Array.isArray(children)) return flattenChildren(children);
+      return flattenChildren([children]);
+    }
+
+    // Props
+    const SKIP_PROPS = new Set(['children', 'key', 'ref', 'textContent']);
+
+    function setProps(dom, newProps, oldProps) {
+      for (const key of Object.keys(oldProps)) {
+        if (SKIP_PROPS.has(key)) continue;
+        if (!(key in newProps)) setProp(dom, key, null, oldProps[key]);
+      }
+      for (const key of Object.keys(newProps)) {
+        if (SKIP_PROPS.has(key)) continue;
+        if (newProps[key] !== oldProps[key]) setProp(dom, key, newProps[key], oldProps[key]);
+      }
+    }
+
+    function setProp(dom, key, newValue, oldValue) {
+      if (key.startsWith('on') && key.length > 2) {
+        const eventName = key.slice(2).toLowerCase();
+        if (oldValue) dom.removeEventListener(eventName, oldValue);
+        if (newValue) dom.addEventListener(eventName, newValue);
+        return;
+      }
+      if (key === 'style') {
+        if (typeof newValue === 'string') {
+          dom.style.cssText = newValue;
+        } else if (typeof newValue === 'object') {
+          if (typeof oldValue === 'object') {
+            for (const k of Object.keys(oldValue || {})) {
+              if (!(k in (newValue || {}))) dom.style[k] = '';
+            }
+          }
+          for (const k of Object.keys(newValue || {})) {
+            dom.style[k] = newValue[k];
+          }
+        }
+        return;
+      }
+      if (key === 'className' || key === 'class') {
+        dom.setAttribute('class', newValue || '');
+        return;
+      }
+      if (key === 'value') {
+        dom.value = newValue ?? '';
+        return;
+      }
+      if (key === 'checked') {
+        dom.checked = !!newValue;
+        return;
+      }
+      if (newValue === true) dom.setAttribute(key, '');
+      else if (newValue === false || newValue == null) dom.removeAttribute(key);
+      else dom.setAttribute(key, String(newValue));
+    }
+
+    // Hooks
+    function getHookState(initialValue) {
+      if (!currentComponent) throw new Error('Hooks must be called inside a component');
+      const index = currentComponent._hookIndex++;
+      const hooks = currentComponent._hooks;
+      if (index >= hooks.length) hooks.push(initialValue());
+      return hooks[index];
+    }
+
+    function useState(initialState) {
+      const hookState = getHookState(() => ({
+        _value: typeof initialState === 'function' ? initialState() : initialState,
+      }));
+      const component = currentComponent;
+      const setState = (action) => {
+        const newValue = typeof action === 'function' ? action(hookState._value) : action;
+        if (!Object.is(hookState._value, newValue)) {
+          hookState._value = newValue;
+          scheduleRerender(component);
+        }
+      };
+      return [hookState._value, setState];
+    }
+
+    function useEffect(effect, deps) {
+      const hookState = getHookState(() => ({ _args: undefined }));
+      const component = currentComponent;
+      if (argsChanged(hookState._args, deps)) {
+        hookState._args = deps;
+        component._pendingEffects.push(() => {
+          if (hookState._cleanup) hookState._cleanup();
+          hookState._cleanup = effect();
+        });
+      }
+    }
+
+    function useMemo(factory, deps) {
+      const hookState = getHookState(() => ({ _value: undefined, _args: undefined }));
+      if (argsChanged(hookState._args, deps)) {
+        hookState._value = factory();
+        hookState._args = deps;
+      }
+      return hookState._value;
+    }
+
+    function useCallback(callback, deps) {
+      return useMemo(() => callback, deps);
+    }
+
+    function useRef(initialValue) {
+      return useMemo(() => ({ current: initialValue }), []);
+    }
+
+    function argsChanged(oldArgs, newArgs) {
+      if (oldArgs === undefined || newArgs === undefined) return true;
+      if (oldArgs.length !== newArgs.length) return true;
+      for (let i = 0; i < oldArgs.length; i++) {
+        if (!Object.is(oldArgs[i], newArgs[i])) return true;
+      }
+      return false;
+    }
+
+    // Scheduling
+    function scheduleRerender(component) {
+      if (!rerenderQueue.includes(component)) rerenderQueue.push(component);
+      if (!isBatching) {
+        isBatching = true;
+        queueMicrotask(processRerenderQueue);
+      }
+    }
+
+    function processRerenderQueue() {
+      rerenderQueue.sort((a, b) => a._depth - b._depth);
+      const queue = rerenderQueue;
+      rerenderQueue = [];
+      isBatching = false;
+      for (const component of queue) {
+        if (!component._vnode._component) continue;
+        const vnode = component._vnode;
+        const parentDom = component._parentDom;
+        const oldChildren = vnode._children || [];
+        const oldChild = oldChildren[0] || null;
+        currentComponent = component;
+        component._hookIndex = 0;
+        const rendered = vnode.type(vnode.props);
+        currentComponent = null;
+        if (rendered) {
+          rendered._parent = vnode;
+          vnode._children = [rendered];
+          diff(parentDom, rendered, oldChild, component._depth + 1);
+        } else {
+          vnode._children = [];
+          if (oldChild) unmount(oldChild);
+        }
+        for (const effect of component._pendingEffects) {
+          pendingEffects.push(effect);
+        }
+        component._pendingEffects = [];
+      }
+      flushEffects();
+    }
+
+    function flushEffects() {
+      const effects = pendingEffects;
+      pendingEffects = [];
+      for (const effect of effects) effect();
+    }
+
+    // =========================================================================
+    // DEMO COMPONENTS
+    // =========================================================================
+
+    // Counter Component
+    const Counter = () => {
+      const [count, setCount] = useState(0);
+
+      useEffect(() => {
+        document.title = `Count: ${count}`;
+        return () => { document.title = 'Zylix Hooks Demo'; };
+      }, [count]);
+
+      return h('div', { class: 'demo-section' },
+        h('h2', null, '1. useState + useEffect'),
+        h('div', { class: 'counter-display' }, count),
+        h('div', { class: 'button-group' },
+          h('button', { onClick: () => setCount(c => c - 1) }, '-1'),
+          h('button', { class: 'secondary', onClick: () => setCount(0) }, 'Reset'),
+          h('button', { onClick: () => setCount(c => c + 1) }, '+1')
+        )
+      );
+    };
+
+    // Todo Component
+    const TodoApp = () => {
+      const [todos, setTodos] = useState([]);
+      const [input, setInput] = useState('');
+      const inputRef = useRef(null);
+
+      const addTodo = useCallback(() => {
+        if (input.trim()) {
+          setTodos(t => [...t, { id: Date.now(), text: input.trim(), done: false }]);
+          setInput('');
+          inputRef.current?.focus();
+        }
+      }, [input]);
+
+      const toggleTodo = useCallback((id) => {
+        setTodos(t => t.map(todo =>
+          todo.id === id ? { ...todo, done: !todo.done } : todo
+        ));
+      }, []);
+
+      const deleteTodo = useCallback((id) => {
+        setTodos(t => t.filter(todo => todo.id !== id));
+      }, []);
+
+      const stats = useMemo(() => ({
+        total: todos.length,
+        done: todos.filter(t => t.done).length,
+        active: todos.filter(t => !t.done).length,
+      }), [todos]);
+
+      return h('div', { class: 'demo-section' },
+        h('h2', null, '2. Todo App (useMemo, useCallback, useRef)'),
+        h('div', { style: { display: 'flex', gap: '0.5rem' } },
+          h('input', {
+            ref: inputRef,
+            type: 'text',
+            value: input,
+            placeholder: 'Add a todo...',
+            onInput: (e) => setInput(e.target.value),
+            onKeydown: (e) => e.key === 'Enter' && addTodo(),
+            style: 'flex: 1'
+          }),
+          h('button', { onClick: addTodo }, 'Add')
+        ),
+        h('ul', { class: 'todo-list' },
+          todos.map(todo =>
+            h('li', { key: todo.id, class: `todo-item ${todo.done ? 'completed' : ''}` },
+              h('input', {
+                type: 'checkbox',
+                checked: todo.done,
+                onChange: () => toggleTodo(todo.id)
+              }),
+              h('span', null, todo.text),
+              h('button', { class: 'danger', onClick: () => deleteTodo(todo.id) }, 'Delete')
+            )
+          )
+        ),
+        h('div', { class: 'stats' },
+          h('span', null, 'Total: ', h('strong', null, stats.total)),
+          h('span', null, 'Active: ', h('strong', null, stats.active)),
+          h('span', null, 'Done: ', h('strong', null, stats.done))
+        )
+      );
+    };
+
+    // Effect Lifecycle Demo
+    const EffectDemo = () => {
+      const [count, setCount] = useState(0);
+      const [logs, setLogs] = useState([]);
+
+      const addLog = useCallback((msg) => {
+        const time = new Date().toLocaleTimeString();
+        setLogs(l => [...l.slice(-9), `[${time}] ${msg}`]);
+      }, []);
+
+      useEffect(() => {
+        addLog(`Effect: count is now ${count}`);
+        return () => {
+          addLog(`Cleanup: count was ${count}`);
+        };
+      }, [count]);
+
+      useEffect(() => {
+        addLog('Mount: Component mounted');
+        return () => {
+          addLog('Unmount: Component will unmount');
+        };
+      }, []);
+
+      return h('div', { class: 'demo-section' },
+        h('h2', null, '3. Effect Lifecycle'),
+        h('div', { class: 'button-group', style: { marginBottom: '1rem' } },
+          h('button', { onClick: () => setCount(c => c + 1) }, `Increment (${count})`),
+          h('button', { class: 'secondary', onClick: () => setLogs([]) }, 'Clear Logs')
+        ),
+        h('div', { class: 'effect-log' },
+          logs.length === 0
+            ? h('div', null, 'Click "Increment" to see effect lifecycle...')
+            : logs.map((log, i) => h('div', { key: i }, log))
+        )
+      );
+    };
+
+    // Performance Demo
+    const PerfDemo = () => {
+      const [items, setItems] = useState([]);
+      const [renderTime, setRenderTime] = useState(0);
+
+      const addItems = useCallback((count) => {
+        const start = performance.now();
+        const newItems = Array.from({ length: count }, (_, i) => ({
+          id: Date.now() + i,
+          value: Math.random()
+        }));
+        setItems(prev => [...prev, ...newItems]);
+        requestAnimationFrame(() => {
+          setRenderTime(performance.now() - start);
+        });
+      }, []);
+
+      const clearItems = useCallback(() => {
+        setItems([]);
+        setRenderTime(0);
+      }, []);
+
+      return h('div', { class: 'demo-section' },
+        h('h2', null, '4. Performance (Key-based Reconciliation)'),
+        h('div', { class: 'button-group', style: { marginBottom: '1rem' } },
+          h('button', { onClick: () => addItems(100) }, '+100 Items'),
+          h('button', { onClick: () => addItems(1000) }, '+1000 Items'),
+          h('button', { class: 'danger', onClick: clearItems }, 'Clear All')
+        ),
+        h('div', { class: 'perf-metrics' },
+          h('div', { class: 'perf-metric' },
+            h('div', { class: 'value' }, items.length),
+            h('div', { class: 'label' }, 'Items')
+          ),
+          h('div', { class: 'perf-metric' },
+            h('div', { class: 'value' }, renderTime.toFixed(1)),
+            h('div', { class: 'label' }, 'Render (ms)')
+          ),
+          h('div', { class: 'perf-metric' },
+            h('div', { class: 'value' }, items.length > 0 ? (renderTime / items.length * 1000).toFixed(2) : '0'),
+            h('div', { class: 'label' }, 'per item (us)')
+          )
+        )
+      );
+    };
+
+    // Code Example
+    const CodeExample = () => {
+      return h('div', { class: 'demo-section' },
+        h('h2', null, '5. Usage Example'),
+        h('div', { class: 'code-block' },
+          h('pre', null, `// Zylix Component
+const Counter = () => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = \`Count: \${count}\`;
+  }, [count]);
+
+  return h('div', null,
+    h('p', null, \`Count: \${count}\`),
+    h('button', { onClick: () => setCount(c => c + 1) }, '+1')
+  );
+};
+
+render(h(Counter), document.getElementById('app'));`)
+        )
+      );
+    };
+
+    // Main App
+    const App = () => {
+      return h(Fragment, null,
+        h(Counter),
+        h(TodoApp),
+        h(EffectDemo),
+        h(PerfDemo),
+        h(CodeExample)
+      );
+    };
+
+    // Render
+    render(h(App), document.getElementById('app'));
+    console.log('Zylix Hooks Demo loaded - framework size: ~3KB minified');
+  </script>
+</body>
+</html>

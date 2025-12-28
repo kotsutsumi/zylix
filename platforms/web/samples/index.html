@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Samples & Templates</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    h1 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 15px;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      color: #9ca3af;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .category {
+      margin-bottom: 50px;
+    }
+    .category-title {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #a5b4fc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .category-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      border-radius: 2px;
+    }
+    .samples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .sample-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .sample-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .sample-preview {
+      height: 180px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .sample-preview::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+      animation: shimmer 3s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .sample-content {
+      padding: 20px;
+    }
+    .sample-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .sample-description {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    .sample-tags {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 4px 10px;
+      background: rgba(129, 140, 248, 0.2);
+      color: #818cf8;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+    .badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .feature {
+      text-align: center;
+      padding: 30px;
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-description {
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #6b7280;
+    }
+    footer a {
+      color: #818cf8;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Zylix Samples</h1>
+      <p class="subtitle">
+        Explore our collection of starter templates, real-world applications,
+        and performance showcases built with Zylix.
+      </p>
+    </header>
+
+    <!-- Starter Templates -->
+    <section class="category">
+      <h2 class="category-title">Starter Templates</h2>
+      <div class="samples-grid">
+        <a href="hello-world.html" class="sample-card">
+          <div class="sample-preview">
+            <span class="badge">Beginner</span>
+          </div>
+          <div class="sample-content">
+            <h3 class="sample-title">Hello World</h3>
+            <p class="sample-description">
+              The simplest Zylix application. Learn the basics of components,
+              state, and rendering.
+            </p>
+            <div class="sample-tags">
+              <span class="tag">Components</span>
+              <span class="tag">useState</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="counter.html" class="sample-card">
+          <div class="sample-preview">
+            <span class="badge">Beginner</span>
+          </div>
+          <div class="sample-content">
+            <h3 class="sample-title">Counter with Store</h3>
+            <p class="sample-description">
+              State management with Zylix Store. Includes undo/redo,
+              selectors, and action history.
+            </p>
+            <div class="sample-tags">
+              <span class="tag">Store</span>
+              <span class="tag">Actions</span>
+              <span class="tag">Selectors</span>
+            </div>
+          </div>
+        </a>
+
+        <a href="todo-mvc.html" class="sample-card">
+          <div class="sample-preview">
+            <span class="badge">Intermediate</span>
+          </div>
+          <div class="sample-content">
+            <h3 class="sample-title">Todo MVC</h3>
+            <p class="sample-description">
+              Classic TodoMVC implementation with CRUD operations,
+              filtering, and local storage persistence.
+            </p>
+            <div class="sample-tags">
+              <span class="tag">CRUD</span>
+              <span class="tag">Storage</span>
+              <span class="tag">Filtering</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Real-World Apps -->
+    <section class="category">
+      <h2 class="category-title">Real-World Applications</h2>
+      <div class="samples-grid">
+        <a href="dashboard.html" class="sample-card">
+          <div class="sample-preview">
+            <span class="badge">Advanced</span>
+          </div>
+          <div class="sample-content">
+            <h3 class="sample-title">Dashboard</h3>
+            <p class="sample-description">
+              Full-featured admin dashboard with charts, tables,
+              real-time updates, and navigation.
+            </p>
+            <div class="sample-tags">
+              <span class="tag">Charts</span>
+              <span class="tag">Tables</span>
+              <span class="tag">Real-time</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Performance Showcases -->
+    <section class="category">
+      <h2 class="category-title">Performance Showcases</h2>
+      <div class="samples-grid">
+        <a href="particles.html" class="sample-card">
+          <div class="sample-preview">
+            <span class="badge">Showcase</span>
+          </div>
+          <div class="sample-content">
+            <h3 class="sample-title">Particle System</h3>
+            <p class="sample-description">
+              50,000+ particles at 60fps. Interactive mouse attraction,
+              presets, and real-time performance metrics.
+            </p>
+            <div class="sample-tags">
+              <span class="tag">Canvas</span>
+              <span class="tag">60fps</span>
+              <span class="tag">50K Particles</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="feature">
+        <div class="feature-icon">
+          <div class="feature-title">Blazing Fast</div>
+        </div>
+        <p class="feature-description">
+          &lt;15KB bundle size, 60fps animations, zero GC overhead
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <div class="feature-title">Developer Friendly</div>
+        </div>
+        <p class="feature-description">
+          React-like API, TypeScript support, HMR with state preservation
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <div class="feature-title">Cross-Platform</div>
+        </div>
+        <p class="feature-description">
+          Web, iOS, Android, Desktop - one codebase, all platforms
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <div class="feature-title">Production Ready</div>
+        </div>
+        <p class="feature-description">
+          DevTools, testing utilities, and comprehensive documentation
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      <p>
+        Built with Zylix v0.25.0 |
+        <a href="https://github.com/kotsutsumi/zylix">GitHub</a> |
+        <a href="../index.html">Documentation</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

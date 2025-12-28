@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Counter with Store</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #app { width: 100%; max-width: 600px; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    // =========================================================================
+    // Zylix Counter - State Management Example
+    // =========================================================================
+
+    // Zylix Core (simplified)
+    const { h, render, useState, useEffect, useMemo } = (() => {
+      let hooks = [];
+      let hookIndex = 0;
+      let rootComponent = null;
+      let rootContainer = null;
+
+      function h(type, props, ...children) {
+        return { type, props: props || {}, children: children.flat() };
+      }
+
+      function createElement(vnode) {
+        if (vnode == null) return document.createTextNode('');
+        if (typeof vnode === 'string' || typeof vnode === 'number') {
+          return document.createTextNode(vnode);
+        }
+        if (typeof vnode.type === 'function') {
+          const result = vnode.type(vnode.props);
+          return createElement(result);
+        }
+        const element = document.createElement(vnode.type);
+        for (const [key, value] of Object.entries(vnode.props)) {
+          if (key.startsWith('on')) {
+            element.addEventListener(key.slice(2).toLowerCase(), value);
+          } else if (key === 'style' && typeof value === 'object') {
+            Object.assign(element.style, value);
+          } else if (key === 'className') {
+            element.className = value;
+          } else {
+            element.setAttribute(key, value);
+          }
+        }
+        vnode.children.forEach(child => {
+          if (child != null) element.appendChild(createElement(child));
+        });
+        return element;
+      }
+
+      function render(vnode, container) {
+        if (typeof vnode.type === 'function') {
+          rootComponent = vnode.type;
+          rootContainer = container;
+        }
+        container.innerHTML = '';
+        hookIndex = 0;
+        container.appendChild(createElement(vnode));
+      }
+
+      function rerender() {
+        if (rootComponent && rootContainer) {
+          hookIndex = 0;
+          rootContainer.innerHTML = '';
+          rootContainer.appendChild(createElement(h(rootComponent)));
+        }
+      }
+
+      function useState(initial) {
+        const idx = hookIndex++;
+        if (hooks[idx] === undefined) {
+          hooks[idx] = typeof initial === 'function' ? initial() : initial;
+        }
+        const setState = (newState) => {
+          hooks[idx] = typeof newState === 'function' ? newState(hooks[idx]) : newState;
+          rerender();
+        };
+        return [hooks[idx], setState];
+      }
+
+      function useEffect(fn, deps) {
+        const idx = hookIndex++;
+        const prev = hooks[idx];
+        const hasChanged = !prev || !deps || deps.some((d, i) => d !== prev.deps?.[i]);
+        if (hasChanged) {
+          if (prev?.cleanup) prev.cleanup();
+          const cleanup = fn();
+          hooks[idx] = { deps, cleanup };
+        }
+      }
+
+      function useMemo(fn, deps) {
+        const idx = hookIndex++;
+        const prev = hooks[idx];
+        const hasChanged = !prev || deps.some((d, i) => d !== prev.deps[i]);
+        if (hasChanged) {
+          hooks[idx] = { value: fn(), deps };
+        }
+        return hooks[idx].value;
+      }
+
+      return { h, render, useState, useEffect, useMemo };
+    })();
+
+    // =========================================================================
+    // Zylix Store (simplified)
+    // =========================================================================
+
+    function createStore(config) {
+      let state = config.state;
+      const listeners = new Set();
+      const history = [];
+      let historyIndex = -1;
+
+      function getState() {
+        return state;
+      }
+
+      function setState(newState) {
+        const prevState = state;
+        state = typeof newState === 'function' ? newState(state) : newState;
+
+        // Record history
+        history.splice(historyIndex + 1);
+        history.push({ prev: prevState, next: state, timestamp: Date.now() });
+        historyIndex = history.length - 1;
+
+        // Notify listeners
+        listeners.forEach(fn => fn(state));
+      }
+
+      function subscribe(fn) {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      }
+
+      function undo() {
+        if (historyIndex > 0) {
+          historyIndex--;
+          state = history[historyIndex].next;
+          listeners.forEach(fn => fn(state));
+          return true;
+        }
+        return false;
+      }
+
+      function redo() {
+        if (historyIndex < history.length - 1) {
+          historyIndex++;
+          state = history[historyIndex].next;
+          listeners.forEach(fn => fn(state));
+          return true;
+        }
+        return false;
+      }
+
+      // Create actions
+      const actions = {};
+      for (const [name, fn] of Object.entries(config.actions || {})) {
+        actions[name] = (...args) => {
+          const newState = fn(state, ...args);
+          setState(newState);
+        };
+      }
+
+      // Create selectors
+      const selectors = {};
+      for (const [name, fn] of Object.entries(config.selectors || {})) {
+        Object.defineProperty(selectors, name, {
+          get: () => fn(state)
+        });
+      }
+
+      return {
+        getState,
+        setState,
+        subscribe,
+        actions,
+        selectors,
+        undo,
+        redo,
+        getHistory: () => history.slice()
+      };
+    }
+
+    // useStore hook
+    function useStore(store, selector = s => s) {
+      const [state, setState] = useState(() => selector(store.getState()));
+
+      useEffect(() => {
+        return store.subscribe(newState => {
+          setState(selector(newState));
+        });
+      }, []);
+
+      return state;
+    }
+
+    // =========================================================================
+    // Counter Store
+    // =========================================================================
+
+    const counterStore = createStore({
+      state: {
+        count: 0,
+        step: 1,
+        history: []
+      },
+
+      actions: {
+        increment(state) {
+          return {
+            ...state,
+            count: state.count + state.step,
+            history: [...state.history, { action: 'increment', value: state.step, time: Date.now() }]
+          };
+        },
+
+        decrement(state) {
+          return {
+            ...state,
+            count: state.count - state.step,
+            history: [...state.history, { action: 'decrement', value: state.step, time: Date.now() }]
+          };
+        },
+
+        setStep(state, step) {
+          return { ...state, step };
+        },
+
+        reset(state) {
+          return {
+            ...state,
+            count: 0,
+            history: [...state.history, { action: 'reset', value: 0, time: Date.now() }]
+          };
+        },
+
+        multiply(state, factor) {
+          return {
+            ...state,
+            count: state.count * factor,
+            history: [...state.history, { action: 'multiply', value: factor, time: Date.now() }]
+          };
+        }
+      },
+
+      selectors: {
+        isPositive: (state) => state.count > 0,
+        isNegative: (state) => state.count < 0,
+        isZero: (state) => state.count === 0,
+        doubled: (state) => state.count * 2,
+        squared: (state) => state.count ** 2
+      }
+    });
+
+    // =========================================================================
+    // Components
+    // =========================================================================
+
+    const styles = {
+      container: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '16px',
+        padding: '30px',
+        textAlign: 'center'
+      },
+      title: {
+        fontSize: '1.5rem',
+        marginBottom: '20px',
+        color: '#818cf8'
+      },
+      countDisplay: {
+        fontSize: '5rem',
+        fontWeight: 'bold',
+        marginBottom: '20px',
+        fontFamily: 'monospace'
+      },
+      buttonGroup: {
+        display: 'flex',
+        gap: '10px',
+        justifyContent: 'center',
+        marginBottom: '20px',
+        flexWrap: 'wrap'
+      },
+      button: {
+        padding: '12px 24px',
+        fontSize: '1.2rem',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        fontWeight: 'bold'
+      },
+      primaryButton: {
+        background: '#4f46e5',
+        color: 'white'
+      },
+      secondaryButton: {
+        background: '#374151',
+        color: 'white'
+      },
+      dangerButton: {
+        background: '#dc2626',
+        color: 'white'
+      },
+      stepControl: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '15px',
+        marginBottom: '20px'
+      },
+      stepInput: {
+        width: '80px',
+        padding: '10px',
+        fontSize: '1rem',
+        border: '1px solid #4f46e5',
+        borderRadius: '6px',
+        background: 'rgba(0,0,0,0.3)',
+        color: 'white',
+        textAlign: 'center'
+      },
+      stats: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '15px',
+        marginTop: '20px',
+        marginBottom: '20px'
+      },
+      statCard: {
+        background: 'rgba(0,0,0,0.2)',
+        padding: '15px',
+        borderRadius: '8px'
+      },
+      statValue: {
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        color: '#818cf8'
+      },
+      statLabel: {
+        fontSize: '0.8rem',
+        color: '#9ca3af',
+        marginTop: '5px'
+      },
+      historySection: {
+        marginTop: '20px',
+        textAlign: 'left'
+      },
+      historyTitle: {
+        fontSize: '1rem',
+        marginBottom: '10px',
+        color: '#a5b4fc'
+      },
+      historyList: {
+        maxHeight: '150px',
+        overflowY: 'auto',
+        background: 'rgba(0,0,0,0.2)',
+        borderRadius: '8px',
+        padding: '10px'
+      },
+      historyItem: {
+        padding: '8px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        fontSize: '0.85rem',
+        display: 'flex',
+        justifyContent: 'space-between'
+      }
+    };
+
+    function Counter() {
+      const state = useStore(counterStore);
+      const { increment, decrement, setStep, reset, multiply } = counterStore.actions;
+
+      const countColor = state.count > 0 ? '#10b981' : state.count < 0 ? '#ef4444' : '#818cf8';
+
+      return h('div', { style: styles.container },
+        h('h1', { style: styles.title }, 'Zylix Counter with Store'),
+
+        // Count Display
+        h('div', {
+          style: { ...styles.countDisplay, color: countColor }
+        }, state.count),
+
+        // Main Buttons
+        h('div', { style: styles.buttonGroup },
+          h('button', {
+            style: { ...styles.button, ...styles.primaryButton },
+            onClick: decrement
+          }, `-${state.step}`),
+          h('button', {
+            style: { ...styles.button, ...styles.dangerButton },
+            onClick: reset
+          }, 'Reset'),
+          h('button', {
+            style: { ...styles.button, ...styles.primaryButton },
+            onClick: increment
+          }, `+${state.step}`)
+        ),
+
+        // Step Control
+        h('div', { style: styles.stepControl },
+          h('span', {}, 'Step:'),
+          h('input', {
+            type: 'number',
+            min: '1',
+            value: state.step,
+            style: styles.stepInput,
+            onInput: (e) => setStep(parseInt(e.target.value) || 1)
+          }),
+          h('button', {
+            style: { ...styles.button, ...styles.secondaryButton, padding: '10px 16px' },
+            onClick: () => multiply(2)
+          }, 'x2'),
+          h('button', {
+            style: { ...styles.button, ...styles.secondaryButton, padding: '10px 16px' },
+            onClick: () => multiply(-1)
+          }, '+/-')
+        ),
+
+        // Undo/Redo
+        h('div', { style: styles.buttonGroup },
+          h('button', {
+            style: { ...styles.button, ...styles.secondaryButton, padding: '10px 16px' },
+            onClick: () => counterStore.undo()
+          }, 'Undo'),
+          h('button', {
+            style: { ...styles.button, ...styles.secondaryButton, padding: '10px 16px' },
+            onClick: () => counterStore.redo()
+          }, 'Redo')
+        ),
+
+        // Stats
+        h('div', { style: styles.stats },
+          h('div', { style: styles.statCard },
+            h('div', { style: styles.statValue }, counterStore.selectors.doubled),
+            h('div', { style: styles.statLabel }, 'Doubled')
+          ),
+          h('div', { style: styles.statCard },
+            h('div', { style: styles.statValue }, counterStore.selectors.squared),
+            h('div', { style: styles.statLabel }, 'Squared')
+          ),
+          h('div', { style: styles.statCard },
+            h('div', { style: styles.statValue }, state.history.length),
+            h('div', { style: styles.statLabel }, 'Actions')
+          )
+        ),
+
+        // History
+        state.history.length > 0 && h('div', { style: styles.historySection },
+          h('div', { style: styles.historyTitle }, 'Action History'),
+          h('div', { style: styles.historyList },
+            ...state.history.slice().reverse().slice(0, 10).map((item, i) =>
+              h('div', { style: styles.historyItem },
+                h('span', {},
+                  item.action === 'increment' ? '+' :
+                  item.action === 'decrement' ? '-' :
+                  item.action === 'multiply' ? 'x' :
+                  item.action
+                ),
+                h('span', { style: { color: '#9ca3af' } },
+                  item.action === 'reset' ? 'Reset' : item.value
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+
+    // =========================================================================
+    // Mount Application
+    // =========================================================================
+
+    render(h(Counter), document.getElementById('app'));
+
+    console.log('Zylix Counter with Store - Running!');
+  </script>
+</body>
+</html>

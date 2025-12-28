@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Fetch - Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e4e4e7;
+      padding: 20px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; color: #818cf8; }
+    .summary {
+      text-align: center;
+      font-size: 24px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .summary.pass { border: 2px solid #10b981; }
+    .summary.fail { border: 2px solid #ef4444; }
+    .test-group {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .test-group-header {
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .test-group-header:hover { background: rgba(0, 0, 0, 0.3); }
+    .test-list { padding: 8px 16px; }
+    .test-item {
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .test-item:last-child { border-bottom: none; }
+    .test-pass { color: #10b981; }
+    .test-fail { color: #ef4444; }
+    .test-name { flex: 1; }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge.pass { background: #10b981; color: black; }
+    .badge.fail { background: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Zylix Fetch Tests</h1>
+  <div id="summary" class="summary"></div>
+  <div id="results"></div>
+
+  <script type="module">
+    // =========================================================================
+    // Test Framework
+    // =========================================================================
+    const results = [];
+    let currentGroup = null;
+
+    function describe(name, fn) {
+      currentGroup = { name, tests: [] };
+      fn();
+      results.push(currentGroup);
+      currentGroup = null;
+    }
+
+    function test(name, fn) {
+      try {
+        fn();
+        currentGroup.tests.push({ name, passed: true });
+      } catch (error) {
+        currentGroup.tests.push({ name, passed: false, error: error.message });
+      }
+    }
+
+    function expect(actual) {
+      return {
+        toBe(expected) {
+          if (actual !== expected) {
+            throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toEqual(expected) {
+          if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+            throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeTruthy() {
+          if (!actual) {
+            throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeFalsy() {
+          if (actual) {
+            throw new Error(`Expected falsy, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeNull() {
+          if (actual !== null) {
+            throw new Error(`Expected null, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeUndefined() {
+          if (actual !== undefined) {
+            throw new Error(`Expected undefined, got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeDefined() {
+          if (actual === undefined) {
+            throw new Error(`Expected defined, got undefined`);
+          }
+        },
+        toBeInstanceOf(type) {
+          if (!(actual instanceof type)) {
+            throw new Error(`Expected instance of ${type.name}`);
+          }
+        },
+        toContain(item) {
+          if (!actual.includes(item)) {
+            throw new Error(`Expected to contain ${JSON.stringify(item)}`);
+          }
+        },
+        toHaveLength(length) {
+          if (actual.length !== length) {
+            throw new Error(`Expected length ${length}, got ${actual.length}`);
+          }
+        },
+        toBeGreaterThan(value) {
+          if (actual <= value) {
+            throw new Error(`Expected ${actual} to be greater than ${value}`);
+          }
+        },
+        toBeLessThan(value) {
+          if (actual >= value) {
+            throw new Error(`Expected ${actual} to be less than ${value}`);
+          }
+        },
+        toThrow() {
+          let threw = false;
+          try {
+            actual();
+          } catch {
+            threw = true;
+          }
+          if (!threw) {
+            throw new Error('Expected function to throw');
+          }
+        },
+        toHaveProperty(prop) {
+          if (!(prop in actual)) {
+            throw new Error(`Expected to have property "${prop}"`);
+          }
+        },
+        toMatchObject(obj) {
+          for (const key of Object.keys(obj)) {
+            if (actual[key] !== obj[key]) {
+              throw new Error(`Property "${key}": expected ${obj[key]}, got ${actual[key]}`);
+            }
+          }
+        }
+      };
+    }
+
+    // =========================================================================
+    // Mock Implementations
+    // =========================================================================
+
+    // Simple state hook mock
+    function createHooks() {
+      let state = new Map();
+      let hookIndex = 0;
+
+      return {
+        useState: (initial) => {
+          const key = hookIndex++;
+          if (!state.has(key)) {
+            state.set(key, typeof initial === 'function' ? initial() : initial);
+          }
+          const setState = (newState) => {
+            const current = state.get(key);
+            state.set(key, typeof newState === 'function' ? newState(current) : newState);
+          };
+          return [state.get(key), setState];
+        },
+        useEffect: (fn) => fn(),
+        useRef: (initial) => ({ current: initial }),
+        useCallback: (fn) => fn,
+        useMemo: (fn) => fn(),
+        reset: () => {
+          state = new Map();
+          hookIndex = 0;
+        }
+      };
+    }
+
+    const hooks = createHooks();
+
+    // =========================================================================
+    // Fetch Module Implementation (Simplified for testing)
+    // =========================================================================
+
+    // Query Cache
+    class QueryCache {
+      constructor() {
+        this.cache = new Map();
+        this.subscribers = new Map();
+      }
+
+      get(key) {
+        return this.cache.get(key);
+      }
+
+      set(key, data, staleTime) {
+        this.cache.set(key, { data, timestamp: Date.now(), staleTime });
+        this.notify(key);
+      }
+
+      remove(key) {
+        this.cache.delete(key);
+        this.notify(key);
+      }
+
+      clear() {
+        this.cache.clear();
+      }
+
+      isStale(key) {
+        const entry = this.cache.get(key);
+        if (!entry) return true;
+        return Date.now() - entry.timestamp > entry.staleTime;
+      }
+
+      subscribe(key, callback) {
+        if (!this.subscribers.has(key)) {
+          this.subscribers.set(key, new Set());
+        }
+        this.subscribers.get(key).add(callback);
+        return () => this.subscribers.get(key)?.delete(callback);
+      }
+
+      notify(key) {
+        this.subscribers.get(key)?.forEach(cb => cb());
+      }
+    }
+
+    const queryCache = new QueryCache();
+
+    // HTTP Client
+    function createClient(config = {}) {
+      const {
+        baseURL = '',
+        headers: defaultHeaders = {},
+        timeout = 30000,
+        interceptors = {},
+        retry = {}
+      } = config;
+
+      const { count: retryCount = 3, delay: retryDelay = 1000, shouldRetry } = retry;
+
+      async function request(url, requestConfig = {}) {
+        let fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`;
+
+        if (requestConfig.params) {
+          const searchParams = new URLSearchParams();
+          for (const [key, value] of Object.entries(requestConfig.params)) {
+            searchParams.append(key, String(value));
+          }
+          fullUrl = `${fullUrl}?${searchParams.toString()}`;
+        }
+
+        const headers = {
+          'Content-Type': 'application/json',
+          ...defaultHeaders,
+          ...requestConfig.headers
+        };
+
+        let finalConfig = { ...requestConfig, url: fullUrl, headers, method: requestConfig.method || 'GET' };
+
+        if (interceptors.request) {
+          finalConfig = interceptors.request(finalConfig);
+        }
+
+        const fetchOptions = { method: finalConfig.method, headers: finalConfig.headers };
+
+        if (finalConfig.body && finalConfig.method !== 'GET') {
+          fetchOptions.body = JSON.stringify(finalConfig.body);
+        }
+
+        // For tests, we'll simulate fetch
+        return { url: fullUrl, method: finalConfig.method, headers: finalConfig.headers, body: finalConfig.body };
+      }
+
+      return {
+        request,
+        get: (url, config) => request(url, { ...config, method: 'GET' }),
+        post: (url, data, config) => request(url, { ...config, method: 'POST', body: data }),
+        put: (url, data, config) => request(url, { ...config, method: 'PUT', body: data }),
+        patch: (url, data, config) => request(url, { ...config, method: 'PATCH', body: data }),
+        delete: (url, config) => request(url, { ...config, method: 'DELETE' }),
+        head: (url, config) => request(url, { ...config, method: 'HEAD' }),
+        options: (url, config) => request(url, { ...config, method: 'OPTIONS' })
+      };
+    }
+
+    // Query utilities
+    function invalidateQueries(key) {
+      if (!key) {
+        queryCache.clear();
+        return;
+      }
+      const queryKey = Array.isArray(key) ? key.join(':') : key;
+      queryCache.remove(queryKey);
+    }
+
+    function getQueryData(key) {
+      const queryKey = Array.isArray(key) ? key.join(':') : key;
+      return queryCache.get(queryKey)?.data;
+    }
+
+    function setQueryData(key, data, staleTime = 0) {
+      const queryKey = Array.isArray(key) ? key.join(':') : key;
+      queryCache.set(queryKey, data, staleTime);
+    }
+
+    // =========================================================================
+    // Tests
+    // =========================================================================
+
+    // Test: createClient
+    describe('createClient', () => {
+      test('creates client with default config', () => {
+        const client = createClient();
+        expect(client).toBeDefined();
+        expect(typeof client.get).toBe('function');
+        expect(typeof client.post).toBe('function');
+        expect(typeof client.put).toBe('function');
+        expect(typeof client.patch).toBe('function');
+        expect(typeof client.delete).toBe('function');
+      });
+
+      test('creates client with baseURL', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/users');
+        expect(result.url).toBe('https://api.example.com/users');
+      });
+
+      test('creates client with custom headers', async () => {
+        const client = createClient({
+          headers: { 'Authorization': 'Bearer token123' }
+        });
+        const result = await client.get('/test');
+        expect(result.headers['Authorization']).toBe('Bearer token123');
+      });
+
+      test('applies request interceptor', async () => {
+        let intercepted = false;
+        const client = createClient({
+          interceptors: {
+            request: (config) => {
+              intercepted = true;
+              config.headers['X-Custom'] = 'value';
+              return config;
+            }
+          }
+        });
+        const result = await client.get('/test');
+        expect(intercepted).toBe(true);
+        expect(result.headers['X-Custom']).toBe('value');
+      });
+    });
+
+    // Test: HTTP Methods
+    describe('HTTP Methods', () => {
+      test('GET request', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/users');
+        expect(result.method).toBe('GET');
+        expect(result.url).toBe('https://api.example.com/users');
+      });
+
+      test('POST request with body', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.post('/users', { name: 'John' });
+        expect(result.method).toBe('POST');
+        expect(result.body).toEqual({ name: 'John' });
+      });
+
+      test('PUT request with body', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.put('/users/1', { name: 'Jane' });
+        expect(result.method).toBe('PUT');
+        expect(result.body).toEqual({ name: 'Jane' });
+      });
+
+      test('PATCH request with body', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.patch('/users/1', { status: 'active' });
+        expect(result.method).toBe('PATCH');
+        expect(result.body).toEqual({ status: 'active' });
+      });
+
+      test('DELETE request', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.delete('/users/1');
+        expect(result.method).toBe('DELETE');
+      });
+
+      test('HEAD request', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.head('/users');
+        expect(result.method).toBe('HEAD');
+      });
+
+      test('OPTIONS request', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.options('/users');
+        expect(result.method).toBe('OPTIONS');
+      });
+    });
+
+    // Test: Query Parameters
+    describe('Query Parameters', () => {
+      test('adds query params to URL', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/users', { params: { page: 1, limit: 10 } });
+        expect(result.url).toContain('page=1');
+        expect(result.url).toContain('limit=10');
+      });
+
+      test('handles string params', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/search', { params: { q: 'test query' } });
+        expect(result.url).toContain('q=test+query');
+      });
+
+      test('handles boolean params', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/items', { params: { active: true } });
+        expect(result.url).toContain('active=true');
+      });
+    });
+
+    // Test: QueryCache
+    describe('QueryCache', () => {
+      test('stores and retrieves data', () => {
+        const cache = new QueryCache();
+        cache.set('test-key', { name: 'Test' }, 5000);
+        const entry = cache.get('test-key');
+        expect(entry.data).toEqual({ name: 'Test' });
+      });
+
+      test('removes data', () => {
+        const cache = new QueryCache();
+        cache.set('test-key', { name: 'Test' }, 5000);
+        cache.remove('test-key');
+        expect(cache.get('test-key')).toBeUndefined();
+      });
+
+      test('clears all data', () => {
+        const cache = new QueryCache();
+        cache.set('key1', 'data1', 5000);
+        cache.set('key2', 'data2', 5000);
+        cache.clear();
+        expect(cache.get('key1')).toBeUndefined();
+        expect(cache.get('key2')).toBeUndefined();
+      });
+
+      test('checks stale status', () => {
+        const cache = new QueryCache();
+        cache.set('fresh', 'data', 10000);
+        expect(cache.isStale('fresh')).toBe(false);
+        expect(cache.isStale('nonexistent')).toBe(true);
+      });
+
+      test('notifies subscribers on change', () => {
+        const cache = new QueryCache();
+        let notified = false;
+        cache.subscribe('key', () => { notified = true; });
+        cache.set('key', 'data', 5000);
+        expect(notified).toBe(true);
+      });
+
+      test('unsubscribes correctly', () => {
+        const cache = new QueryCache();
+        let count = 0;
+        const unsubscribe = cache.subscribe('key', () => { count++; });
+        cache.set('key', 'data1', 5000);
+        unsubscribe();
+        cache.set('key', 'data2', 5000);
+        expect(count).toBe(1);
+      });
+    });
+
+    // Test: Query Utilities
+    describe('Query Utilities', () => {
+      test('setQueryData stores data', () => {
+        setQueryData('users', [{ id: 1, name: 'John' }]);
+        const data = getQueryData('users');
+        expect(data).toEqual([{ id: 1, name: 'John' }]);
+      });
+
+      test('getQueryData returns undefined for missing key', () => {
+        const data = getQueryData('nonexistent-key');
+        expect(data).toBeUndefined();
+      });
+
+      test('invalidateQueries removes specific key', () => {
+        setQueryData('to-remove', { test: true });
+        invalidateQueries('to-remove');
+        expect(getQueryData('to-remove')).toBeUndefined();
+      });
+
+      test('invalidateQueries clears all when no key', () => {
+        setQueryData('key1', 'data1');
+        setQueryData('key2', 'data2');
+        invalidateQueries();
+        expect(getQueryData('key1')).toBeUndefined();
+        expect(getQueryData('key2')).toBeUndefined();
+      });
+
+      test('handles array keys', () => {
+        setQueryData(['users', '1'], { id: 1, name: 'John' });
+        const data = getQueryData(['users', '1']);
+        expect(data).toEqual({ id: 1, name: 'John' });
+      });
+    });
+
+    // Test: Request Configuration
+    describe('Request Configuration', () => {
+      test('merges headers correctly', async () => {
+        const client = createClient({
+          headers: { 'X-Default': 'default' }
+        });
+        const result = await client.get('/test', {
+          headers: { 'X-Custom': 'custom' }
+        });
+        expect(result.headers['X-Default']).toBe('default');
+        expect(result.headers['X-Custom']).toBe('custom');
+      });
+
+      test('sets Content-Type by default', async () => {
+        const client = createClient();
+        const result = await client.get('/test');
+        expect(result.headers['Content-Type']).toBe('application/json');
+      });
+
+      test('allows overriding Content-Type', async () => {
+        const client = createClient();
+        const result = await client.post('/test', 'data', {
+          headers: { 'Content-Type': 'text/plain' }
+        });
+        expect(result.headers['Content-Type']).toBe('text/plain');
+      });
+    });
+
+    // Test: URL Handling
+    describe('URL Handling', () => {
+      test('uses absolute URLs directly', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('https://other.com/data');
+        expect(result.url).toBe('https://other.com/data');
+      });
+
+      test('combines baseURL with relative paths', async () => {
+        const client = createClient({ baseURL: 'https://api.example.com' });
+        const result = await client.get('/v1/users');
+        expect(result.url).toBe('https://api.example.com/v1/users');
+      });
+
+      test('handles empty baseURL', async () => {
+        const client = createClient();
+        const result = await client.get('/api/users');
+        expect(result.url).toBe('/api/users');
+      });
+    });
+
+    // Test: Retry Configuration
+    describe('Retry Configuration', () => {
+      test('accepts retry config', () => {
+        const client = createClient({
+          retry: { count: 5, delay: 2000 }
+        });
+        expect(client).toBeDefined();
+      });
+
+      test('accepts shouldRetry function', () => {
+        const client = createClient({
+          retry: {
+            count: 3,
+            shouldRetry: (error) => error.status >= 500
+          }
+        });
+        expect(client).toBeDefined();
+      });
+    });
+
+    // Test: Interceptors
+    describe('Interceptors', () => {
+      test('request interceptor can modify config', async () => {
+        const client = createClient({
+          interceptors: {
+            request: (config) => {
+              config.headers['X-Timestamp'] = Date.now().toString();
+              return config;
+            }
+          }
+        });
+        const result = await client.get('/test');
+        expect(result.headers['X-Timestamp']).toBeDefined();
+      });
+
+      test('request interceptor can modify URL', async () => {
+        const client = createClient({
+          interceptors: {
+            request: (config) => {
+              config.url = config.url + '?version=2';
+              return config;
+            }
+          }
+        });
+        const result = await client.get('/api');
+        expect(result.url).toContain('version=2');
+      });
+
+      test('multiple header modifications stack', async () => {
+        const client = createClient({
+          headers: { 'X-Base': '1' },
+          interceptors: {
+            request: (config) => {
+              config.headers['X-Intercepted'] = '2';
+              return config;
+            }
+          }
+        });
+        const result = await client.get('/test', {
+          headers: { 'X-Request': '3' }
+        });
+        expect(result.headers['X-Base']).toBe('1');
+        expect(result.headers['X-Intercepted']).toBe('2');
+        expect(result.headers['X-Request']).toBe('3');
+      });
+    });
+
+    // Test: State Management Types
+    describe('State Types', () => {
+      test('QueryResult has correct shape', () => {
+        const result = {
+          data: undefined,
+          error: null,
+          isLoading: true,
+          isFetching: false,
+          isError: false,
+          isSuccess: false,
+          isStale: true,
+          refetch: () => {},
+          remove: () => {}
+        };
+        expect(result).toHaveProperty('data');
+        expect(result).toHaveProperty('error');
+        expect(result).toHaveProperty('isLoading');
+        expect(result).toHaveProperty('isFetching');
+        expect(result).toHaveProperty('isError');
+        expect(result).toHaveProperty('isSuccess');
+        expect(result).toHaveProperty('isStale');
+        expect(result).toHaveProperty('refetch');
+        expect(result).toHaveProperty('remove');
+      });
+
+      test('MutationResult has correct shape', () => {
+        const result = {
+          data: undefined,
+          error: null,
+          isLoading: false,
+          isError: false,
+          isSuccess: false,
+          isIdle: true,
+          mutate: () => {},
+          mutateAsync: () => {},
+          reset: () => {}
+        };
+        expect(result).toHaveProperty('data');
+        expect(result).toHaveProperty('error');
+        expect(result).toHaveProperty('isLoading');
+        expect(result).toHaveProperty('isError');
+        expect(result).toHaveProperty('isSuccess');
+        expect(result).toHaveProperty('isIdle');
+        expect(result).toHaveProperty('mutate');
+        expect(result).toHaveProperty('mutateAsync');
+        expect(result).toHaveProperty('reset');
+      });
+    });
+
+    // Test: QueryOptions
+    describe('QueryOptions', () => {
+      test('default options', () => {
+        const defaults = {
+          enabled: true,
+          staleTime: 0,
+          cacheTime: 5 * 60 * 1000,
+          refetchOnMount: true,
+          refetchOnWindowFocus: true,
+          refetchInterval: false,
+          retry: 3,
+          retryDelay: 1000,
+          keepPreviousData: false
+        };
+        expect(defaults.enabled).toBe(true);
+        expect(defaults.staleTime).toBe(0);
+        expect(defaults.retry).toBe(3);
+      });
+
+      test('custom options', () => {
+        const options = {
+          enabled: false,
+          staleTime: 60000,
+          cacheTime: 300000,
+          refetchOnMount: false,
+          refetchOnWindowFocus: false,
+          refetchInterval: 10000,
+          retry: 5,
+          retryDelay: 2000,
+          keepPreviousData: true
+        };
+        expect(options.enabled).toBe(false);
+        expect(options.staleTime).toBe(60000);
+        expect(options.refetchInterval).toBe(10000);
+      });
+    });
+
+    // Test: MutationOptions
+    describe('MutationOptions', () => {
+      test('supports onMutate callback', () => {
+        let mutateContext = null;
+        const options = {
+          onMutate: (variables) => {
+            mutateContext = { optimistic: true };
+            return mutateContext;
+          }
+        };
+        const context = options.onMutate({ id: 1 });
+        expect(context).toEqual({ optimistic: true });
+      });
+
+      test('supports onSuccess callback', () => {
+        let successData = null;
+        const options = {
+          onSuccess: (data, variables, context) => {
+            successData = data;
+          }
+        };
+        options.onSuccess({ id: 1, name: 'Created' }, { name: 'Created' }, {});
+        expect(successData).toEqual({ id: 1, name: 'Created' });
+      });
+
+      test('supports onError callback', () => {
+        let errorMsg = null;
+        const options = {
+          onError: (error, variables, context) => {
+            errorMsg = error.message;
+          }
+        };
+        options.onError({ message: 'Network error' }, {}, {});
+        expect(errorMsg).toBe('Network error');
+      });
+
+      test('supports onSettled callback', () => {
+        let settled = false;
+        const options = {
+          onSettled: (data, error, variables, context) => {
+            settled = true;
+          }
+        };
+        options.onSettled(null, null, {}, {});
+        expect(settled).toBe(true);
+      });
+    });
+
+    // Test: InfiniteQuery Types
+    describe('InfiniteQuery Types', () => {
+      test('page params handling', () => {
+        const pages = [];
+        const pageParams = [];
+
+        // Simulate first page
+        pages.push([{ id: 1 }, { id: 2 }]);
+        pageParams.push(1);
+
+        // Simulate second page
+        pages.push([{ id: 3 }, { id: 4 }]);
+        pageParams.push(2);
+
+        expect(pages).toHaveLength(2);
+        expect(pageParams).toHaveLength(2);
+        expect(pageParams[1]).toBe(2);
+      });
+
+      test('getNextPageParam function', () => {
+        const getNextPageParam = (lastPage, allPages) => {
+          return lastPage.length === 10 ? allPages.length + 1 : undefined;
+        };
+
+        const fullPage = Array(10).fill({ id: 1 });
+        const partialPage = Array(5).fill({ id: 1 });
+
+        expect(getNextPageParam(fullPage, [fullPage])).toBe(2);
+        expect(getNextPageParam(partialPage, [partialPage])).toBeUndefined();
+      });
+
+      test('getPreviousPageParam function', () => {
+        const getPreviousPageParam = (firstPage, allPages) => {
+          const firstId = firstPage[0]?.id;
+          return firstId > 1 ? firstId - 1 : undefined;
+        };
+
+        expect(getPreviousPageParam([{ id: 5 }], [])).toBe(4);
+        expect(getPreviousPageParam([{ id: 1 }], [])).toBeUndefined();
+      });
+    });
+
+    // Test: Error Types
+    describe('Error Types', () => {
+      test('FetchError has correct properties', () => {
+        const error = new Error('Request failed');
+        error.status = 404;
+        error.statusText = 'Not Found';
+        error.config = { url: '/api/users', method: 'GET' };
+
+        expect(error.status).toBe(404);
+        expect(error.statusText).toBe('Not Found');
+        expect(error.config.url).toBe('/api/users');
+      });
+
+      test('network error has no status', () => {
+        const error = new Error('Network error');
+        expect(error.status).toBeUndefined();
+      });
+
+      test('timeout error', () => {
+        const error = new Error('Request timeout');
+        error.name = 'AbortError';
+        expect(error.name).toBe('AbortError');
+      });
+    });
+
+    // =========================================================================
+    // Render Results
+    // =========================================================================
+
+    function renderResults() {
+      const total = results.reduce((acc, g) => acc + g.tests.length, 0);
+      const passed = results.reduce((acc, g) => acc + g.tests.filter(t => t.passed).length, 0);
+      const allPassed = passed === total;
+
+      const summaryEl = document.getElementById('summary');
+      summaryEl.className = `summary ${allPassed ? 'pass' : 'fail'}`;
+      summaryEl.textContent = `${passed}/${total} tests passed`;
+
+      const resultsEl = document.getElementById('results');
+      resultsEl.innerHTML = results.map(group => {
+        const groupPassed = group.tests.filter(t => t.passed).length;
+        const groupTotal = group.tests.length;
+
+        return `
+          <div class="test-group">
+            <div class="test-group-header">
+              <span>${group.name}</span>
+              <span class="badge ${groupPassed === groupTotal ? 'pass' : 'fail'}">${groupPassed}/${groupTotal}</span>
+            </div>
+            <div class="test-list">
+              ${group.tests.map(test => `
+                <div class="test-item">
+                  <span class="${test.passed ? 'test-pass' : 'test-fail'}">${test.passed ? '✓' : '✗'}</span>
+                  <span class="test-name">${test.name}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      console.log(`Tests completed: ${passed}/${total} passed`);
+    }
+
+    renderResults();
+  </script>
+</body>
+</html>

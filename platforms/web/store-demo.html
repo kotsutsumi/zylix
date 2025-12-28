@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Store Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    h1 { color: #00d4aa; margin-bottom: 10px; }
+    h2 { color: #00d4aa; margin: 20px 0 15px; font-size: 1.3em; }
+    .subtitle { color: #888; margin-bottom: 30px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .demos { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+    .demo {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #2a2a4a;
+    }
+    .demo h3 {
+      color: #00d4aa;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .demo h3 span { font-size: 1.2em; }
+    button {
+      background: linear-gradient(135deg, #00d4aa 0%, #00a885 100%);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3); }
+    button:active { transform: translateY(0); }
+    button.secondary {
+      background: #2a2a4a;
+      color: #e0e0e0;
+    }
+    button.danger {
+      background: linear-gradient(135deg, #ff4757 0%, #ff3344 100%);
+      color: #fff;
+    }
+    input, select {
+      background: #252542;
+      border: 1px solid #3a3a5a;
+      color: #e0e0e0;
+      padding: 10px 14px;
+      border-radius: 6px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    input:focus, select:focus { outline: none; border-color: #00d4aa; }
+    .stats {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .stat {
+      background: #252542;
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 80px;
+    }
+    .stat-value { font-size: 1.5em; font-weight: bold; color: #00d4aa; }
+    .stat-label { font-size: 0.8em; color: #888; }
+    .todo-list { list-style: none; max-height: 200px; overflow-y: auto; }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #252542;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .todo-item:hover { background: #2d2d50; }
+    .todo-item.done { opacity: 0.5; text-decoration: line-through; }
+    .todo-item .checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #00d4aa;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .todo-item.done .checkbox { background: #00d4aa; }
+    .todo-item.done .checkbox::after { content: "✓"; color: #000; font-weight: bold; }
+    .filter-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
+    .filter-buttons button { flex: 1; padding: 6px 12px; font-size: 0.9em; }
+    .filter-buttons button.active { background: #00d4aa; color: #000; }
+    .history-panel {
+      background: #252542;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #3a3a5a;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .history-item:hover { background: #2d2d50; }
+    .history-item.current { background: rgba(0, 212, 170, 0.2); }
+    .history-item .action { color: #00d4aa; font-family: monospace; }
+    .history-item .time { color: #666; font-size: 0.85em; }
+    .time-travel-controls { display: flex; gap: 8px; margin-top: 10px; }
+    .log-output {
+      background: #0a0a1a;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 0.85em;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .log-output .action { color: #03A9F4; }
+    .log-output .prev { color: #9E9E9E; }
+    .log-output .next { color: #4CAF50; }
+    .products { display: grid; gap: 10px; }
+    .product {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #252542;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .product-name { font-weight: 500; }
+    .product-price { color: #00d4aa; font-weight: bold; }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #3a3a5a;
+    }
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px;
+      background: #252542;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .cart-total .amount { color: #00d4aa; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Zylix Store Demo</h1>
+    <p class="subtitle">Redux-like state management with time-travel debugging</p>
+    <div class="demos" id="app"></div>
+  </div>
+
+  <script type="module">
+// =============================================================================
+// COMPONENT FRAMEWORK (inline from component.ts)
+// =============================================================================
+
+const Fragment = Symbol.for('zylix.fragment');
+let currentComponent = null;
+let rerenderQueue = [];
+let isBatching = false;
+let pendingEffects = [];
+
+function h(type, props, ...children) {
+  const normalizedProps = props ? { ...props } : {};
+  const flatChildren = flattenChildren(children);
+  if (flatChildren.length > 0) {
+    normalizedProps.children = flatChildren.length === 1 ? flatChildren[0] : flatChildren;
+  }
+  const key = normalizedProps.key ?? null;
+  delete normalizedProps.key;
+  return { type, props: normalizedProps, key, _dom: null, _component: null, _children: null };
+}
+
+function flattenChildren(children) {
+  const result = [];
+  for (const child of children) {
+    if (child == null || typeof child === 'boolean') continue;
+    if (Array.isArray(child)) result.push(...flattenChildren(child));
+    else if (typeof child === 'string' || typeof child === 'number')
+      result.push({ type: null, props: { textContent: String(child) }, key: null, _dom: null });
+    else if (child.type !== undefined) result.push(child);
+  }
+  return result;
+}
+
+function render(vnode, container) {
+  const oldVNode = container._vnode;
+  diff(container, vnode, oldVNode, 0);
+  container._vnode = vnode;
+  flushEffects();
+}
+
+function diff(parentDom, newVNode, oldVNode, depth) {
+  if (newVNode === oldVNode) return;
+  if (newVNode == null) { if (oldVNode) unmount(oldVNode); return; }
+  newVNode._depth = depth;
+  if (!oldVNode || oldVNode.type !== newVNode.type) {
+    if (oldVNode) unmount(oldVNode);
+    mount(parentDom, newVNode, null, depth);
+    return;
+  }
+  if (typeof newVNode.type === 'function') diffComponent(parentDom, newVNode, oldVNode, depth);
+  else if (newVNode.type === Fragment) diffChildren(parentDom, newVNode, oldVNode, depth);
+  else if (newVNode.props.textContent !== undefined) diffText(newVNode, oldVNode);
+  else diffElement(parentDom, newVNode, oldVNode, depth);
+}
+
+function mount(parentDom, vnode, beforeNode, depth) {
+  vnode._depth = depth;
+  if (typeof vnode.type === 'function') mountComponent(parentDom, vnode, beforeNode, depth);
+  else if (vnode.type === Fragment) mountFragment(parentDom, vnode, beforeNode, depth);
+  else if (vnode.props.textContent !== undefined) mountText(parentDom, vnode, beforeNode);
+  else mountElement(parentDom, vnode, beforeNode, depth);
+}
+
+function mountText(parentDom, vnode, beforeNode) {
+  vnode._dom = document.createTextNode(vnode.props.textContent);
+  parentDom.insertBefore(vnode._dom, beforeNode);
+}
+
+function mountElement(parentDom, vnode, beforeNode, depth) {
+  const dom = document.createElement(vnode.type);
+  vnode._dom = dom;
+  setProps(dom, vnode.props, {});
+  const children = normalizeChildren(vnode.props.children);
+  vnode._children = children;
+  for (const child of children) { child._parent = vnode; mount(dom, child, null, depth + 1); }
+  if (vnode.props.ref) vnode.props.ref.current = dom;
+  parentDom.insertBefore(dom, beforeNode);
+}
+
+function mountFragment(parentDom, vnode, beforeNode, depth) {
+  const children = normalizeChildren(vnode.props.children);
+  vnode._children = children;
+  for (const child of children) { child._parent = vnode; mount(parentDom, child, beforeNode, depth + 1); }
+}
+
+function mountComponent(parentDom, vnode, beforeNode, depth) {
+  const component = { _hooks: [], _hookIndex: 0, _vnode: vnode, _parentDom: parentDom, _pendingEffects: [], _depth: depth };
+  vnode._component = component;
+  currentComponent = component;
+  component._hookIndex = 0;
+  const rendered = vnode.type(vnode.props);
+  currentComponent = null;
+  if (rendered) { rendered._parent = vnode; vnode._children = [rendered]; mount(parentDom, rendered, beforeNode, depth + 1); }
+  else vnode._children = [];
+  for (const effect of component._pendingEffects) pendingEffects.push(effect);
+  component._pendingEffects = [];
+}
+
+function diffComponent(parentDom, newVNode, oldVNode, depth) {
+  const component = oldVNode._component;
+  component._vnode = newVNode;
+  newVNode._component = component;
+  currentComponent = component;
+  component._hookIndex = 0;
+  const rendered = newVNode.type(newVNode.props);
+  currentComponent = null;
+  const oldChild = (oldVNode._children || [])[0] || null;
+  if (rendered) { rendered._parent = newVNode; newVNode._children = [rendered]; diff(parentDom, rendered, oldChild, depth + 1); }
+  else { newVNode._children = []; if (oldChild) unmount(oldChild); }
+  for (const effect of component._pendingEffects) pendingEffects.push(effect);
+  component._pendingEffects = [];
+}
+
+function diffText(newVNode, oldVNode) {
+  if (newVNode.props.textContent !== oldVNode.props.textContent)
+    oldVNode._dom.textContent = newVNode.props.textContent;
+  newVNode._dom = oldVNode._dom;
+}
+
+function diffElement(parentDom, newVNode, oldVNode, depth) {
+  newVNode._dom = oldVNode._dom;
+  setProps(newVNode._dom, newVNode.props, oldVNode.props);
+  diffChildren(newVNode._dom, newVNode, oldVNode, depth);
+}
+
+function diffChildren(parentDom, newVNode, oldVNode, depth) {
+  const newChildren = normalizeChildren(newVNode.props.children);
+  const oldChildren = oldVNode._children || [];
+  newVNode._children = newChildren;
+  const oldKeyMap = new Map();
+  const matchedOld = new Set();
+  for (let i = 0; i < oldChildren.length; i++) {
+    if (oldChildren[i].key != null) oldKeyMap.set(oldChildren[i].key, oldChildren[i]);
+  }
+  const matches = [];
+  for (let i = 0; i < newChildren.length; i++) {
+    const newChild = newChildren[i];
+    newChild._parent = newVNode;
+    let oldChild = null;
+    if (newChild.key != null && oldKeyMap.has(newChild.key)) {
+      oldChild = oldKeyMap.get(newChild.key);
+      if (oldChild.type === newChild.type) matchedOld.add(oldChild);
+      else oldChild = null;
+    }
+    if (!oldChild && i < oldChildren.length) {
+      const candidate = oldChildren[i];
+      if (!matchedOld.has(candidate) && candidate.key == null && newChild.key == null && candidate.type === newChild.type) {
+        oldChild = candidate;
+        matchedOld.add(oldChild);
+      }
+    }
+    matches.push({ newChild, oldChild });
+  }
+  for (const oldChild of oldChildren) { if (!matchedOld.has(oldChild)) unmount(oldChild); }
+  let lastDom = null;
+  for (const { newChild, oldChild } of matches) {
+    if (oldChild) {
+      diff(parentDom, newChild, oldChild, depth + 1);
+      const dom = getDom(newChild);
+      if (dom && lastDom && dom.previousSibling !== lastDom) parentDom.insertBefore(dom, lastDom.nextSibling);
+      lastDom = dom || lastDom;
+    } else {
+      mount(parentDom, newChild, lastDom ? lastDom.nextSibling : parentDom.firstChild, depth + 1);
+      lastDom = getDom(newChild) || lastDom;
+    }
+  }
+}
+
+function unmount(vnode) {
+  if (vnode._component) {
+    for (const hook of vnode._component._hooks) {
+      if (hook._cleanup) hook._cleanup();
+      if (hook._unsubscribe) hook._unsubscribe();
+    }
+  }
+  if (vnode.props.ref) vnode.props.ref.current = null;
+  if (vnode._children) for (const child of vnode._children) unmount(child);
+  if (vnode._dom && vnode._dom.parentNode) vnode._dom.parentNode.removeChild(vnode._dom);
+}
+
+function getDom(vnode) {
+  if (vnode._dom) return vnode._dom;
+  if (vnode._children && vnode._children.length > 0) return getDom(vnode._children[0]);
+  return null;
+}
+
+function normalizeChildren(children) {
+  if (children == null) return [];
+  return Array.isArray(children) ? flattenChildren(children) : flattenChildren([children]);
+}
+
+function setProps(dom, newProps, oldProps) {
+  for (const key of Object.keys(oldProps)) {
+    if (['children', 'key', 'ref', 'textContent'].includes(key)) continue;
+    if (!(key in newProps)) setProp(dom, key, null, oldProps[key]);
+  }
+  for (const key of Object.keys(newProps)) {
+    if (['children', 'key', 'ref', 'textContent'].includes(key)) continue;
+    if (newProps[key] !== oldProps[key]) setProp(dom, key, newProps[key], oldProps[key]);
+  }
+}
+
+function setProp(dom, key, newValue, oldValue) {
+  if (key.startsWith('on') && key.length > 2) {
+    const event = key.slice(2).toLowerCase();
+    if (oldValue) dom.removeEventListener(event, oldValue);
+    if (newValue) dom.addEventListener(event, newValue);
+    return;
+  }
+  if (key === 'style' && typeof newValue === 'object') {
+    for (const k of Object.keys(newValue)) dom.style[k] = newValue[k];
+    return;
+  }
+  if (key === 'className' || key === 'class') { dom.setAttribute('class', newValue || ''); return; }
+  if (newValue === true) dom.setAttribute(key, '');
+  else if (newValue === false || newValue == null) dom.removeAttribute(key);
+  else dom.setAttribute(key, String(newValue));
+}
+
+function getHookState(initialValue) {
+  if (!currentComponent) throw new Error('Hooks must be called inside a component');
+  const index = currentComponent._hookIndex++;
+  const hooks = currentComponent._hooks;
+  if (index >= hooks.length) hooks.push(initialValue());
+  return hooks[index];
+}
+
+function useState(initialState) {
+  const hookState = getHookState(() => ({
+    _value: typeof initialState === 'function' ? initialState() : initialState
+  }));
+  const component = currentComponent;
+  const setState = (action) => {
+    const newValue = typeof action === 'function' ? action(hookState._value) : action;
+    if (!Object.is(hookState._value, newValue)) {
+      hookState._value = newValue;
+      scheduleRerender(component);
+    }
+  };
+  return [hookState._value, setState];
+}
+
+function useEffect(effect, deps) {
+  const hookState = getHookState(() => ({ _args: undefined }));
+  const component = currentComponent;
+  if (argsChanged(hookState._args, deps)) {
+    hookState._args = deps;
+    component._pendingEffects.push(() => {
+      if (hookState._cleanup) hookState._cleanup();
+      hookState._cleanup = effect();
+    });
+  }
+}
+
+function useMemo(factory, deps) {
+  const hookState = getHookState(() => ({ _value: undefined, _args: undefined }));
+  if (argsChanged(hookState._args, deps)) {
+    hookState._value = factory();
+    hookState._args = deps;
+  }
+  return hookState._value;
+}
+
+function useCallback(callback, deps) { return useMemo(() => callback, deps); }
+function useRef(initialValue) { return useMemo(() => ({ current: initialValue }), []); }
+
+function argsChanged(oldArgs, newArgs) {
+  if (oldArgs === undefined || newArgs === undefined) return true;
+  if (oldArgs.length !== newArgs.length) return true;
+  for (let i = 0; i < oldArgs.length; i++) if (!Object.is(oldArgs[i], newArgs[i])) return true;
+  return false;
+}
+
+function scheduleRerender(component) {
+  if (!rerenderQueue.includes(component)) rerenderQueue.push(component);
+  if (!isBatching) { isBatching = true; queueMicrotask(processRerenderQueue); }
+}
+
+function processRerenderQueue() {
+  rerenderQueue.sort((a, b) => a._depth - b._depth);
+  const queue = rerenderQueue;
+  rerenderQueue = [];
+  isBatching = false;
+  for (const component of queue) {
+    if (!component._vnode._component) continue;
+    const vnode = component._vnode;
+    const oldChild = (vnode._children || [])[0] || null;
+    currentComponent = component;
+    component._hookIndex = 0;
+    const rendered = vnode.type(vnode.props);
+    currentComponent = null;
+    if (rendered) { rendered._parent = vnode; vnode._children = [rendered]; diff(component._parentDom, rendered, oldChild, component._depth + 1); }
+    else { vnode._children = []; if (oldChild) unmount(oldChild); }
+    for (const effect of component._pendingEffects) pendingEffects.push(effect);
+    component._pendingEffects = [];
+  }
+  flushEffects();
+}
+
+function flushEffects() {
+  const effects = pendingEffects;
+  pendingEffects = [];
+  for (const effect of effects) effect();
+}
+
+// =============================================================================
+// STORE IMPLEMENTATION (inline from store.ts)
+// =============================================================================
+
+function createMemoizedSelector(selector) {
+  let lastState, lastResult, hasResult = false;
+  return (state) => {
+    if (hasResult && Object.is(state, lastState)) return lastResult;
+    lastState = state;
+    lastResult = selector(state);
+    hasResult = true;
+    return lastResult;
+  };
+}
+
+function createDevTools(options, getState, setState) {
+  const maxHistory = options.maxHistory ?? 50;
+  let history = [];
+  let currentIndex = -1;
+  let recording = true;
+
+  const addEntry = (state, action, args) => {
+    if (!recording) return;
+    if (currentIndex < history.length - 1) history = history.slice(0, currentIndex + 1);
+    history.push({ state, action, args, timestamp: Date.now() });
+    if (history.length > maxHistory) history = history.slice(history.length - maxHistory);
+    currentIndex = history.length - 1;
+  };
+
+  addEntry(getState(), '@@INIT', []);
+
+  return {
+    undo: () => { if (currentIndex > 0) { currentIndex--; setState(history[currentIndex].state); return true; } return false; },
+    redo: () => { if (currentIndex < history.length - 1) { currentIndex++; setState(history[currentIndex].state); return true; } return false; },
+    jumpTo: (index) => { if (index >= 0 && index < history.length) { currentIndex = index; setState(history[currentIndex].state); return true; } return false; },
+    getHistory: () => [...history],
+    getCurrentIndex: () => currentIndex,
+    clearHistory: () => { history = [{ state: getState(), action: '@@INIT', args: [], timestamp: Date.now() }]; currentIndex = 0; },
+    setRecording: (enabled) => { recording = enabled; },
+    isRecording: () => recording,
+    _addEntry: addEntry
+  };
+}
+
+function createStore(config) {
+  let state = config.state;
+  const subscribers = new Set();
+  const actionDefs = config.actions ?? {};
+  const selectorDefs = config.selectors ?? {};
+  const middleware = config.middleware ?? [];
+
+  const memoizedSelectors = new Map();
+  for (const key of Object.keys(selectorDefs)) {
+    memoizedSelectors.set(key, createMemoizedSelector(selectorDefs[key]));
+  }
+
+  let devtools;
+  if (config.devtools) {
+    const options = typeof config.devtools === 'object' ? config.devtools : {};
+    devtools = createDevTools(options, () => state, (s) => { const prev = state; state = s; notifySubscribers(prev); });
+  }
+
+  const notifySubscribers = (prevState) => {
+    for (const subscriber of subscribers) {
+      try { subscriber(state, prevState); } catch (e) { console.error('Subscriber error:', e); }
+    }
+  };
+
+  const coreDispatch = (action, ...args) => {
+    const actionFn = actionDefs[action];
+    if (!actionFn) { console.warn(`Unknown action: ${action}`); return; }
+    const prevState = state;
+    const result = actionFn(state, ...args);
+    if (result instanceof Promise) {
+      result.then((newState) => { state = newState; devtools?._addEntry?.(state, action, args); notifySubscribers(prevState); });
+    } else {
+      state = result;
+      devtools?._addEntry?.(state, action, args);
+      notifySubscribers(prevState);
+    }
+  };
+
+  let dispatch = coreDispatch;
+  if (middleware.length > 0) {
+    const context = { getState: () => state, dispatch: (action, ...args) => dispatch(action, ...args) };
+    dispatch = middleware.reduceRight((next, mw) => mw(context)(next), coreDispatch);
+  }
+
+  const actions = {};
+  for (const key of Object.keys(actionDefs)) {
+    actions[key] = (...args) => dispatch(key, ...args);
+  }
+
+  const selectors = {};
+  for (const key of Object.keys(selectorDefs)) {
+    const memoized = memoizedSelectors.get(key);
+    selectors[key] = () => memoized(state);
+  }
+
+  return { getState: () => state, subscribe: (cb) => { subscribers.add(cb); return () => subscribers.delete(cb); }, actions, selectors, dispatch, devtools };
+}
+
+function useStore(store, selector) {
+  if (!currentComponent) throw new Error('useStore must be called inside a component');
+  const component = currentComponent;
+  const index = component._hookIndex++;
+  const hooks = component._hooks;
+
+  if (index >= hooks.length) {
+    const actualSelector = selector ?? ((s) => s);
+    const memoizedSelector = createMemoizedSelector(actualSelector);
+    const initialValue = memoizedSelector(store.getState());
+    const unsubscribe = store.subscribe((newState) => {
+      const newValue = memoizedSelector(newState);
+      if (!Object.is(newValue, hooks[index]._value)) {
+        hooks[index]._value = newValue;
+        scheduleRerender(component);
+      }
+    });
+    hooks.push({ _value: initialValue, _unsubscribe: unsubscribe });
+  }
+
+  return hooks[index]._value;
+}
+
+function loggerMiddleware(options = {}) {
+  return (context) => (next) => (action, ...args) => {
+    const prev = context.getState();
+    console.log(`%c action %c${action}`, 'color: gray', 'color: #03A9F4; font-weight: bold', args);
+    next(action, ...args);
+    console.log('%c next state', 'color: #4CAF50', context.getState());
+  };
+}
+
+// =============================================================================
+// DEMO STORES
+// =============================================================================
+
+// 1. Counter Store
+const counterStore = createStore({
+  state: { count: 0 },
+  actions: {
+    increment: (state) => ({ count: state.count + 1 }),
+    decrement: (state) => ({ count: state.count - 1 }),
+    add: (state, amount) => ({ count: state.count + amount }),
+    reset: () => ({ count: 0 })
+  },
+  selectors: {
+    doubled: (state) => state.count * 2,
+    isPositive: (state) => state.count > 0,
+    isNegative: (state) => state.count < 0
+  },
+  devtools: { maxHistory: 30 }
+});
+
+// 2. Todo Store
+const todoStore = createStore({
+  state: {
+    todos: [],
+    filter: 'all',
+    nextId: 1
+  },
+  actions: {
+    addTodo: (state, text) => ({
+      ...state,
+      todos: [...state.todos, { id: state.nextId, text, done: false }],
+      nextId: state.nextId + 1
+    }),
+    toggleTodo: (state, id) => ({
+      ...state,
+      todos: state.todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
+    }),
+    removeTodo: (state, id) => ({
+      ...state,
+      todos: state.todos.filter(t => t.id !== id)
+    }),
+    setFilter: (state, filter) => ({ ...state, filter }),
+    clearCompleted: (state) => ({
+      ...state,
+      todos: state.todos.filter(t => !t.done)
+    })
+  },
+  selectors: {
+    filteredTodos: (state) => {
+      if (state.filter === 'active') return state.todos.filter(t => !t.done);
+      if (state.filter === 'completed') return state.todos.filter(t => t.done);
+      return state.todos;
+    },
+    activeCount: (state) => state.todos.filter(t => !t.done).length,
+    completedCount: (state) => state.todos.filter(t => t.done).length,
+    totalCount: (state) => state.todos.length
+  },
+  devtools: { maxHistory: 50 }
+});
+
+// 3. Shopping Cart Store
+const cartStore = createStore({
+  state: {
+    items: [],
+    products: [
+      { id: 1, name: 'Zylix Pro License', price: 99 },
+      { id: 2, name: 'Premium Support', price: 49 },
+      { id: 3, name: 'Enterprise Bundle', price: 299 },
+      { id: 4, name: 'Training Course', price: 79 }
+    ]
+  },
+  actions: {
+    addToCart: (state, productId) => {
+      const existing = state.items.find(i => i.productId === productId);
+      if (existing) {
+        return {
+          ...state,
+          items: state.items.map(i => i.productId === productId ? { ...i, qty: i.qty + 1 } : i)
+        };
+      }
+      return { ...state, items: [...state.items, { productId, qty: 1 }] };
+    },
+    removeFromCart: (state, productId) => ({
+      ...state,
+      items: state.items.filter(i => i.productId !== productId)
+    }),
+    updateQty: (state, productId, qty) => ({
+      ...state,
+      items: qty > 0
+        ? state.items.map(i => i.productId === productId ? { ...i, qty } : i)
+        : state.items.filter(i => i.productId !== productId)
+    }),
+    clearCart: (state) => ({ ...state, items: [] })
+  },
+  selectors: {
+    cartItems: (state) => state.items.map(item => {
+      const product = state.products.find(p => p.id === item.productId);
+      return { ...item, ...product, subtotal: product.price * item.qty };
+    }),
+    totalItems: (state) => state.items.reduce((sum, i) => sum + i.qty, 0),
+    totalPrice: (state) => state.items.reduce((sum, item) => {
+      const product = state.products.find(p => p.id === item.productId);
+      return sum + product.price * item.qty;
+    }, 0)
+  },
+  middleware: [loggerMiddleware()]
+});
+
+// =============================================================================
+// DEMO COMPONENTS
+// =============================================================================
+
+// Counter Demo
+const CounterDemo = () => {
+  const count = useStore(counterStore, s => s.count);
+  const doubled = useStore(counterStore, s => s.count * 2);
+  const history = counterStore.devtools?.getHistory() ?? [];
+  const currentIndex = counterStore.devtools?.getCurrentIndex() ?? 0;
+
+  return h('div', { class: 'demo' },
+    h('h3', null, h('span', null, '1'), ' Counter with Time-Travel'),
+    h('div', { class: 'stats' },
+      h('div', { class: 'stat' },
+        h('div', { class: 'stat-value' }, count),
+        h('div', { class: 'stat-label' }, 'Count')
+      ),
+      h('div', { class: 'stat' },
+        h('div', { class: 'stat-value' }, doubled),
+        h('div', { class: 'stat-label' }, 'Doubled')
+      )
+    ),
+    h('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+      h('button', { onClick: () => counterStore.actions.decrement() }, '-1'),
+      h('button', { onClick: () => counterStore.actions.increment() }, '+1'),
+      h('button', { onClick: () => counterStore.actions.add(10) }, '+10'),
+      h('button', { class: 'secondary', onClick: () => counterStore.actions.reset() }, 'Reset')
+    ),
+    h('div', { class: 'time-travel-controls' },
+      h('button', { class: 'secondary', onClick: () => counterStore.devtools?.undo() }, 'Undo'),
+      h('button', { class: 'secondary', onClick: () => counterStore.devtools?.redo() }, 'Redo'),
+      h('button', { class: 'secondary', onClick: () => counterStore.devtools?.clearHistory() }, 'Clear')
+    ),
+    h('div', { class: 'history-panel' },
+      history.map((entry, i) =>
+        h('div', {
+          key: i,
+          class: `history-item ${i === currentIndex ? 'current' : ''}`,
+          onClick: () => counterStore.devtools?.jumpTo(i)
+        },
+          h('span', { class: 'action' }, entry.action),
+          h('span', { class: 'time' }, new Date(entry.timestamp).toLocaleTimeString())
+        )
+      )
+    )
+  );
+};
+
+// Todo Demo
+const TodoDemo = () => {
+  const todos = useStore(todoStore, s => todoStore.selectors.filteredTodos());
+  const filter = useStore(todoStore, s => s.filter);
+  const activeCount = useStore(todoStore, s => todoStore.selectors.activeCount());
+  const completedCount = useStore(todoStore, s => todoStore.selectors.completedCount());
+  const totalCount = useStore(todoStore, s => todoStore.selectors.totalCount());
+  const inputRef = useRef(null);
+
+  const handleAdd = () => {
+    const text = inputRef.current?.value.trim();
+    if (text) {
+      todoStore.actions.addTodo(text);
+      inputRef.current.value = '';
+    }
+  };
+
+  return h('div', { class: 'demo' },
+    h('h3', null, h('span', null, '2'), ' Todo App with Selectors'),
+    h('div', { style: { display: 'flex', gap: '8px' } },
+      h('input', {
+        ref: inputRef,
+        placeholder: 'Add a todo...',
+        onKeydown: (e) => e.key === 'Enter' && handleAdd()
+      }),
+      h('button', { onClick: handleAdd }, 'Add')
+    ),
+    h('div', { class: 'filter-buttons' },
+      h('button', { class: filter === 'all' ? 'active' : 'secondary', onClick: () => todoStore.actions.setFilter('all') }, 'All'),
+      h('button', { class: filter === 'active' ? 'active' : 'secondary', onClick: () => todoStore.actions.setFilter('active') }, 'Active'),
+      h('button', { class: filter === 'completed' ? 'active' : 'secondary', onClick: () => todoStore.actions.setFilter('completed') }, 'Done')
+    ),
+    h('ul', { class: 'todo-list' },
+      todos.map(todo =>
+        h('li', {
+          key: todo.id,
+          class: `todo-item ${todo.done ? 'done' : ''}`,
+          onClick: () => todoStore.actions.toggleTodo(todo.id)
+        },
+          h('span', { class: 'checkbox' }),
+          h('span', { style: { flex: 1 } }, todo.text),
+          h('button', {
+            class: 'danger',
+            style: { padding: '4px 8px', fontSize: '0.8em' },
+            onClick: (e) => { e.stopPropagation(); todoStore.actions.removeTodo(todo.id); }
+          }, 'x')
+        )
+      )
+    ),
+    h('div', { class: 'stats' },
+      h('div', { class: 'stat' }, h('div', { class: 'stat-value' }, totalCount), h('div', { class: 'stat-label' }, 'Total')),
+      h('div', { class: 'stat' }, h('div', { class: 'stat-value' }, activeCount), h('div', { class: 'stat-label' }, 'Active')),
+      h('div', { class: 'stat' }, h('div', { class: 'stat-value' }, completedCount), h('div', { class: 'stat-label' }, 'Done'))
+    ),
+    completedCount > 0 && h('button', { class: 'danger', onClick: () => todoStore.actions.clearCompleted() }, 'Clear Completed')
+  );
+};
+
+// Shopping Cart Demo
+const CartDemo = () => {
+  const products = useStore(cartStore, s => s.products);
+  const cartItems = useStore(cartStore, s => cartStore.selectors.cartItems());
+  const totalItems = useStore(cartStore, s => cartStore.selectors.totalItems());
+  const totalPrice = useStore(cartStore, s => cartStore.selectors.totalPrice());
+
+  return h('div', { class: 'demo' },
+    h('h3', null, h('span', null, '3'), ' Shopping Cart with Middleware'),
+    h('div', { class: 'products' },
+      products.map(product =>
+        h('div', { key: product.id, class: 'product' },
+          h('span', { class: 'product-name' }, product.name),
+          h('span', { class: 'product-price' }, '$', product.price),
+          h('button', { onClick: () => cartStore.actions.addToCart(product.id) }, 'Add')
+        )
+      )
+    ),
+    h('h4', { style: { margin: '15px 0 10px', color: '#888' } }, 'Cart (', totalItems, ' items)'),
+    cartItems.length === 0
+      ? h('p', { style: { color: '#666' } }, 'Cart is empty')
+      : h('div', null,
+          cartItems.map(item =>
+            h('div', { key: item.productId, class: 'cart-item' },
+              h('span', null, item.name, ' x', item.qty),
+              h('span', null,
+                '$', item.subtotal,
+                h('button', {
+                  class: 'danger',
+                  style: { marginLeft: '8px', padding: '2px 6px' },
+                  onClick: () => cartStore.actions.removeFromCart(item.productId)
+                }, 'x')
+              )
+            )
+          ),
+          h('div', { class: 'cart-total' },
+            h('span', null, 'Total:'),
+            h('span', { class: 'amount' }, '$', totalPrice)
+          ),
+          h('button', { class: 'danger', style: { marginTop: '10px' }, onClick: () => cartStore.actions.clearCart() }, 'Clear Cart')
+        ),
+    h('p', { style: { fontSize: '0.85em', color: '#666', marginTop: '15px' } },
+      'Check console for logger middleware output'
+    )
+  );
+};
+
+// App
+const App = () => {
+  return h(Fragment, null,
+    h(CounterDemo),
+    h(TodoDemo),
+    h(CartDemo)
+  );
+};
+
+// Mount
+render(h(App), document.getElementById('app'));
+console.log('Zylix Store Demo loaded');
+
+  </script>
+</body>
+</html>

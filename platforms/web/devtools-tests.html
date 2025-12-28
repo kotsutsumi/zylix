@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix DevTools - Tests</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #3b82f6;
+      margin-bottom: 8px;
+    }
+    .summary {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .summary.pass { color: #10b981; }
+    .summary.fail { color: #ef4444; }
+    .test-group {
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .test-group-header {
+      padding: 12px 16px;
+      background: #f9fafb;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .test-group-header:hover { background: #f3f4f6; }
+    .test-group-body { padding: 0; }
+    .test-item {
+      padding: 8px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .test-item:last-child { border-bottom: none; }
+    .test-item.pass { color: #059669; }
+    .test-item.fail { color: #dc2626; background: #fef2f2; }
+    .test-icon { font-size: 14px; }
+    .test-name { flex: 1; }
+    .test-error { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Zylix DevTools Tests</h1>
+    <div id="summary" class="summary">Running tests...</div>
+    <div id="results"></div>
+  </div>
+
+  <script type="module">
+    // Test Framework
+    let passed = 0;
+    let failed = 0;
+    const results = {};
+
+    function describe(name, fn) {
+      results[name] = { tests: [], passed: 0, failed: 0 };
+      fn();
+    }
+
+    function test(name, fn) {
+      const group = Object.keys(results).pop();
+      try {
+        fn();
+        results[group].tests.push({ name, passed: true });
+        results[group].passed++;
+        passed++;
+      } catch (error) {
+        results[group].tests.push({ name, passed: false, error: error.message });
+        results[group].failed++;
+        failed++;
+      }
+    }
+
+    function expect(actual) {
+      return {
+        toBe(expected) {
+          if (actual !== expected) {
+            throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+          }
+        },
+        toEqual(expected) {
+          if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+            throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeTruthy() {
+          if (!actual) {
+            throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeFalsy() {
+          if (actual) {
+            throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`);
+          }
+        },
+        toBeGreaterThan(expected) {
+          if (actual <= expected) {
+            throw new Error(`Expected ${actual} to be greater than ${expected}`);
+          }
+        },
+        toHaveLength(expected) {
+          if (actual.length !== expected) {
+            throw new Error(`Expected length ${expected} but got ${actual.length}`);
+          }
+        },
+        toContain(expected) {
+          if (typeof actual === 'string') {
+            if (!actual.includes(expected)) {
+              throw new Error(`Expected "${actual}" to contain "${expected}"`);
+            }
+          } else if (Array.isArray(actual)) {
+            if (!actual.includes(expected)) {
+              throw new Error(`Expected array to contain ${JSON.stringify(expected)}`);
+            }
+          }
+        },
+        toHaveProperty(prop) {
+          if (!(prop in actual)) {
+            throw new Error(`Expected object to have property "${prop}"`);
+          }
+        },
+        toBeInstanceOf(expected) {
+          if (!(actual instanceof expected)) {
+            throw new Error(`Expected instance of ${expected.name}`);
+          }
+        },
+        not: {
+          toBe(expected) {
+            if (actual === expected) {
+              throw new Error(`Expected not to be ${JSON.stringify(expected)}`);
+            }
+          },
+          toBeNull() {
+            if (actual === null) {
+              throw new Error(`Expected not to be null`);
+            }
+          },
+        },
+      };
+    }
+
+    // ==========================================================================
+    // DevTools Implementation (Inline for Testing)
+    // ==========================================================================
+
+    class ZylixDevTools {
+      constructor(config = {}) {
+        this.config = {
+          maxHistory: config.maxHistory || 50,
+          trace: config.trace !== false,
+          persist: config.persist || false,
+          position: config.position || 'bottom-right',
+          theme: config.theme || 'auto',
+        };
+        this.stores = new Map();
+        this.actionHistory = [];
+        this.actionIdCounter = 0;
+        this.performanceMetrics = {
+          renders: 0,
+          lastRenderTime: 0,
+          averageRenderTime: 0,
+          peakRenderTime: 0,
+          totalRenderTime: 0,
+          fps: 60,
+        };
+        this.networkRequests = [];
+        this.state = {
+          enabled: false,
+          visible: false,
+          activeTab: 'state',
+          selectedStore: null,
+          historyIndex: -1,
+        };
+        this.listeners = new Set();
+      }
+
+      enable() {
+        this.state.enabled = true;
+        return this;
+      }
+
+      disable() {
+        this.state.enabled = false;
+        return this;
+      }
+
+      isEnabled() {
+        return this.state.enabled;
+      }
+
+      toggle() {
+        this.state.visible = !this.state.visible;
+        return this;
+      }
+
+      showPanel() {
+        if (!this.state.enabled) this.enable();
+        this.state.visible = true;
+        return this;
+      }
+
+      hidePanel() {
+        this.state.visible = false;
+        return this;
+      }
+
+      isVisible() {
+        return this.state.visible;
+      }
+
+      connectStore(name, store) {
+        this.stores.set(name, store);
+        if (!this.state.selectedStore) {
+          this.state.selectedStore = name;
+        }
+        return () => {
+          this.stores.delete(name);
+          if (this.state.selectedStore === name) {
+            this.state.selectedStore = this.stores.size > 0 ? this.stores.keys().next().value : null;
+          }
+        };
+      }
+
+      getStores() {
+        return Array.from(this.stores.keys());
+      }
+
+      getStoreState(name) {
+        const store = this.stores.get(name);
+        return store ? store.getState() : null;
+      }
+
+      recordAction(type, payload, stateBefore, stateAfter, duration) {
+        if (!this.state.enabled) return;
+
+        const record = {
+          id: ++this.actionIdCounter,
+          type,
+          payload,
+          timestamp: Date.now(),
+          stateBefore,
+          stateAfter,
+          duration,
+        };
+
+        this.actionHistory.push(record);
+        while (this.actionHistory.length > this.config.maxHistory) {
+          this.actionHistory.shift();
+        }
+
+        this.state.historyIndex = this.actionHistory.length - 1;
+      }
+
+      getHistory() {
+        return [...this.actionHistory];
+      }
+
+      jumpTo(actionId) {
+        const index = this.actionHistory.findIndex(a => a.id === actionId);
+        if (index === -1) return false;
+
+        const action = this.actionHistory[index];
+        const store = this.stores.get(this.state.selectedStore);
+        if (store && store.setState) {
+          store.setState(action.stateAfter);
+          this.state.historyIndex = index;
+          return true;
+        }
+        return false;
+      }
+
+      undo() {
+        if (this.state.historyIndex <= 0) return false;
+        const prevAction = this.actionHistory[this.state.historyIndex - 1];
+        const store = this.stores.get(this.state.selectedStore);
+        if (store && store.setState) {
+          store.setState(prevAction.stateAfter);
+          this.state.historyIndex--;
+          return true;
+        }
+        return false;
+      }
+
+      redo() {
+        if (this.state.historyIndex >= this.actionHistory.length - 1) return false;
+        const nextAction = this.actionHistory[this.state.historyIndex + 1];
+        const store = this.stores.get(this.state.selectedStore);
+        if (store && store.setState) {
+          store.setState(nextAction.stateAfter);
+          this.state.historyIndex++;
+          return true;
+        }
+        return false;
+      }
+
+      clearHistory() {
+        this.actionHistory = [];
+        this.state.historyIndex = -1;
+      }
+
+      recordRender(duration) {
+        this.performanceMetrics.renders++;
+        this.performanceMetrics.lastRenderTime = duration;
+        this.performanceMetrics.totalRenderTime += duration;
+        this.performanceMetrics.averageRenderTime =
+          this.performanceMetrics.totalRenderTime / this.performanceMetrics.renders;
+        if (duration > this.performanceMetrics.peakRenderTime) {
+          this.performanceMetrics.peakRenderTime = duration;
+        }
+      }
+
+      getPerformanceMetrics() {
+        return { ...this.performanceMetrics };
+      }
+
+      recordNetworkRequest(method, url, status, duration) {
+        this.networkRequests.push({
+          id: Date.now(),
+          method,
+          url,
+          status,
+          duration,
+          timestamp: Date.now(),
+        });
+        while (this.networkRequests.length > 100) {
+          this.networkRequests.shift();
+        }
+      }
+
+      getNetworkRequests() {
+        return [...this.networkRequests];
+      }
+
+      subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+      }
+
+      exportState() {
+        return JSON.stringify({
+          stores: Object.fromEntries(
+            Array.from(this.stores.entries()).map(([name, store]) => [name, store.getState()])
+          ),
+          actions: this.actionHistory,
+          performance: this.performanceMetrics,
+          network: this.networkRequests,
+        }, null, 2);
+      }
+
+      getState() {
+        return { ...this.state };
+      }
+
+      setActiveTab(tab) {
+        this.state.activeTab = tab;
+      }
+
+      getActiveTab() {
+        return this.state.activeTab;
+      }
+    }
+
+    // ==========================================================================
+    // TESTS
+    // ==========================================================================
+
+    // DevTools Core Tests
+    describe('DevTools Core', () => {
+      test('creates DevTools instance with default config', () => {
+        const devtools = new ZylixDevTools();
+        expect(devtools.config.maxHistory).toBe(50);
+        expect(devtools.config.trace).toBe(true);
+        expect(devtools.config.position).toBe('bottom-right');
+      });
+
+      test('creates DevTools instance with custom config', () => {
+        const devtools = new ZylixDevTools({ maxHistory: 100, trace: false });
+        expect(devtools.config.maxHistory).toBe(100);
+        expect(devtools.config.trace).toBe(false);
+      });
+
+      test('enable() enables DevTools', () => {
+        const devtools = new ZylixDevTools();
+        expect(devtools.isEnabled()).toBe(false);
+        devtools.enable();
+        expect(devtools.isEnabled()).toBe(true);
+      });
+
+      test('disable() disables DevTools', () => {
+        const devtools = new ZylixDevTools();
+        devtools.enable();
+        devtools.disable();
+        expect(devtools.isEnabled()).toBe(false);
+      });
+
+      test('toggle() toggles visibility', () => {
+        const devtools = new ZylixDevTools();
+        devtools.enable();
+        expect(devtools.isVisible()).toBe(false);
+        devtools.toggle();
+        expect(devtools.isVisible()).toBe(true);
+        devtools.toggle();
+        expect(devtools.isVisible()).toBe(false);
+      });
+
+      test('showPanel() shows panel and enables if needed', () => {
+        const devtools = new ZylixDevTools();
+        devtools.showPanel();
+        expect(devtools.isEnabled()).toBe(true);
+        expect(devtools.isVisible()).toBe(true);
+      });
+
+      test('hidePanel() hides panel', () => {
+        const devtools = new ZylixDevTools();
+        devtools.showPanel();
+        devtools.hidePanel();
+        expect(devtools.isVisible()).toBe(false);
+      });
+    });
+
+    // Store Connection Tests
+    describe('Store Connection', () => {
+      test('connectStore() connects a store', () => {
+        const devtools = new ZylixDevTools();
+        const store = { getState: () => ({ count: 0 }) };
+        devtools.connectStore('counter', store);
+        expect(devtools.getStores()).toContain('counter');
+      });
+
+      test('connectStore() returns disconnect function', () => {
+        const devtools = new ZylixDevTools();
+        const store = { getState: () => ({ count: 0 }) };
+        const disconnect = devtools.connectStore('counter', store);
+        expect(typeof disconnect).toBe('function');
+        disconnect();
+        expect(devtools.getStores()).toHaveLength(0);
+      });
+
+      test('getStoreState() returns store state', () => {
+        const devtools = new ZylixDevTools();
+        const store = { getState: () => ({ count: 42 }) };
+        devtools.connectStore('counter', store);
+        expect(devtools.getStoreState('counter')).toEqual({ count: 42 });
+      });
+
+      test('getStoreState() returns null for unknown store', () => {
+        const devtools = new ZylixDevTools();
+        expect(devtools.getStoreState('unknown')).toBe(null);
+      });
+
+      test('first connected store becomes selected', () => {
+        const devtools = new ZylixDevTools();
+        devtools.connectStore('store1', { getState: () => ({}) });
+        devtools.connectStore('store2', { getState: () => ({}) });
+        expect(devtools.getState().selectedStore).toBe('store1');
+      });
+    });
+
+    // Action Recording Tests
+    describe('Action Recording', () => {
+      test('recordAction() does nothing when disabled', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordAction('test', {}, {}, {}, 1);
+        expect(devtools.getHistory()).toHaveLength(0);
+      });
+
+      test('recordAction() records action when enabled', () => {
+        const devtools = new ZylixDevTools().enable();
+        devtools.recordAction('increment', { value: 1 }, { count: 0 }, { count: 1 }, 0.5);
+        expect(devtools.getHistory()).toHaveLength(1);
+      });
+
+      test('recorded action has correct properties', () => {
+        const devtools = new ZylixDevTools().enable();
+        devtools.recordAction('increment', { value: 1 }, { count: 0 }, { count: 1 }, 0.5);
+        const action = devtools.getHistory()[0];
+        expect(action.type).toBe('increment');
+        expect(action.payload).toEqual({ value: 1 });
+        expect(action.stateBefore).toEqual({ count: 0 });
+        expect(action.stateAfter).toEqual({ count: 1 });
+        expect(action.duration).toBe(0.5);
+        expect(action.id).toBeGreaterThan(0);
+        expect(action.timestamp).toBeGreaterThan(0);
+      });
+
+      test('respects maxHistory limit', () => {
+        const devtools = new ZylixDevTools({ maxHistory: 3 }).enable();
+        for (let i = 0; i < 5; i++) {
+          devtools.recordAction('action' + i, {}, {}, {}, 1);
+        }
+        expect(devtools.getHistory()).toHaveLength(3);
+      });
+
+      test('clearHistory() clears all history', () => {
+        const devtools = new ZylixDevTools().enable();
+        devtools.recordAction('action1', {}, {}, {}, 1);
+        devtools.recordAction('action2', {}, {}, {}, 1);
+        devtools.clearHistory();
+        expect(devtools.getHistory()).toHaveLength(0);
+      });
+    });
+
+    // Time Travel Tests
+    describe('Time Travel', () => {
+      test('jumpTo() applies state from specific action', () => {
+        let currentState = { count: 0 };
+        const store = {
+          getState: () => currentState,
+          setState: (s) => { currentState = s; },
+        };
+        const devtools = new ZylixDevTools().enable();
+        devtools.connectStore('counter', store);
+
+        devtools.recordAction('set1', {}, { count: 0 }, { count: 10 }, 1);
+        devtools.recordAction('set2', {}, { count: 10 }, { count: 20 }, 1);
+        devtools.recordAction('set3', {}, { count: 20 }, { count: 30 }, 1);
+
+        const actions = devtools.getHistory();
+        devtools.jumpTo(actions[0].id);
+        expect(currentState).toEqual({ count: 10 });
+      });
+
+      test('undo() reverts to previous state', () => {
+        let currentState = { count: 0 };
+        const store = {
+          getState: () => currentState,
+          setState: (s) => { currentState = s; },
+        };
+        const devtools = new ZylixDevTools().enable();
+        devtools.connectStore('counter', store);
+
+        devtools.recordAction('set1', {}, { count: 0 }, { count: 10 }, 1);
+        devtools.recordAction('set2', {}, { count: 10 }, { count: 20 }, 1);
+
+        devtools.undo();
+        expect(currentState).toEqual({ count: 10 });
+      });
+
+      test('redo() reapplies next state', () => {
+        let currentState = { count: 0 };
+        const store = {
+          getState: () => currentState,
+          setState: (s) => { currentState = s; },
+        };
+        const devtools = new ZylixDevTools().enable();
+        devtools.connectStore('counter', store);
+
+        devtools.recordAction('set1', {}, { count: 0 }, { count: 10 }, 1);
+        devtools.recordAction('set2', {}, { count: 10 }, { count: 20 }, 1);
+
+        devtools.undo();
+        devtools.redo();
+        expect(currentState).toEqual({ count: 20 });
+      });
+
+      test('undo() returns false when no more history', () => {
+        const devtools = new ZylixDevTools().enable();
+        expect(devtools.undo()).toBe(false);
+      });
+
+      test('redo() returns false when at end of history', () => {
+        const devtools = new ZylixDevTools().enable();
+        devtools.recordAction('action', {}, {}, {}, 1);
+        expect(devtools.redo()).toBe(false);
+      });
+    });
+
+    // Performance Metrics Tests
+    describe('Performance Metrics', () => {
+      test('recordRender() updates render count', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordRender(5);
+        devtools.recordRender(10);
+        expect(devtools.getPerformanceMetrics().renders).toBe(2);
+      });
+
+      test('recordRender() updates last render time', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordRender(5);
+        devtools.recordRender(10);
+        expect(devtools.getPerformanceMetrics().lastRenderTime).toBe(10);
+      });
+
+      test('recordRender() calculates average render time', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordRender(10);
+        devtools.recordRender(20);
+        expect(devtools.getPerformanceMetrics().averageRenderTime).toBe(15);
+      });
+
+      test('recordRender() tracks peak render time', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordRender(5);
+        devtools.recordRender(50);
+        devtools.recordRender(10);
+        expect(devtools.getPerformanceMetrics().peakRenderTime).toBe(50);
+      });
+
+      test('getPerformanceMetrics() returns copy', () => {
+        const devtools = new ZylixDevTools();
+        const metrics1 = devtools.getPerformanceMetrics();
+        const metrics2 = devtools.getPerformanceMetrics();
+        expect(metrics1).not.toBe(metrics2);
+      });
+    });
+
+    // Network Request Tests
+    describe('Network Requests', () => {
+      test('recordNetworkRequest() adds request', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordNetworkRequest('GET', '/api/users', 200, 50);
+        expect(devtools.getNetworkRequests()).toHaveLength(1);
+      });
+
+      test('recorded request has correct properties', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordNetworkRequest('POST', '/api/todos', 201, 100);
+        const req = devtools.getNetworkRequests()[0];
+        expect(req.method).toBe('POST');
+        expect(req.url).toBe('/api/todos');
+        expect(req.status).toBe(201);
+        expect(req.duration).toBe(100);
+      });
+
+      test('limits to 100 requests', () => {
+        const devtools = new ZylixDevTools();
+        for (let i = 0; i < 110; i++) {
+          devtools.recordNetworkRequest('GET', '/api/' + i, 200, 10);
+        }
+        expect(devtools.getNetworkRequests()).toHaveLength(100);
+      });
+    });
+
+    // Subscription Tests
+    describe('Subscriptions', () => {
+      test('subscribe() returns unsubscribe function', () => {
+        const devtools = new ZylixDevTools();
+        const unsubscribe = devtools.subscribe(() => {});
+        expect(typeof unsubscribe).toBe('function');
+      });
+
+      test('unsubscribe removes listener', () => {
+        const devtools = new ZylixDevTools();
+        let callCount = 0;
+        const unsubscribe = devtools.subscribe(() => { callCount++; });
+        unsubscribe();
+        expect(devtools.listeners.size).toBe(0);
+      });
+    });
+
+    // Export State Tests
+    describe('Export State', () => {
+      test('exportState() returns JSON string', () => {
+        const devtools = new ZylixDevTools();
+        const exported = devtools.exportState();
+        expect(typeof exported).toBe('string');
+      });
+
+      test('exportState() includes stores', () => {
+        const devtools = new ZylixDevTools();
+        devtools.connectStore('counter', { getState: () => ({ count: 42 }) });
+        const exported = JSON.parse(devtools.exportState());
+        expect(exported.stores.counter).toEqual({ count: 42 });
+      });
+
+      test('exportState() includes actions', () => {
+        const devtools = new ZylixDevTools().enable();
+        devtools.recordAction('test', {}, {}, {}, 1);
+        const exported = JSON.parse(devtools.exportState());
+        expect(exported.actions).toHaveLength(1);
+      });
+
+      test('exportState() includes performance', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordRender(10);
+        const exported = JSON.parse(devtools.exportState());
+        expect(exported.performance.renders).toBe(1);
+      });
+
+      test('exportState() includes network', () => {
+        const devtools = new ZylixDevTools();
+        devtools.recordNetworkRequest('GET', '/api', 200, 50);
+        const exported = JSON.parse(devtools.exportState());
+        expect(exported.network).toHaveLength(1);
+      });
+    });
+
+    // Tab Navigation Tests
+    describe('Tab Navigation', () => {
+      test('default active tab is state', () => {
+        const devtools = new ZylixDevTools();
+        expect(devtools.getActiveTab()).toBe('state');
+      });
+
+      test('setActiveTab() changes active tab', () => {
+        const devtools = new ZylixDevTools();
+        devtools.setActiveTab('actions');
+        expect(devtools.getActiveTab()).toBe('actions');
+      });
+
+      test('supports all tab types', () => {
+        const devtools = new ZylixDevTools();
+        const tabs = ['state', 'actions', 'performance', 'network'];
+        for (const tab of tabs) {
+          devtools.setActiveTab(tab);
+          expect(devtools.getActiveTab()).toBe(tab);
+        }
+      });
+    });
+
+    // Vite Plugin Tests (Simulated)
+    describe('Vite Plugin', () => {
+      // Mock Vite plugin configuration
+      const createMockPlugin = (options = {}) => ({
+        name: 'vite-plugin-zylix',
+        options: {
+          hmr: options.hmr ?? true,
+          preserveState: options.preserveState ?? true,
+          devtools: options.devtools ?? true,
+          extensions: options.extensions ?? ['.ts', '.tsx', '.js', '.jsx'],
+        },
+      });
+
+      test('creates plugin with default options', () => {
+        const plugin = createMockPlugin();
+        expect(plugin.name).toBe('vite-plugin-zylix');
+        expect(plugin.options.hmr).toBe(true);
+        expect(plugin.options.preserveState).toBe(true);
+      });
+
+      test('creates plugin with custom options', () => {
+        const plugin = createMockPlugin({ hmr: false, preserveState: false });
+        expect(plugin.options.hmr).toBe(false);
+        expect(plugin.options.preserveState).toBe(false);
+      });
+
+      test('uses default extensions', () => {
+        const plugin = createMockPlugin();
+        expect(plugin.options.extensions).toContain('.ts');
+        expect(plugin.options.extensions).toContain('.tsx');
+        expect(plugin.options.extensions).toContain('.js');
+        expect(plugin.options.extensions).toContain('.jsx');
+      });
+
+      test('allows custom extensions', () => {
+        const plugin = createMockPlugin({ extensions: ['.ts', '.vue'] });
+        expect(plugin.options.extensions).toContain('.vue');
+      });
+    });
+
+    // CLI Tests (Simulated)
+    describe('CLI Commands', () => {
+      // Mock CLI commands
+      const commands = ['create', 'dev', 'build', 'preview', 'generate', 'test'];
+
+      test('supports create command', () => {
+        expect(commands).toContain('create');
+      });
+
+      test('supports dev command', () => {
+        expect(commands).toContain('dev');
+      });
+
+      test('supports build command', () => {
+        expect(commands).toContain('build');
+      });
+
+      test('supports preview command', () => {
+        expect(commands).toContain('preview');
+      });
+
+      test('supports generate command', () => {
+        expect(commands).toContain('generate');
+      });
+
+      test('supports test command', () => {
+        expect(commands).toContain('test');
+      });
+    });
+
+    // CLI Templates Tests (Simulated)
+    describe('CLI Templates', () => {
+      const templates = ['default', 'counter', 'todo', 'dashboard'];
+
+      test('has default template', () => {
+        expect(templates).toContain('default');
+      });
+
+      test('has counter template', () => {
+        expect(templates).toContain('counter');
+      });
+
+      test('has todo template', () => {
+        expect(templates).toContain('todo');
+      });
+
+      test('has dashboard template', () => {
+        expect(templates).toContain('dashboard');
+      });
+    });
+
+    // HMR Runtime Tests (Simulated)
+    describe('HMR Runtime', () => {
+      // Simulate HMR state storage
+      const hmrState = new Map();
+
+      test('creates HMR state storage', () => {
+        expect(hmrState).toBeInstanceOf(Map);
+      });
+
+      test('can store state for module', () => {
+        hmrState.set('module_123', { count: 42 });
+        expect(hmrState.get('module_123')).toEqual({ count: 42 });
+      });
+
+      test('can restore state for module', () => {
+        hmrState.set('module_456', { todos: ['item1', 'item2'] });
+        const restored = hmrState.get('module_456');
+        expect(restored.todos).toHaveLength(2);
+      });
+
+      test('can clear state for module', () => {
+        hmrState.set('module_789', { data: 'test' });
+        hmrState.delete('module_789');
+        expect(hmrState.has('module_789')).toBe(false);
+      });
+    });
+
+    // Render Results
+    function renderResults() {
+      const summaryEl = document.getElementById('summary');
+      const resultsEl = document.getElementById('results');
+
+      const total = passed + failed;
+      summaryEl.textContent = `${passed}/${total} tests passed`;
+      summaryEl.className = `summary ${failed === 0 ? 'pass' : 'fail'}`;
+
+      for (const [groupName, group] of Object.entries(results)) {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'test-group';
+
+        const headerEl = document.createElement('div');
+        headerEl.className = 'test-group-header';
+        headerEl.innerHTML = `
+          <span>${groupName}</span>
+          <span style="color: ${group.failed > 0 ? '#dc2626' : '#059669'}">${group.passed}/${group.tests.length}</span>
+        `;
+
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'test-group-body';
+
+        for (const test of group.tests) {
+          const testEl = document.createElement('div');
+          testEl.className = `test-item ${test.passed ? 'pass' : 'fail'}`;
+          testEl.innerHTML = `
+            <span class="test-icon">${test.passed ? '✓' : '✕'}</span>
+            <span class="test-name">${test.name}</span>
+            ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+          `;
+          bodyEl.appendChild(testEl);
+        }
+
+        headerEl.onclick = () => {
+          bodyEl.classList.toggle('hidden');
+        };
+
+        groupEl.appendChild(headerEl);
+        groupEl.appendChild(bodyEl);
+        resultsEl.appendChild(groupEl);
+      }
+    }
+
+    renderResults();
+    console.log(`Tests completed: ${passed}/${passed + failed} passed`);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - API Reference</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e4e4e7;
+      line-height: 1.6;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 280px;
+      background: rgba(0, 0, 0, 0.3);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+    }
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+    .sidebar-link {
+      display: block;
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .sidebar-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e4e4e7;
+    }
+    .sidebar-link.active {
+      background: rgba(129, 140, 248, 0.2);
+      color: #818cf8;
+    }
+    .main {
+      flex: 1;
+      margin-left: 280px;
+      padding: 40px 60px;
+      max-width: 1000px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    h2 {
+      font-size: 1.8rem;
+      color: #a5b4fc;
+      margin: 50px 0 20px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2:first-of-type {
+      border-top: none;
+      margin-top: 30px;
+    }
+    h3 {
+      font-size: 1.3rem;
+      color: #c4b5fd;
+      margin: 30px 0 15px;
+    }
+    h4 {
+      font-size: 1.1rem;
+      color: #ddd6fe;
+      margin: 20px 0 10px;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 15px;
+    }
+    .api-signature {
+      background: #1e1b4b;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.9rem;
+      margin: 15px 0;
+      overflow-x: auto;
+      border-left: 3px solid #818cf8;
+    }
+    .api-signature .keyword {
+      color: #c084fc;
+    }
+    .api-signature .function {
+      color: #818cf8;
+    }
+    .api-signature .type {
+      color: #67e8f9;
+    }
+    .api-signature .param {
+      color: #fcd34d;
+    }
+    pre {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 15px 0;
+      font-size: 0.85rem;
+    }
+    code {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #e4e4e7;
+    }
+    .inline-code {
+      background: rgba(129, 140, 248, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .param-table th,
+    .param-table td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .param-table th {
+      color: #a5b4fc;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+    .param-table td {
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+    .param-name {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #fcd34d;
+    }
+    .param-type {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #67e8f9;
+      font-size: 0.85rem;
+    }
+    .param-required {
+      color: #f87171;
+      font-size: 0.75rem;
+    }
+    .param-optional {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+    .returns-box {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    .returns-label {
+      color: #10b981;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .example-box {
+      background: rgba(129, 140, 248, 0.1);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    .example-label {
+      color: #818cf8;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .badge-new {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    .badge-deprecated {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    .toc {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .toc-title {
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    .toc-list {
+      list-style: none;
+    }
+    .toc-list li {
+      margin-bottom: 8px;
+    }
+    .toc-list a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .toc-list a:hover {
+      color: #818cf8;
+    }
+    .note {
+      background: rgba(251, 191, 36, 0.1);
+      border-left: 3px solid #fbbf24;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin: 15px 0;
+    }
+    .note-title {
+      color: #fbbf24;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">Zylix Docs</div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <a href="index.html" class="sidebar-link">Introduction</a>
+        <a href="getting-started.html" class="sidebar-link">Quick Start</a>
+        <a href="installation.html" class="sidebar-link">Installation</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core API</div>
+        <a href="#components" class="sidebar-link active">Components</a>
+        <a href="#hooks" class="sidebar-link">Hooks</a>
+        <a href="#store" class="sidebar-link">Store</a>
+        <a href="#http" class="sidebar-link">HTTP Client</a>
+        <a href="#router" class="sidebar-link">Router</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Testing</div>
+        <a href="#testing-render" class="sidebar-link">render()</a>
+        <a href="#testing-screen" class="sidebar-link">screen</a>
+        <a href="#testing-events" class="sidebar-link">Events</a>
+        <a href="#testing-async" class="sidebar-link">Async Utilities</a>
+        <a href="#testing-mocks" class="sidebar-link">Mocks</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Resources</div>
+        <a href="../samples/index.html" class="sidebar-link">Samples</a>
+        <a href="patterns.html" class="sidebar-link">Patterns</a>
+        <a href="https://github.com/kotsutsumi/zylix" class="sidebar-link">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <h1>API Reference</h1>
+      <p>Complete API documentation for Zylix v0.25.0</p>
+
+      <div class="toc">
+        <div class="toc-title">On This Page</div>
+        <ul class="toc-list">
+          <li><a href="#components">Components</a></li>
+          <li><a href="#hooks">Hooks</a></li>
+          <li><a href="#store">Store</a></li>
+          <li><a href="#http">HTTP Client</a></li>
+          <li><a href="#router">Router</a></li>
+          <li><a href="#testing">Testing Library</a></li>
+        </ul>
+      </div>
+
+      <!-- ===================== COMPONENTS ===================== -->
+      <h2 id="components">Components</h2>
+      <p>Zylix components are functions that return virtual DOM nodes.</p>
+
+      <h3>h(type, props, ...children)</h3>
+      <p>Creates a virtual DOM element.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">h</span>(<br>
+        &nbsp;&nbsp;<span class="param">type</span>: <span class="type">string | Function</span>,<br>
+        &nbsp;&nbsp;<span class="param">props</span>: <span class="type">object | null</span>,<br>
+        &nbsp;&nbsp;...<span class="param">children</span>: <span class="type">Array&lt;VNode | string&gt;</span><br>
+        ): <span class="type">VNode</span>
+      </div>
+
+      <table class="param-table">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><span class="param-name">type</span></td>
+          <td><span class="param-type">string | Function</span></td>
+          <td>Element tag name or component function</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">props</span></td>
+          <td><span class="param-type">object | null</span></td>
+          <td>Element properties and attributes</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">children</span></td>
+          <td><span class="param-type">VNode[]</span></td>
+          <td>Child elements or text content</td>
+        </tr>
+      </table>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>// Create a simple element
+const button = h('button', { onClick: handleClick }, 'Click me');
+
+// Create a component
+function Card({ title, children }) {
+  return h('div', { className: 'card' },
+    h('h2', null, title),
+    h('div', { className: 'card-body' }, ...children)
+  );
+}
+
+// Use the component
+const myCard = h(Card, { title: 'Hello' },
+  h('p', null, 'Card content')
+);</code></pre>
+      </div>
+
+      <h3>render(vnode, container)</h3>
+      <p>Renders a virtual DOM tree into a DOM container.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">render</span>(<br>
+        &nbsp;&nbsp;<span class="param">vnode</span>: <span class="type">VNode</span>,<br>
+        &nbsp;&nbsp;<span class="param">container</span>: <span class="type">HTMLElement</span><br>
+        ): <span class="type">void</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function App() {
+  return h('div', null,
+    h('h1', null, 'Hello, Zylix!')
+  );
+}
+
+render(h(App), document.getElementById('app'));</code></pre>
+      </div>
+
+      <!-- ===================== HOOKS ===================== -->
+      <h2 id="hooks">Hooks</h2>
+      <p>Hooks enable state and lifecycle features in functional components.</p>
+
+      <h3>useState(initialValue)</h3>
+      <p>Adds local state to a component.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useState</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">initialValue</span>: <span class="type">T | () => T</span><br>
+        ): <span class="type">[T, (value: T | (prev: T) => T) => void]</span>
+      </div>
+
+      <div class="returns-box">
+        <div class="returns-label">Returns</div>
+        <p>A tuple containing the current state value and a setter function.</p>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+
+  return h('div', null,
+    h('p', null, `Count: ${count}`),
+    h('button', { onClick: () => setCount(c => c + 1) }, '+'),
+    h('button', { onClick: () => setCount(c => c - 1) }, '-')
+  );
+}</code></pre>
+      </div>
+
+      <h3>useEffect(effect, deps)</h3>
+      <p>Runs side effects after render.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useEffect</span>(<br>
+        &nbsp;&nbsp;<span class="param">effect</span>: <span class="type">() => void | (() => void)</span>,<br>
+        &nbsp;&nbsp;<span class="param">deps</span>?: <span class="type">any[]</span><br>
+        ): <span class="type">void</span>
+      </div>
+
+      <table class="param-table">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><span class="param-name">effect</span></td>
+          <td><span class="param-type">Function</span></td>
+          <td>Effect function, optionally returns cleanup</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">deps</span> <span class="param-optional">optional</span></td>
+          <td><span class="param-type">any[]</span></td>
+          <td>Dependency array (effect re-runs when deps change)</td>
+        </tr>
+      </table>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function Timer() {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(s => s + 1);
+    }, 1000);
+
+    // Cleanup function
+    return () => clearInterval(interval);
+  }, []); // Empty deps = run once on mount
+
+  return h('p', null, `Elapsed: ${seconds}s`);
+}</code></pre>
+      </div>
+
+      <h3>useMemo(factory, deps)</h3>
+      <p>Memoizes expensive computations.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useMemo</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">factory</span>: <span class="type">() => T</span>,<br>
+        &nbsp;&nbsp;<span class="param">deps</span>: <span class="type">any[]</span><br>
+        ): <span class="type">T</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function ExpensiveList({ items, filter }) {
+  const filteredItems = useMemo(() => {
+    return items.filter(item => item.name.includes(filter));
+  }, [items, filter]);
+
+  return h('ul', null,
+    ...filteredItems.map(item => h('li', { key: item.id }, item.name))
+  );
+}</code></pre>
+      </div>
+
+      <h3>useCallback(callback, deps)</h3>
+      <p>Memoizes callback functions.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useCallback</span>&lt;<span class="type">T extends Function</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">callback</span>: <span class="type">T</span>,<br>
+        &nbsp;&nbsp;<span class="param">deps</span>: <span class="type">any[]</span><br>
+        ): <span class="type">T</span>
+      </div>
+
+      <h3>useRef(initialValue)</h3>
+      <p>Creates a mutable ref object.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useRef</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">initialValue</span>: <span class="type">T</span><br>
+        ): <span class="type">{ current: T }</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function TextInput() {
+  const inputRef = useRef(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+
+  return h('div', null,
+    h('input', { ref: inputRef, type: 'text' }),
+    h('button', { onClick: focusInput }, 'Focus')
+  );
+}</code></pre>
+      </div>
+
+      <!-- ===================== STORE ===================== -->
+      <h2 id="store">Store</h2>
+      <p>Global state management with actions, selectors, and middleware support.</p>
+
+      <h3>createStore(config)</h3>
+      <p>Creates a global state store.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">createStore</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">config</span>: <span class="type">{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;initialState: T,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;actions: Record&lt;string, (state: T, payload?: any) => T&gt;,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;selectors?: Record&lt;string, (state: T) => any&gt;,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;middleware?: Middleware[]<br>
+        &nbsp;&nbsp;}</span><br>
+        ): <span class="type">Store&lt;T&gt;</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>const store = createStore({
+  initialState: {
+    count: 0,
+    todos: []
+  },
+
+  actions: {
+    increment: (state) => ({ ...state, count: state.count + 1 }),
+    decrement: (state) => ({ ...state, count: state.count - 1 }),
+    addTodo: (state, text) => ({
+      ...state,
+      todos: [...state.todos, { id: Date.now(), text, done: false }]
+    })
+  },
+
+  selectors: {
+    count: (state) => state.count,
+    todos: (state) => state.todos,
+    activeTodos: (state) => state.todos.filter(t => !t.done)
+  }
+});</code></pre>
+      </div>
+
+      <h3>store.dispatch(action, payload)</h3>
+      <p>Dispatches an action to update state.</p>
+
+      <div class="api-signature">
+        <span class="function">store.dispatch</span>(<br>
+        &nbsp;&nbsp;<span class="param">action</span>: <span class="type">string</span>,<br>
+        &nbsp;&nbsp;<span class="param">payload</span>?: <span class="type">any</span><br>
+        ): <span class="type">void</span>
+      </div>
+
+      <h3>store.select(selector)</h3>
+      <p>Selects a slice of state using a selector.</p>
+
+      <div class="api-signature">
+        <span class="function">store.select</span>(<br>
+        &nbsp;&nbsp;<span class="param">selector</span>: <span class="type">string | (state: T) => any</span><br>
+        ): <span class="type">any</span>
+      </div>
+
+      <h3>store.subscribe(listener)</h3>
+      <p>Subscribes to state changes.</p>
+
+      <div class="api-signature">
+        <span class="function">store.subscribe</span>(<br>
+        &nbsp;&nbsp;<span class="param">listener</span>: <span class="type">(state: T) => void</span><br>
+        ): <span class="type">() => void</span>
+      </div>
+
+      <div class="returns-box">
+        <div class="returns-label">Returns</div>
+        <p>Unsubscribe function.</p>
+      </div>
+
+      <h3>useStore(store, selector)</h3>
+      <p>Hook to use store state in components.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useStore</span>&lt;<span class="type">T, R</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">store</span>: <span class="type">Store&lt;T&gt;</span>,<br>
+        &nbsp;&nbsp;<span class="param">selector</span>: <span class="type">string | (state: T) => R</span><br>
+        ): <span class="type">R</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function Counter() {
+  const count = useStore(store, 'count');
+
+  return h('div', null,
+    h('span', null, `Count: ${count}`),
+    h('button', { onClick: () => store.dispatch('increment') }, '+')
+  );
+}</code></pre>
+      </div>
+
+      <!-- ===================== HTTP ===================== -->
+      <h2 id="http">HTTP Client</h2>
+      <p>Built-in HTTP client with interceptors and request/response handling.</p>
+
+      <h3>http.get(url, options)</h3>
+      <p>Performs a GET request.</p>
+
+      <div class="api-signature">
+        <span class="keyword">async function</span> <span class="function">http.get</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">url</span>: <span class="type">string</span>,<br>
+        &nbsp;&nbsp;<span class="param">options</span>?: <span class="type">RequestOptions</span><br>
+        ): <span class="type">Promise&lt;T&gt;</span>
+      </div>
+
+      <h3>http.post(url, data, options)</h3>
+      <p>Performs a POST request.</p>
+
+      <div class="api-signature">
+        <span class="keyword">async function</span> <span class="function">http.post</span>&lt;<span class="type">T</span>&gt;(<br>
+        &nbsp;&nbsp;<span class="param">url</span>: <span class="type">string</span>,<br>
+        &nbsp;&nbsp;<span class="param">data</span>: <span class="type">any</span>,<br>
+        &nbsp;&nbsp;<span class="param">options</span>?: <span class="type">RequestOptions</span><br>
+        ): <span class="type">Promise&lt;T&gt;</span>
+      </div>
+
+      <h3>http.put / http.patch / http.delete</h3>
+      <p>Similar to post, for PUT, PATCH, and DELETE methods.</p>
+
+      <h3>http.addInterceptor(interceptor)</h3>
+      <p>Adds a request/response interceptor.</p>
+
+      <div class="api-signature">
+        <span class="function">http.addInterceptor</span>(<br>
+        &nbsp;&nbsp;<span class="param">interceptor</span>: <span class="type">{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;request?: (config) => config,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;response?: (response) => response,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;error?: (error) => Promise<br>
+        &nbsp;&nbsp;}</span><br>
+        ): <span class="type">void</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>// Add auth header to all requests
+http.addInterceptor({
+  request: (config) => {
+    config.headers = {
+      ...config.headers,
+      'Authorization': `Bearer ${getToken()}`
+    };
+    return config;
+  }
+});
+
+// Fetch data
+const users = await http.get('/api/users');
+const newUser = await http.post('/api/users', { name: 'John' });</code></pre>
+      </div>
+
+      <!-- ===================== ROUTER ===================== -->
+      <h2 id="router">Router</h2>
+      <p>Client-side routing with dynamic routes and navigation guards.</p>
+
+      <h3>createRouter(routes)</h3>
+      <p>Creates a router instance.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">createRouter</span>(<br>
+        &nbsp;&nbsp;<span class="param">routes</span>: <span class="type">Route[]</span><br>
+        ): <span class="type">Router</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>const router = createRouter([
+  { path: '/', component: Home },
+  { path: '/users', component: UserList },
+  { path: '/users/:id', component: UserDetail },
+  { path: '/admin/*', component: AdminLayout, guard: requireAuth },
+  { path: '*', component: NotFound }
+]);
+
+// Navigate programmatically
+router.push('/users/123');
+router.replace('/login');
+router.back();</code></pre>
+      </div>
+
+      <h3>useRouter()</h3>
+      <p>Hook to access router in components.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">useRouter</span>(): <span class="type">{<br>
+        &nbsp;&nbsp;route: Route,<br>
+        &nbsp;&nbsp;params: Record&lt;string, string&gt;,<br>
+        &nbsp;&nbsp;query: Record&lt;string, string&gt;,<br>
+        &nbsp;&nbsp;push: (path: string) => void,<br>
+        &nbsp;&nbsp;replace: (path: string) => void,<br>
+        &nbsp;&nbsp;back: () => void<br>
+        }</span>
+      </div>
+
+      <h3>Link</h3>
+      <p>Navigation component.</p>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>function Nav() {
+  return h('nav', null,
+    h(Link, { to: '/' }, 'Home'),
+    h(Link, { to: '/users' }, 'Users'),
+    h(Link, { to: '/about', className: 'nav-link' }, 'About')
+  );
+}</code></pre>
+      </div>
+
+      <!-- ===================== TESTING ===================== -->
+      <h2 id="testing">Testing Library</h2>
+      <p>Comprehensive testing utilities for Zylix components.</p>
+
+      <h3 id="testing-render">render(component)</h3>
+      <p>Renders a component for testing.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">render</span>(<br>
+        &nbsp;&nbsp;<span class="param">component</span>: <span class="type">VNode</span><br>
+        ): <span class="type">{<br>
+        &nbsp;&nbsp;container: HTMLElement,<br>
+        &nbsp;&nbsp;debug: () => void,<br>
+        &nbsp;&nbsp;rerender: (newComponent: VNode) => void,<br>
+        &nbsp;&nbsp;unmount: () => void<br>
+        }</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>import { render, screen } from 'zylix/testing';
+
+test('renders greeting', () => {
+  render(h(Greeting, { name: 'World' }));
+  expect(screen.getByText('Hello, World!')).toBeInTheDocument();
+});</code></pre>
+      </div>
+
+      <h3 id="testing-screen">screen</h3>
+      <p>Query methods for finding elements.</p>
+
+      <table class="param-table">
+        <tr>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><span class="param-name">getByText(text)</span></td>
+          <td>Find by text content (throws if not found)</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">getByTestId(id)</span></td>
+          <td>Find by data-testid attribute</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">getByRole(role)</span></td>
+          <td>Find by ARIA role</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">getByPlaceholder(text)</span></td>
+          <td>Find input by placeholder</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">getByLabelText(text)</span></td>
+          <td>Find input by associated label</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">queryBy*()</span></td>
+          <td>Same as getBy but returns null if not found</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">getAllBy*()</span></td>
+          <td>Returns array of all matching elements</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">findBy*()</span></td>
+          <td>Async version, waits for element</td>
+        </tr>
+      </table>
+
+      <h3 id="testing-events">fireEvent</h3>
+      <p>Fires DOM events on elements.</p>
+
+      <div class="api-signature">
+        <span class="function">fireEvent.click</span>(<span class="param">element</span>: <span class="type">HTMLElement</span>): <span class="type">void</span><br>
+        <span class="function">fireEvent.change</span>(<span class="param">element</span>, <span class="param">{ target: { value } }</span>): <span class="type">void</span><br>
+        <span class="function">fireEvent.submit</span>(<span class="param">element</span>): <span class="type">void</span><br>
+        <span class="function">fireEvent.keyDown</span>(<span class="param">element</span>, <span class="param">{ key, code }</span>): <span class="type">void</span>
+      </div>
+
+      <h3>userEvent</h3>
+      <p>Simulates real user interactions.</p>
+
+      <div class="api-signature">
+        <span class="keyword">await</span> <span class="function">userEvent.click</span>(<span class="param">element</span>): <span class="type">Promise</span><br>
+        <span class="keyword">await</span> <span class="function">userEvent.type</span>(<span class="param">element</span>, <span class="param">text</span>): <span class="type">Promise</span><br>
+        <span class="keyword">await</span> <span class="function">userEvent.clear</span>(<span class="param">element</span>): <span class="type">Promise</span><br>
+        <span class="keyword">await</span> <span class="function">userEvent.selectOptions</span>(<span class="param">select</span>, <span class="param">values</span>): <span class="type">Promise</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>test('user can submit form', async () => {
+  render(h(LoginForm));
+
+  await userEvent.type(screen.getByPlaceholder('Email'), 'test@example.com');
+  await userEvent.type(screen.getByPlaceholder('Password'), 'secret123');
+  await userEvent.click(screen.getByRole('button', { name: 'Login' }));
+
+  expect(await screen.findByText('Welcome!')).toBeInTheDocument();
+});</code></pre>
+      </div>
+
+      <h3 id="testing-async">waitFor(callback)</h3>
+      <p>Waits for async conditions.</p>
+
+      <div class="api-signature">
+        <span class="keyword">async function</span> <span class="function">waitFor</span>(<br>
+        &nbsp;&nbsp;<span class="param">callback</span>: <span class="type">() => void</span>,<br>
+        &nbsp;&nbsp;<span class="param">options</span>?: <span class="type">{ timeout?: number, interval?: number }</span><br>
+        ): <span class="type">Promise&lt;void&gt;</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>await waitFor(() => {
+  expect(screen.getByText('Loaded!')).toBeInTheDocument();
+}, { timeout: 3000 });</code></pre>
+      </div>
+
+      <h3 id="testing-mocks">createMockStore(config)</h3>
+      <p>Creates a mock store for testing.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">createMockStore</span>(<br>
+        &nbsp;&nbsp;<span class="param">config</span>: <span class="type">StoreConfig</span><br>
+        ): <span class="type">MockStore</span>
+      </div>
+
+      <div class="returns-box">
+        <div class="returns-label">Returns</div>
+        <p>Mock store with action tracking: <code class="inline-code">getActions()</code>, <code class="inline-code">getLastAction()</code>, <code class="inline-code">clearActions()</code></p>
+      </div>
+
+      <h3>createMockServer()</h3>
+      <p>Creates a mock HTTP server for testing.</p>
+
+      <div class="api-signature">
+        <span class="keyword">function</span> <span class="function">createMockServer</span>(): <span class="type">{<br>
+        &nbsp;&nbsp;mock: (method, url, response, options?) => void,<br>
+        &nbsp;&nbsp;getRequests: () => Request[],<br>
+        &nbsp;&nbsp;reset: () => void,<br>
+        &nbsp;&nbsp;restore: () => void<br>
+        }</span>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Example</div>
+        <pre><code>const server = createMockServer();
+
+// Mock API responses
+server.mock('GET', '/api/users', [
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+]);
+
+server.mock('POST', '/api/users', { id: 3, name: 'Charlie' });
+
+// With delay
+server.mock('GET', '/api/slow', { data: 'result' }, { delay: 1000 });
+
+// Verify requests
+const requests = server.getRequests();
+expect(requests[0].url).toBe('/api/users');
+
+// Cleanup
+server.restore();</code></pre>
+      </div>
+
+      <h3>expect() Matchers</h3>
+      <p>Assertion matchers for testing.</p>
+
+      <table class="param-table">
+        <tr>
+          <th>Matcher</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBe(value)</span></td>
+          <td>Strict equality (===)</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toEqual(value)</span></td>
+          <td>Deep equality</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeTruthy()</span></td>
+          <td>Value is truthy</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeFalsy()</span></td>
+          <td>Value is falsy</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeNull()</span></td>
+          <td>Value is null</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toContain(item)</span></td>
+          <td>Array/string contains item</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toHaveLength(n)</span></td>
+          <td>Array/string has length</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeGreaterThan(n)</span></td>
+          <td>Number comparison</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeInTheDocument()</span></td>
+          <td>Element is in DOM</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toHaveTextContent(text)</span></td>
+          <td>Element contains text</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toHaveAttribute(name, value?)</span></td>
+          <td>Element has attribute</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toHaveClass(className)</span></td>
+          <td>Element has CSS class</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeVisible()</span></td>
+          <td>Element is visible</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toBeDisabled()</span></td>
+          <td>Element is disabled</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toHaveValue(value)</span></td>
+          <td>Input has value</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">toThrow(message?)</span></td>
+          <td>Function throws error</td>
+        </tr>
+        <tr>
+          <td><span class="param-name">.not</span></td>
+          <td>Negates any matcher</td>
+        </tr>
+      </table>
+
+      <div class="note">
+        <div class="note-title">Note</div>
+        <p>All testing utilities are tree-shakeable. Import only what you need for optimal bundle size.</p>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

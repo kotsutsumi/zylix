@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Component Patterns</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e4e4e7;
+      line-height: 1.6;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 280px;
+      background: rgba(0, 0, 0, 0.3);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+    }
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+    .sidebar-link {
+      display: block;
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .sidebar-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e4e4e7;
+    }
+    .sidebar-link.active {
+      background: rgba(129, 140, 248, 0.2);
+      color: #818cf8;
+    }
+    .main {
+      flex: 1;
+      margin-left: 280px;
+      padding: 40px 60px;
+      max-width: 1000px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    h2 {
+      font-size: 1.8rem;
+      color: #a5b4fc;
+      margin: 50px 0 20px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2:first-of-type {
+      border-top: none;
+      margin-top: 30px;
+    }
+    h3 {
+      font-size: 1.3rem;
+      color: #c4b5fd;
+      margin: 30px 0 15px;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 15px;
+    }
+    .lead {
+      font-size: 1.2rem;
+      color: #a5b4fc;
+      margin-bottom: 30px;
+    }
+    pre {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    code {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #e4e4e7;
+    }
+    .inline-code {
+      background: rgba(129, 140, 248, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .pattern-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin: 25px 0;
+      overflow: hidden;
+    }
+    .pattern-header {
+      padding: 15px 20px;
+      background: rgba(129, 140, 248, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pattern-icon {
+      font-size: 1.5rem;
+    }
+    .pattern-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .pattern-badges {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-beginner {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    .badge-intermediate {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+    }
+    .badge-advanced {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    .pattern-body {
+      padding: 20px;
+    }
+    .pattern-desc {
+      color: #9ca3af;
+      margin-bottom: 15px;
+    }
+    .use-cases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 15px 0;
+    }
+    .use-case {
+      padding: 4px 10px;
+      background: rgba(129, 140, 248, 0.15);
+      color: #a5b4fc;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    .tip {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 3px solid #10b981;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .tip-title {
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .warning {
+      background: rgba(251, 191, 36, 0.1);
+      border-left: 3px solid #fbbf24;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .warning-title {
+      color: #fbbf24;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .comparison-box {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .comparison-header {
+      padding: 10px 15px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .comparison-bad .comparison-header {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+    .comparison-good .comparison-header {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+    .comparison pre {
+      margin: 0;
+      border-radius: 0;
+      border: none;
+    }
+    .toc {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .toc-title {
+      font-size: 0.9rem;
+      color: #a5b4fc;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .toc-list a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .toc-list a:hover {
+      color: #818cf8;
+    }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .comparison { grid-template-columns: 1fr; }
+      .toc-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">Zylix Docs</div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <a href="index.html" class="sidebar-link">Introduction</a>
+        <a href="getting-started.html" class="sidebar-link">Quick Start</a>
+        <a href="installation.html" class="sidebar-link">Installation</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Concepts</div>
+        <a href="api-reference.html#components" class="sidebar-link">Components</a>
+        <a href="api-reference.html#hooks" class="sidebar-link">Hooks</a>
+        <a href="api-reference.html#store" class="sidebar-link">Store</a>
+        <a href="patterns.html" class="sidebar-link active">Patterns</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">On This Page</div>
+        <a href="#container-presentational" class="sidebar-link">Container/Presentational</a>
+        <a href="#compound-components" class="sidebar-link">Compound Components</a>
+        <a href="#render-props" class="sidebar-link">Render Props</a>
+        <a href="#custom-hooks" class="sidebar-link">Custom Hooks</a>
+        <a href="#controlled-components" class="sidebar-link">Controlled Components</a>
+        <a href="#error-boundaries" class="sidebar-link">Error Boundaries</a>
+        <a href="#optimistic-updates" class="sidebar-link">Optimistic Updates</a>
+        <a href="#lazy-loading" class="sidebar-link">Lazy Loading</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <h1>Component Patterns</h1>
+      <p class="lead">
+        Best practices and reusable patterns for building maintainable Zylix applications.
+      </p>
+
+      <div class="toc">
+        <div class="toc-title">Patterns Covered</div>
+        <ul class="toc-list">
+          <li><a href="#container-presentational">Container/Presentational</a></li>
+          <li><a href="#compound-components">Compound Components</a></li>
+          <li><a href="#render-props">Render Props</a></li>
+          <li><a href="#custom-hooks">Custom Hooks</a></li>
+          <li><a href="#controlled-components">Controlled Components</a></li>
+          <li><a href="#error-boundaries">Error Boundaries</a></li>
+          <li><a href="#optimistic-updates">Optimistic Updates</a></li>
+          <li><a href="#lazy-loading">Lazy Loading</a></li>
+        </ul>
+      </div>
+
+      <!-- Container/Presentational -->
+      <h2 id="container-presentational">Container/Presentational Pattern</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">📦</span>
+          <span class="pattern-name">Container/Presentational</span>
+          <div class="pattern-badges">
+            <span class="badge badge-beginner">Beginner</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Separate data fetching and business logic (container) from UI rendering (presentational).
+            This makes components more reusable and easier to test.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Data-driven UIs</span>
+            <span class="use-case">Reusable components</span>
+            <span class="use-case">Testing</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// Presentational: Only handles UI, receives data via props
+function UserList({ users, onSelect }) {
+  return h('ul', { className: 'user-list' },
+    ...users.map(user =>
+      h('li', {
+        key: user.id,
+        onClick: () => onSelect(user)
+      }, user.name)
+    )
+  );
+}
+
+// Container: Handles data fetching and state
+function UserListContainer() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    http.get('/api/users')
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return h('div', null, 'Loading...');
+  }
+
+  return h(UserList, {
+    users,
+    onSelect: setSelected
+  });
+}</code></pre>
+
+      <div class="tip">
+        <div class="tip-title">When to Use</div>
+        <p>Use this pattern when you need to reuse the same UI with different data sources, or when you want to simplify testing by isolating UI from logic.</p>
+      </div>
+
+      <!-- Compound Components -->
+      <h2 id="compound-components">Compound Components</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🧩</span>
+          <span class="pattern-name">Compound Components</span>
+          <div class="pattern-badges">
+            <span class="badge badge-intermediate">Intermediate</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Create components that work together as a group, sharing implicit state.
+            This provides a flexible and expressive API for complex components.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Tabs</span>
+            <span class="use-case">Accordions</span>
+            <span class="use-case">Menus</span>
+            <span class="use-case">Form groups</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// Create a context for shared state
+const TabsContext = createContext();
+
+function Tabs({ children, defaultTab }) {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  return h(TabsContext.Provider, { value: { activeTab, setActiveTab } },
+    h('div', { className: 'tabs' }, children)
+  );
+}
+
+function TabList({ children }) {
+  return h('div', { className: 'tab-list', role: 'tablist' }, children);
+}
+
+function Tab({ id, children }) {
+  const { activeTab, setActiveTab } = useContext(TabsContext);
+  const isActive = activeTab === id;
+
+  return h('button', {
+    role: 'tab',
+    className: `tab ${isActive ? 'active' : ''}`,
+    onClick: () => setActiveTab(id),
+    'aria-selected': isActive
+  }, children);
+}
+
+function TabPanel({ id, children }) {
+  const { activeTab } = useContext(TabsContext);
+
+  if (activeTab !== id) return null;
+
+  return h('div', { className: 'tab-panel', role: 'tabpanel' }, children);
+}
+
+// Usage - Clean, declarative API
+h(Tabs, { defaultTab: 'home' },
+  h(TabList, null,
+    h(Tab, { id: 'home' }, 'Home'),
+    h(Tab, { id: 'profile' }, 'Profile'),
+    h(Tab, { id: 'settings' }, 'Settings')
+  ),
+  h(TabPanel, { id: 'home' }, 'Home content'),
+  h(TabPanel, { id: 'profile' }, 'Profile content'),
+  h(TabPanel, { id: 'settings' }, 'Settings content')
+)</code></pre>
+
+      <!-- Render Props -->
+      <h2 id="render-props">Render Props</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🎨</span>
+          <span class="pattern-name">Render Props</span>
+          <div class="pattern-badges">
+            <span class="badge badge-intermediate">Intermediate</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Share code between components using a prop whose value is a function.
+            This allows maximum flexibility in how the shared logic is rendered.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Cross-cutting concerns</span>
+            <span class="use-case">Dynamic rendering</span>
+            <span class="use-case">Flexible APIs</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// Mouse position tracker
+function MouseTracker({ render }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    return () => window.removeEventListener('mousemove', handleMove);
+  }, []);
+
+  return render(position);
+}
+
+// Usage - render the position however you want
+h(MouseTracker, {
+  render: ({ x, y }) => h('div', null,
+    h('p', null, `Mouse: ${x}, ${y}`),
+    h('div', {
+      style: `position: fixed; left: ${x}px; top: ${y}px;`
+    }, '🎯')
+  )
+})
+
+// Alternative: children as function
+function DataFetcher({ url, children }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    http.get(url)
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [url]);
+
+  return children({ data, loading, error });
+}
+
+// Usage
+h(DataFetcher, { url: '/api/users' }, ({ data, loading, error }) => {
+  if (loading) return h('p', null, 'Loading...');
+  if (error) return h('p', null, `Error: ${error.message}`);
+  return h('ul', null, ...data.map(u => h('li', null, u.name)));
+})</code></pre>
+
+      <!-- Custom Hooks -->
+      <h2 id="custom-hooks">Custom Hooks</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🪝</span>
+          <span class="pattern-name">Custom Hooks</span>
+          <div class="pattern-badges">
+            <span class="badge badge-beginner">Beginner</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Extract reusable stateful logic into custom hooks. This is the preferred
+            way to share logic between components in Zylix.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Data fetching</span>
+            <span class="use-case">Form handling</span>
+            <span class="use-case">Event listeners</span>
+            <span class="use-case">Browser APIs</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// useLocalStorage - Persist state to localStorage
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+// useDebounce - Debounce a value
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+// useFetch - Data fetching hook
+function useFetch(url) {
+  const [state, setState] = useState({
+    data: null,
+    loading: true,
+    error: null
+  });
+
+  useEffect(() => {
+    setState(s => ({ ...s, loading: true }));
+
+    http.get(url)
+      .then(data => setState({ data, loading: false, error: null }))
+      .catch(error => setState({ data: null, loading: false, error }));
+  }, [url]);
+
+  return state;
+}
+
+// useMediaQuery - Responsive design hook
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(
+    () => window.matchMedia(query).matches
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const listener = (e) => setMatches(e.matches);
+
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [query]);
+
+  return matches;
+}
+
+// Usage
+function App() {
+  const [theme, setTheme] = useLocalStorage('theme', 'dark');
+  const { data, loading } = useFetch('/api/users');
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // ...
+}</code></pre>
+
+      <!-- Controlled Components -->
+      <h2 id="controlled-components">Controlled Components</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🎮</span>
+          <span class="pattern-name">Controlled Components</span>
+          <div class="pattern-badges">
+            <span class="badge badge-beginner">Beginner</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Make form elements controlled by component state. This gives you full control
+            over the form values and enables validation, formatting, and conditional logic.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Forms</span>
+            <span class="use-case">Input validation</span>
+            <span class="use-case">Formatted inputs</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// Controlled input with validation
+function EmailInput({ value, onChange, error }) {
+  return h('div', { className: 'form-field' },
+    h('input', {
+      type: 'email',
+      value,
+      onInput: (e) => onChange(e.target.value),
+      className: error ? 'input-error' : ''
+    }),
+    error && h('span', { className: 'error' }, error)
+  );
+}
+
+// Form with controlled inputs
+function ContactForm() {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [errors, setErrors] = useState({});
+
+  const updateField = (field) => (value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!form.name) newErrors.name = 'Name is required';
+    if (!form.email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    if (!form.message) newErrors.message = 'Message is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) {
+      console.log('Submitting:', form);
+    }
+  };
+
+  return h('form', { onSubmit: handleSubmit },
+    h('input', {
+      value: form.name,
+      onInput: (e) => updateField('name')(e.target.value),
+      placeholder: 'Name'
+    }),
+    errors.name && h('span', { className: 'error' }, errors.name),
+
+    h(EmailInput, {
+      value: form.email,
+      onChange: updateField('email'),
+      error: errors.email
+    }),
+
+    h('textarea', {
+      value: form.message,
+      onInput: (e) => updateField('message')(e.target.value),
+      placeholder: 'Message'
+    }),
+    errors.message && h('span', { className: 'error' }, errors.message),
+
+    h('button', { type: 'submit' }, 'Send')
+  );
+}</code></pre>
+
+      <!-- Error Boundaries -->
+      <h2 id="error-boundaries">Error Boundaries</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🛡️</span>
+          <span class="pattern-name">Error Boundaries</span>
+          <div class="pattern-badges">
+            <span class="badge badge-intermediate">Intermediate</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Catch errors in component trees and display fallback UIs instead of crashing
+            the entire application.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Graceful degradation</span>
+            <span class="use-case">Error reporting</span>
+            <span class="use-case">User-friendly errors</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// ErrorBoundary component
+function ErrorBoundary({ children, fallback }) {
+  const [error, setError] = useState(null);
+
+  // In a real implementation, this would catch render errors
+  // For demo, we'll show the pattern
+
+  if (error) {
+    return typeof fallback === 'function'
+      ? fallback({ error, reset: () => setError(null) })
+      : fallback || h('div', { className: 'error-boundary' },
+          h('h2', null, 'Something went wrong'),
+          h('p', null, error.message),
+          h('button', { onClick: () => setError(null) }, 'Try Again')
+        );
+  }
+
+  return children;
+}
+
+// Usage with custom fallback
+h(ErrorBoundary, {
+  fallback: ({ error, reset }) => h('div', { className: 'error-ui' },
+    h('h2', null, 'Oops!'),
+    h('p', null, error.message),
+    h('button', { onClick: reset }, 'Retry')
+  )
+},
+  h(RiskyComponent)
+)
+
+// Async error handling pattern
+function useAsyncError() {
+  const [, setError] = useState();
+  return useCallback((error) => {
+    setError(() => { throw error; });
+  }, []);
+}</code></pre>
+
+      <!-- Optimistic Updates -->
+      <h2 id="optimistic-updates">Optimistic Updates</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">⚡</span>
+          <span class="pattern-name">Optimistic Updates</span>
+          <div class="pattern-badges">
+            <span class="badge badge-advanced">Advanced</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Update the UI immediately before the server responds, then reconcile
+            if the request fails. This makes the app feel instant and responsive.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Like buttons</span>
+            <span class="use-case">Todo toggles</span>
+            <span class="use-case">Comments</span>
+            <span class="use-case">Real-time apps</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>function TodoList() {
+  const [todos, setTodos] = useState([]);
+
+  const toggleTodo = async (id) => {
+    // 1. Save current state for rollback
+    const previousTodos = [...todos];
+
+    // 2. Optimistically update UI
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ));
+
+    try {
+      // 3. Send request to server
+      await http.patch(`/api/todos/${id}`, {
+        done: !todos.find(t => t.id === id).done
+      });
+    } catch (error) {
+      // 4. Rollback on error
+      setTodos(previousTodos);
+      showError('Failed to update todo');
+    }
+  };
+
+  const addTodo = async (text) => {
+    // Create optimistic todo with temporary ID
+    const tempId = `temp-${Date.now()}`;
+    const optimisticTodo = { id: tempId, text, done: false };
+
+    setTodos([...todos, optimisticTodo]);
+
+    try {
+      const newTodo = await http.post('/api/todos', { text });
+      // Replace temp todo with real one
+      setTodos(todos => todos.map(t =>
+        t.id === tempId ? newTodo : t
+      ));
+    } catch (error) {
+      // Remove optimistic todo on error
+      setTodos(todos => todos.filter(t => t.id !== tempId));
+      showError('Failed to add todo');
+    }
+  };
+
+  return h('ul', null,
+    ...todos.map(todo =>
+      h('li', {
+        key: todo.id,
+        className: todo.id.startsWith('temp-') ? 'pending' : ''
+      },
+        h('input', {
+          type: 'checkbox',
+          checked: todo.done,
+          onChange: () => toggleTodo(todo.id)
+        }),
+        h('span', null, todo.text)
+      )
+    )
+  );
+}</code></pre>
+
+      <!-- Lazy Loading -->
+      <h2 id="lazy-loading">Lazy Loading</h2>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🚀</span>
+          <span class="pattern-name">Lazy Loading</span>
+          <div class="pattern-badges">
+            <span class="badge badge-intermediate">Intermediate</span>
+          </div>
+        </div>
+        <div class="pattern-body">
+          <p class="pattern-desc">
+            Load components or data only when needed. This improves initial load time
+            and reduces memory usage.
+          </p>
+          <div class="use-cases">
+            <span class="use-case">Route-based splitting</span>
+            <span class="use-case">Heavy components</span>
+            <span class="use-case">Below-fold content</span>
+            <span class="use-case">Modals</span>
+          </div>
+        </div>
+      </div>
+
+      <pre><code>// Lazy component loader
+function lazy(loader) {
+  let Component = null;
+  let promise = null;
+
+  return function LazyComponent(props) {
+    const [, forceUpdate] = useState(0);
+
+    if (Component) {
+      return h(Component, props);
+    }
+
+    if (!promise) {
+      promise = loader().then(mod => {
+        Component = mod.default || mod;
+        forceUpdate(n => n + 1);
+      });
+    }
+
+    return null; // or loading spinner
+  };
+}
+
+// Usage
+const HeavyChart = lazy(() => import('./HeavyChart.js'));
+
+function Dashboard() {
+  const [showChart, setShowChart] = useState(false);
+
+  return h('div', null,
+    h('button', { onClick: () => setShowChart(true) }, 'Load Chart'),
+    showChart && h(HeavyChart, { data: chartData })
+  );
+}
+
+// Intersection Observer for lazy loading
+function LazyLoad({ children, placeholder }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return h('div', { ref },
+    isVisible ? children : (placeholder || h('div', { className: 'skeleton' }))
+  );
+}
+
+// Usage
+h(LazyLoad, { placeholder: h('div', null, 'Loading...') },
+  h(HeavyComponent)
+)</code></pre>
+
+      <div class="tip">
+        <div class="tip-title">Performance Tip</div>
+        <p>Combine lazy loading with code splitting to load only the JavaScript needed for each route or feature. This can dramatically improve initial load times.</p>
+      </div>
+
+      <h2>Best Practices Summary</h2>
+
+      <div class="comparison">
+        <div class="comparison-box comparison-bad">
+          <div class="comparison-header">❌ Avoid</div>
+          <pre><code>// Giant components with mixed concerns
+function UserPage() {
+  // 200+ lines of mixed logic
+  // Data fetching
+  // Form handling
+  // UI rendering
+  // ...
+}</code></pre>
+        </div>
+        <div class="comparison-box comparison-good">
+          <div class="comparison-header">✅ Prefer</div>
+          <pre><code>// Focused, composable components
+function UserPage() {
+  return h(UserContainer, null,
+    h(UserProfile),
+    h(UserActivity),
+    h(UserSettings)
+  );
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="comparison">
+        <div class="comparison-box comparison-bad">
+          <div class="comparison-header">❌ Avoid</div>
+          <pre><code>// Prop drilling
+function App() {
+  const [user, setUser] = useState(null);
+  return h(Layout, { user, setUser },
+    h(Header, { user, setUser },
+      h(UserMenu, { user, setUser })
+    )
+  );
+}</code></pre>
+        </div>
+        <div class="comparison-box comparison-good">
+          <div class="comparison-header">✅ Prefer</div>
+          <pre><code>// Context or Store
+const userStore = createStore({
+  initialState: { user: null },
+  actions: { setUser: (s, user) => ({...s, user}) }
+});
+
+function UserMenu() {
+  const user = useStore(userStore, 'user');
+  // ...
+}</code></pre>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

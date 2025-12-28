@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Component Framework - Test Suite</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 { color: #00d4aa; margin-bottom: 10px; }
+    h2 { color: #00d4aa; margin: 20px 0 10px; font-size: 1.2em; }
+    .summary {
+      background: #1a1a2e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .stat { font-size: 1.5em; font-weight: bold; }
+    .stat.pass { color: #00d4aa; }
+    .stat.fail { color: #ff4757; }
+    .stat.skip { color: #ffa502; }
+    .test-group {
+      background: #1a1a2e;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .group-header {
+      background: #252542;
+      padding: 10px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    .group-header:hover { background: #2d2d50; }
+    .group-tests { padding: 10px 15px; }
+    .test {
+      padding: 8px 0;
+      border-bottom: 1px solid #2a2a3a;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .test:last-child { border-bottom: none; }
+    .test-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .test.pass .test-icon { color: #00d4aa; }
+    .test.fail .test-icon { color: #ff4757; }
+    .test.skip .test-icon { color: #ffa502; }
+    .test-name { flex: 1; }
+    .test-time { color: #666; font-size: 0.9em; }
+    .test-error {
+      background: #2a1a1a;
+      color: #ff6b6b;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85em;
+      white-space: pre-wrap;
+    }
+    #test-container {
+      position: fixed;
+      top: -9999px;
+      left: -9999px;
+      width: 800px;
+      height: 600px;
+    }
+    .progress-bar {
+      background: #252542;
+      height: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4aa, #00a885);
+      transition: width 0.3s ease;
+    }
+    .running { animation: pulse 1s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Zylix Component Framework Test Suite</h1>
+  <div class="summary">
+    <div><span class="stat pass" id="pass-count">0</span> passed</div>
+    <div><span class="stat fail" id="fail-count">0</span> failed</div>
+    <div><span class="stat skip" id="skip-count">0</span> skipped</div>
+    <div style="flex:1"></div>
+    <div id="status" class="running">Running...</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress" style="width: 0%"></div></div>
+  <div id="results"></div>
+  <div id="test-container"></div>
+
+  <script type="module">
+// =============================================================================
+// INLINE COMPONENT FRAMEWORK (copy from component.ts for testing)
+// =============================================================================
+
+const Fragment = Symbol.for('zylix.fragment');
+const Portal = Symbol.for('zylix.portal');
+const EMPTY_OBJ = {};
+
+let currentComponent = null;
+let rerenderQueue = [];
+let isBatching = false;
+let pendingEffects = [];
+let currentDepth = 0;
+
+function h(type, props, ...children) {
+  const normalizedProps = props ? { ...props } : {};
+  const flatChildren = flattenChildren(children);
+  if (flatChildren.length > 0) {
+    normalizedProps.children = flatChildren.length === 1 ? flatChildren[0] : flatChildren;
+  }
+  const key = normalizedProps.key ?? null;
+  delete normalizedProps.key;
+  return createVNode(type, normalizedProps, key);
+}
+
+function createVNode(type, props, key) {
+  return { type, props, key, _dom: null, _component: null, _children: null, _parent: null, _depth: 0 };
+}
+
+function flattenChildren(children) {
+  const result = [];
+  for (const child of children) {
+    if (child == null || typeof child === 'boolean') continue;
+    if (Array.isArray(child)) {
+      result.push(...flattenChildren(child));
+    } else if (typeof child === 'string' || typeof child === 'number') {
+      result.push(createVNode(null, { textContent: String(child) }, null));
+    } else if (child.type !== undefined) {
+      result.push(child);
+    }
+  }
+  return result;
+}
+
+function render(vnode, container) {
+  const oldVNode = container._vnode;
+  diff(container, vnode, oldVNode, 0);
+  container._vnode = vnode;
+  flushEffects();
+}
+
+function diff(parentDom, newVNode, oldVNode, depth) {
+  if (newVNode === oldVNode) return;
+  if (newVNode == null) {
+    if (oldVNode != null) unmount(oldVNode);
+    return;
+  }
+  newVNode._depth = depth;
+  if (oldVNode == null || oldVNode.type !== newVNode.type) {
+    if (oldVNode != null) unmount(oldVNode);
+    mount(parentDom, newVNode, null, depth);
+    return;
+  }
+  if (typeof newVNode.type === 'function') {
+    diffComponent(parentDom, newVNode, oldVNode, depth);
+  } else if (newVNode.type === Fragment) {
+    diffChildren(parentDom, newVNode, oldVNode, depth);
+  } else if (newVNode.type === Portal) {
+    const portalContainer = newVNode.props.container;
+    diffChildren(portalContainer, newVNode, oldVNode, depth);
+  } else if (newVNode.props.textContent !== undefined) {
+    diffText(parentDom, newVNode, oldVNode);
+  } else {
+    diffElement(parentDom, newVNode, oldVNode, depth);
+  }
+}
+
+function mount(parentDom, vnode, beforeNode, depth) {
+  vnode._depth = depth;
+  if (typeof vnode.type === 'function') {
+    mountComponent(parentDom, vnode, beforeNode, depth);
+  } else if (vnode.type === Fragment) {
+    mountFragment(parentDom, vnode, beforeNode, depth);
+  } else if (vnode.type === Portal) {
+    const portalContainer = vnode.props.container;
+    mountFragment(portalContainer, vnode, null, depth);
+  } else if (vnode.props.textContent !== undefined) {
+    mountText(parentDom, vnode, beforeNode);
+  } else {
+    mountElement(parentDom, vnode, beforeNode, depth);
+  }
+}
+
+function mountText(parentDom, vnode, beforeNode) {
+  const textNode = document.createTextNode(vnode.props.textContent);
+  vnode._dom = textNode;
+  parentDom.insertBefore(textNode, beforeNode);
+}
+
+function mountElement(parentDom, vnode, beforeNode, depth) {
+  const dom = document.createElement(vnode.type);
+  vnode._dom = dom;
+  setProps(dom, vnode.props, EMPTY_OBJ);
+  const children = normalizeChildren(vnode.props.children);
+  vnode._children = children;
+  for (const child of children) {
+    child._parent = vnode;
+    mount(dom, child, null, depth + 1);
+  }
+  if (vnode.props.ref) vnode.props.ref.current = dom;
+  parentDom.insertBefore(dom, beforeNode);
+}
+
+function mountFragment(parentDom, vnode, beforeNode, depth) {
+  const children = normalizeChildren(vnode.props.children);
+  vnode._children = children;
+  for (const child of children) {
+    child._parent = vnode;
+    mount(parentDom, child, beforeNode, depth + 1);
+  }
+}
+
+function mountComponent(parentDom, vnode, beforeNode, depth) {
+  const component = {
+    _hooks: [], _hookIndex: 0, _vnode: vnode,
+    _parentDom: parentDom, _pendingEffects: [], _depth: depth
+  };
+  vnode._component = component;
+  currentComponent = component;
+  component._hookIndex = 0;
+  currentDepth = depth;
+  const rendered = vnode.type(vnode.props);
+  currentComponent = null;
+  if (rendered) {
+    rendered._parent = vnode;
+    vnode._children = [rendered];
+    mount(parentDom, rendered, beforeNode, depth + 1);
+  } else {
+    vnode._children = [];
+  }
+  for (const effect of component._pendingEffects) pendingEffects.push(effect);
+  component._pendingEffects = [];
+}
+
+function diffComponent(parentDom, newVNode, oldVNode, depth) {
+  const component = oldVNode._component;
+  component._vnode = newVNode;
+  newVNode._component = component;
+  currentComponent = component;
+  component._hookIndex = 0;
+  currentDepth = depth;
+  const rendered = newVNode.type(newVNode.props);
+  currentComponent = null;
+  const oldChildren = oldVNode._children || [];
+  const oldChild = oldChildren[0] || null;
+  if (rendered) {
+    rendered._parent = newVNode;
+    newVNode._children = [rendered];
+    diff(parentDom, rendered, oldChild, depth + 1);
+  } else {
+    newVNode._children = [];
+    if (oldChild) unmount(oldChild);
+  }
+  for (const effect of component._pendingEffects) pendingEffects.push(effect);
+  component._pendingEffects = [];
+}
+
+function diffText(parentDom, newVNode, oldVNode) {
+  if (newVNode.props.textContent !== oldVNode.props.textContent) {
+    oldVNode._dom.textContent = newVNode.props.textContent;
+  }
+  newVNode._dom = oldVNode._dom;
+}
+
+function diffElement(parentDom, newVNode, oldVNode, depth) {
+  const dom = oldVNode._dom;
+  newVNode._dom = dom;
+  setProps(dom, newVNode.props, oldVNode.props);
+  if (newVNode.props.ref !== oldVNode.props.ref) {
+    if (oldVNode.props.ref) oldVNode.props.ref.current = null;
+    if (newVNode.props.ref) newVNode.props.ref.current = dom;
+  }
+  diffChildren(dom, newVNode, oldVNode, depth);
+}
+
+function diffChildren(parentDom, newVNode, oldVNode, depth) {
+  const newChildren = normalizeChildren(newVNode.props.children);
+  const oldChildren = oldVNode._children || [];
+  newVNode._children = newChildren;
+  const oldKeyMap = new Map();
+  const matchedOld = new Set();
+  for (let i = 0; i < oldChildren.length; i++) {
+    const oldChild = oldChildren[i];
+    if (oldChild.key != null) oldKeyMap.set(oldChild.key, oldChild);
+  }
+  const matches = [];
+  for (let i = 0; i < newChildren.length; i++) {
+    const newChild = newChildren[i];
+    newChild._parent = newVNode;
+    let oldChild = null;
+    if (newChild.key != null && oldKeyMap.has(newChild.key)) {
+      oldChild = oldKeyMap.get(newChild.key);
+      if (oldChild.type === newChild.type) matchedOld.add(oldChild);
+      else oldChild = null;
+    }
+    if (!oldChild && i < oldChildren.length) {
+      const candidate = oldChildren[i];
+      if (!matchedOld.has(candidate) && candidate.key == null && newChild.key == null && candidate.type === newChild.type) {
+        oldChild = candidate;
+        matchedOld.add(oldChild);
+      }
+    }
+    matches.push({ newChild, oldChild });
+  }
+  for (const oldChild of oldChildren) {
+    if (!matchedOld.has(oldChild)) unmount(oldChild);
+  }
+  let lastDom = null;
+  for (let i = 0; i < matches.length; i++) {
+    const { newChild, oldChild } = matches[i];
+    if (oldChild) {
+      diff(parentDom, newChild, oldChild, depth + 1);
+      const dom = getDom(newChild);
+      if (dom && lastDom && dom.previousSibling !== lastDom) {
+        parentDom.insertBefore(dom, lastDom.nextSibling);
+      }
+      lastDom = dom || lastDom;
+    } else {
+      const beforeNode = lastDom ? lastDom.nextSibling : parentDom.firstChild;
+      mount(parentDom, newChild, beforeNode, depth + 1);
+      lastDom = getDom(newChild) || lastDom;
+    }
+  }
+}
+
+function unmount(vnode) {
+  if (vnode._component) {
+    for (const hook of vnode._component._hooks) {
+      if (hook._cleanup) hook._cleanup();
+    }
+  }
+  if (vnode.props.ref) vnode.props.ref.current = null;
+  if (vnode._children) {
+    for (const child of vnode._children) unmount(child);
+  }
+  if (vnode._dom && vnode._dom.parentNode) {
+    vnode._dom.parentNode.removeChild(vnode._dom);
+  }
+  vnode._dom = null;
+  vnode._component = null;
+  vnode._children = null;
+}
+
+function getDom(vnode) {
+  if (vnode._dom) return vnode._dom;
+  if (vnode._children && vnode._children.length > 0) return getDom(vnode._children[0]);
+  return null;
+}
+
+function normalizeChildren(children) {
+  if (children == null) return [];
+  if (Array.isArray(children)) return flattenChildren(children);
+  return flattenChildren([children]);
+}
+
+const SKIP_PROPS = new Set(['children', 'key', 'ref', 'textContent', 'container']);
+
+function setProps(dom, newProps, oldProps) {
+  for (const key of Object.keys(oldProps)) {
+    if (SKIP_PROPS.has(key)) continue;
+    if (!(key in newProps)) setProp(dom, key, null, oldProps[key]);
+  }
+  for (const key of Object.keys(newProps)) {
+    if (SKIP_PROPS.has(key)) continue;
+    if (newProps[key] !== oldProps[key]) setProp(dom, key, newProps[key], oldProps[key]);
+  }
+}
+
+function setProp(dom, key, newValue, oldValue) {
+  if (key.startsWith('on') && key.length > 2) {
+    const eventName = key.slice(2).toLowerCase();
+    if (oldValue) dom.removeEventListener(eventName, oldValue);
+    if (newValue) dom.addEventListener(eventName, newValue);
+    return;
+  }
+  if (key === 'style') {
+    if (typeof newValue === 'string') {
+      dom.style.cssText = newValue;
+    } else if (typeof newValue === 'object') {
+      const style = dom.style;
+      if (typeof oldValue === 'object') {
+        for (const k of Object.keys(oldValue)) {
+          if (!(k in newValue)) style[k] = '';
+        }
+      }
+      for (const k of Object.keys(newValue)) style[k] = newValue[k];
+    }
+    return;
+  }
+  if (key === 'className' || key === 'class') {
+    dom.setAttribute('class', newValue || '');
+    return;
+  }
+  if (key === 'dangerouslySetInnerHTML') {
+    if (newValue && newValue.__html != null) dom.innerHTML = newValue.__html;
+    return;
+  }
+  if (newValue === true) dom.setAttribute(key, '');
+  else if (newValue === false || newValue == null) dom.removeAttribute(key);
+  else dom.setAttribute(key, String(newValue));
+}
+
+function getHookState(initialValue) {
+  if (!currentComponent) throw new Error('Hooks can only be called inside a component');
+  const index = currentComponent._hookIndex++;
+  const hooks = currentComponent._hooks;
+  if (index >= hooks.length) hooks.push(initialValue());
+  return hooks[index];
+}
+
+function useState(initialState) {
+  const hookState = getHookState(() => ({
+    _value: typeof initialState === 'function' ? initialState() : initialState
+  }));
+  const component = currentComponent;
+  const setState = (action) => {
+    const newValue = typeof action === 'function' ? action(hookState._value) : action;
+    if (!Object.is(hookState._value, newValue)) {
+      hookState._value = newValue;
+      scheduleRerender(component);
+    }
+  };
+  return [hookState._value, setState];
+}
+
+function useReducer(reducer, initialState, init) {
+  const hookState = getHookState(() => ({
+    _value: init ? init(initialState) : initialState
+  }));
+  const component = currentComponent;
+  const dispatch = (action) => {
+    const newValue = reducer(hookState._value, action);
+    if (!Object.is(hookState._value, newValue)) {
+      hookState._value = newValue;
+      scheduleRerender(component);
+    }
+  };
+  return [hookState._value, dispatch];
+}
+
+function useEffect(effect, deps) {
+  const hookState = getHookState(() => ({ _args: undefined }));
+  const component = currentComponent;
+  if (argsChanged(hookState._args, deps)) {
+    hookState._args = deps;
+    component._pendingEffects.push(() => {
+      if (hookState._cleanup) hookState._cleanup();
+      hookState._cleanup = effect();
+    });
+  }
+}
+
+function useLayoutEffect(effect, deps) {
+  const hookState = getHookState(() => ({ _args: undefined }));
+  if (argsChanged(hookState._args, deps)) {
+    hookState._args = deps;
+    if (hookState._cleanup) hookState._cleanup();
+    hookState._cleanup = effect();
+  }
+}
+
+function useMemo(factory, deps) {
+  const hookState = getHookState(() => ({
+    _value: undefined, _args: undefined, _factory: factory
+  }));
+  if (argsChanged(hookState._args, deps)) {
+    hookState._value = factory();
+    hookState._args = deps;
+    hookState._factory = factory;
+  }
+  return hookState._value;
+}
+
+function useCallback(callback, deps) {
+  return useMemo(() => callback, deps);
+}
+
+function useRef(initialValue) {
+  return useMemo(() => ({ current: initialValue }), []);
+}
+
+function argsChanged(oldArgs, newArgs) {
+  if (oldArgs === undefined || newArgs === undefined) return true;
+  if (oldArgs.length !== newArgs.length) return true;
+  for (let i = 0; i < oldArgs.length; i++) {
+    if (!Object.is(oldArgs[i], newArgs[i])) return true;
+  }
+  return false;
+}
+
+function scheduleRerender(component) {
+  if (!rerenderQueue.includes(component)) rerenderQueue.push(component);
+  if (!isBatching) {
+    isBatching = true;
+    queueMicrotask(processRerenderQueue);
+  }
+}
+
+function processRerenderQueue() {
+  rerenderQueue.sort((a, b) => a._depth - b._depth);
+  const queue = rerenderQueue;
+  rerenderQueue = [];
+  isBatching = false;
+  for (const component of queue) {
+    if (!component._vnode._component) continue;
+    const vnode = component._vnode;
+    const parentDom = component._parentDom;
+    const oldChildren = vnode._children || [];
+    const oldChild = oldChildren[0] || null;
+    currentComponent = component;
+    component._hookIndex = 0;
+    currentDepth = component._depth;
+    const rendered = vnode.type(vnode.props);
+    currentComponent = null;
+    if (rendered) {
+      rendered._parent = vnode;
+      vnode._children = [rendered];
+      diff(parentDom, rendered, oldChild, component._depth + 1);
+    } else {
+      vnode._children = [];
+      if (oldChild) unmount(oldChild);
+    }
+    for (const effect of component._pendingEffects) pendingEffects.push(effect);
+    component._pendingEffects = [];
+  }
+  flushEffects();
+}
+
+function flushEffects() {
+  const effects = pendingEffects;
+  pendingEffects = [];
+  for (const effect of effects) effect();
+}
+
+function batch(fn) {
+  const wasBatching = isBatching;
+  isBatching = true;
+  try { fn(); }
+  finally {
+    isBatching = wasBatching;
+    if (!wasBatching && rerenderQueue.length > 0) queueMicrotask(processRerenderQueue);
+  }
+}
+
+function flushSync(fn) {
+  if (fn) fn();
+  processRerenderQueue();
+}
+
+function memo(component, areEqual) {
+  let prevProps = null;
+  let prevResult = null;
+  return (props) => {
+    if (prevProps !== null) {
+      const equal = areEqual ? areEqual(prevProps, props) : shallowEqual(prevProps, props);
+      if (equal) return prevResult;
+    }
+    prevProps = props;
+    prevResult = component(props);
+    return prevResult;
+  };
+}
+
+function shallowEqual(a, b) {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  if (a === null || b === null) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (key === 'children') continue;
+    if (!Object.is(a[key], b[key])) return false;
+  }
+  return true;
+}
+
+// =============================================================================
+// TEST FRAMEWORK
+// =============================================================================
+
+class TestRunner {
+  constructor() {
+    this.groups = [];
+    this.currentGroup = null;
+    this.passed = 0;
+    this.failed = 0;
+    this.skipped = 0;
+    this.total = 0;
+  }
+
+  describe(name, fn) {
+    const group = { name, tests: [], beforeEach: null, afterEach: null };
+    this.groups.push(group);
+    const prevGroup = this.currentGroup;
+    this.currentGroup = group;
+    fn();
+    this.currentGroup = prevGroup;
+  }
+
+  it(name, fn) {
+    if (!this.currentGroup) throw new Error('it() must be called inside describe()');
+    this.currentGroup.tests.push({ name, fn, skip: false });
+    this.total++;
+  }
+
+  skip(name, fn) {
+    if (!this.currentGroup) throw new Error('skip() must be called inside describe()');
+    this.currentGroup.tests.push({ name, fn, skip: true });
+    this.total++;
+  }
+
+  beforeEach(fn) {
+    if (!this.currentGroup) throw new Error('beforeEach() must be called inside describe()');
+    this.currentGroup.beforeEach = fn;
+  }
+
+  afterEach(fn) {
+    if (!this.currentGroup) throw new Error('afterEach() must be called inside describe()');
+    this.currentGroup.afterEach = fn;
+  }
+
+  async run() {
+    const container = document.getElementById('test-container');
+    const resultsDiv = document.getElementById('results');
+    let completed = 0;
+
+    for (const group of this.groups) {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'test-group';
+
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'group-header';
+      headerDiv.innerHTML = `<span>${group.name}</span><span class="group-status"></span>`;
+
+      const testsDiv = document.createElement('div');
+      testsDiv.className = 'group-tests';
+
+      groupDiv.appendChild(headerDiv);
+      groupDiv.appendChild(testsDiv);
+      resultsDiv.appendChild(groupDiv);
+
+      let groupPassed = 0;
+      let groupFailed = 0;
+
+      for (const test of group.tests) {
+        container.innerHTML = '';
+        container._vnode = null;  // Clear vnode reference for fresh renders
+
+        const testDiv = document.createElement('div');
+        testDiv.className = 'test';
+
+        if (test.skip) {
+          this.skipped++;
+          testDiv.classList.add('skip');
+          testDiv.innerHTML = `
+            <span class="test-icon">⏭</span>
+            <span class="test-name">${test.name}</span>
+            <span class="test-time">skipped</span>
+          `;
+        } else {
+          try {
+            if (group.beforeEach) await group.beforeEach(container);
+
+            const start = performance.now();
+            await test.fn(container);
+            const elapsed = performance.now() - start;
+
+            if (group.afterEach) await group.afterEach(container);
+
+            this.passed++;
+            groupPassed++;
+            testDiv.classList.add('pass');
+            testDiv.innerHTML = `
+              <span class="test-icon">✓</span>
+              <span class="test-name">${test.name}</span>
+              <span class="test-time">${elapsed.toFixed(1)}ms</span>
+            `;
+          } catch (error) {
+            this.failed++;
+            groupFailed++;
+            testDiv.classList.add('fail');
+            testDiv.innerHTML = `
+              <span class="test-icon">✗</span>
+              <span class="test-name">${test.name}</span>
+              <div class="test-error">${error.message}\n${error.stack || ''}</div>
+            `;
+          }
+        }
+
+        testsDiv.appendChild(testDiv);
+        completed++;
+
+        document.getElementById('pass-count').textContent = this.passed;
+        document.getElementById('fail-count').textContent = this.failed;
+        document.getElementById('skip-count').textContent = this.skipped;
+        document.getElementById('progress').style.width = `${(completed / this.total) * 100}%`;
+
+        await new Promise(r => setTimeout(r, 0));
+      }
+
+      const statusSpan = headerDiv.querySelector('.group-status');
+      if (groupFailed > 0) {
+        statusSpan.style.color = '#ff4757';
+        statusSpan.textContent = `${groupFailed} failed`;
+      } else {
+        statusSpan.style.color = '#00d4aa';
+        statusSpan.textContent = `${groupPassed} passed`;
+      }
+    }
+
+    document.getElementById('status').textContent =
+      this.failed > 0 ? 'Tests Failed' : 'All Tests Passed';
+    document.getElementById('status').classList.remove('running');
+  }
+}
+
+// Assertion helpers
+function expect(actual) {
+  const matchers = {
+    toBe(expected) {
+      if (!Object.is(actual, expected)) {
+        throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+      }
+    },
+    toEqual(expected) {
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+      }
+    },
+    toBeTruthy() {
+      if (!actual) throw new Error(`Expected truthy value but got ${actual}`);
+    },
+    toBeFalsy() {
+      if (actual) throw new Error(`Expected falsy value but got ${actual}`);
+    },
+    toBeNull() {
+      if (actual !== null) throw new Error(`Expected null but got ${actual}`);
+    },
+    toBeUndefined() {
+      if (actual !== undefined) throw new Error(`Expected undefined but got ${actual}`);
+    },
+    toContain(item) {
+      if (!actual.includes(item)) {
+        throw new Error(`Expected ${JSON.stringify(actual)} to contain ${JSON.stringify(item)}`);
+      }
+    },
+    toHaveLength(length) {
+      if (actual.length !== length) {
+        throw new Error(`Expected length ${length} but got ${actual.length}`);
+      }
+    },
+    toThrow(message) {
+      let threw = false;
+      try { actual(); }
+      catch (e) {
+        threw = true;
+        if (message && !e.message.includes(message)) {
+          throw new Error(`Expected error message to contain "${message}" but got "${e.message}"`);
+        }
+      }
+      if (!threw) throw new Error('Expected function to throw');
+    },
+    toBeInstanceOf(cls) {
+      if (!(actual instanceof cls)) {
+        throw new Error(`Expected instance of ${cls.name} but got ${actual?.constructor?.name}`);
+      }
+    },
+    toBeGreaterThan(n) {
+      if (actual <= n) throw new Error(`Expected ${actual} > ${n}`);
+    },
+    toBeLessThan(n) {
+      if (actual >= n) throw new Error(`Expected ${actual} < ${n}`);
+    }
+  };
+
+  // Add negated matchers
+  matchers.not = {
+    toBe(expected) {
+      if (Object.is(actual, expected)) {
+        throw new Error(`Expected ${JSON.stringify(actual)} not to be ${JSON.stringify(expected)}`);
+      }
+    },
+    toEqual(expected) {
+      if (JSON.stringify(actual) === JSON.stringify(expected)) {
+        throw new Error(`Expected not to equal ${JSON.stringify(expected)}`);
+      }
+    },
+    toBeNull() {
+      if (actual === null) throw new Error(`Expected not null`);
+    },
+    toBeTruthy() {
+      if (actual) throw new Error(`Expected falsy but got ${actual}`);
+    },
+    toBeFalsy() {
+      if (!actual) throw new Error(`Expected truthy but got ${actual}`);
+    }
+  };
+
+  return matchers;
+}
+
+async function waitFor(fn, timeout = 1000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const result = fn();
+      if (result) return result;
+    } catch {}
+    await new Promise(r => setTimeout(r, 10));
+  }
+  throw new Error(`waitFor timed out after ${timeout}ms`);
+}
+
+async function nextTick() {
+  await new Promise(r => queueMicrotask(r));
+  await new Promise(r => setTimeout(r, 0));
+}
+
+// =============================================================================
+// TEST SUITES
+// =============================================================================
+
+const runner = new TestRunner();
+const describe = runner.describe.bind(runner);
+const it = runner.it.bind(runner);
+const skip = runner.skip.bind(runner);
+const beforeEach = runner.beforeEach.bind(runner);
+const afterEach = runner.afterEach.bind(runner);
+
+// -----------------------------------------------------------------------------
+// h() function tests
+// -----------------------------------------------------------------------------
+
+describe('h() - Hyperscript', () => {
+  it('creates element VNode with string type', (container) => {
+    const vnode = h('div');
+    expect(vnode.type).toBe('div');
+    expect(vnode.props).toEqual({});
+    expect(vnode.key).toBeNull();
+  });
+
+  it('creates VNode with props', (container) => {
+    const vnode = h('div', { id: 'test', className: 'foo' });
+    expect(vnode.props.id).toBe('test');
+    expect(vnode.props.className).toBe('foo');
+  });
+
+  it('extracts key from props', (container) => {
+    const vnode = h('div', { key: 'mykey', id: 'test' });
+    expect(vnode.key).toBe('mykey');
+    expect(vnode.props.key).toBeUndefined();
+  });
+
+  it('flattens children', (container) => {
+    const vnode = h('div', null, 'a', 'b', 'c');
+    expect(vnode.props.children).toHaveLength(3);
+  });
+
+  it('handles nested arrays in children', (container) => {
+    const vnode = h('div', null, ['a', ['b', 'c']], 'd');
+    expect(vnode.props.children).toHaveLength(4);
+  });
+
+  it('filters null and boolean children', (container) => {
+    const vnode = h('div', null, null, 'text', false, true, undefined);
+    expect(vnode.props.children.props.textContent).toBe('text');
+  });
+
+  it('converts numbers to text nodes', (container) => {
+    const vnode = h('div', null, 42);
+    expect(vnode.props.children.props.textContent).toBe('42');
+  });
+
+  it('handles Fragment type', (container) => {
+    const vnode = h(Fragment, null, h('span'), h('span'));
+    expect(vnode.type).toBe(Fragment);
+    expect(vnode.props.children).toHaveLength(2);
+  });
+
+  it('handles function component type', (container) => {
+    const Comp = () => h('div');
+    const vnode = h(Comp, { value: 42 });
+    expect(vnode.type).toBe(Comp);
+    expect(vnode.props.value).toBe(42);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// render() tests
+// -----------------------------------------------------------------------------
+
+describe('render() - DOM Mounting', () => {
+  it('renders text content', (container) => {
+    render(h('div', null, 'Hello'), container);
+    expect(container.textContent).toBe('Hello');
+  });
+
+  it('renders element with attributes', (container) => {
+    render(h('div', { id: 'test', 'data-value': '42' }), container);
+    const div = container.firstChild;
+    expect(div.id).toBe('test');
+    expect(div.getAttribute('data-value')).toBe('42');
+  });
+
+  it('renders nested elements', (container) => {
+    render(
+      h('div', null,
+        h('span', null, 'A'),
+        h('span', null, 'B')
+      ),
+      container
+    );
+    expect(container.querySelectorAll('span')).toHaveLength(2);
+  });
+
+  it('handles className prop', (container) => {
+    render(h('div', { className: 'foo bar' }), container);
+    expect(container.firstChild.className).toBe('foo bar');
+  });
+
+  it('handles class prop (alias)', (container) => {
+    render(h('div', { class: 'foo bar' }), container);
+    expect(container.firstChild.getAttribute('class')).toBe('foo bar');
+  });
+
+  it('handles style as string', (container) => {
+    render(h('div', { style: 'color: red; font-size: 12px' }), container);
+    expect(container.firstChild.style.color).toBe('red');
+  });
+
+  it('handles style as object', (container) => {
+    render(h('div', { style: { color: 'blue', fontSize: '14px' } }), container);
+    expect(container.firstChild.style.color).toBe('blue');
+    expect(container.firstChild.style.fontSize).toBe('14px');
+  });
+
+  it('handles boolean attributes (true)', (container) => {
+    render(h('input', { disabled: true }), container);
+    expect(container.firstChild.hasAttribute('disabled')).toBeTruthy();
+  });
+
+  it('handles boolean attributes (false)', (container) => {
+    render(h('input', { disabled: false }), container);
+    expect(container.firstChild.hasAttribute('disabled')).toBeFalsy();
+  });
+
+  it('attaches event handlers', (container) => {
+    let clicked = false;
+    render(h('button', { onClick: () => clicked = true }, 'Click'), container);
+    container.firstChild.click();
+    expect(clicked).toBeTruthy();
+  });
+
+  it('renders Fragment without wrapper', (container) => {
+    render(
+      h(Fragment, null,
+        h('span', null, 'A'),
+        h('span', null, 'B')
+      ),
+      container
+    );
+    expect(container.children).toHaveLength(2);
+    expect(container.children[0].tagName).toBe('SPAN');
+  });
+
+  it('renders Portal to different container', (container) => {
+    const portal = document.createElement('div');
+    document.body.appendChild(portal);
+
+    render(
+      h('div', null,
+        'Main',
+        h(Portal, { container: portal }, h('span', null, 'Portaled'))
+      ),
+      container
+    );
+
+    expect(container.textContent).toBe('Main');
+    expect(portal.textContent).toBe('Portaled');
+
+    document.body.removeChild(portal);
+  });
+
+  it('handles ref prop', (container) => {
+    const ref = { current: null };
+    render(h('input', { ref }), container);
+    expect(ref.current).toBe(container.firstChild);
+    expect(ref.current.tagName).toBe('INPUT');
+  });
+
+  it('clears ref on unmount', (container) => {
+    const ref = { current: null };
+    render(h('input', { ref }), container);
+    expect(ref.current).toBeTruthy();
+    render(null, container);
+    expect(ref.current).toBeNull();
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Reconciliation tests
+// -----------------------------------------------------------------------------
+
+describe('Reconciliation (Diffing)', () => {
+  it('updates text content', (container) => {
+    render(h('div', null, 'Hello'), container);
+    render(h('div', null, 'World'), container);
+    expect(container.textContent).toBe('World');
+  });
+
+  it('reuses existing DOM elements', (container) => {
+    render(h('div', { id: 'test' }), container);
+    const div1 = container.firstChild;
+    render(h('div', { id: 'test2' }), container);
+    const div2 = container.firstChild;
+    expect(div1).toBe(div2);
+    expect(div2.id).toBe('test2');
+  });
+
+  it('replaces elements of different types', (container) => {
+    render(h('div'), container);
+    const div = container.firstChild;
+    render(h('span'), container);
+    const span = container.firstChild;
+    expect(div).not.toBe(span);
+    expect(span.tagName).toBe('SPAN');
+  });
+
+  it('adds new children', (container) => {
+    render(h('div', null, h('span', null, 'A')), container);
+    expect(container.querySelectorAll('span')).toHaveLength(1);
+
+    render(h('div', null, h('span', null, 'A'), h('span', null, 'B')), container);
+    expect(container.querySelectorAll('span')).toHaveLength(2);
+  });
+
+  it('removes extra children', (container) => {
+    render(h('div', null, h('span'), h('span'), h('span')), container);
+    expect(container.querySelectorAll('span')).toHaveLength(3);
+
+    render(h('div', null, h('span')), container);
+    expect(container.querySelectorAll('span')).toHaveLength(1);
+  });
+
+  it('uses keys for efficient reordering', (container) => {
+    render(
+      h('div', null,
+        h('span', { key: 'a' }, 'A'),
+        h('span', { key: 'b' }, 'B'),
+        h('span', { key: 'c' }, 'C')
+      ),
+      container
+    );
+    const [a1, b1, c1] = container.querySelectorAll('span');
+
+    // Reorder: C, A, B
+    render(
+      h('div', null,
+        h('span', { key: 'c' }, 'C'),
+        h('span', { key: 'a' }, 'A'),
+        h('span', { key: 'b' }, 'B')
+      ),
+      container
+    );
+    const [c2, a2, b2] = container.querySelectorAll('span');
+
+    expect(a1).toBe(a2);
+    expect(b1).toBe(b2);
+    expect(c1).toBe(c2);
+  });
+
+  it('removes old event handlers', (container) => {
+    let count = 0;
+    const handler1 = () => count += 1;
+    const handler2 = () => count += 10;
+
+    render(h('button', { onClick: handler1 }), container);
+    container.firstChild.click();
+    expect(count).toBe(1);
+
+    render(h('button', { onClick: handler2 }), container);
+    container.firstChild.click();
+    expect(count).toBe(11);
+  });
+
+  it('updates style object properties', (container) => {
+    render(h('div', { style: { color: 'red', fontSize: '12px' } }), container);
+    expect(container.firstChild.style.color).toBe('red');
+
+    render(h('div', { style: { color: 'blue' } }), container);
+    expect(container.firstChild.style.color).toBe('blue');
+    expect(container.firstChild.style.fontSize).toBe('');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useState tests
+// -----------------------------------------------------------------------------
+
+describe('useState Hook', () => {
+  it('initializes with value', async (container) => {
+    const Comp = () => {
+      const [value] = useState(42);
+      return h('div', null, String(value));
+    };
+    render(h(Comp), container);
+    expect(container.textContent).toBe('42');
+  });
+
+  it('initializes with factory function', async (container) => {
+    let factoryCalls = 0;
+    const Comp = () => {
+      const [value] = useState(() => {
+        factoryCalls++;
+        return 'init';
+      });
+      return h('div', null, value);
+    };
+    render(h(Comp), container);
+    expect(container.textContent).toBe('init');
+    expect(factoryCalls).toBe(1);
+
+    // Re-render should not call factory again
+    render(h(Comp), container);
+    expect(factoryCalls).toBe(1);
+  });
+
+  it('updates state with value', async (container) => {
+    let setValue;
+    const Comp = () => {
+      const [value, set] = useState(0);
+      setValue = set;
+      return h('div', null, String(value));
+    };
+    render(h(Comp), container);
+    expect(container.textContent).toBe('0');
+
+    setValue(5);
+    await nextTick();
+    expect(container.textContent).toBe('5');
+  });
+
+  it('updates state with updater function', async (container) => {
+    let setValue;
+    const Comp = () => {
+      const [value, set] = useState(10);
+      setValue = set;
+      return h('div', null, String(value));
+    };
+    render(h(Comp), container);
+
+    setValue(prev => prev + 5);
+    await nextTick();
+    expect(container.textContent).toBe('15');
+
+    setValue(prev => prev * 2);
+    await nextTick();
+    expect(container.textContent).toBe('30');
+  });
+
+  it('does not re-render if value is the same (Object.is)', async (container) => {
+    let renderCount = 0;
+    let setValue;
+    const Comp = () => {
+      renderCount++;
+      const [value, set] = useState(5);
+      setValue = set;
+      return h('div', null, String(value));
+    };
+    render(h(Comp), container);
+    expect(renderCount).toBe(1);
+
+    setValue(5);
+    await nextTick();
+    expect(renderCount).toBe(1);
+  });
+
+  it('batches multiple setState calls', async (container) => {
+    let renderCount = 0;
+    let setA, setB;
+    const Comp = () => {
+      renderCount++;
+      const [a, sa] = useState(0);
+      const [b, sb] = useState(0);
+      setA = sa;
+      setB = sb;
+      return h('div', null, `${a}-${b}`);
+    };
+    render(h(Comp), container);
+    expect(renderCount).toBe(1);
+
+    setA(1);
+    setB(1);
+    await nextTick();
+    expect(renderCount).toBe(2);
+    expect(container.textContent).toBe('1-1');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useReducer tests
+// -----------------------------------------------------------------------------
+
+describe('useReducer Hook', () => {
+  it('works with simple reducer', async (container) => {
+    const reducer = (state, action) => {
+      switch (action.type) {
+        case 'inc': return state + 1;
+        case 'dec': return state - 1;
+        default: return state;
+      }
+    };
+
+    let dispatch;
+    const Comp = () => {
+      const [count, d] = useReducer(reducer, 0);
+      dispatch = d;
+      return h('div', null, String(count));
+    };
+    render(h(Comp), container);
+    expect(container.textContent).toBe('0');
+
+    dispatch({ type: 'inc' });
+    await nextTick();
+    expect(container.textContent).toBe('1');
+
+    dispatch({ type: 'inc' });
+    dispatch({ type: 'inc' });
+    await nextTick();
+    expect(container.textContent).toBe('3');
+
+    dispatch({ type: 'dec' });
+    await nextTick();
+    expect(container.textContent).toBe('2');
+  });
+
+  it('supports init function', async (container) => {
+    const reducer = (state, action) => ({ count: state.count + action });
+    const init = (initial) => ({ count: initial * 2 });
+
+    const Comp = () => {
+      const [state] = useReducer(reducer, 5, init);
+      return h('div', null, String(state.count));
+    };
+    render(h(Comp), container);
+    expect(container.textContent).toBe('10');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useEffect tests
+// -----------------------------------------------------------------------------
+
+describe('useEffect Hook', () => {
+  it('runs effect after render', async (container) => {
+    let effectRan = false;
+    const Comp = () => {
+      useEffect(() => { effectRan = true; });
+      return h('div', null, 'test');
+    };
+    render(h(Comp), container);
+    await nextTick();
+    expect(effectRan).toBeTruthy();
+  });
+
+  it('runs cleanup on unmount', async (container) => {
+    let cleanedUp = false;
+    const Comp = () => {
+      useEffect(() => {
+        return () => { cleanedUp = true; };
+      }, []);
+      return h('div', null, 'test');
+    };
+    render(h(Comp), container);
+    await nextTick();
+    expect(cleanedUp).toBeFalsy();
+
+    render(null, container);
+    expect(cleanedUp).toBeTruthy();
+  });
+
+  it('skips effect when deps are unchanged', async (container) => {
+    let effectCount = 0;
+    let rerender;
+
+    const Comp = ({ value }) => {
+      useEffect(() => { effectCount++; }, [value]);
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div', null, String(value));
+    };
+
+    render(h(Comp, { value: 'a' }), container);
+    await nextTick();
+    expect(effectCount).toBe(1);
+
+    // Same value, should not run effect
+    render(h(Comp, { value: 'a' }), container);
+    await nextTick();
+    expect(effectCount).toBe(1);
+
+    // Different value, should run effect
+    render(h(Comp, { value: 'b' }), container);
+    await nextTick();
+    expect(effectCount).toBe(2);
+  });
+
+  it('runs effect every render when no deps', async (container) => {
+    let effectCount = 0;
+    let rerender;
+
+    const Comp = () => {
+      useEffect(() => { effectCount++; });
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div');
+    };
+
+    render(h(Comp), container);
+    await nextTick();
+    expect(effectCount).toBe(1);
+
+    rerender();
+    await nextTick();
+    expect(effectCount).toBe(2);
+
+    rerender();
+    await nextTick();
+    expect(effectCount).toBe(3);
+  });
+
+  it('runs effect only once with empty deps', async (container) => {
+    let effectCount = 0;
+    let rerender;
+
+    const Comp = () => {
+      useEffect(() => { effectCount++; }, []);
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div');
+    };
+
+    render(h(Comp), container);
+    await nextTick();
+    expect(effectCount).toBe(1);
+
+    rerender();
+    await nextTick();
+    expect(effectCount).toBe(1);
+  });
+
+  it('runs cleanup before next effect', async (container) => {
+    const log = [];
+
+    const Comp = ({ value }) => {
+      useEffect(() => {
+        log.push(`effect-${value}`);
+        return () => log.push(`cleanup-${value}`);
+      }, [value]);
+      return h('div');
+    };
+
+    render(h(Comp, { value: 1 }), container);
+    await nextTick();
+    expect(log).toEqual(['effect-1']);
+
+    render(h(Comp, { value: 2 }), container);
+    await nextTick();
+    expect(log).toEqual(['effect-1', 'cleanup-1', 'effect-2']);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useMemo / useCallback tests
+// -----------------------------------------------------------------------------
+
+describe('useMemo Hook', () => {
+  it('memoizes computed value', async (container) => {
+    let computeCount = 0;
+    let rerender;
+
+    const Comp = ({ value }) => {
+      const computed = useMemo(() => {
+        computeCount++;
+        return value * 2;
+      }, [value]);
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div', null, String(computed));
+    };
+
+    render(h(Comp, { value: 5 }), container);
+    expect(container.textContent).toBe('10');
+    expect(computeCount).toBe(1);
+
+    // Re-render with same value
+    rerender();
+    await nextTick();
+    expect(computeCount).toBe(1);
+
+    // Re-render with different value
+    render(h(Comp, { value: 10 }), container);
+    expect(container.textContent).toBe('20');
+    expect(computeCount).toBe(2);
+  });
+});
+
+describe('useCallback Hook', () => {
+  it('memoizes callback', async (container) => {
+    let callback1, callback2;
+    let rerender;
+
+    const Comp = ({ value }) => {
+      const cb = useCallback(() => value, [value]);
+      if (!callback1) callback1 = cb;
+      else callback2 = cb;
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div');
+    };
+
+    render(h(Comp, { value: 'a' }), container);
+    rerender();
+    await nextTick();
+    expect(callback1).toBe(callback2);
+
+    // Change value
+    callback2 = null;
+    render(h(Comp, { value: 'b' }), container);
+    expect(callback1).not.toBe(callback2);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useRef tests
+// -----------------------------------------------------------------------------
+
+describe('useRef Hook', () => {
+  it('persists value across renders', async (container) => {
+    let ref;
+    let rerender;
+
+    const Comp = () => {
+      ref = useRef(0);
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h('div', null, String(ref.current));
+    };
+
+    render(h(Comp), container);
+    expect(ref.current).toBe(0);
+
+    ref.current = 42;
+    rerender();
+    await nextTick();
+    expect(ref.current).toBe(42);
+  });
+
+  it('mutation does not cause re-render', async (container) => {
+    let renderCount = 0;
+    let ref;
+
+    const Comp = () => {
+      renderCount++;
+      ref = useRef(0);
+      return h('div');
+    };
+
+    render(h(Comp), container);
+    expect(renderCount).toBe(1);
+
+    ref.current = 100;
+    await nextTick();
+    expect(renderCount).toBe(1);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// useLayoutEffect tests
+// -----------------------------------------------------------------------------
+
+describe('useLayoutEffect Hook', () => {
+  it('runs synchronously during render', (container) => {
+    const log = [];
+
+    const Comp = () => {
+      useLayoutEffect(() => {
+        log.push('layout');
+      }, []);
+      useEffect(() => {
+        log.push('effect');
+      }, []);
+      log.push('render');
+      return h('div');
+    };
+
+    render(h(Comp), container);
+    // useLayoutEffect runs during hook execution (synchronously)
+    // useEffect runs after render commits
+    expect(log).toEqual(['layout', 'render', 'effect']);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// memo tests
+// -----------------------------------------------------------------------------
+
+describe('memo()', () => {
+  it('prevents re-render when props are equal', async (container) => {
+    let renderCount = 0;
+
+    const Child = memo(({ value }) => {
+      renderCount++;
+      return h('div', null, value);
+    });
+
+    let rerender;
+    const Parent = () => {
+      const [, set] = useState(0);
+      rerender = () => set(v => v + 1);
+      return h(Child, { value: 'test' });
+    };
+
+    render(h(Parent), container);
+    expect(renderCount).toBe(1);
+
+    rerender();
+    await nextTick();
+    expect(renderCount).toBe(1);
+  });
+
+  it('re-renders when props change', async (container) => {
+    let renderCount = 0;
+
+    const Child = memo(({ value }) => {
+      renderCount++;
+      return h('div', null, value);
+    });
+
+    render(h(Child, { value: 'a' }), container);
+    expect(renderCount).toBe(1);
+    expect(container.textContent).toBe('a');
+
+    render(h(Child, { value: 'b' }), container);
+    expect(renderCount).toBe(2);
+    expect(container.textContent).toBe('b');
+  });
+
+  it('supports custom comparison function', async (container) => {
+    let renderCount = 0;
+
+    const Child = memo(
+      ({ item }) => {
+        renderCount++;
+        return h('div', null, item.id);
+      },
+      (prev, next) => prev.item.id === next.item.id
+    );
+
+    render(h(Child, { item: { id: '1', name: 'a' } }), container);
+    expect(renderCount).toBe(1);
+
+    // Same id, different name - should not re-render
+    render(h(Child, { item: { id: '1', name: 'b' } }), container);
+    expect(renderCount).toBe(1);
+
+    // Different id - should re-render
+    render(h(Child, { item: { id: '2', name: 'c' } }), container);
+    expect(renderCount).toBe(2);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// batch() tests
+// -----------------------------------------------------------------------------
+
+describe('batch()', () => {
+  it('batches multiple state updates', async (container) => {
+    let renderCount = 0;
+    let setA, setB, setC;
+
+    const Comp = () => {
+      renderCount++;
+      const [a, sa] = useState(0);
+      const [b, sb] = useState(0);
+      const [c, sc] = useState(0);
+      setA = sa; setB = sb; setC = sc;
+      return h('div', null, `${a}-${b}-${c}`);
+    };
+
+    render(h(Comp), container);
+    expect(renderCount).toBe(1);
+
+    batch(() => {
+      setA(1);
+      setB(2);
+      setC(3);
+    });
+
+    await nextTick();
+    expect(renderCount).toBe(2);
+    expect(container.textContent).toBe('1-2-3');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// flushSync() tests
+// -----------------------------------------------------------------------------
+
+describe('flushSync()', () => {
+  it('synchronously flushes updates', (container) => {
+    let setValue;
+    const Comp = () => {
+      const [value, set] = useState(0);
+      setValue = set;
+      return h('div', null, String(value));
+    };
+
+    render(h(Comp), container);
+    expect(container.textContent).toBe('0');
+
+    flushSync(() => setValue(5));
+    expect(container.textContent).toBe('5');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Error handling tests
+// -----------------------------------------------------------------------------
+
+describe('Error Handling', () => {
+  it('throws when hook called outside component', () => {
+    expect(() => useState(0)).toThrow('Hooks can only be called inside a component');
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Component lifecycle tests
+// -----------------------------------------------------------------------------
+
+describe('Component Lifecycle', () => {
+  it('mounts and renders function component', (container) => {
+    const Comp = ({ name }) => h('div', null, `Hello, ${name}!`);
+    render(h(Comp, { name: 'World' }), container);
+    expect(container.textContent).toBe('Hello, World!');
+  });
+
+  it('updates function component on prop change', (container) => {
+    const Comp = ({ name }) => h('div', null, `Hello, ${name}!`);
+    render(h(Comp, { name: 'A' }), container);
+    expect(container.textContent).toBe('Hello, A!');
+
+    render(h(Comp, { name: 'B' }), container);
+    expect(container.textContent).toBe('Hello, B!');
+  });
+
+  it('handles component returning null', (container) => {
+    const Comp = ({ show }) => show ? h('div', null, 'visible') : null;
+
+    render(h(Comp, { show: true }), container);
+    expect(container.textContent).toBe('visible');
+
+    render(h(Comp, { show: false }), container);
+    expect(container.textContent).toBe('');
+
+    render(h(Comp, { show: true }), container);
+    expect(container.textContent).toBe('visible');
+  });
+
+  it('preserves component instance across re-renders', async (container) => {
+    let hookStates = [];
+
+    const Comp = () => {
+      const [count, setCount] = useState(0);
+      hookStates.push(count);
+      useEffect(() => {
+        setCount(c => c + 1);
+      }, []);
+      return h('div', null, String(count));
+    };
+
+    render(h(Comp), container);
+    await nextTick();
+
+    // Initial render: 0, effect triggers re-render: 1
+    expect(hookStates).toEqual([0, 1]);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Run tests
+// -----------------------------------------------------------------------------
+
+runner.run();
+
+  </script>
+</body>
+</html>

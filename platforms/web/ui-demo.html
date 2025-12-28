@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix UI Component Library Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #111827;
+    }
+
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #3b82f6;
+      margin-bottom: 40px;
+    }
+
+    .demo-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .demo-section h2 {
+      margin-top: 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+
+    .demo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .demo-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .demo-group {
+      margin-bottom: 24px;
+    }
+
+    .demo-group h3 {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1>Zylix UI Component Library</h1>
+
+    <!-- Theme Section -->
+    <div class="demo-section">
+      <h2>Theme System</h2>
+      <div class="demo-group">
+        <h3>Theme Colors</h3>
+        <div id="theme-colors"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Theme Customization</h3>
+        <div class="demo-row" id="theme-buttons"></div>
+        <div id="theme-demo"></div>
+      </div>
+    </div>
+
+    <!-- Layout Section -->
+    <div class="demo-section">
+      <h2>Layout Components</h2>
+      <div class="demo-group">
+        <h3>Flex</h3>
+        <div id="flex-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Grid</h3>
+        <div id="grid-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Stack</h3>
+        <div id="stack-demo"></div>
+      </div>
+    </div>
+
+    <!-- Button Section -->
+    <div class="demo-section">
+      <h2>Buttons</h2>
+      <div class="demo-group">
+        <h3>Variants</h3>
+        <div class="demo-row" id="button-variants"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Sizes</h3>
+        <div class="demo-row" id="button-sizes"></div>
+      </div>
+      <div class="demo-group">
+        <h3>States</h3>
+        <div class="demo-row" id="button-states"></div>
+      </div>
+    </div>
+
+    <!-- Form Inputs Section -->
+    <div class="demo-section">
+      <h2>Form Inputs</h2>
+      <div class="demo-grid" id="form-inputs"></div>
+    </div>
+
+    <!-- Selection Controls Section -->
+    <div class="demo-section">
+      <h2>Selection Controls</h2>
+      <div class="demo-group">
+        <h3>Checkbox</h3>
+        <div class="demo-row" id="checkbox-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Radio Group</h3>
+        <div id="radio-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Switch</h3>
+        <div class="demo-row" id="switch-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Slider</h3>
+        <div id="slider-demo"></div>
+      </div>
+    </div>
+
+    <!-- Data Display Section -->
+    <div class="demo-section">
+      <h2>Data Display</h2>
+      <div class="demo-group">
+        <h3>Cards</h3>
+        <div class="demo-row" id="card-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Avatar</h3>
+        <div class="demo-row" id="avatar-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Badge</h3>
+        <div class="demo-row" id="badge-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Tag</h3>
+        <div class="demo-row" id="tag-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Tooltip</h3>
+        <div class="demo-row" id="tooltip-demo"></div>
+      </div>
+    </div>
+
+    <!-- Feedback Section -->
+    <div class="demo-section">
+      <h2>Feedback</h2>
+      <div class="demo-group">
+        <h3>Alert</h3>
+        <div id="alert-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Toast</h3>
+        <div class="demo-row" id="toast-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Modal</h3>
+        <div class="demo-row" id="modal-demo"></div>
+        <div id="modal-container"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Progress</h3>
+        <div id="progress-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Spinner</h3>
+        <div class="demo-row" id="spinner-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Skeleton</h3>
+        <div id="skeleton-demo"></div>
+      </div>
+    </div>
+
+    <!-- Navigation Section -->
+    <div class="demo-section">
+      <h2>Navigation</h2>
+      <div class="demo-group">
+        <h3>Tabs</h3>
+        <div id="tabs-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Breadcrumb</h3>
+        <div id="breadcrumb-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Pagination</h3>
+        <div id="pagination-demo"></div>
+      </div>
+      <div class="demo-group">
+        <h3>Menu & Dropdown</h3>
+        <div class="demo-row" id="dropdown-demo"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Inline UI library for demo
+    const defaultTheme = {
+      colors: {
+        primary: '#3b82f6',
+        primaryHover: '#2563eb',
+        primaryActive: '#1d4ed8',
+        secondary: '#6b7280',
+        secondaryHover: '#4b5563',
+        secondaryActive: '#374151',
+        success: '#10b981',
+        successHover: '#059669',
+        warning: '#f59e0b',
+        warningHover: '#d97706',
+        danger: '#ef4444',
+        dangerHover: '#dc2626',
+        info: '#06b6d4',
+        infoHover: '#0891b2',
+        background: '#ffffff',
+        surface: '#f9fafb',
+        surfaceHover: '#f3f4f6',
+        border: '#e5e7eb',
+        borderFocus: '#3b82f6',
+        text: '#111827',
+        textSecondary: '#4b5563',
+        textMuted: '#9ca3af',
+        textInverse: '#ffffff',
+        overlay: 'rgba(0, 0, 0, 0.5)',
+        shadow: 'rgba(0, 0, 0, 0.1)',
+      },
+      spacing: {
+        xs: '0.25rem',
+        sm: '0.5rem',
+        md: '1rem',
+        lg: '1.5rem',
+        xl: '2rem',
+        '2xl': '3rem',
+        '3xl': '4rem',
+      },
+      borderRadius: {
+        none: '0',
+        sm: '0.25rem',
+        md: '0.5rem',
+        lg: '0.75rem',
+        xl: '1rem',
+        full: '9999px',
+      },
+      fontSize: {
+        xs: '0.75rem',
+        sm: '0.875rem',
+        md: '1rem',
+        lg: '1.125rem',
+        xl: '1.25rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
+      },
+      shadow: {
+        sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+      },
+      transition: {
+        fast: '150ms ease',
+        normal: '250ms ease',
+        slow: '350ms ease',
+      },
+      breakpoints: {
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+      },
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    };
+
+    let currentTheme = JSON.parse(JSON.stringify(defaultTheme));
+    const themeListeners = new Set();
+
+    const theme = {
+      get() { return currentTheme; },
+      set(partial) {
+        const updates = typeof partial === 'function' ? partial(currentTheme) : partial;
+        currentTheme = deepMerge(currentTheme, updates);
+        themeListeners.forEach(listener => listener());
+      },
+      reset() {
+        currentTheme = JSON.parse(JSON.stringify(defaultTheme));
+        themeListeners.forEach(listener => listener());
+      },
+      subscribe(listener) {
+        themeListeners.add(listener);
+        return () => themeListeners.delete(listener);
+      },
+    };
+
+    function deepMerge(target, source) {
+      const result = { ...target };
+      for (const key of Object.keys(source)) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+          result[key] = deepMerge(target[key] || {}, source[key]);
+        } else {
+          result[key] = source[key];
+        }
+      }
+      return result;
+    }
+
+    function createId() {
+      return `zylix-${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    function mergeClasses(...classes) {
+      return classes.filter(Boolean).join(' ');
+    }
+
+    function createStyleString(styles) {
+      return Object.entries(styles)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => {
+          const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          return `${cssKey}: ${value}`;
+        })
+        .join('; ');
+    }
+
+    function getVariantColors(variant) {
+      const t = theme.get();
+      const variants = {
+        primary: { bg: t.colors.primary, text: t.colors.textInverse, border: t.colors.primary, hover: t.colors.primaryHover },
+        secondary: { bg: t.colors.secondary, text: t.colors.textInverse, border: t.colors.secondary, hover: t.colors.secondaryHover },
+        success: { bg: t.colors.success, text: t.colors.textInverse, border: t.colors.success, hover: t.colors.successHover },
+        warning: { bg: t.colors.warning, text: t.colors.text, border: t.colors.warning, hover: t.colors.warningHover },
+        danger: { bg: t.colors.danger, text: t.colors.textInverse, border: t.colors.danger, hover: t.colors.dangerHover },
+        info: { bg: t.colors.info, text: t.colors.textInverse, border: t.colors.info, hover: t.colors.infoHover },
+        ghost: { bg: 'transparent', text: t.colors.text, border: 'transparent', hover: t.colors.surfaceHover },
+        outline: { bg: 'transparent', text: t.colors.primary, border: t.colors.primary, hover: t.colors.surface },
+      };
+      return variants[variant];
+    }
+
+    function getSizeStyles(size, type) {
+      const t = theme.get();
+      if (type === 'button') {
+        const sizes = {
+          xs: { padding: `${t.spacing.xs} ${t.spacing.sm}`, fontSize: t.fontSize.xs, height: '1.75rem' },
+          sm: { padding: `${t.spacing.xs} ${t.spacing.md}`, fontSize: t.fontSize.sm, height: '2rem' },
+          md: { padding: `${t.spacing.sm} ${t.spacing.lg}`, fontSize: t.fontSize.md, height: '2.5rem' },
+          lg: { padding: `${t.spacing.md} ${t.spacing.xl}`, fontSize: t.fontSize.lg, height: '3rem' },
+          xl: { padding: `${t.spacing.lg} ${t.spacing['2xl']}`, fontSize: t.fontSize.xl, height: '3.5rem' },
+        };
+        return sizes[size];
+      }
+      if (type === 'input') {
+        const sizes = {
+          xs: { padding: `${t.spacing.xs} ${t.spacing.sm}`, fontSize: t.fontSize.xs, height: '1.75rem' },
+          sm: { padding: `${t.spacing.xs} ${t.spacing.md}`, fontSize: t.fontSize.sm, height: '2rem' },
+          md: { padding: `${t.spacing.sm} ${t.spacing.md}`, fontSize: t.fontSize.md, height: '2.5rem' },
+          lg: { padding: `${t.spacing.md} ${t.spacing.lg}`, fontSize: t.fontSize.lg, height: '3rem' },
+          xl: { padding: `${t.spacing.lg} ${t.spacing.xl}`, fontSize: t.fontSize.xl, height: '3.5rem' },
+        };
+        return sizes[size];
+      }
+      const sizes = {
+        xs: { fontSize: t.fontSize.xs },
+        sm: { fontSize: t.fontSize.sm },
+        md: { fontSize: t.fontSize.md },
+        lg: { fontSize: t.fontSize.lg },
+        xl: { fontSize: t.fontSize.xl },
+      };
+      return sizes[size];
+    }
+
+    function createElement(config) {
+      const { tag = 'div', className, style, attrs, children, events, ref } = config;
+      const el = document.createElement(tag);
+      el.className = mergeClasses('zylix-component', className);
+      if (style) el.setAttribute('style', createStyleString(style));
+      if (attrs) {
+        for (const [key, value] of Object.entries(attrs)) {
+          if (value === undefined) continue;
+          if (typeof value === 'boolean') {
+            if (value) el.setAttribute(key, '');
+          } else {
+            el.setAttribute(key, String(value));
+          }
+        }
+      }
+      if (children) {
+        for (const child of children) {
+          if (typeof child === 'string') {
+            el.appendChild(document.createTextNode(child));
+          } else if (child) {
+            el.appendChild(child);
+          }
+        }
+      }
+      if (events) {
+        for (const [event, handler] of Object.entries(events)) {
+          if (handler) el.addEventListener(event, handler);
+        }
+      }
+      if (ref) ref(el);
+      return el;
+    }
+
+    // Components
+    function Container(props) {
+      const { maxWidth = 'lg', padding, center = true, className, children } = props;
+      const t = theme.get();
+      const widths = { sm: t.breakpoints.sm, md: t.breakpoints.md, lg: t.breakpoints.lg, xl: t.breakpoints.xl, full: '100%' };
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-container', className),
+        style: { width: '100%', maxWidth: widths[maxWidth] || maxWidth, margin: center ? '0 auto' : undefined, padding: padding || t.spacing.md },
+        children,
+      });
+    }
+
+    function Flex(props) {
+      const { direction = 'row', wrap = 'nowrap', justify = 'start', align = 'stretch', gap, className, style, children } = props;
+      const t = theme.get();
+      const justifyMap = { start: 'flex-start', end: 'flex-end', center: 'center', between: 'space-between', around: 'space-around', evenly: 'space-evenly' };
+      const alignMap = { start: 'flex-start', end: 'flex-end', center: 'center', stretch: 'stretch', baseline: 'baseline' };
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-flex', className),
+        style: { display: 'flex', flexDirection: direction, flexWrap: wrap, justifyContent: justifyMap[justify], alignItems: alignMap[align], gap: gap || t.spacing.md, ...style },
+        children,
+      });
+    }
+
+    function Grid(props) {
+      const { columns = 12, rows, gap, columnGap, rowGap, className, style, children } = props;
+      const t = theme.get();
+      const gridCols = typeof columns === 'number' ? `repeat(${columns}, 1fr)` : columns;
+      const gridRows = rows ? (typeof rows === 'number' ? `repeat(${rows}, 1fr)` : rows) : undefined;
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-grid', className),
+        style: { display: 'grid', gridTemplateColumns: gridCols, gridTemplateRows: gridRows, gap: gap || t.spacing.md, columnGap, rowGap, ...style },
+        children,
+      });
+    }
+
+    function Stack(props) {
+      const { direction = 'vertical', gap, align = 'stretch', className, children } = props;
+      const t = theme.get();
+      return Flex({ direction: direction === 'vertical' ? 'column' : 'row', gap: gap || t.spacing.md, align, className: mergeClasses('zylix-stack', className), children });
+    }
+
+    function Button(props) {
+      const { variant = 'primary', size = 'md', disabled = false, loading = false, fullWidth = false, type = 'button', onClick, className, children = [] } = props;
+      const t = theme.get();
+      const colors = getVariantColors(variant);
+      const sizeStyles = getSizeStyles(size, 'button');
+      const isOutline = variant === 'outline';
+      const isGhost = variant === 'ghost';
+
+      const buttonChildren = [];
+      if (loading) {
+        buttonChildren.push(Spinner({ size: 'sm' }));
+      }
+      buttonChildren.push(...children);
+
+      return createElement({
+        tag: 'button',
+        className: mergeClasses('zylix-button', className),
+        style: {
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: t.spacing.sm,
+          border: isOutline ? `2px solid ${colors.border}` : 'none', borderRadius: t.borderRadius.md,
+          backgroundColor: colors.bg, color: colors.text, cursor: disabled || loading ? 'not-allowed' : 'pointer',
+          opacity: disabled ? '0.5' : '1', fontWeight: '500', transition: `all ${t.transition.fast}`,
+          width: fullWidth ? '100%' : undefined, ...sizeStyles,
+        },
+        attrs: { type, disabled: disabled || loading, 'aria-disabled': disabled || loading, 'aria-busy': loading },
+        children: buttonChildren,
+        events: onClick && !disabled && !loading ? {
+          click: onClick,
+          mouseenter: (e) => { e.target.style.backgroundColor = isGhost ? colors.hover : colors.hover; },
+          mouseleave: (e) => { e.target.style.backgroundColor = colors.bg; },
+        } : undefined,
+      });
+    }
+
+    function Input(props) {
+      const { type = 'text', size = 'md', placeholder, value, defaultValue, disabled = false, error, label, helperText, onChange, className, id = createId() } = props;
+      const t = theme.get();
+      const sizeStyles = getSizeStyles(size, 'input');
+      const hasError = !!error;
+      const errorMessage = typeof error === 'string' ? error : undefined;
+
+      const inputEl = createElement({
+        tag: 'input',
+        style: {
+          width: '100%', border: `1px solid ${hasError ? t.colors.danger : t.colors.border}`, borderRadius: t.borderRadius.md,
+          backgroundColor: disabled ? t.colors.surface : t.colors.background, color: t.colors.text, outline: 'none',
+          transition: `all ${t.transition.fast}`, ...sizeStyles,
+        },
+        attrs: { type, id, placeholder, value, disabled, 'aria-invalid': hasError },
+        events: {
+          input: onChange ? (e) => onChange(e.target.value, e) : undefined,
+          focusin: (e) => { e.target.style.borderColor = hasError ? t.colors.danger : t.colors.borderFocus; e.target.style.boxShadow = `0 0 0 3px ${hasError ? t.colors.danger : t.colors.primary}20`; },
+          focusout: (e) => { e.target.style.borderColor = hasError ? t.colors.danger : t.colors.border; e.target.style.boxShadow = 'none'; },
+        },
+      });
+      if (defaultValue !== undefined) inputEl.value = defaultValue;
+
+      const children = [];
+      if (label) {
+        children.push(createElement({
+          tag: 'label',
+          style: { display: 'block', marginBottom: t.spacing.xs, fontSize: t.fontSize.sm, fontWeight: '500', color: t.colors.text },
+          attrs: { for: id },
+          children: [label],
+        }));
+      }
+      children.push(inputEl);
+      if (errorMessage || helperText) {
+        children.push(createElement({
+          tag: 'span',
+          style: { display: 'block', marginTop: t.spacing.xs, fontSize: t.fontSize.xs, color: errorMessage ? t.colors.danger : t.colors.textMuted },
+          children: [errorMessage || helperText || ''],
+        }));
+      }
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-input', className), children });
+    }
+
+    function Textarea(props) {
+      const { size = 'md', placeholder, value, defaultValue, disabled = false, error, label, rows = 4, resize = 'vertical', onChange, className, id = createId() } = props;
+      const t = theme.get();
+      const sizeStyles = getSizeStyles(size, 'input');
+      const hasError = !!error;
+      const errorMessage = typeof error === 'string' ? error : undefined;
+
+      const textareaEl = createElement({
+        tag: 'textarea',
+        style: {
+          width: '100%', border: `1px solid ${hasError ? t.colors.danger : t.colors.border}`, borderRadius: t.borderRadius.md,
+          backgroundColor: disabled ? t.colors.surface : t.colors.background, color: t.colors.text, outline: 'none',
+          transition: `all ${t.transition.fast}`, resize, minHeight: '80px', ...sizeStyles, height: undefined,
+        },
+        attrs: { id, placeholder, disabled, rows, 'aria-invalid': hasError },
+        events: { input: onChange ? (e) => onChange(e.target.value, e) : undefined },
+      });
+      if (defaultValue !== undefined) textareaEl.value = defaultValue;
+
+      const children = [];
+      if (label) {
+        children.push(createElement({
+          tag: 'label',
+          style: { display: 'block', marginBottom: t.spacing.xs, fontSize: t.fontSize.sm, fontWeight: '500', color: t.colors.text },
+          attrs: { for: id },
+          children: [label],
+        }));
+      }
+      children.push(textareaEl);
+      if (errorMessage) {
+        children.push(createElement({ tag: 'span', style: { display: 'block', marginTop: t.spacing.xs, fontSize: t.fontSize.xs, color: t.colors.danger }, children: [errorMessage] }));
+      }
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-textarea', className), children });
+    }
+
+    function Select(props) {
+      const { options, size = 'md', placeholder, value, defaultValue, disabled = false, error, label, onChange, className, id = createId() } = props;
+      const t = theme.get();
+      const sizeStyles = getSizeStyles(size, 'input');
+      const hasError = !!error;
+
+      const optionElements = [];
+      if (placeholder) {
+        optionElements.push(createElement({ tag: 'option', attrs: { value: '', disabled: true, selected: !value && !defaultValue }, children: [placeholder] }));
+      }
+      for (const opt of options) {
+        optionElements.push(createElement({ tag: 'option', attrs: { value: opt.value, disabled: opt.disabled, selected: value === opt.value || defaultValue === opt.value }, children: [opt.label] }));
+      }
+
+      const selectEl = createElement({
+        tag: 'select',
+        style: {
+          width: '100%', border: `1px solid ${hasError ? t.colors.danger : t.colors.border}`, borderRadius: t.borderRadius.md,
+          backgroundColor: disabled ? t.colors.surface : t.colors.background, color: t.colors.text, outline: 'none',
+          transition: `all ${t.transition.fast}`, cursor: disabled ? 'not-allowed' : 'pointer', appearance: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat', backgroundPosition: `right ${t.spacing.sm} center`, backgroundSize: '1.5em',
+          paddingRight: t.spacing['2xl'], ...sizeStyles,
+        },
+        attrs: { id, disabled, 'aria-invalid': hasError },
+        children: optionElements,
+        events: { change: onChange ? (e) => onChange(e.target.value, e) : undefined },
+      });
+
+      const children = [];
+      if (label) {
+        children.push(createElement({ tag: 'label', style: { display: 'block', marginBottom: t.spacing.xs, fontSize: t.fontSize.sm, fontWeight: '500', color: t.colors.text }, attrs: { for: id }, children: [label] }));
+      }
+      children.push(selectEl);
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-select', className), children });
+    }
+
+    function Checkbox(props) {
+      const { checked, defaultChecked, disabled = false, label, size = 'md', onChange, className, id = createId() } = props;
+      const t = theme.get();
+      const sizes = { xs: '14px', sm: '16px', md: '18px', lg: '20px', xl: '24px' };
+
+      const inputEl = createElement({
+        tag: 'input',
+        style: { width: sizes[size], height: sizes[size], margin: '0', cursor: disabled ? 'not-allowed' : 'pointer', accentColor: t.colors.primary },
+        attrs: { type: 'checkbox', id, checked: checked ?? defaultChecked, disabled },
+        events: { change: onChange ? (e) => onChange(e.target.checked, e) : undefined },
+      });
+
+      const children = [inputEl];
+      if (label) {
+        children.push(createElement({
+          tag: 'span',
+          style: { marginLeft: t.spacing.sm, fontSize: getSizeStyles(size, 'text').fontSize, color: disabled ? t.colors.textMuted : t.colors.text, cursor: disabled ? 'not-allowed' : 'pointer' },
+          children: [label],
+        }));
+      }
+
+      return createElement({
+        tag: 'label',
+        className: mergeClasses('zylix-checkbox', className),
+        style: { display: 'inline-flex', alignItems: 'center', cursor: disabled ? 'not-allowed' : 'pointer' },
+        attrs: { for: id },
+        children,
+      });
+    }
+
+    function RadioGroup(props) {
+      const { name, options, value, defaultValue, disabled = false, direction = 'vertical', size = 'md', onChange, className } = props;
+      const t = theme.get();
+      let currentValue = value ?? defaultValue;
+
+      const radios = options.map(opt => {
+        const id = createId();
+        const inputEl = createElement({
+          tag: 'input',
+          style: { margin: '0', cursor: disabled || opt.disabled ? 'not-allowed' : 'pointer', accentColor: t.colors.primary },
+          attrs: { type: 'radio', id, name, value: opt.value, checked: currentValue === opt.value, disabled: disabled || opt.disabled },
+          events: { change: (e) => { currentValue = e.target.value; if (onChange) onChange(currentValue); } },
+        });
+
+        return createElement({
+          tag: 'label',
+          style: { display: 'inline-flex', alignItems: 'center', cursor: disabled || opt.disabled ? 'not-allowed' : 'pointer' },
+          attrs: { for: id },
+          children: [inputEl, createElement({ tag: 'span', style: { marginLeft: t.spacing.sm, fontSize: getSizeStyles(size, 'text').fontSize, color: disabled || opt.disabled ? t.colors.textMuted : t.colors.text }, children: [opt.label] })],
+        });
+      });
+
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-radio-group', className),
+        style: { display: 'flex', flexDirection: direction === 'vertical' ? 'column' : 'row', gap: t.spacing.sm },
+        attrs: { role: 'radiogroup' },
+        children: radios,
+      });
+    }
+
+    function Switch(props) {
+      const { checked, defaultChecked, disabled = false, label, size = 'md', onChange, className, id = createId() } = props;
+      const t = theme.get();
+      const sizes = { xs: { width: '28px', height: '16px', knob: '12px' }, sm: { width: '32px', height: '18px', knob: '14px' }, md: { width: '40px', height: '22px', knob: '18px' }, lg: { width: '48px', height: '26px', knob: '22px' }, xl: { width: '56px', height: '30px', knob: '26px' } };
+      const switchSize = sizes[size];
+      let isChecked = checked ?? defaultChecked ?? false;
+
+      const knob = createElement({
+        tag: 'span',
+        style: { position: 'absolute', width: switchSize.knob, height: switchSize.knob, backgroundColor: t.colors.background, borderRadius: t.borderRadius.full, top: '2px', left: isChecked ? `calc(100% - ${switchSize.knob} - 2px)` : '2px', transition: `left ${t.transition.fast}`, boxShadow: t.shadow.sm },
+      });
+
+      const track = createElement({
+        tag: 'span',
+        style: { display: 'inline-block', position: 'relative', width: switchSize.width, height: switchSize.height, backgroundColor: isChecked ? t.colors.primary : t.colors.border, borderRadius: t.borderRadius.full, transition: `background-color ${t.transition.fast}`, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? '0.5' : '1' },
+        children: [knob],
+      });
+
+      const inputEl = createElement({
+        tag: 'input',
+        style: { position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: '0' },
+        attrs: { type: 'checkbox', id, checked: isChecked, disabled, role: 'switch', 'aria-checked': isChecked },
+        events: {
+          change: (e) => {
+            isChecked = e.target.checked;
+            track.style.backgroundColor = isChecked ? t.colors.primary : t.colors.border;
+            knob.style.left = isChecked ? `calc(100% - ${switchSize.knob} - 2px)` : '2px';
+            if (onChange) onChange(isChecked);
+          },
+        },
+      });
+
+      const children = [inputEl, track];
+      if (label) {
+        children.push(createElement({ tag: 'span', style: { marginLeft: t.spacing.sm, fontSize: getSizeStyles(size, 'text').fontSize, color: disabled ? t.colors.textMuted : t.colors.text }, children: [label] }));
+      }
+
+      return createElement({ tag: 'label', className: mergeClasses('zylix-switch', className), style: { display: 'inline-flex', alignItems: 'center', cursor: disabled ? 'not-allowed' : 'pointer' }, attrs: { for: id }, children });
+    }
+
+    function Slider(props) {
+      const { min = 0, max = 100, step = 1, value, defaultValue = min, disabled = false, label, showValue = true, size = 'md', onChange, className, id = createId() } = props;
+      const t = theme.get();
+      let currentValue = value ?? defaultValue;
+      const heights = { xs: '4px', sm: '6px', md: '8px', lg: '10px', xl: '12px' };
+
+      const valueDisplay = showValue ? createElement({ tag: 'span', style: { minWidth: '40px', textAlign: 'right', fontSize: t.fontSize.sm, color: t.colors.text }, children: [String(currentValue)] }) : null;
+
+      const inputEl = createElement({
+        tag: 'input',
+        style: { width: '100%', height: heights[size], cursor: disabled ? 'not-allowed' : 'pointer', accentColor: t.colors.primary },
+        attrs: { type: 'range', id, min, max, step, value: currentValue, disabled },
+        events: {
+          input: (e) => {
+            currentValue = Number(e.target.value);
+            if (valueDisplay) valueDisplay.textContent = String(currentValue);
+            if (onChange) onChange(currentValue);
+          },
+        },
+      });
+
+      const children = [];
+      if (label) {
+        children.push(createElement({ tag: 'label', style: { display: 'block', marginBottom: t.spacing.xs, fontSize: t.fontSize.sm, fontWeight: '500', color: t.colors.text }, attrs: { for: id }, children: [label] }));
+      }
+      const sliderRow = createElement({ tag: 'div', style: { display: 'flex', alignItems: 'center', gap: t.spacing.md }, children: valueDisplay ? [inputEl, valueDisplay] : [inputEl] });
+      children.push(sliderRow);
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-slider', className), children });
+    }
+
+    function Card(props) {
+      const { variant = 'elevated', padding, radius = 'lg', hoverable = false, clickable = false, onClick, className, children } = props;
+      const t = theme.get();
+      const variantStyles = {
+        elevated: { backgroundColor: t.colors.background, boxShadow: t.shadow.md, border: 'none' },
+        outlined: { backgroundColor: t.colors.background, boxShadow: 'none', border: `1px solid ${t.colors.border}` },
+        filled: { backgroundColor: t.colors.surface, boxShadow: 'none', border: 'none' },
+      };
+
+      return createElement({
+        tag: clickable || onClick ? 'button' : 'div',
+        className: mergeClasses('zylix-card', className),
+        style: { padding: padding || t.spacing.lg, borderRadius: t.borderRadius[radius], transition: `all ${t.transition.fast}`, cursor: (hoverable || clickable || onClick) ? 'pointer' : undefined, textAlign: 'left', width: '100%', ...variantStyles[variant] },
+        attrs: clickable || onClick ? { type: 'button' } : undefined,
+        children,
+        events: {
+          click: onClick,
+          mouseenter: hoverable || clickable ? (e) => { if (variant === 'elevated') e.target.style.boxShadow = t.shadow.lg; } : undefined,
+          mouseleave: hoverable || clickable ? (e) => { if (variant === 'elevated') e.target.style.boxShadow = t.shadow.md; } : undefined,
+        },
+      });
+    }
+
+    function Avatar(props) {
+      const { src, alt, name, size = 'md', shape = 'circle', className } = props;
+      const t = theme.get();
+      const sizes = { xs: '24px', sm: '32px', md: '40px', lg: '48px', xl: '64px' };
+      const avatarSize = typeof size === 'number' ? `${size}px` : sizes[size];
+      const fontSize = typeof size === 'number' ? `${size / 2.5}px` : getSizeStyles(size, 'text').fontSize;
+
+      const getInitials = (name) => name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2);
+      const bgColors = [t.colors.primary, t.colors.secondary, t.colors.success, t.colors.warning, t.colors.danger, t.colors.info];
+      const getColorFromName = (name) => { let hash = 0; for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash); return bgColors[Math.abs(hash) % bgColors.length]; };
+
+      const children = [];
+      if (src) {
+        children.push(createElement({ tag: 'img', style: { width: '100%', height: '100%', objectFit: 'cover' }, attrs: { src, alt: alt || name || 'Avatar' } }));
+      } else if (name) {
+        children.push(getInitials(name));
+      }
+
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-avatar', className),
+        style: { width: avatarSize, height: avatarSize, borderRadius: shape === 'circle' ? t.borderRadius.full : t.borderRadius.md, backgroundColor: name ? getColorFromName(name) : t.colors.secondary, color: t.colors.textInverse, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize, fontWeight: '500', overflow: 'hidden', flexShrink: '0' },
+        attrs: { role: 'img', 'aria-label': alt || name || 'Avatar' },
+        children,
+      });
+    }
+
+    function Badge(props) {
+      const { variant = 'primary', size = 'md', rounded = false, dot = false, className, children } = props;
+      const t = theme.get();
+      const colors = getVariantColors(variant);
+      const sizes = { xs: { padding: `${t.spacing.xs} ${t.spacing.sm}`, fontSize: '10px' }, sm: { padding: `${t.spacing.xs} ${t.spacing.sm}`, fontSize: t.fontSize.xs }, md: { padding: `${t.spacing.xs} ${t.spacing.md}`, fontSize: t.fontSize.sm }, lg: { padding: `${t.spacing.sm} ${t.spacing.md}`, fontSize: t.fontSize.md }, xl: { padding: `${t.spacing.sm} ${t.spacing.lg}`, fontSize: t.fontSize.lg } };
+
+      if (dot) {
+        return createElement({ tag: 'span', className: mergeClasses('zylix-badge', 'zylix-badge-dot', className), style: { display: 'inline-block', width: '8px', height: '8px', borderRadius: t.borderRadius.full, backgroundColor: colors.bg } });
+      }
+
+      return createElement({
+        tag: 'span',
+        className: mergeClasses('zylix-badge', className),
+        style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: rounded ? t.borderRadius.full : t.borderRadius.sm, backgroundColor: colors.bg, color: colors.text, fontWeight: '500', whiteSpace: 'nowrap', ...sizes[size] },
+        children,
+      });
+    }
+
+    function Tag(props) {
+      const { variant = 'secondary', size = 'md', removable = false, onRemove, className, children = [] } = props;
+      const t = theme.get();
+      const colors = getVariantColors(variant);
+      const sizes = { xs: { padding: `2px ${t.spacing.sm}`, fontSize: '10px', gap: t.spacing.xs }, sm: { padding: `${t.spacing.xs} ${t.spacing.sm}`, fontSize: t.fontSize.xs, gap: t.spacing.xs }, md: { padding: `${t.spacing.xs} ${t.spacing.md}`, fontSize: t.fontSize.sm, gap: t.spacing.sm }, lg: { padding: `${t.spacing.sm} ${t.spacing.md}`, fontSize: t.fontSize.md, gap: t.spacing.sm }, xl: { padding: `${t.spacing.sm} ${t.spacing.lg}`, fontSize: t.fontSize.lg, gap: t.spacing.md } };
+
+      const tagChildren = [...children];
+      if (removable) {
+        tagChildren.push(createElement({
+          tag: 'button',
+          style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0', border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', opacity: '0.7', marginLeft: t.spacing.xs },
+          attrs: { type: 'button', 'aria-label': 'Remove' },
+          children: ['×'],
+          events: { click: (e) => { e.stopPropagation(); if (onRemove) onRemove(); }, mouseenter: (e) => { e.target.style.opacity = '1'; }, mouseleave: (e) => { e.target.style.opacity = '0.7'; } },
+        }));
+      }
+
+      return createElement({
+        tag: 'span',
+        className: mergeClasses('zylix-tag', className),
+        style: { display: 'inline-flex', alignItems: 'center', borderRadius: t.borderRadius.md, backgroundColor: `${colors.bg}20`, color: colors.bg, fontWeight: '500', ...sizes[size] },
+        children: tagChildren,
+      });
+    }
+
+    function Tooltip(props) {
+      const { content, position = 'top', delay = 200, className, children } = props;
+      const t = theme.get();
+      let tooltipEl = null;
+      let timeoutId = null;
+
+      const showTooltip = (target) => {
+        if (tooltipEl) return;
+        tooltipEl = createElement({
+          tag: 'div',
+          style: { position: 'fixed', padding: `${t.spacing.xs} ${t.spacing.sm}`, backgroundColor: t.colors.text, color: t.colors.textInverse, borderRadius: t.borderRadius.sm, fontSize: t.fontSize.xs, zIndex: '9999', pointerEvents: 'none', whiteSpace: 'nowrap', opacity: '0', transition: `opacity ${t.transition.fast}` },
+          attrs: { role: 'tooltip' },
+          children: [content],
+        });
+        document.body.appendChild(tooltipEl);
+
+        const rect = target.getBoundingClientRect();
+        const tooltipRect = tooltipEl.getBoundingClientRect();
+        let top = 0, left = 0;
+
+        switch (position) {
+          case 'top': top = rect.top - tooltipRect.height - 8; left = rect.left + (rect.width - tooltipRect.width) / 2; break;
+          case 'bottom': top = rect.bottom + 8; left = rect.left + (rect.width - tooltipRect.width) / 2; break;
+          case 'left': top = rect.top + (rect.height - tooltipRect.height) / 2; left = rect.left - tooltipRect.width - 8; break;
+          case 'right': top = rect.top + (rect.height - tooltipRect.height) / 2; left = rect.right + 8; break;
+        }
+
+        tooltipEl.style.top = `${top}px`;
+        tooltipEl.style.left = `${left}px`;
+        requestAnimationFrame(() => { if (tooltipEl) tooltipEl.style.opacity = '1'; });
+      };
+
+      const hideTooltip = () => {
+        if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+        if (tooltipEl) { tooltipEl.style.opacity = '0'; setTimeout(() => { if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; } }, 150); }
+      };
+
+      return createElement({
+        tag: 'span',
+        className: mergeClasses('zylix-tooltip', className),
+        style: { display: 'inline-block' },
+        children: [children],
+        events: { mouseenter: (e) => { timeoutId = setTimeout(() => showTooltip(e.target), delay); }, mouseleave: hideTooltip, focusin: (e) => showTooltip(e.target), focusout: hideTooltip },
+      });
+    }
+
+    function Alert(props) {
+      const { variant = 'info', title, closable = false, onClose, className, children } = props;
+      const t = theme.get();
+      const variantStyles = {
+        info: { bg: `${t.colors.info}15`, border: t.colors.info, text: t.colors.info, icon: 'ℹ️' },
+        success: { bg: `${t.colors.success}15`, border: t.colors.success, text: t.colors.success, icon: '✓' },
+        warning: { bg: `${t.colors.warning}15`, border: t.colors.warning, text: t.colors.warning, icon: '⚠' },
+        danger: { bg: `${t.colors.danger}15`, border: t.colors.danger, text: t.colors.danger, icon: '✕' },
+      };
+      const styles = variantStyles[variant];
+
+      const alertChildren = [];
+      alertChildren.push(createElement({ tag: 'span', style: { marginRight: t.spacing.sm, fontSize: t.fontSize.lg }, children: [styles.icon] }));
+
+      const contentChildren = [];
+      if (title) contentChildren.push(createElement({ tag: 'div', style: { fontWeight: '600', marginBottom: children ? t.spacing.xs : undefined }, children: [title] }));
+      if (children) contentChildren.push(createElement({ tag: 'div', children }));
+      alertChildren.push(createElement({ tag: 'div', style: { flex: '1' }, children: contentChildren }));
+
+      if (closable) {
+        alertChildren.push(createElement({
+          tag: 'button',
+          style: { padding: t.spacing.xs, border: 'none', background: 'none', color: styles.text, cursor: 'pointer', opacity: '0.7', fontSize: t.fontSize.lg },
+          attrs: { type: 'button', 'aria-label': 'Close' },
+          children: ['×'],
+          events: { click: () => { if (onClose) onClose(); }, mouseenter: (e) => { e.target.style.opacity = '1'; }, mouseleave: (e) => { e.target.style.opacity = '0.7'; } },
+        }));
+      }
+
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-alert', className),
+        style: { display: 'flex', alignItems: 'flex-start', padding: t.spacing.md, backgroundColor: styles.bg, borderLeft: `4px solid ${styles.border}`, borderRadius: t.borderRadius.md, color: styles.text },
+        attrs: { role: 'alert' },
+        children: alertChildren,
+      });
+    }
+
+    let toastContainer = null;
+    function toast(message, options = {}) {
+      const { variant = 'info', duration = 3000, position = 'top-right' } = options;
+      const t = theme.get();
+
+      if (!toastContainer) {
+        toastContainer = createElement({ tag: 'div', style: { position: 'fixed', zIndex: '10000', pointerEvents: 'none' } });
+        document.body.appendChild(toastContainer);
+      }
+
+      const positions = {
+        'top-right': { top: t.spacing.lg, right: t.spacing.lg },
+        'top-left': { top: t.spacing.lg, left: t.spacing.lg },
+        'bottom-right': { bottom: t.spacing.lg, right: t.spacing.lg },
+        'bottom-left': { bottom: t.spacing.lg, left: t.spacing.lg },
+        'top-center': { top: t.spacing.lg, left: '50%', transform: 'translateX(-50%)' },
+        'bottom-center': { bottom: t.spacing.lg, left: '50%', transform: 'translateX(-50%)' },
+      };
+      Object.assign(toastContainer.style, positions[position]);
+
+      const colors = {
+        info: { bg: t.colors.info, text: t.colors.textInverse },
+        success: { bg: t.colors.success, text: t.colors.textInverse },
+        warning: { bg: t.colors.warning, text: t.colors.text },
+        danger: { bg: t.colors.danger, text: t.colors.textInverse },
+      };
+
+      const toastEl = createElement({
+        tag: 'div',
+        style: { padding: `${t.spacing.md} ${t.spacing.lg}`, backgroundColor: colors[variant].bg, color: colors[variant].text, borderRadius: t.borderRadius.md, boxShadow: t.shadow.lg, marginBottom: t.spacing.sm, pointerEvents: 'auto', opacity: '0', transform: 'translateY(-10px)', transition: `all ${t.transition.normal}` },
+        attrs: { role: 'alert' },
+        children: [message],
+      });
+
+      toastContainer.appendChild(toastEl);
+      requestAnimationFrame(() => { toastEl.style.opacity = '1'; toastEl.style.transform = 'translateY(0)'; });
+      setTimeout(() => { toastEl.style.opacity = '0'; toastEl.style.transform = 'translateY(-10px)'; setTimeout(() => { toastEl.remove(); }, 250); }, duration);
+    }
+
+    function Progress(props) {
+      const { value, max = 100, size = 'md', variant = 'primary', showLabel = false, striped = false, animated = false, className } = props;
+      const t = theme.get();
+      const colors = getVariantColors(variant);
+      const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+      const heights = { xs: '4px', sm: '6px', md: '10px', lg: '14px', xl: '20px' };
+
+      if ((striped || animated) && !document.getElementById('zylix-progress-styles')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'zylix-progress-styles';
+        styleEl.textContent = `@keyframes zylix-progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }`;
+        document.head.appendChild(styleEl);
+      }
+
+      const bar = createElement({
+        tag: 'div',
+        style: {
+          width: `${percentage}%`, height: '100%', backgroundColor: colors.bg, borderRadius: t.borderRadius.full, transition: `width ${t.transition.normal}`,
+          backgroundImage: striped || animated ? 'linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent)' : undefined,
+          backgroundSize: striped || animated ? '1rem 1rem' : undefined,
+          animation: animated ? 'zylix-progress-stripes 1s linear infinite' : undefined,
+        },
+        attrs: { role: 'progressbar', 'aria-valuenow': value, 'aria-valuemin': 0, 'aria-valuemax': max },
+      });
+
+      const track = createElement({
+        tag: 'div',
+        style: { width: '100%', height: heights[size], backgroundColor: t.colors.surface, borderRadius: t.borderRadius.full, overflow: 'hidden' },
+        children: [bar],
+      });
+
+      const children = [track];
+      if (showLabel) {
+        children.push(createElement({ tag: 'span', style: { marginLeft: t.spacing.sm, fontSize: t.fontSize.sm, color: t.colors.textSecondary, minWidth: '40px', textAlign: 'right' }, children: [`${Math.round(percentage)}%`] }));
+      }
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-progress', className), style: { display: 'flex', alignItems: 'center' }, children });
+    }
+
+    function Spinner(props = {}) {
+      const { size = 'md', color, thickness = 3, className } = props;
+      const t = theme.get();
+      const sizes = { xs: '12px', sm: '16px', md: '24px', lg: '32px', xl: '48px' };
+      const spinnerSize = typeof size === 'number' ? `${size}px` : sizes[size];
+
+      if (!document.getElementById('zylix-spinner-styles')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'zylix-spinner-styles';
+        styleEl.textContent = `@keyframes zylix-spin { to { transform: rotate(360deg); } }`;
+        document.head.appendChild(styleEl);
+      }
+
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-spinner', className),
+        style: { width: spinnerSize, height: spinnerSize, border: `${thickness}px solid ${t.colors.border}`, borderTopColor: color || t.colors.primary, borderRadius: t.borderRadius.full, animation: 'zylix-spin 0.8s linear infinite' },
+        attrs: { role: 'status', 'aria-label': 'Loading' },
+      });
+    }
+
+    function Skeleton(props = {}) {
+      const { variant = 'text', width, height, lines = 1, className } = props;
+      const t = theme.get();
+
+      if (!document.getElementById('zylix-skeleton-styles')) {
+        const styleEl = document.createElement('style');
+        styleEl.id = 'zylix-skeleton-styles';
+        styleEl.textContent = `@keyframes zylix-skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`;
+        document.head.appendChild(styleEl);
+      }
+
+      const createSkeletonLine = (w, h) => {
+        const getWidth = () => { if (w !== undefined) return typeof w === 'number' ? `${w}px` : w; return variant === 'circular' ? (h !== undefined ? (typeof h === 'number' ? `${h}px` : h) : '40px') : '100%'; };
+        const getHeight = () => { if (h !== undefined) return typeof h === 'number' ? `${h}px` : h; if (variant === 'text') return t.fontSize.md; if (variant === 'circular') return getWidth(); return '100px'; };
+        return createElement({ tag: 'div', style: { width: getWidth(), height: getHeight(), backgroundColor: t.colors.surface, borderRadius: variant === 'circular' ? t.borderRadius.full : t.borderRadius.sm, animation: 'zylix-skeleton-pulse 1.5s ease-in-out infinite' } });
+      };
+
+      if (lines === 1 || variant !== 'text') {
+        return createElement({ tag: 'div', className: mergeClasses('zylix-skeleton', className), children: [createSkeletonLine(width, height)] });
+      }
+
+      const skeletonLines = [];
+      for (let i = 0; i < lines; i++) {
+        const lineWidth = i === lines - 1 ? '75%' : '100%';
+        skeletonLines.push(createSkeletonLine(lineWidth, height));
+      }
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-skeleton', className), style: { display: 'flex', flexDirection: 'column', gap: t.spacing.sm }, children: skeletonLines });
+    }
+
+    function Tabs(props) {
+      const { tabs, activeTab, defaultTab, variant = 'line', size = 'md', onChange, className } = props;
+      const t = theme.get();
+      let currentTab = activeTab ?? defaultTab ?? tabs[0]?.id;
+      const sizeStyles = getSizeStyles(size, 'button');
+
+      const updateTabs = () => {
+        const tabsEl = document.querySelector('.zylix-tabs');
+        if (tabsEl) {
+          const buttons = tabsEl.querySelectorAll('.zylix-tab-button');
+          buttons.forEach((btn, idx) => {
+            const isActive = tabs[idx].id === currentTab;
+            btn.style.color = isActive ? t.colors.primary : t.colors.textSecondary;
+            btn.style.fontWeight = isActive ? '600' : '400';
+            if (variant === 'line') btn.style.borderBottom = isActive ? `2px solid ${t.colors.primary}` : '2px solid transparent';
+            else if (variant === 'pills') {
+              btn.style.backgroundColor = isActive ? t.colors.primary : 'transparent';
+              btn.style.color = isActive ? t.colors.textInverse : t.colors.textSecondary;
+            }
+          });
+        }
+      };
+
+      const tabButtons = tabs.map(tab => {
+        const isActive = tab.id === currentTab;
+        const getTabStyles = () => {
+          const base = { ...sizeStyles, border: 'none', backgroundColor: 'transparent', color: isActive ? t.colors.primary : t.colors.textSecondary, cursor: tab.disabled ? 'not-allowed' : 'pointer', opacity: tab.disabled ? '0.5' : '1', transition: `all ${t.transition.fast}`, fontWeight: isActive ? '600' : '400' };
+          if (variant === 'line') { base.borderBottom = isActive ? `2px solid ${t.colors.primary}` : '2px solid transparent'; base.marginBottom = '-1px'; }
+          else if (variant === 'pills') { base.backgroundColor = isActive ? t.colors.primary : 'transparent'; base.color = isActive ? t.colors.textInverse : t.colors.textSecondary; base.borderRadius = t.borderRadius.full; }
+          return base;
+        };
+
+        return createElement({
+          tag: 'button',
+          className: 'zylix-tab-button',
+          style: getTabStyles(),
+          attrs: { type: 'button', role: 'tab', 'aria-selected': isActive, disabled: tab.disabled },
+          children: [tab.label],
+          events: !tab.disabled ? { click: () => { currentTab = tab.id; if (onChange) onChange(tab.id); updateTabs(); } } : undefined,
+        });
+      });
+
+      const tabList = createElement({
+        tag: 'div',
+        style: { display: 'flex', gap: variant === 'pills' ? t.spacing.sm : '0', borderBottom: variant === 'line' ? `1px solid ${t.colors.border}` : undefined },
+        attrs: { role: 'tablist' },
+        children: tabButtons,
+      });
+
+      return createElement({ tag: 'div', className: mergeClasses('zylix-tabs', className), children: [tabList] });
+    }
+
+    function Breadcrumb(props) {
+      const { items, separator = '/', className } = props;
+      const t = theme.get();
+
+      const breadcrumbItems = [];
+      items.forEach((item, index) => {
+        const isLast = index === items.length - 1;
+
+        if (index > 0) {
+          breadcrumbItems.push(createElement({ tag: 'span', style: { margin: `0 ${t.spacing.sm}`, color: t.colors.textMuted }, attrs: { 'aria-hidden': 'true' }, children: [separator] }));
+        }
+
+        if (isLast || (!item.href && !item.onClick)) {
+          breadcrumbItems.push(createElement({ tag: 'span', style: { color: isLast ? t.colors.text : t.colors.textSecondary, fontWeight: isLast ? '500' : undefined }, attrs: isLast ? { 'aria-current': 'page' } : undefined, children: [item.label] }));
+        } else {
+          breadcrumbItems.push(createElement({ tag: 'a', style: { color: t.colors.primary, textDecoration: 'none', cursor: 'pointer' }, attrs: item.href ? { href: item.href } : undefined, children: [item.label], events: item.onClick ? { click: item.onClick } : undefined }));
+        }
+      });
+
+      return createElement({
+        tag: 'nav',
+        className: mergeClasses('zylix-breadcrumb', className),
+        style: { fontSize: t.fontSize.sm },
+        attrs: { 'aria-label': 'Breadcrumb' },
+        children: [createElement({ tag: 'ol', style: { display: 'flex', alignItems: 'center', listStyle: 'none', margin: '0', padding: '0' }, children: breadcrumbItems.map(item => createElement({ tag: 'li', style: { display: 'inline-flex', alignItems: 'center' }, children: [item] })) })],
+      });
+    }
+
+    function Pagination(props) {
+      const { total, page, defaultPage = 1, pageSize = 10, siblings = 1, boundaries = 1, showFirst = true, showLast = true, onChange, className } = props;
+      const t = theme.get();
+      let currentPage = page ?? defaultPage;
+      const totalPages = Math.ceil(total / pageSize);
+
+      const range = (start, end) => Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+      const getPageNumbers = () => {
+        const totalNumbers = siblings * 2 + 3 + boundaries * 2;
+        if (totalNumbers >= totalPages) return range(1, totalPages);
+
+        const leftSiblingIndex = Math.max(currentPage - siblings, boundaries + 1);
+        const rightSiblingIndex = Math.min(currentPage + siblings, totalPages - boundaries);
+        const showLeftDots = leftSiblingIndex > boundaries + 2;
+        const showRightDots = rightSiblingIndex < totalPages - boundaries - 1;
+
+        if (!showLeftDots && showRightDots) {
+          const leftItemCount = 3 + 2 * siblings + boundaries;
+          return [...range(1, leftItemCount), '...', ...range(totalPages - boundaries + 1, totalPages)];
+        }
+        if (showLeftDots && !showRightDots) {
+          const rightItemCount = 3 + 2 * siblings + boundaries;
+          return [...range(1, boundaries), '...', ...range(totalPages - rightItemCount + 1, totalPages)];
+        }
+        return [...range(1, boundaries), '...', ...range(leftSiblingIndex, rightSiblingIndex), '...', ...range(totalPages - boundaries + 1, totalPages)];
+      };
+
+      const createButton = (content, pageNum, disabled = false) => {
+        const isActive = pageNum === currentPage;
+        return createElement({
+          tag: 'button',
+          style: { minWidth: '32px', height: '32px', padding: `0 ${t.spacing.sm}`, border: `1px solid ${isActive ? t.colors.primary : t.colors.border}`, borderRadius: t.borderRadius.sm, backgroundColor: isActive ? t.colors.primary : t.colors.background, color: isActive ? t.colors.textInverse : t.colors.text, cursor: disabled || isActive ? 'default' : 'pointer', opacity: disabled ? '0.5' : '1', fontSize: t.fontSize.sm, transition: `all ${t.transition.fast}` },
+          attrs: { type: 'button', disabled, 'aria-current': isActive ? 'page' : undefined },
+          children: [String(content)],
+          events: !disabled && !isActive && pageNum ? { click: () => { currentPage = pageNum; if (onChange) onChange(pageNum); } } : undefined,
+        });
+      };
+
+      const buttons = [];
+      if (showFirst) buttons.push(createButton('«', 1, currentPage === 1));
+      buttons.push(createButton('‹', currentPage - 1, currentPage === 1));
+
+      for (const pageNum of getPageNumbers()) {
+        if (pageNum === '...') buttons.push(createElement({ tag: 'span', style: { padding: `0 ${t.spacing.sm}`, color: t.colors.textMuted }, children: ['...'] }));
+        else buttons.push(createButton(pageNum, pageNum));
+      }
+
+      buttons.push(createButton('›', currentPage + 1, currentPage === totalPages));
+      if (showLast) buttons.push(createButton('»', totalPages, currentPage === totalPages));
+
+      return createElement({ tag: 'nav', className: mergeClasses('zylix-pagination', className), style: { display: 'flex', alignItems: 'center', gap: t.spacing.xs }, attrs: { 'aria-label': 'Pagination' }, children: buttons });
+    }
+
+    function Menu(props) {
+      const { items, className } = props;
+      const t = theme.get();
+
+      const menuItems = items.map(item => createElement({
+        tag: 'button',
+        style: { display: 'flex', alignItems: 'center', gap: t.spacing.sm, width: '100%', padding: `${t.spacing.sm} ${t.spacing.md}`, border: 'none', backgroundColor: 'transparent', color: item.danger ? t.colors.danger : t.colors.text, cursor: item.disabled ? 'not-allowed' : 'pointer', opacity: item.disabled ? '0.5' : '1', fontSize: t.fontSize.sm, textAlign: 'left', transition: `background-color ${t.transition.fast}` },
+        attrs: { type: 'button', disabled: item.disabled, role: 'menuitem' },
+        children: item.icon ? [item.icon, item.label] : [item.label],
+        events: !item.disabled && item.onClick ? { click: item.onClick, mouseenter: (e) => { e.target.style.backgroundColor = t.colors.surfaceHover; }, mouseleave: (e) => { e.target.style.backgroundColor = 'transparent'; } } : undefined,
+      }));
+
+      return createElement({
+        tag: 'div',
+        className: mergeClasses('zylix-menu', className),
+        style: { minWidth: '160px', padding: t.spacing.xs, backgroundColor: t.colors.background, border: `1px solid ${t.colors.border}`, borderRadius: t.borderRadius.md, boxShadow: t.shadow.lg },
+        attrs: { role: 'menu' },
+        children: menuItems,
+      });
+    }
+
+    function Dropdown(props) {
+      const { trigger, items, position = 'bottom-start', className } = props;
+      const t = theme.get();
+      let isOpen = false;
+      let menuEl = null;
+
+      const toggleMenu = () => {
+        isOpen = !isOpen;
+        if (menuEl) menuEl.style.display = isOpen ? 'block' : 'none';
+      };
+
+      const closeMenu = () => {
+        isOpen = false;
+        if (menuEl) menuEl.style.display = 'none';
+      };
+
+      const menuItems = items.map(item => ({ ...item, onClick: () => { if (item.onClick) item.onClick(); closeMenu(); } }));
+      menuEl = Menu({ items: menuItems });
+      menuEl.style.display = 'none';
+      menuEl.style.position = 'absolute';
+      menuEl.style.zIndex = '100';
+
+      const positionStyles = {
+        'bottom-start': { top: '100%', left: '0', marginTop: t.spacing.xs },
+        'bottom-end': { top: '100%', right: '0', marginTop: t.spacing.xs },
+        'top-start': { bottom: '100%', left: '0', marginBottom: t.spacing.xs },
+        'top-end': { bottom: '100%', right: '0', marginBottom: t.spacing.xs },
+      };
+      Object.assign(menuEl.style, positionStyles[position]);
+
+      const triggerWrapper = createElement({ tag: 'div', children: [trigger], events: { click: (e) => { e.stopPropagation(); toggleMenu(); } } });
+      const dropdown = createElement({ tag: 'div', className: mergeClasses('zylix-dropdown', className), style: { position: 'relative', display: 'inline-block' }, children: [triggerWrapper, menuEl] });
+
+      document.addEventListener('click', closeMenu);
+      return dropdown;
+    }
+
+    // Demo Rendering
+    const t = theme.get();
+
+    // Theme Colors Demo
+    const themeColors = document.getElementById('theme-colors');
+    const colorSwatches = Flex({
+      wrap: 'wrap',
+      gap: t.spacing.sm,
+      children: Object.entries(t.colors).slice(0, 12).map(([name, color]) =>
+        createElement({
+          tag: 'div',
+          style: { display: 'flex', alignItems: 'center', gap: t.spacing.sm, padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.md, minWidth: '150px' },
+          children: [
+            createElement({ tag: 'div', style: { width: '24px', height: '24px', borderRadius: t.borderRadius.sm, backgroundColor: color, border: `1px solid ${t.colors.border}` } }),
+            createElement({ tag: 'span', style: { fontSize: t.fontSize.xs, color: t.colors.textSecondary }, children: [name] }),
+          ],
+        })
+      ),
+    });
+    themeColors.appendChild(colorSwatches);
+
+    // Theme Customization Demo
+    const themeButtons = document.getElementById('theme-buttons');
+    themeButtons.appendChild(Button({ variant: 'primary', children: ['Default Theme'], onClick: () => { theme.reset(); renderThemeDemo(); } }));
+    themeButtons.appendChild(Button({ variant: 'secondary', children: ['Dark Theme'], onClick: () => {
+      theme.set({ colors: { primary: '#8b5cf6', background: '#1f2937', surface: '#374151', text: '#f9fafb', textInverse: '#1f2937', border: '#4b5563' } });
+      renderThemeDemo();
+    }}));
+    themeButtons.appendChild(Button({ variant: 'success', children: ['Green Theme'], onClick: () => {
+      theme.set({ colors: { primary: '#10b981', primaryHover: '#059669' } });
+      renderThemeDemo();
+    }}));
+
+    const themeDemo = document.getElementById('theme-demo');
+    function renderThemeDemo() {
+      themeDemo.innerHTML = '';
+      themeDemo.appendChild(Flex({
+        gap: t.spacing.md,
+        style: { marginTop: t.spacing.md, padding: t.spacing.lg, backgroundColor: theme.get().colors.background, borderRadius: t.borderRadius.lg, border: `1px solid ${theme.get().colors.border}` },
+        children: [
+          Button({ variant: 'primary', children: ['Primary'] }),
+          Button({ variant: 'secondary', children: ['Secondary'] }),
+          Input({ placeholder: 'Themed input', size: 'md' }),
+        ],
+      }));
+    }
+    renderThemeDemo();
+
+    // Flex Demo
+    const flexDemo = document.getElementById('flex-demo');
+    flexDemo.appendChild(Flex({
+      gap: t.spacing.sm,
+      justify: 'between',
+      children: [1, 2, 3].map(n => createElement({ tag: 'div', style: { padding: t.spacing.md, backgroundColor: t.colors.primary, color: t.colors.textInverse, borderRadius: t.borderRadius.md }, children: [`Item ${n}`] })),
+    }));
+
+    // Grid Demo
+    const gridDemo = document.getElementById('grid-demo');
+    gridDemo.appendChild(Grid({
+      columns: 4,
+      gap: t.spacing.sm,
+      children: [1, 2, 3, 4, 5, 6, 7, 8].map(n => createElement({ tag: 'div', style: { padding: t.spacing.md, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.md, textAlign: 'center' }, children: [`Cell ${n}`] })),
+    }));
+
+    // Stack Demo
+    const stackDemo = document.getElementById('stack-demo');
+    stackDemo.appendChild(Flex({
+      gap: t.spacing.xl,
+      children: [
+        Stack({ direction: 'vertical', gap: t.spacing.xs, children: [
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Vertical 1'] }),
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Vertical 2'] }),
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Vertical 3'] }),
+        ]}),
+        Stack({ direction: 'horizontal', gap: t.spacing.xs, children: [
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Horizontal 1'] }),
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Horizontal 2'] }),
+          createElement({ tag: 'div', style: { padding: t.spacing.sm, backgroundColor: t.colors.surface, borderRadius: t.borderRadius.sm }, children: ['Horizontal 3'] }),
+        ]}),
+      ],
+    }));
+
+    // Button Variants Demo
+    const buttonVariants = document.getElementById('button-variants');
+    ['primary', 'secondary', 'success', 'warning', 'danger', 'info', 'ghost', 'outline'].forEach(variant => {
+      buttonVariants.appendChild(Button({ variant, children: [variant.charAt(0).toUpperCase() + variant.slice(1)] }));
+    });
+
+    // Button Sizes Demo
+    const buttonSizes = document.getElementById('button-sizes');
+    ['xs', 'sm', 'md', 'lg', 'xl'].forEach(size => {
+      buttonSizes.appendChild(Button({ size, children: [size.toUpperCase()] }));
+    });
+
+    // Button States Demo
+    const buttonStates = document.getElementById('button-states');
+    buttonStates.appendChild(Button({ children: ['Normal'] }));
+    buttonStates.appendChild(Button({ disabled: true, children: ['Disabled'] }));
+    buttonStates.appendChild(Button({ loading: true, children: ['Loading'] }));
+    buttonStates.appendChild(Button({ fullWidth: true, children: ['Full Width'] }));
+
+    // Form Inputs Demo
+    const formInputs = document.getElementById('form-inputs');
+    formInputs.appendChild(Input({ label: 'Email', type: 'email', placeholder: 'Enter email', helperText: 'We will never share your email' }));
+    formInputs.appendChild(Input({ label: 'Password', type: 'password', placeholder: 'Enter password' }));
+    formInputs.appendChild(Input({ label: 'With Error', error: 'This field is required' }));
+    formInputs.appendChild(Input({ label: 'Disabled', disabled: true, defaultValue: 'Cannot edit' }));
+    formInputs.appendChild(Textarea({ label: 'Message', placeholder: 'Enter your message', rows: 3 }));
+    formInputs.appendChild(Select({ label: 'Country', placeholder: 'Select a country', options: [
+      { value: 'us', label: 'United States' },
+      { value: 'uk', label: 'United Kingdom' },
+      { value: 'jp', label: 'Japan' },
+      { value: 'de', label: 'Germany' },
+    ]}));
+
+    // Checkbox Demo
+    const checkboxDemo = document.getElementById('checkbox-demo');
+    checkboxDemo.appendChild(Checkbox({ label: 'Default', size: 'md' }));
+    checkboxDemo.appendChild(Checkbox({ label: 'Checked', defaultChecked: true, size: 'md' }));
+    checkboxDemo.appendChild(Checkbox({ label: 'Disabled', disabled: true, size: 'md' }));
+    checkboxDemo.appendChild(Checkbox({ label: 'Small', size: 'sm' }));
+    checkboxDemo.appendChild(Checkbox({ label: 'Large', size: 'lg' }));
+
+    // Radio Demo
+    const radioDemo = document.getElementById('radio-demo');
+    radioDemo.appendChild(RadioGroup({
+      name: 'demo-radio',
+      options: [
+        { value: 'option1', label: 'Option 1' },
+        { value: 'option2', label: 'Option 2' },
+        { value: 'option3', label: 'Option 3', disabled: true },
+      ],
+      defaultValue: 'option1',
+      direction: 'horizontal',
+    }));
+
+    // Switch Demo
+    const switchDemo = document.getElementById('switch-demo');
+    switchDemo.appendChild(Switch({ label: 'Off', size: 'md' }));
+    switchDemo.appendChild(Switch({ label: 'On', defaultChecked: true, size: 'md' }));
+    switchDemo.appendChild(Switch({ label: 'Disabled', disabled: true, size: 'md' }));
+    switchDemo.appendChild(Switch({ label: 'Small', size: 'sm' }));
+    switchDemo.appendChild(Switch({ label: 'Large', size: 'lg' }));
+
+    // Slider Demo
+    const sliderDemo = document.getElementById('slider-demo');
+    sliderDemo.appendChild(Slider({ label: 'Volume', defaultValue: 50, min: 0, max: 100, showValue: true }));
+    sliderDemo.appendChild(Slider({ label: 'Temperature', defaultValue: 22, min: 16, max: 30, step: 0.5, showValue: true }));
+
+    // Card Demo
+    const cardDemo = document.getElementById('card-demo');
+    cardDemo.appendChild(Card({ variant: 'elevated', children: [createElement({ tag: 'h3', style: { margin: '0 0 8px' }, children: ['Elevated Card'] }), createElement({ tag: 'p', style: { margin: 0, color: t.colors.textSecondary }, children: ['This card has a shadow'] })] }));
+    cardDemo.appendChild(Card({ variant: 'outlined', children: [createElement({ tag: 'h3', style: { margin: '0 0 8px' }, children: ['Outlined Card'] }), createElement({ tag: 'p', style: { margin: 0, color: t.colors.textSecondary }, children: ['This card has a border'] })] }));
+    cardDemo.appendChild(Card({ variant: 'filled', hoverable: true, children: [createElement({ tag: 'h3', style: { margin: '0 0 8px' }, children: ['Hoverable Card'] }), createElement({ tag: 'p', style: { margin: 0, color: t.colors.textSecondary }, children: ['Hover over this card'] })] }));
+
+    // Avatar Demo
+    const avatarDemo = document.getElementById('avatar-demo');
+    avatarDemo.appendChild(Avatar({ name: 'John Doe', size: 'sm' }));
+    avatarDemo.appendChild(Avatar({ name: 'Jane Smith', size: 'md' }));
+    avatarDemo.appendChild(Avatar({ name: 'Bob Wilson', size: 'lg' }));
+    avatarDemo.appendChild(Avatar({ src: 'https://i.pravatar.cc/100', size: 'lg' }));
+    avatarDemo.appendChild(Avatar({ name: 'Square', size: 'lg', shape: 'square' }));
+
+    // Badge Demo
+    const badgeDemo = document.getElementById('badge-demo');
+    ['primary', 'secondary', 'success', 'warning', 'danger', 'info'].forEach(variant => {
+      badgeDemo.appendChild(Badge({ variant, children: [variant] }));
+    });
+    badgeDemo.appendChild(Badge({ variant: 'primary', rounded: true, children: ['Rounded'] }));
+    badgeDemo.appendChild(Badge({ variant: 'danger', dot: true }));
+
+    // Tag Demo
+    const tagDemo = document.getElementById('tag-demo');
+    ['primary', 'secondary', 'success', 'warning', 'danger'].forEach(variant => {
+      tagDemo.appendChild(Tag({ variant, children: [variant] }));
+    });
+    tagDemo.appendChild(Tag({ variant: 'primary', removable: true, onRemove: () => toast('Tag removed!', { variant: 'info' }), children: ['Removable'] }));
+
+    // Tooltip Demo
+    const tooltipDemo = document.getElementById('tooltip-demo');
+    tooltipDemo.appendChild(Tooltip({ content: 'Tooltip on top', position: 'top', children: Button({ variant: 'outline', children: ['Top'] }) }));
+    tooltipDemo.appendChild(Tooltip({ content: 'Tooltip on bottom', position: 'bottom', children: Button({ variant: 'outline', children: ['Bottom'] }) }));
+    tooltipDemo.appendChild(Tooltip({ content: 'Tooltip on left', position: 'left', children: Button({ variant: 'outline', children: ['Left'] }) }));
+    tooltipDemo.appendChild(Tooltip({ content: 'Tooltip on right', position: 'right', children: Button({ variant: 'outline', children: ['Right'] }) }));
+
+    // Alert Demo
+    const alertDemo = document.getElementById('alert-demo');
+    alertDemo.appendChild(Alert({ variant: 'info', title: 'Information', children: ['This is an informational message.'], closable: true }));
+    alertDemo.appendChild(Alert({ variant: 'success', title: 'Success', children: ['Your action was successful!'] }));
+    alertDemo.appendChild(Alert({ variant: 'warning', title: 'Warning', children: ['Please be careful with this action.'] }));
+    alertDemo.appendChild(Alert({ variant: 'danger', title: 'Error', children: ['Something went wrong!'], closable: true }));
+
+    // Toast Demo
+    const toastDemo = document.getElementById('toast-demo');
+    toastDemo.appendChild(Button({ variant: 'info', children: ['Info Toast'], onClick: () => toast('This is an info message', { variant: 'info' }) }));
+    toastDemo.appendChild(Button({ variant: 'success', children: ['Success Toast'], onClick: () => toast('Action completed successfully!', { variant: 'success' }) }));
+    toastDemo.appendChild(Button({ variant: 'warning', children: ['Warning Toast'], onClick: () => toast('Please be careful!', { variant: 'warning' }) }));
+    toastDemo.appendChild(Button({ variant: 'danger', children: ['Error Toast'], onClick: () => toast('Something went wrong!', { variant: 'danger' }) }));
+
+    // Modal Demo
+    const modalDemo = document.getElementById('modal-demo');
+    const modalContainer = document.getElementById('modal-container');
+    let modalOpen = false;
+
+    const renderModal = () => {
+      modalContainer.innerHTML = '';
+      if (modalOpen) {
+        const modal = createElement({
+          tag: 'div',
+          style: { position: 'fixed', inset: '0', backgroundColor: t.colors.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: t.spacing.lg, zIndex: '1000' },
+          children: [
+            createElement({
+              tag: 'div',
+              style: { backgroundColor: t.colors.background, borderRadius: t.borderRadius.lg, boxShadow: t.shadow.xl, width: '100%', maxWidth: '500px', overflow: 'hidden' },
+              children: [
+                createElement({
+                  tag: 'div',
+                  style: { display: 'flex', alignItems: 'center', padding: t.spacing.lg, borderBottom: `1px solid ${t.colors.border}` },
+                  children: [
+                    createElement({ tag: 'h2', style: { margin: '0', fontSize: t.fontSize.xl, fontWeight: '600' }, children: ['Modal Title'] }),
+                    createElement({ tag: 'button', style: { marginLeft: 'auto', padding: t.spacing.xs, border: 'none', background: 'none', cursor: 'pointer', fontSize: t.fontSize.xl, color: t.colors.textMuted }, attrs: { type: 'button' }, children: ['×'], events: { click: () => { modalOpen = false; renderModal(); } } }),
+                  ],
+                }),
+                createElement({
+                  tag: 'div',
+                  style: { padding: t.spacing.lg },
+                  children: [createElement({ tag: 'p', children: ['This is a modal dialog. Click the X or outside to close.'] })],
+                }),
+                createElement({
+                  tag: 'div',
+                  style: { display: 'flex', justifyContent: 'flex-end', gap: t.spacing.sm, padding: t.spacing.lg, borderTop: `1px solid ${t.colors.border}` },
+                  children: [
+                    Button({ variant: 'ghost', children: ['Cancel'], onClick: () => { modalOpen = false; renderModal(); } }),
+                    Button({ variant: 'primary', children: ['Confirm'], onClick: () => { modalOpen = false; renderModal(); toast('Confirmed!', { variant: 'success' }); } }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+          events: { click: (e) => { if (e.target === e.currentTarget) { modalOpen = false; renderModal(); } } },
+        });
+        modalContainer.appendChild(modal);
+      }
+    };
+
+    modalDemo.appendChild(Button({ variant: 'primary', children: ['Open Modal'], onClick: () => { modalOpen = true; renderModal(); } }));
+
+    // Progress Demo
+    const progressDemo = document.getElementById('progress-demo');
+    progressDemo.appendChild(Stack({ gap: t.spacing.md, children: [
+      Progress({ value: 25, showLabel: true }),
+      Progress({ value: 50, variant: 'success', showLabel: true }),
+      Progress({ value: 75, variant: 'warning', striped: true, showLabel: true }),
+      Progress({ value: 90, variant: 'danger', animated: true, showLabel: true }),
+    ]}));
+
+    // Spinner Demo
+    const spinnerDemo = document.getElementById('spinner-demo');
+    ['xs', 'sm', 'md', 'lg', 'xl'].forEach(size => {
+      spinnerDemo.appendChild(Spinner({ size }));
+    });
+    spinnerDemo.appendChild(Spinner({ size: 'lg', color: t.colors.success }));
+    spinnerDemo.appendChild(Spinner({ size: 'lg', color: t.colors.danger }));
+
+    // Skeleton Demo
+    const skeletonDemo = document.getElementById('skeleton-demo');
+    skeletonDemo.appendChild(Flex({
+      gap: t.spacing.lg,
+      children: [
+        Stack({ gap: t.spacing.sm, style: { width: '200px' }, children: [
+          Skeleton({ variant: 'circular', width: 48, height: 48 }),
+          Skeleton({ variant: 'text', lines: 3 }),
+        ]}),
+        Skeleton({ variant: 'rectangular', width: 200, height: 100 }),
+      ],
+    }));
+
+    // Tabs Demo
+    const tabsDemo = document.getElementById('tabs-demo');
+    tabsDemo.appendChild(Tabs({
+      tabs: [
+        { id: 'tab1', label: 'Account' },
+        { id: 'tab2', label: 'Notifications' },
+        { id: 'tab3', label: 'Security' },
+        { id: 'tab4', label: 'Disabled', disabled: true },
+      ],
+      defaultTab: 'tab1',
+      variant: 'line',
+      onChange: (id) => console.log('Tab changed:', id),
+    }));
+
+    tabsDemo.appendChild(createElement({ tag: 'div', style: { marginTop: t.spacing.lg } }));
+
+    tabsDemo.appendChild(Tabs({
+      tabs: [
+        { id: 'pill1', label: 'All' },
+        { id: 'pill2', label: 'Active' },
+        { id: 'pill3', label: 'Completed' },
+      ],
+      defaultTab: 'pill1',
+      variant: 'pills',
+    }));
+
+    // Breadcrumb Demo
+    const breadcrumbDemo = document.getElementById('breadcrumb-demo');
+    breadcrumbDemo.appendChild(Breadcrumb({
+      items: [
+        { label: 'Home', onClick: () => toast('Navigate to Home', { variant: 'info' }) },
+        { label: 'Products', onClick: () => toast('Navigate to Products', { variant: 'info' }) },
+        { label: 'Category', onClick: () => toast('Navigate to Category', { variant: 'info' }) },
+        { label: 'Current Page' },
+      ],
+    }));
+
+    // Pagination Demo
+    const paginationDemo = document.getElementById('pagination-demo');
+    paginationDemo.appendChild(Pagination({
+      total: 100,
+      pageSize: 10,
+      defaultPage: 1,
+      onChange: (page) => console.log('Page changed:', page),
+    }));
+
+    // Dropdown Demo
+    const dropdownDemo = document.getElementById('dropdown-demo');
+    dropdownDemo.appendChild(Dropdown({
+      trigger: Button({ variant: 'primary', children: ['Open Menu'] }),
+      items: [
+        { label: 'Profile', onClick: () => toast('Profile clicked', { variant: 'info' }) },
+        { label: 'Settings', onClick: () => toast('Settings clicked', { variant: 'info' }) },
+        { label: 'Help', disabled: true },
+        { label: 'Logout', danger: true, onClick: () => toast('Logged out', { variant: 'danger' }) },
+      ],
+    }));
+
+    dropdownDemo.appendChild(Dropdown({
+      trigger: Button({ variant: 'outline', children: ['Bottom End'] }),
+      position: 'bottom-end',
+      items: [
+        { label: 'Option 1', onClick: () => toast('Option 1', { variant: 'info' }) },
+        { label: 'Option 2', onClick: () => toast('Option 2', { variant: 'info' }) },
+        { label: 'Option 3', onClick: () => toast('Option 3', { variant: 'info' }) },
+      ],
+    }));
+
+    console.log('Zylix UI Demo loaded successfully!');
+  </script>
+</body>
+</html>

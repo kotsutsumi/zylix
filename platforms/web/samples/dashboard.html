@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    #app { display: flex; min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    // =========================================================================
+    // Zylix Dashboard - Real-World App Example
+    // =========================================================================
+
+    // Zylix Core (simplified)
+    const Zylix = (() => {
+      let hooks = [], hookIndex = 0, rootComponent = null, rootContainer = null;
+
+      function h(type, props, ...children) {
+        return { type, props: props || {}, children: children.flat() };
+      }
+
+      function createElement(vnode) {
+        if (vnode == null || vnode === false) return document.createTextNode('');
+        if (typeof vnode === 'string' || typeof vnode === 'number') {
+          return document.createTextNode(vnode);
+        }
+        if (Array.isArray(vnode)) {
+          const fragment = document.createDocumentFragment();
+          vnode.forEach(v => fragment.appendChild(createElement(v)));
+          return fragment;
+        }
+        if (typeof vnode.type === 'function') {
+          return createElement(vnode.type(vnode.props));
+        }
+        const element = document.createElement(vnode.type);
+        for (const [key, value] of Object.entries(vnode.props)) {
+          if (key.startsWith('on')) {
+            element.addEventListener(key.slice(2).toLowerCase(), value);
+          } else if (key === 'style' && typeof value === 'object') {
+            Object.assign(element.style, value);
+          } else if (key === 'className') {
+            element.className = value;
+          } else if (value !== false && value != null) {
+            element.setAttribute(key, value);
+          }
+        }
+        vnode.children.forEach(child => {
+          if (child != null) element.appendChild(createElement(child));
+        });
+        return element;
+      }
+
+      function render(vnode, container) {
+        if (typeof vnode.type === 'function') {
+          rootComponent = vnode.type;
+          rootContainer = container;
+        }
+        container.innerHTML = '';
+        hookIndex = 0;
+        container.appendChild(createElement(vnode));
+      }
+
+      function rerender() {
+        if (rootComponent && rootContainer) {
+          hookIndex = 0;
+          rootContainer.innerHTML = '';
+          rootContainer.appendChild(createElement(h(rootComponent)));
+        }
+      }
+
+      function useState(initial) {
+        const idx = hookIndex++;
+        if (hooks[idx] === undefined) {
+          hooks[idx] = typeof initial === 'function' ? initial() : initial;
+        }
+        const setState = (newState) => {
+          hooks[idx] = typeof newState === 'function' ? newState(hooks[idx]) : newState;
+          rerender();
+        };
+        return [hooks[idx], setState];
+      }
+
+      function useEffect(fn, deps) {
+        const idx = hookIndex++;
+        const prev = hooks[idx];
+        const hasChanged = !prev || !deps || deps.some((d, i) => d !== prev.deps?.[i]);
+        if (hasChanged) {
+          if (prev?.cleanup) prev.cleanup();
+          setTimeout(() => {
+            const cleanup = fn();
+            hooks[idx] = { deps, cleanup };
+          }, 0);
+        } else {
+          hooks[idx] = prev;
+        }
+      }
+
+      return { h, render, useState, useEffect };
+    })();
+
+    const { h, render, useState, useEffect } = Zylix;
+
+    // =========================================================================
+    // Mock Data
+    // =========================================================================
+
+    const mockStats = {
+      revenue: 125840,
+      orders: 1482,
+      customers: 892,
+      growth: 12.5
+    };
+
+    const mockChartData = [
+      { month: 'Jan', value: 4200 },
+      { month: 'Feb', value: 5100 },
+      { month: 'Mar', value: 4800 },
+      { month: 'Apr', value: 6200 },
+      { month: 'May', value: 7100 },
+      { month: 'Jun', value: 6800 },
+      { month: 'Jul', value: 8200 }
+    ];
+
+    const mockOrders = [
+      { id: '#ORD-001', customer: 'John Doe', product: 'MacBook Pro', amount: 2499, status: 'completed' },
+      { id: '#ORD-002', customer: 'Jane Smith', product: 'iPhone 15 Pro', amount: 1199, status: 'pending' },
+      { id: '#ORD-003', customer: 'Bob Johnson', product: 'AirPods Pro', amount: 249, status: 'completed' },
+      { id: '#ORD-004', customer: 'Alice Brown', product: 'iPad Air', amount: 799, status: 'shipping' },
+      { id: '#ORD-005', customer: 'Charlie Wilson', product: 'Apple Watch', amount: 399, status: 'completed' },
+      { id: '#ORD-006', customer: 'Diana Miller', product: 'Mac Mini', amount: 599, status: 'pending' }
+    ];
+
+    const mockActivities = [
+      { type: 'order', message: 'New order from John Doe', time: '2 min ago' },
+      { type: 'user', message: 'New customer registered', time: '15 min ago' },
+      { type: 'payment', message: 'Payment received $1,199', time: '1 hour ago' },
+      { type: 'shipping', message: 'Order #ORD-004 shipped', time: '2 hours ago' },
+      { type: 'review', message: 'New 5-star review received', time: '3 hours ago' }
+    ];
+
+    // =========================================================================
+    // Styles
+    // =========================================================================
+
+    const colors = {
+      bg: '#0f172a',
+      card: '#1e293b',
+      border: '#334155',
+      primary: '#3b82f6',
+      success: '#10b981',
+      warning: '#f59e0b',
+      danger: '#ef4444',
+      purple: '#8b5cf6',
+      text: '#e4e4e7',
+      textMuted: '#94a3b8'
+    };
+
+    const styles = {
+      sidebar: {
+        width: '250px',
+        background: colors.card,
+        borderRight: `1px solid ${colors.border}`,
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column'
+      },
+      logo: {
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        color: colors.primary,
+        marginBottom: '30px',
+        paddingLeft: '10px'
+      },
+      navItem: {
+        padding: '12px 15px',
+        borderRadius: '8px',
+        marginBottom: '5px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        color: colors.textMuted,
+        transition: 'all 0.2s'
+      },
+      navItemActive: {
+        background: 'rgba(59, 130, 246, 0.2)',
+        color: colors.primary
+      },
+      main: {
+        flex: 1,
+        padding: '30px',
+        overflowY: 'auto'
+      },
+      header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '30px'
+      },
+      pageTitle: {
+        fontSize: '1.75rem',
+        fontWeight: 'bold'
+      },
+      headerRight: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px'
+      },
+      searchInput: {
+        padding: '10px 15px',
+        borderRadius: '8px',
+        border: `1px solid ${colors.border}`,
+        background: colors.card,
+        color: colors.text,
+        width: '250px',
+        outline: 'none'
+      },
+      avatar: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        background: colors.primary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold'
+      },
+      statsGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '20px',
+        marginBottom: '30px'
+      },
+      statCard: {
+        background: colors.card,
+        borderRadius: '12px',
+        padding: '20px',
+        border: `1px solid ${colors.border}`
+      },
+      statLabel: {
+        fontSize: '0.875rem',
+        color: colors.textMuted,
+        marginBottom: '8px'
+      },
+      statValue: {
+        fontSize: '1.75rem',
+        fontWeight: 'bold'
+      },
+      statChange: {
+        fontSize: '0.875rem',
+        marginTop: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px'
+      },
+      chartSection: {
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: '20px',
+        marginBottom: '30px'
+      },
+      card: {
+        background: colors.card,
+        borderRadius: '12px',
+        padding: '20px',
+        border: `1px solid ${colors.border}`
+      },
+      cardTitle: {
+        fontSize: '1rem',
+        fontWeight: '600',
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      },
+      chart: {
+        height: '200px',
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: '15px',
+        paddingTop: '20px'
+      },
+      chartBar: {
+        flex: 1,
+        background: 'linear-gradient(to top, #3b82f6, #60a5fa)',
+        borderRadius: '6px 6px 0 0',
+        minHeight: '20px',
+        position: 'relative',
+        transition: 'all 0.3s'
+      },
+      chartLabel: {
+        textAlign: 'center',
+        fontSize: '0.75rem',
+        color: colors.textMuted,
+        marginTop: '8px'
+      },
+      activityList: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '15px'
+      },
+      activityItem: {
+        display: 'flex',
+        gap: '12px',
+        alignItems: 'flex-start'
+      },
+      activityDot: {
+        width: '10px',
+        height: '10px',
+        borderRadius: '50%',
+        marginTop: '5px'
+      },
+      activityContent: {
+        flex: 1
+      },
+      activityMessage: {
+        fontSize: '0.875rem'
+      },
+      activityTime: {
+        fontSize: '0.75rem',
+        color: colors.textMuted
+      },
+      table: {
+        width: '100%',
+        borderCollapse: 'collapse'
+      },
+      th: {
+        textAlign: 'left',
+        padding: '12px',
+        borderBottom: `1px solid ${colors.border}`,
+        color: colors.textMuted,
+        fontSize: '0.875rem',
+        fontWeight: '500'
+      },
+      td: {
+        padding: '12px',
+        borderBottom: `1px solid ${colors.border}`,
+        fontSize: '0.875rem'
+      },
+      badge: {
+        padding: '4px 10px',
+        borderRadius: '20px',
+        fontSize: '0.75rem',
+        fontWeight: '500'
+      },
+      filterGroup: {
+        display: 'flex',
+        gap: '10px'
+      },
+      filterButton: {
+        padding: '6px 12px',
+        borderRadius: '6px',
+        border: `1px solid ${colors.border}`,
+        background: 'transparent',
+        color: colors.textMuted,
+        cursor: 'pointer',
+        fontSize: '0.875rem'
+      },
+      filterButtonActive: {
+        background: colors.primary,
+        borderColor: colors.primary,
+        color: 'white'
+      }
+    };
+
+    // =========================================================================
+    // Components
+    // =========================================================================
+
+    function Sidebar({ activeNav, setActiveNav }) {
+      const navItems = [
+        { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+        { id: 'orders', icon: '📦', label: 'Orders' },
+        { id: 'customers', icon: '👥', label: 'Customers' },
+        { id: 'products', icon: '🛍️', label: 'Products' },
+        { id: 'analytics', icon: '📈', label: 'Analytics' },
+        { id: 'settings', icon: '⚙️', label: 'Settings' }
+      ];
+
+      return h('aside', { style: styles.sidebar },
+        h('div', { style: styles.logo }, 'Zylix'),
+        h('nav', {},
+          ...navItems.map(item =>
+            h('div', {
+              style: {
+                ...styles.navItem,
+                ...(activeNav === item.id ? styles.navItemActive : {})
+              },
+              onClick: () => setActiveNav(item.id)
+            },
+              h('span', {}, item.icon),
+              h('span', {}, item.label)
+            )
+          )
+        )
+      );
+    }
+
+    function StatCard({ label, value, change, color }) {
+      const isPositive = change >= 0;
+      return h('div', { style: styles.statCard },
+        h('div', { style: styles.statLabel }, label),
+        h('div', { style: { ...styles.statValue, color } }, value),
+        h('div', {
+          style: {
+            ...styles.statChange,
+            color: isPositive ? colors.success : colors.danger
+          }
+        },
+          h('span', {}, isPositive ? '↑' : '↓'),
+          h('span', {}, `${Math.abs(change)}% from last month`)
+        )
+      );
+    }
+
+    function RevenueChart() {
+      const maxValue = Math.max(...mockChartData.map(d => d.value));
+
+      return h('div', { style: styles.card },
+        h('div', { style: styles.cardTitle },
+          h('span', {}, 'Revenue Overview'),
+          h('div', { style: styles.filterGroup },
+            h('button', { style: { ...styles.filterButton, ...styles.filterButtonActive } }, '7D'),
+            h('button', { style: styles.filterButton }, '1M'),
+            h('button', { style: styles.filterButton }, '1Y')
+          )
+        ),
+        h('div', { style: styles.chart },
+          ...mockChartData.map(item =>
+            h('div', { style: { flex: 1, textAlign: 'center' } },
+              h('div', {
+                style: {
+                  ...styles.chartBar,
+                  height: `${(item.value / maxValue) * 160}px`
+                }
+              }),
+              h('div', { style: styles.chartLabel }, item.month)
+            )
+          )
+        )
+      );
+    }
+
+    function ActivityFeed() {
+      const getActivityColor = (type) => {
+        switch (type) {
+          case 'order': return colors.primary;
+          case 'user': return colors.purple;
+          case 'payment': return colors.success;
+          case 'shipping': return colors.warning;
+          case 'review': return colors.success;
+          default: return colors.textMuted;
+        }
+      };
+
+      return h('div', { style: styles.card },
+        h('div', { style: styles.cardTitle }, 'Recent Activity'),
+        h('div', { style: styles.activityList },
+          ...mockActivities.map(activity =>
+            h('div', { style: styles.activityItem },
+              h('div', {
+                style: {
+                  ...styles.activityDot,
+                  background: getActivityColor(activity.type)
+                }
+              }),
+              h('div', { style: styles.activityContent },
+                h('div', { style: styles.activityMessage }, activity.message),
+                h('div', { style: styles.activityTime }, activity.time)
+              )
+            )
+          )
+        )
+      );
+    }
+
+    function OrdersTable({ filter, setFilter }) {
+      const getStatusStyle = (status) => {
+        switch (status) {
+          case 'completed':
+            return { background: 'rgba(16, 185, 129, 0.2)', color: colors.success };
+          case 'pending':
+            return { background: 'rgba(245, 158, 11, 0.2)', color: colors.warning };
+          case 'shipping':
+            return { background: 'rgba(59, 130, 246, 0.2)', color: colors.primary };
+          default:
+            return { background: 'rgba(148, 163, 184, 0.2)', color: colors.textMuted };
+        }
+      };
+
+      const filteredOrders = filter === 'all'
+        ? mockOrders
+        : mockOrders.filter(o => o.status === filter);
+
+      return h('div', { style: styles.card },
+        h('div', { style: styles.cardTitle },
+          h('span', {}, 'Recent Orders'),
+          h('div', { style: styles.filterGroup },
+            ['all', 'completed', 'pending', 'shipping'].map(f =>
+              h('button', {
+                style: {
+                  ...styles.filterButton,
+                  ...(filter === f ? styles.filterButtonActive : {})
+                },
+                onClick: () => setFilter(f)
+              }, f.charAt(0).toUpperCase() + f.slice(1))
+            )
+          )
+        ),
+        h('table', { style: styles.table },
+          h('thead', {},
+            h('tr', {},
+              h('th', { style: styles.th }, 'Order ID'),
+              h('th', { style: styles.th }, 'Customer'),
+              h('th', { style: styles.th }, 'Product'),
+              h('th', { style: styles.th }, 'Amount'),
+              h('th', { style: styles.th }, 'Status')
+            )
+          ),
+          h('tbody', {},
+            ...filteredOrders.map(order =>
+              h('tr', {},
+                h('td', { style: styles.td }, order.id),
+                h('td', { style: styles.td }, order.customer),
+                h('td', { style: styles.td }, order.product),
+                h('td', { style: styles.td }, `$${order.amount.toLocaleString()}`),
+                h('td', { style: styles.td },
+                  h('span', {
+                    style: { ...styles.badge, ...getStatusStyle(order.status) }
+                  }, order.status)
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+
+    function Dashboard() {
+      const [activeNav, setActiveNav] = useState('dashboard');
+      const [orderFilter, setOrderFilter] = useState('all');
+      const [stats, setStats] = useState(mockStats);
+
+      // Simulate real-time updates
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setStats(prev => ({
+            ...prev,
+            revenue: prev.revenue + Math.floor(Math.random() * 100),
+            orders: prev.orders + (Math.random() > 0.7 ? 1 : 0)
+          }));
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return h('div', { style: { display: 'flex', minHeight: '100vh' } },
+        h(Sidebar, { activeNav, setActiveNav }),
+
+        h('main', { style: styles.main },
+          // Header
+          h('header', { style: styles.header },
+            h('h1', { style: styles.pageTitle }, 'Dashboard'),
+            h('div', { style: styles.headerRight },
+              h('input', {
+                type: 'text',
+                placeholder: 'Search...',
+                style: styles.searchInput
+              }),
+              h('div', { style: styles.avatar }, 'JD')
+            )
+          ),
+
+          // Stats Grid
+          h('div', { style: styles.statsGrid },
+            h(StatCard, {
+              label: 'Total Revenue',
+              value: `$${stats.revenue.toLocaleString()}`,
+              change: 12.5,
+              color: colors.success
+            }),
+            h(StatCard, {
+              label: 'Total Orders',
+              value: stats.orders.toLocaleString(),
+              change: 8.2,
+              color: colors.primary
+            }),
+            h(StatCard, {
+              label: 'Customers',
+              value: stats.customers.toLocaleString(),
+              change: 5.3,
+              color: colors.purple
+            }),
+            h(StatCard, {
+              label: 'Growth Rate',
+              value: `${stats.growth}%`,
+              change: stats.growth,
+              color: colors.warning
+            })
+          ),
+
+          // Charts Section
+          h('div', { style: styles.chartSection },
+            h(RevenueChart),
+            h(ActivityFeed)
+          ),
+
+          // Orders Table
+          h(OrdersTable, { filter: orderFilter, setFilter: setOrderFilter })
+        )
+      );
+    }
+
+    // =========================================================================
+    // Mount Application
+    // =========================================================================
+
+    render(h(Dashboard), document.getElementById('app'));
+
+    console.log('Zylix Dashboard - Running!');
+  </script>
+</body>
+</html>

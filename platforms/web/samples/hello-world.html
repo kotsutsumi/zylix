@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Hello World</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #app {
+      text-align: center;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    // =========================================================================
+    // Zylix Hello World - Minimal Example
+    // =========================================================================
+
+    // Import Zylix core functions (simulated for demo)
+    const { h, render, useState, useEffect } = (() => {
+      let currentComponent = null;
+      let hookIndex = 0;
+      let hooks = [];
+
+      function h(type, props, ...children) {
+        return { type, props: props || {}, children: children.flat() };
+      }
+
+      function render(vnode, container) {
+        container.innerHTML = '';
+        const element = createElement(vnode);
+        container.appendChild(element);
+      }
+
+      function createElement(vnode) {
+        if (typeof vnode === 'string' || typeof vnode === 'number') {
+          return document.createTextNode(vnode);
+        }
+
+        if (typeof vnode.type === 'function') {
+          currentComponent = vnode;
+          hookIndex = 0;
+          const result = vnode.type(vnode.props);
+          return createElement(result);
+        }
+
+        const element = document.createElement(vnode.type);
+
+        for (const [key, value] of Object.entries(vnode.props)) {
+          if (key.startsWith('on')) {
+            element.addEventListener(key.slice(2).toLowerCase(), value);
+          } else if (key === 'style' && typeof value === 'object') {
+            Object.assign(element.style, value);
+          } else if (key === 'className') {
+            element.className = value;
+          } else {
+            element.setAttribute(key, value);
+          }
+        }
+
+        vnode.children.forEach(child => {
+          if (child != null) {
+            element.appendChild(createElement(child));
+          }
+        });
+
+        return element;
+      }
+
+      function useState(initial) {
+        const idx = hookIndex++;
+        if (hooks[idx] === undefined) {
+          hooks[idx] = typeof initial === 'function' ? initial() : initial;
+        }
+        const setState = (newState) => {
+          hooks[idx] = typeof newState === 'function' ? newState(hooks[idx]) : newState;
+          rerender();
+        };
+        return [hooks[idx], setState];
+      }
+
+      function useEffect(fn, deps) {
+        const idx = hookIndex++;
+        const prevDeps = hooks[idx];
+        const hasChanged = !prevDeps || deps.some((d, i) => d !== prevDeps[i]);
+        if (hasChanged) {
+          fn();
+          hooks[idx] = deps;
+        }
+      }
+
+      let rootComponent = null;
+      let rootContainer = null;
+
+      function rerender() {
+        if (rootComponent && rootContainer) {
+          hookIndex = 0;
+          render(h(rootComponent), rootContainer);
+        }
+      }
+
+      const originalRender = render;
+      render = (vnode, container) => {
+        if (typeof vnode.type === 'function') {
+          rootComponent = vnode.type;
+          rootContainer = container;
+        }
+        originalRender(vnode, container);
+      };
+
+      return { h, render, useState, useEffect };
+    })();
+
+    // =========================================================================
+    // Hello World Component
+    // =========================================================================
+
+    function HelloWorld() {
+      const [name, setName] = useState('World');
+      const [animate, setAnimate] = useState(true);
+
+      return h('div', { style: { padding: '40px' } },
+        h('h1', {
+          style: {
+            fontSize: '4rem',
+            marginBottom: '20px',
+            animation: animate ? 'pulse 2s infinite' : 'none'
+          }
+        }, `Hello, ${name}!`),
+
+        h('p', {
+          style: {
+            fontSize: '1.2rem',
+            opacity: 0.9,
+            marginBottom: '30px'
+          }
+        }, 'Welcome to Zylix - The Ultra-Fast Cross-Platform Runtime'),
+
+        h('div', { style: { marginBottom: '20px' } },
+          h('input', {
+            type: 'text',
+            value: name,
+            placeholder: 'Enter your name',
+            onInput: (e) => setName(e.target.value),
+            style: {
+              padding: '12px 20px',
+              fontSize: '1rem',
+              border: 'none',
+              borderRadius: '8px',
+              width: '250px',
+              outline: 'none'
+            }
+          })
+        ),
+
+        h('button', {
+          onClick: () => setAnimate(!animate),
+          style: {
+            padding: '12px 24px',
+            fontSize: '1rem',
+            background: 'rgba(255,255,255,0.2)',
+            color: 'white',
+            border: '2px solid white',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }
+        }, animate ? 'Stop Animation' : 'Start Animation'),
+
+        h('style', {}, `
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+        `)
+      );
+    }
+
+    // =========================================================================
+    // Mount Application
+    // =========================================================================
+
+    render(h(HelloWorld), document.getElementById('app'));
+
+    console.log('Zylix Hello World - Running!');
+  </script>
+</body>
+</html>

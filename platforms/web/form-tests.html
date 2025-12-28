@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Form Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .summary {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    .summary-item { text-align: center; }
+    .summary-item .count { font-size: 2em; font-weight: bold; }
+    .summary-item.passed .count { color: #4ade80; }
+    .summary-item.failed .count { color: #f87171; }
+    .summary-item.total .count { color: #60a5fa; }
+    .test-groups { max-width: 900px; margin: 0 auto; }
+    .test-group {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .test-group-header {
+      background: rgba(255,255,255,0.1);
+      padding: 12px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+    .test-group-tests { padding: 10px 15px; }
+    .test-item {
+      padding: 8px 10px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .test-item.passed { background: rgba(74, 222, 128, 0.1); }
+    .test-item.failed { background: rgba(248, 113, 113, 0.1); }
+    .test-icon { font-size: 1.2em; }
+    .test-name { flex: 1; }
+    .test-error {
+      color: #f87171;
+      font-size: 0.85em;
+      margin-top: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .running {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zylix Form Tests</h1>
+  <div id="results">
+    <div class="running">Running tests...</div>
+  </div>
+
+  <script type="module">
+    // ========================================
+    // Inline Form Implementation
+    // ========================================
+
+    const validators = {
+      required: (message = 'Required') => ({
+        validate: (value) => {
+          if (value === null || value === undefined) return false;
+          if (typeof value === 'string') return value.trim().length > 0;
+          if (Array.isArray(value)) return value.length > 0;
+          return true;
+        },
+        message
+      }),
+
+      email: (message = 'Invalid email') => ({
+        validate: (value) => {
+          if (!value || typeof value !== 'string') return true;
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        },
+        message
+      }),
+
+      minLength: (min, message) => ({
+        validate: (value) => {
+          if (!value || typeof value !== 'string') return true;
+          return value.length >= min;
+        },
+        message: message || `Min ${min} chars`
+      }),
+
+      maxLength: (max, message) => ({
+        validate: (value) => {
+          if (!value || typeof value !== 'string') return true;
+          return value.length <= max;
+        },
+        message: message || `Max ${max} chars`
+      }),
+
+      pattern: (regex, message = 'Invalid format') => ({
+        validate: (value) => {
+          if (!value || typeof value !== 'string') return true;
+          return regex.test(value);
+        },
+        message
+      }),
+
+      min: (minValue, message) => ({
+        validate: (value) => {
+          if (value === null || value === undefined || value === '') return true;
+          const num = typeof value === 'number' ? value : parseFloat(String(value));
+          return !isNaN(num) && num >= minValue;
+        },
+        message: message || `Min ${minValue}`
+      }),
+
+      max: (maxValue, message) => ({
+        validate: (value) => {
+          if (value === null || value === undefined || value === '') return true;
+          const num = typeof value === 'number' ? value : parseFloat(String(value));
+          return !isNaN(num) && num <= maxValue;
+        },
+        message: message || `Max ${maxValue}`
+      }),
+
+      match: (fieldName, message) => ({
+        validate: (value, formValues) => value === formValues[fieldName],
+        message: message || `Must match ${fieldName}`
+      }),
+
+      custom: (fn, message) => ({ validate: fn, message }),
+
+      async: (fn, message) => ({
+        validate: async (value) => {
+          if (!value) return true;
+          return await fn(value);
+        },
+        message
+      })
+    };
+
+    function deepClone(obj) {
+      if (obj === null || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(deepClone);
+      const cloned = {};
+      for (const key in obj) cloned[key] = deepClone(obj[key]);
+      return cloned;
+    }
+
+    function isEqual(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function generateId() {
+      return Math.random().toString(36).substring(2, 11);
+    }
+
+    function useForm(config) {
+      const { defaultValues, validation = {}, mode = 'onSubmit' } = config;
+
+      let values = deepClone(defaultValues);
+      let initialValues = deepClone(defaultValues);
+      const errors = {};
+      const touched = {};
+      const dirty = {};
+      const fieldConfigs = {};
+      const listeners = new Set();
+
+      let isSubmitting = false;
+      let isValidating = false;
+      let submitCount = 0;
+
+      const notify = () => listeners.forEach(l => l());
+
+      const validateField = async (name) => {
+        const fieldValidation = validation[name] || fieldConfigs[name]?.validation || [];
+        const value = values[name];
+
+        for (const rule of fieldValidation) {
+          const isValid = await rule.validate(value, values);
+          if (!isValid) {
+            return typeof rule.message === 'function' ? rule.message(value) : rule.message;
+          }
+        }
+        return null;
+      };
+
+      const validateAll = async () => {
+        isValidating = true;
+        let isValid = true;
+        for (const name of Object.keys(values)) {
+          const error = await validateField(name);
+          if (error) {
+            errors[name] = error;
+            isValid = false;
+          } else {
+            delete errors[name];
+          }
+        }
+        isValidating = false;
+        return isValid;
+      };
+
+      const register = (name, config = {}) => {
+        fieldConfigs[name] = config;
+        if (config.defaultValue !== undefined && values[name] === undefined) {
+          values[name] = config.defaultValue;
+        }
+
+        return {
+          name,
+          value: values[name],
+          onChange: (e) => {
+            let newValue;
+            if (e && typeof e === 'object' && 'target' in e) {
+              const target = e.target;
+              if (target.type === 'checkbox') newValue = target.checked;
+              else if (target.type === 'number') newValue = target.value === '' ? '' : parseFloat(target.value);
+              else newValue = target.value;
+            } else {
+              newValue = e;
+            }
+            values[name] = newValue;
+            dirty[name] = !isEqual(newValue, initialValues[name]);
+            if (mode === 'onChange' || mode === 'all' || config.validateOnChange) {
+              validateField(name).then(error => {
+                if (error) errors[name] = error;
+                else delete errors[name];
+                notify();
+              });
+            } else {
+              notify();
+            }
+          },
+          onBlur: () => {
+            touched[name] = true;
+            if (mode === 'onBlur' || mode === 'all' || config.validateOnBlur) {
+              validateField(name).then(error => {
+                if (error) errors[name] = error;
+                else delete errors[name];
+                notify();
+              });
+            } else {
+              notify();
+            }
+          },
+          ref: () => {}
+        };
+      };
+
+      const setValue = (name, value, options = {}) => {
+        values[name] = value;
+        if (options.shouldDirty !== false) {
+          dirty[name] = !isEqual(value, initialValues[name]);
+        }
+        if (options.shouldValidate) {
+          validateField(name).then(error => {
+            if (error) errors[name] = error;
+            else delete errors[name];
+            notify();
+          });
+        } else {
+          notify();
+        }
+      };
+
+      const reset = (newValues) => {
+        if (newValues) {
+          values = { ...deepClone(defaultValues), ...newValues };
+          initialValues = deepClone(values);
+        } else {
+          values = deepClone(defaultValues);
+          initialValues = deepClone(defaultValues);
+        }
+        for (const key in errors) delete errors[key];
+        for (const key in touched) delete touched[key];
+        for (const key in dirty) delete dirty[key];
+        notify();
+      };
+
+      const handleSubmit = (onValid, onInvalid) => {
+        return async (e) => {
+          if (e?.preventDefault) e.preventDefault();
+          submitCount++;
+          isSubmitting = true;
+          notify();
+
+          const isValid = await validateAll();
+          if (isValid) {
+            await onValid?.(deepClone(values));
+          } else {
+            onInvalid?.(errors);
+          }
+
+          isSubmitting = false;
+          notify();
+        };
+      };
+
+      const useFieldArray = (name) => {
+        const getArray = () => {
+          const arr = values[name];
+          if (!Array.isArray(arr)) return [];
+          return arr.map((item, i) => {
+            if (typeof item === 'object' && item !== null) {
+              return item.id ? item : { id: `${name}-${i}`, ...item };
+            }
+            return { id: `${name}-${i}`, value: item };
+          });
+        };
+
+        const setArray = (newArray) => {
+          values[name] = newArray.map(item => item.id ? item : { id: generateId(), ...item });
+          dirty[name] = true;
+          notify();
+        };
+
+        return {
+          fields: getArray(),
+          append: (value) => setArray([...getArray(), { id: generateId(), ...value }]),
+          prepend: (value) => setArray([{ id: generateId(), ...value }, ...getArray()]),
+          insert: (index, value) => {
+            const arr = [...getArray()];
+            arr.splice(index, 0, { id: generateId(), ...value });
+            setArray(arr);
+          },
+          remove: (index) => setArray(getArray().filter((_, i) => i !== index)),
+          swap: (a, b) => {
+            const arr = [...getArray()];
+            [arr[a], arr[b]] = [arr[b], arr[a]];
+            setArray(arr);
+          },
+          move: (from, to) => {
+            const arr = [...getArray()];
+            const [item] = arr.splice(from, 1);
+            arr.splice(to, 0, item);
+            setArray(arr);
+          },
+          update: (index, value) => {
+            const arr = [...getArray()];
+            arr[index] = { ...arr[index], ...value };
+            setArray(arr);
+          },
+          replace: (newValues) => setArray(newValues.map(v => ({ id: generateId(), ...v })))
+        };
+      };
+
+      return {
+        register,
+        setValue,
+        setValues: (newVals, opts = {}) => {
+          for (const key in newVals) {
+            values[key] = newVals[key];
+            dirty[key] = !isEqual(newVals[key], initialValues[key]);
+          }
+          if (opts.shouldValidate) validateAll().then(notify);
+          else notify();
+        },
+        reset,
+        handleSubmit,
+        useFieldArray,
+        validate: validateAll,
+        validateField,
+        clearErrors: (name) => {
+          if (name) delete errors[name];
+          else for (const k in errors) delete errors[k];
+          notify();
+        },
+        setError: (name, msg) => { errors[name] = msg; notify(); },
+        subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
+        getValues: () => deepClone(values),
+        getValue: (name) => values[name],
+        get errors() { return { ...errors }; },
+        get isValid() { return Object.keys(errors).length === 0; },
+        get isSubmitting() { return isSubmitting; },
+        get isValidating() { return isValidating; },
+        get isDirty() { return Object.values(dirty).some(Boolean); },
+        get touched() { return { ...touched }; },
+        get dirty() { return { ...dirty }; },
+        get submitCount() { return submitCount; }
+      };
+    }
+
+    // ========================================
+    // Test Runner
+    // ========================================
+
+    class TestRunner {
+      constructor() {
+        this.groups = [];
+        this.currentGroup = null;
+      }
+
+      describe(name, fn) {
+        this.currentGroup = { name, tests: [], passed: 0, failed: 0 };
+        this.groups.push(this.currentGroup);
+        fn();
+        this.currentGroup = null;
+      }
+
+      it(name, fn) {
+        if (!this.currentGroup) throw new Error('it() must be inside describe()');
+        this.currentGroup.tests.push({ name, fn });
+      }
+
+      expect(actual) {
+        const matchers = {
+          toBe: (expected) => {
+            if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+          },
+          toEqual: (expected) => {
+            if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+              throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+            }
+          },
+          toBeTruthy: () => { if (!actual) throw new Error(`Expected truthy but got ${JSON.stringify(actual)}`); },
+          toBeFalsy: () => { if (actual) throw new Error(`Expected falsy but got ${JSON.stringify(actual)}`); },
+          toBeNull: () => { if (actual !== null) throw new Error(`Expected null but got ${JSON.stringify(actual)}`); },
+          toBeUndefined: () => { if (actual !== undefined) throw new Error(`Expected undefined`); },
+          toBeDefined: () => { if (actual === undefined) throw new Error(`Expected defined`); },
+          toContain: (expected) => {
+            if (Array.isArray(actual)) {
+              if (!actual.includes(expected)) throw new Error(`Expected array to contain ${JSON.stringify(expected)}`);
+            } else if (typeof actual === 'string') {
+              if (!actual.includes(expected)) throw new Error(`Expected string to contain "${expected}"`);
+            }
+          },
+          toHaveLength: (expected) => {
+            if (actual.length !== expected) throw new Error(`Expected length ${expected} but got ${actual.length}`);
+          },
+          toThrow: () => {
+            let threw = false;
+            try { actual(); } catch { threw = true; }
+            if (!threw) throw new Error('Expected to throw');
+          },
+          toBeGreaterThan: (expected) => {
+            if (!(actual > expected)) throw new Error(`Expected ${actual} > ${expected}`);
+          },
+          toBeLessThan: (expected) => {
+            if (!(actual < expected)) throw new Error(`Expected ${actual} < ${expected}`);
+          },
+          not: {
+            toBe: (expected) => { if (actual === expected) throw new Error(`Expected not to be ${JSON.stringify(expected)}`); },
+            toEqual: (expected) => {
+              if (JSON.stringify(actual) === JSON.stringify(expected)) throw new Error(`Expected not equal`);
+            },
+            toBeNull: () => { if (actual === null) throw new Error('Expected not null'); },
+            toContain: (expected) => {
+              if (Array.isArray(actual) && actual.includes(expected)) {
+                throw new Error(`Expected not to contain ${JSON.stringify(expected)}`);
+              }
+            }
+          }
+        };
+        return matchers;
+      }
+
+      async run() {
+        const results = { groups: [], passed: 0, failed: 0 };
+
+        for (const group of this.groups) {
+          const groupResult = { name: group.name, tests: [], passed: 0, failed: 0 };
+
+          for (const test of group.tests) {
+            try {
+              await test.fn();
+              groupResult.tests.push({ name: test.name, passed: true });
+              groupResult.passed++;
+              results.passed++;
+            } catch (error) {
+              groupResult.tests.push({ name: test.name, passed: false, error: error.message });
+              groupResult.failed++;
+              results.failed++;
+            }
+          }
+
+          results.groups.push(groupResult);
+        }
+
+        return results;
+      }
+    }
+
+    const runner = new TestRunner();
+    const describe = runner.describe.bind(runner);
+    const it = runner.it.bind(runner);
+    const expect = runner.expect.bind(runner);
+
+    // ========================================
+    // Test Suites
+    // ========================================
+
+    describe('useForm - Basic', () => {
+      it('creates form with default values', () => {
+        const form = useForm({ defaultValues: { name: '', email: '' } });
+        expect(form.getValues()).toEqual({ name: '', email: '' });
+      });
+
+      it('returns form API', () => {
+        const form = useForm({ defaultValues: {} });
+        expect(typeof form.register).toBe('function');
+        expect(typeof form.handleSubmit).toBe('function');
+        expect(typeof form.reset).toBe('function');
+        expect(typeof form.setValue).toBe('function');
+        expect(typeof form.getValues).toBe('function');
+      });
+
+      it('getValue returns single value', () => {
+        const form = useForm({ defaultValues: { name: 'John', age: 25 } });
+        expect(form.getValue('name')).toBe('John');
+        expect(form.getValue('age')).toBe(25);
+      });
+
+      it('starts with empty errors', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        expect(form.errors).toEqual({});
+        expect(form.isValid).toBe(true);
+      });
+
+      it('starts with isSubmitting false', () => {
+        const form = useForm({ defaultValues: {} });
+        expect(form.isSubmitting).toBe(false);
+      });
+
+      it('starts with isDirty false', () => {
+        const form = useForm({ defaultValues: { name: 'test' } });
+        expect(form.isDirty).toBe(false);
+      });
+    });
+
+    describe('useForm - register', () => {
+      it('returns registration object', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        const reg = form.register('name');
+        expect(reg.name).toBe('name');
+        expect(typeof reg.onChange).toBe('function');
+        expect(typeof reg.onBlur).toBe('function');
+      });
+
+      it('register with default value config', () => {
+        const form = useForm({ defaultValues: {} });
+        form.register('email', { defaultValue: 'default@test.com' });
+        expect(form.getValue('email')).toBe('default@test.com');
+      });
+
+      it('onChange updates value', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        const reg = form.register('name');
+        reg.onChange({ target: { value: 'John' } });
+        expect(form.getValue('name')).toBe('John');
+      });
+
+      it('onChange with checkbox', () => {
+        const form = useForm({ defaultValues: { agree: false } });
+        const reg = form.register('agree');
+        reg.onChange({ target: { type: 'checkbox', checked: true } });
+        expect(form.getValue('agree')).toBe(true);
+      });
+
+      it('onChange with number input', () => {
+        const form = useForm({ defaultValues: { age: 0 } });
+        const reg = form.register('age');
+        reg.onChange({ target: { type: 'number', value: '25' } });
+        expect(form.getValue('age')).toBe(25);
+      });
+
+      it('onChange marks field as dirty', () => {
+        const form = useForm({ defaultValues: { name: 'original' } });
+        const reg = form.register('name');
+        reg.onChange({ target: { value: 'changed' } });
+        expect(form.dirty.name).toBe(true);
+        expect(form.isDirty).toBe(true);
+      });
+
+      it('onBlur marks field as touched', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        const reg = form.register('name');
+        reg.onBlur();
+        expect(form.touched.name).toBe(true);
+      });
+    });
+
+    describe('useForm - setValue/setValues', () => {
+      it('setValue updates single value', () => {
+        const form = useForm({ defaultValues: { name: '', email: '' } });
+        form.setValue('name', 'John');
+        expect(form.getValue('name')).toBe('John');
+      });
+
+      it('setValue marks field as dirty by default', () => {
+        const form = useForm({ defaultValues: { name: 'original' } });
+        form.setValue('name', 'changed');
+        expect(form.dirty.name).toBe(true);
+      });
+
+      it('setValue with shouldDirty false', () => {
+        const form = useForm({ defaultValues: { name: 'original' } });
+        form.setValue('name', 'changed', { shouldDirty: false });
+        expect(form.dirty.name).toBeFalsy();
+      });
+
+      it('setValues updates multiple values', () => {
+        const form = useForm({ defaultValues: { name: '', email: '' } });
+        form.setValues({ name: 'John', email: 'john@test.com' });
+        expect(form.getValues()).toEqual({ name: 'John', email: 'john@test.com' });
+      });
+    });
+
+    describe('useForm - reset', () => {
+      it('reset restores default values', () => {
+        const form = useForm({ defaultValues: { name: 'John', age: 25 } });
+        form.setValue('name', 'Jane');
+        form.setValue('age', 30);
+        form.reset();
+        expect(form.getValues()).toEqual({ name: 'John', age: 25 });
+      });
+
+      it('reset clears errors', () => {
+        const form = useForm({
+          defaultValues: { name: '' },
+          validation: { name: [validators.required()] }
+        });
+        form.setError('name', 'Required');
+        expect(form.errors.name).toBe('Required');
+        form.reset();
+        expect(form.errors.name).toBeUndefined();
+      });
+
+      it('reset clears touched', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        form.register('name').onBlur();
+        expect(form.touched.name).toBe(true);
+        form.reset();
+        expect(form.touched.name).toBeFalsy();
+      });
+
+      it('reset clears dirty', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        form.setValue('name', 'changed');
+        expect(form.isDirty).toBe(true);
+        form.reset();
+        expect(form.isDirty).toBe(false);
+      });
+
+      it('reset with new values', () => {
+        const form = useForm({ defaultValues: { name: 'John' } });
+        form.reset({ name: 'Jane' });
+        expect(form.getValue('name')).toBe('Jane');
+      });
+    });
+
+    describe('Validators - required', () => {
+      it('fails for empty string', async () => {
+        const rule = validators.required();
+        expect(await rule.validate('')).toBe(false);
+      });
+
+      it('fails for whitespace only', async () => {
+        const rule = validators.required();
+        expect(await rule.validate('   ')).toBe(false);
+      });
+
+      it('fails for null', async () => {
+        const rule = validators.required();
+        expect(await rule.validate(null)).toBe(false);
+      });
+
+      it('fails for undefined', async () => {
+        const rule = validators.required();
+        expect(await rule.validate(undefined)).toBe(false);
+      });
+
+      it('passes for non-empty string', async () => {
+        const rule = validators.required();
+        expect(await rule.validate('hello')).toBe(true);
+      });
+
+      it('passes for number', async () => {
+        const rule = validators.required();
+        expect(await rule.validate(0)).toBe(true);
+        expect(await rule.validate(42)).toBe(true);
+      });
+
+      it('passes for boolean', async () => {
+        const rule = validators.required();
+        expect(await rule.validate(false)).toBe(true);
+        expect(await rule.validate(true)).toBe(true);
+      });
+
+      it('uses custom message', () => {
+        const rule = validators.required('Name is required');
+        expect(rule.message).toBe('Name is required');
+      });
+    });
+
+    describe('Validators - email', () => {
+      it('passes for valid emails', async () => {
+        const rule = validators.email();
+        expect(await rule.validate('test@example.com')).toBe(true);
+        expect(await rule.validate('user.name@domain.org')).toBe(true);
+        expect(await rule.validate('a@b.co')).toBe(true);
+      });
+
+      it('fails for invalid emails', async () => {
+        const rule = validators.email();
+        expect(await rule.validate('invalid')).toBe(false);
+        expect(await rule.validate('no@domain')).toBe(false);
+        expect(await rule.validate('@nodomain.com')).toBe(false);
+        expect(await rule.validate('spaces in@email.com')).toBe(false);
+      });
+
+      it('passes for empty (not required)', async () => {
+        const rule = validators.email();
+        expect(await rule.validate('')).toBe(true);
+        expect(await rule.validate(null)).toBe(true);
+      });
+    });
+
+    describe('Validators - minLength/maxLength', () => {
+      it('minLength fails for short strings', async () => {
+        const rule = validators.minLength(5);
+        expect(await rule.validate('hi')).toBe(false);
+        expect(await rule.validate('1234')).toBe(false);
+      });
+
+      it('minLength passes for long enough strings', async () => {
+        const rule = validators.minLength(5);
+        expect(await rule.validate('hello')).toBe(true);
+        expect(await rule.validate('hello world')).toBe(true);
+      });
+
+      it('maxLength fails for long strings', async () => {
+        const rule = validators.maxLength(5);
+        expect(await rule.validate('hello world')).toBe(false);
+      });
+
+      it('maxLength passes for short enough strings', async () => {
+        const rule = validators.maxLength(5);
+        expect(await rule.validate('hi')).toBe(true);
+        expect(await rule.validate('hello')).toBe(true);
+      });
+
+      it('passes for empty (not required)', async () => {
+        const minRule = validators.minLength(5);
+        const maxRule = validators.maxLength(5);
+        expect(await minRule.validate('')).toBe(true);
+        expect(await maxRule.validate('')).toBe(true);
+      });
+    });
+
+    describe('Validators - min/max', () => {
+      it('min fails for small numbers', async () => {
+        const rule = validators.min(10);
+        expect(await rule.validate(5)).toBe(false);
+        expect(await rule.validate(9)).toBe(false);
+      });
+
+      it('min passes for large enough numbers', async () => {
+        const rule = validators.min(10);
+        expect(await rule.validate(10)).toBe(true);
+        expect(await rule.validate(100)).toBe(true);
+      });
+
+      it('max fails for large numbers', async () => {
+        const rule = validators.max(10);
+        expect(await rule.validate(11)).toBe(false);
+        expect(await rule.validate(100)).toBe(false);
+      });
+
+      it('max passes for small enough numbers', async () => {
+        const rule = validators.max(10);
+        expect(await rule.validate(10)).toBe(true);
+        expect(await rule.validate(5)).toBe(true);
+      });
+
+      it('handles string numbers', async () => {
+        const minRule = validators.min(10);
+        expect(await minRule.validate('15')).toBe(true);
+        expect(await minRule.validate('5')).toBe(false);
+      });
+    });
+
+    describe('Validators - pattern', () => {
+      it('passes for matching pattern', async () => {
+        const rule = validators.pattern(/^[A-Z]+$/);
+        expect(await rule.validate('ABC')).toBe(true);
+      });
+
+      it('fails for non-matching pattern', async () => {
+        const rule = validators.pattern(/^[A-Z]+$/);
+        expect(await rule.validate('abc')).toBe(false);
+        expect(await rule.validate('Abc')).toBe(false);
+      });
+
+      it('passes for empty (not required)', async () => {
+        const rule = validators.pattern(/^[A-Z]+$/);
+        expect(await rule.validate('')).toBe(true);
+      });
+    });
+
+    describe('Validators - match', () => {
+      it('passes when fields match', async () => {
+        const rule = validators.match('password');
+        expect(await rule.validate('secret123', { password: 'secret123' })).toBe(true);
+      });
+
+      it('fails when fields differ', async () => {
+        const rule = validators.match('password');
+        expect(await rule.validate('different', { password: 'secret123' })).toBe(false);
+      });
+    });
+
+    describe('Validators - custom', () => {
+      it('executes custom function', async () => {
+        const rule = validators.custom((value) => value === 'valid', 'Must be valid');
+        expect(await rule.validate('valid')).toBe(true);
+        expect(await rule.validate('invalid')).toBe(false);
+      });
+
+      it('receives form values', async () => {
+        const rule = validators.custom((value, form) => value === form.expected, 'No match');
+        expect(await rule.validate('test', { expected: 'test' })).toBe(true);
+      });
+    });
+
+    describe('Validators - async', () => {
+      it('handles async validation', async () => {
+        const rule = validators.async(async (value) => {
+          await new Promise(r => setTimeout(r, 10));
+          return value !== 'taken';
+        }, 'Already taken');
+
+        expect(await rule.validate('available')).toBe(true);
+        expect(await rule.validate('taken')).toBe(false);
+      });
+
+      it('passes for empty (not required)', async () => {
+        const rule = validators.async(async () => false, 'Error');
+        expect(await rule.validate('')).toBe(true);
+      });
+    });
+
+    describe('useForm - validation integration', () => {
+      it('validate() runs all validations', async () => {
+        const form = useForm({
+          defaultValues: { name: '', email: '' },
+          validation: {
+            name: [validators.required()],
+            email: [validators.required(), validators.email()]
+          }
+        });
+
+        const isValid = await form.validate();
+        expect(isValid).toBe(false);
+        expect(form.errors.name).toBeDefined();
+        expect(form.errors.email).toBeDefined();
+      });
+
+      it('clears errors on valid input', async () => {
+        const form = useForm({
+          defaultValues: { email: '' },
+          validation: { email: [validators.email()] }
+        });
+
+        form.setValue('email', 'invalid');
+        await form.validate();
+        expect(form.errors.email).toBeDefined();
+
+        form.setValue('email', 'valid@test.com');
+        await form.validate();
+        expect(form.errors.email).toBeUndefined();
+      });
+
+      it('setError adds manual error', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        form.setError('name', 'Custom error');
+        expect(form.errors.name).toBe('Custom error');
+        expect(form.isValid).toBe(false);
+      });
+
+      it('clearErrors removes specific error', () => {
+        const form = useForm({ defaultValues: { name: '', email: '' } });
+        form.setError('name', 'Error 1');
+        form.setError('email', 'Error 2');
+        form.clearErrors('name');
+        expect(form.errors.name).toBeUndefined();
+        expect(form.errors.email).toBe('Error 2');
+      });
+
+      it('clearErrors removes all errors', () => {
+        const form = useForm({ defaultValues: { name: '', email: '' } });
+        form.setError('name', 'Error 1');
+        form.setError('email', 'Error 2');
+        form.clearErrors();
+        expect(form.errors).toEqual({});
+      });
+    });
+
+    describe('useForm - handleSubmit', () => {
+      it('calls onValid when form is valid', async () => {
+        const form = useForm({ defaultValues: { name: 'John' } });
+        let submittedData = null;
+
+        await form.handleSubmit((data) => { submittedData = data; })();
+
+        expect(submittedData).toEqual({ name: 'John' });
+      });
+
+      it('calls onInvalid when form is invalid', async () => {
+        const form = useForm({
+          defaultValues: { name: '' },
+          validation: { name: [validators.required()] }
+        });
+        let invalidErrors = null;
+
+        await form.handleSubmit(
+          () => {},
+          (errors) => { invalidErrors = errors; }
+        )();
+
+        expect(invalidErrors).toBeDefined();
+        expect(invalidErrors.name).toBeDefined();
+      });
+
+      it('increments submitCount', async () => {
+        const form = useForm({ defaultValues: {} });
+        expect(form.submitCount).toBe(0);
+        await form.handleSubmit(() => {})();
+        expect(form.submitCount).toBe(1);
+        await form.handleSubmit(() => {})();
+        expect(form.submitCount).toBe(2);
+      });
+
+      it('prevents default on event', async () => {
+        const form = useForm({ defaultValues: {} });
+        let prevented = false;
+        const mockEvent = { preventDefault: () => { prevented = true; } };
+
+        await form.handleSubmit(() => {})(mockEvent);
+
+        expect(prevented).toBe(true);
+      });
+    });
+
+    describe('useForm - Field Arrays', () => {
+      it('useFieldArray returns fields', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }, { name: 'B' }] }
+        });
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(2);
+        expect(fields[0].name).toBe('A');
+        expect(fields[1].name).toBe('B');
+      });
+
+      it('append adds item to end', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.append({ name: 'B' });
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(2);
+        expect(fields[1].name).toBe('B');
+      });
+
+      it('prepend adds item to start', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'B' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.prepend({ name: 'A' });
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(2);
+        expect(fields[0].name).toBe('A');
+      });
+
+      it('remove removes item at index', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }, { name: 'B' }, { name: 'C' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.remove(1);
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(2);
+        expect(fields[0].name).toBe('A');
+        expect(fields[1].name).toBe('C');
+      });
+
+      it('swap swaps two items', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }, { name: 'B' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.swap(0, 1);
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields[0].name).toBe('B');
+        expect(fields[1].name).toBe('A');
+      });
+
+      it('move moves item to new position', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }, { name: 'B' }, { name: 'C' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.move(0, 2);
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields[0].name).toBe('B');
+        expect(fields[1].name).toBe('C');
+        expect(fields[2].name).toBe('A');
+      });
+
+      it('update modifies item at index', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'Old' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.update(0, { name: 'New' });
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields[0].name).toBe('New');
+      });
+
+      it('replace replaces all items', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.replace([{ name: 'X' }, { name: 'Y' }]);
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(2);
+        expect(fields[0].name).toBe('X');
+        expect(fields[1].name).toBe('Y');
+      });
+
+      it('insert adds item at specific index', () => {
+        const form = useForm({
+          defaultValues: { items: [{ name: 'A' }, { name: 'C' }] }
+        });
+        const fieldArray = form.useFieldArray('items');
+        fieldArray.insert(1, { name: 'B' });
+
+        const { fields } = form.useFieldArray('items');
+        expect(fields).toHaveLength(3);
+        expect(fields[1].name).toBe('B');
+      });
+    });
+
+    describe('useForm - Subscription', () => {
+      it('subscribe is called on changes', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        let callCount = 0;
+        form.subscribe(() => { callCount++; });
+
+        form.setValue('name', 'test');
+        expect(callCount).toBe(1);
+
+        form.setValue('name', 'test2');
+        expect(callCount).toBe(2);
+      });
+
+      it('unsubscribe stops notifications', () => {
+        const form = useForm({ defaultValues: { name: '' } });
+        let callCount = 0;
+        const unsubscribe = form.subscribe(() => { callCount++; });
+
+        form.setValue('name', 'test');
+        expect(callCount).toBe(1);
+
+        unsubscribe();
+        form.setValue('name', 'test2');
+        expect(callCount).toBe(1);
+      });
+    });
+
+    describe('Complex Scenarios', () => {
+      it('signup form validation', async () => {
+        const form = useForm({
+          defaultValues: {
+            email: '',
+            password: '',
+            confirmPassword: ''
+          },
+          validation: {
+            email: [validators.required(), validators.email()],
+            password: [validators.required(), validators.minLength(8)],
+            confirmPassword: [validators.required(), validators.match('password')]
+          }
+        });
+
+        // Empty form should fail
+        let isValid = await form.validate();
+        expect(isValid).toBe(false);
+        expect(Object.keys(form.errors)).toHaveLength(3);
+
+        // Fill with valid data
+        form.setValue('email', 'test@example.com');
+        form.setValue('password', 'password123');
+        form.setValue('confirmPassword', 'password123');
+
+        isValid = await form.validate();
+        expect(isValid).toBe(true);
+        expect(Object.keys(form.errors)).toHaveLength(0);
+      });
+
+      it('password mismatch validation', async () => {
+        const form = useForm({
+          defaultValues: { password: '', confirmPassword: '' },
+          validation: {
+            confirmPassword: [validators.match('password', 'Passwords do not match')]
+          }
+        });
+
+        form.setValue('password', 'secret123');
+        form.setValue('confirmPassword', 'different');
+
+        await form.validate();
+        expect(form.errors.confirmPassword).toBe('Passwords do not match');
+      });
+
+      it('dynamic field array with validation', async () => {
+        const form = useForm({
+          defaultValues: { teamName: '', members: [] },
+          validation: { teamName: [validators.required()] }
+        });
+
+        const fieldArray = form.useFieldArray('members');
+        fieldArray.append({ name: 'Alice', role: 'Developer' });
+        fieldArray.append({ name: 'Bob', role: 'Designer' });
+
+        const values = form.getValues();
+        expect(values.members).toHaveLength(2);
+      });
+    });
+
+    // ========================================
+    // Run Tests
+    // ========================================
+
+    async function runTests() {
+      const results = await runner.run();
+
+      document.getElementById('results').innerHTML = `
+        <div class="summary">
+          <div class="summary-item passed">
+            <div class="count">${results.passed}</div>
+            <div>Passed</div>
+          </div>
+          <div class="summary-item failed">
+            <div class="count">${results.failed}</div>
+            <div>Failed</div>
+          </div>
+          <div class="summary-item total">
+            <div class="count">${results.passed + results.failed}</div>
+            <div>Total</div>
+          </div>
+        </div>
+        <div class="test-groups">
+          ${results.groups.map(group => `
+            <div class="test-group">
+              <div class="test-group-header">
+                <span>${group.name}</span>
+                <span>${group.passed}/${group.tests.length}</span>
+              </div>
+              <div class="test-group-tests">
+                ${group.tests.map(test => `
+                  <div class="test-item ${test.passed ? 'passed' : 'failed'}">
+                    <span class="test-icon">${test.passed ? '✓' : '✗'}</span>
+                    <div class="test-name">
+                      ${test.name}
+                      ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      console.log(`Zylix Form Tests: ${results.passed}/${results.passed + results.failed} passed`);
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

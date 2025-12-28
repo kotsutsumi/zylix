@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Particle System Showcase</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000;
+      color: white;
+      overflow: hidden;
+    }
+    #app { width: 100vw; height: 100vh; position: relative; }
+    canvas { display: block; }
+    .controls {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 100;
+      min-width: 280px;
+    }
+    .controls h2 {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #818cf8;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 5px;
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      -webkit-appearance: none;
+      background: #374151;
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #818cf8;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .value {
+      min-width: 50px;
+      text-align: right;
+      font-family: monospace;
+      color: #818cf8;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      font-family: monospace;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .fps-good { color: #10b981; }
+    .fps-ok { color: #f59e0b; }
+    .fps-bad { color: #ef4444; }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover { background: #4338ca; }
+    button.secondary {
+      background: #374151;
+    }
+    button.secondary:hover { background: #4b5563; }
+    .presets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .presets button {
+      margin-top: 0;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+      <h2>Zylix Particles</h2>
+
+      <div class="control-group">
+        <label>Particle Count</label>
+        <div class="control-row">
+          <input type="range" id="count" min="1000" max="100000" value="50000" step="1000">
+          <span class="value" id="countValue">50000</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Particle Size</label>
+        <div class="control-row">
+          <input type="range" id="size" min="0.5" max="5" value="2" step="0.5">
+          <span class="value" id="sizeValue">2</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Speed</label>
+        <div class="control-row">
+          <input type="range" id="speed" min="0.1" max="3" value="1" step="0.1">
+          <span class="value" id="speedValue">1</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Mouse Attraction</label>
+        <div class="control-row">
+          <input type="range" id="attraction" min="0" max="100" value="50" step="5">
+          <span class="value" id="attractionValue">50</span>
+        </div>
+      </div>
+
+      <div class="presets">
+        <button onclick="applyPreset('galaxy')">Galaxy</button>
+        <button onclick="applyPreset('explosion')">Explosion</button>
+        <button onclick="applyPreset('fireflies')">Fireflies</button>
+        <button onclick="applyPreset('rain')">Rain</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="fpsValue">60</div>
+          <div class="stat-label">FPS</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="particleCount">50K</div>
+          <div class="stat-label">Particles</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="frameTime">16.7</div>
+          <div class="stat-label">Frame (ms)</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="memoryUsage">0</div>
+          <div class="stat-label">Memory (MB)</div>
+        </div>
+      </div>
+
+      <button onclick="togglePause()">Pause / Resume</button>
+      <button class="secondary" onclick="resetParticles()">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // Zylix Particle System - 50K+ Particles @ 60fps
+    // =========================================================================
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    let config = {
+      count: 50000,
+      size: 2,
+      speed: 1,
+      attraction: 50,
+      colorMode: 'rainbow'
+    };
+
+    // State
+    let particles = [];
+    let mouseX = 0;
+    let mouseY = 0;
+    let isPaused = false;
+    let lastTime = performance.now();
+    let frameCount = 0;
+    let fps = 60;
+    let frameTimes = [];
+
+    // Resize canvas
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse tracking
+    canvas.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      mouseX = canvas.width / 2;
+      mouseY = canvas.height / 2;
+    });
+
+    // Particle class using TypedArrays for performance
+    class ParticleSystem {
+      constructor(count) {
+        this.count = count;
+        // Use TypedArrays for better performance
+        this.x = new Float32Array(count);
+        this.y = new Float32Array(count);
+        this.vx = new Float32Array(count);
+        this.vy = new Float32Array(count);
+        this.hue = new Float32Array(count);
+        this.alpha = new Float32Array(count);
+
+        this.init();
+      }
+
+      init() {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        for (let i = 0; i < this.count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * Math.min(canvas.width, canvas.height) * 0.4;
+
+          this.x[i] = centerX + Math.cos(angle) * radius;
+          this.y[i] = centerY + Math.sin(angle) * radius;
+          this.vx[i] = (Math.random() - 0.5) * 2;
+          this.vy[i] = (Math.random() - 0.5) * 2;
+          this.hue[i] = Math.random() * 360;
+          this.alpha[i] = 0.3 + Math.random() * 0.7;
+        }
+      }
+
+      update(dt) {
+        const attractionForce = config.attraction / 5000;
+        const speed = config.speed;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        for (let i = 0; i < this.count; i++) {
+          // Mouse attraction
+          const dx = mouseX - this.x[i];
+          const dy = mouseY - this.y[i];
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+          if (dist < 200) {
+            this.vx[i] += (dx / dist) * attractionForce;
+            this.vy[i] += (dy / dist) * attractionForce;
+          }
+
+          // Update position
+          this.x[i] += this.vx[i] * speed * dt;
+          this.y[i] += this.vy[i] * speed * dt;
+
+          // Apply friction
+          this.vx[i] *= 0.99;
+          this.vy[i] *= 0.99;
+
+          // Wrap around screen
+          if (this.x[i] < 0) this.x[i] = width;
+          if (this.x[i] > width) this.x[i] = 0;
+          if (this.y[i] < 0) this.y[i] = height;
+          if (this.y[i] > height) this.y[i] = 0;
+
+          // Slowly shift hue
+          this.hue[i] = (this.hue[i] + 0.1 * dt) % 360;
+        }
+      }
+
+      render() {
+        const size = config.size;
+
+        // Use ImageData for faster rendering
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        const data = imageData.data;
+        const width = canvas.width;
+
+        for (let i = 0; i < this.count; i++) {
+          const px = Math.floor(this.x[i]);
+          const py = Math.floor(this.y[i]);
+
+          if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+            // Convert HSL to RGB
+            const h = this.hue[i] / 60;
+            const c = 1;
+            const x = c * (1 - Math.abs(h % 2 - 1));
+
+            let r = 0, g = 0, b = 0;
+            if (h < 1) { r = c; g = x; }
+            else if (h < 2) { r = x; g = c; }
+            else if (h < 3) { g = c; b = x; }
+            else if (h < 4) { g = x; b = c; }
+            else if (h < 5) { r = x; b = c; }
+            else { r = c; b = x; }
+
+            const alpha = this.alpha[i];
+
+            // Draw particle (simple point)
+            for (let dy = 0; dy < size; dy++) {
+              for (let dx = 0; dx < size; dx++) {
+                const idx = ((py + dy) * width + (px + dx)) * 4;
+                if (idx >= 0 && idx < data.length - 3) {
+                  data[idx] = Math.min(255, data[idx] + r * 255 * alpha);
+                  data[idx + 1] = Math.min(255, data[idx + 1] + g * 255 * alpha);
+                  data[idx + 2] = Math.min(255, data[idx + 2] + b * 255 * alpha);
+                  data[idx + 3] = 255;
+                }
+              }
+            }
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      // Alternative render using canvas API (smoother but slower)
+      renderCanvas() {
+        const size = config.size;
+
+        for (let i = 0; i < this.count; i++) {
+          ctx.fillStyle = `hsla(${this.hue[i]}, 100%, 60%, ${this.alpha[i]})`;
+          ctx.fillRect(this.x[i], this.y[i], size, size);
+        }
+      }
+    }
+
+    let system = new ParticleSystem(config.count);
+
+    // Animation loop
+    function animate(currentTime) {
+      if (!isPaused) {
+        const dt = Math.min((currentTime - lastTime) / 16.67, 2); // Cap delta time
+        lastTime = currentTime;
+
+        // Track frame time
+        frameTimes.push(currentTime);
+        if (frameTimes.length > 60) frameTimes.shift();
+
+        // Calculate FPS
+        if (frameTimes.length > 1) {
+          fps = Math.round(1000 / ((frameTimes[frameTimes.length - 1] - frameTimes[0]) / frameTimes.length));
+        }
+
+        // Update stats every 10 frames
+        frameCount++;
+        if (frameCount % 10 === 0) {
+          updateStats();
+        }
+
+        // Clear and render
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        system.update(dt);
+        system.renderCanvas();
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // Update stats display
+    function updateStats() {
+      const fpsEl = document.getElementById('fpsValue');
+      fpsEl.textContent = fps;
+      fpsEl.className = 'stat-value ' + (fps >= 55 ? 'fps-good' : fps >= 30 ? 'fps-ok' : 'fps-bad');
+
+      document.getElementById('particleCount').textContent =
+        config.count >= 1000 ? `${(config.count / 1000).toFixed(0)}K` : config.count;
+
+      document.getElementById('frameTime').textContent = (1000 / fps).toFixed(1);
+
+      // Memory usage (if available)
+      if (performance.memory) {
+        const mb = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+        document.getElementById('memoryUsage').textContent = mb;
+      }
+    }
+
+    // Control handlers
+    document.getElementById('count').addEventListener('input', (e) => {
+      config.count = parseInt(e.target.value);
+      document.getElementById('countValue').textContent = config.count;
+      system = new ParticleSystem(config.count);
+    });
+
+    document.getElementById('size').addEventListener('input', (e) => {
+      config.size = parseFloat(e.target.value);
+      document.getElementById('sizeValue').textContent = config.size;
+    });
+
+    document.getElementById('speed').addEventListener('input', (e) => {
+      config.speed = parseFloat(e.target.value);
+      document.getElementById('speedValue').textContent = config.speed;
+    });
+
+    document.getElementById('attraction').addEventListener('input', (e) => {
+      config.attraction = parseInt(e.target.value);
+      document.getElementById('attractionValue').textContent = config.attraction;
+    });
+
+    // Presets
+    window.applyPreset = function(preset) {
+      switch (preset) {
+        case 'galaxy':
+          config = { count: 30000, size: 1.5, speed: 0.5, attraction: 80 };
+          break;
+        case 'explosion':
+          config = { count: 20000, size: 3, speed: 2.5, attraction: 0 };
+          // Apply outward velocity
+          for (let i = 0; i < system.count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            system.vx[i] = Math.cos(angle) * 10;
+            system.vy[i] = Math.sin(angle) * 10;
+          }
+          break;
+        case 'fireflies':
+          config = { count: 5000, size: 3, speed: 0.3, attraction: 20 };
+          break;
+        case 'rain':
+          config = { count: 50000, size: 1, speed: 2, attraction: 0 };
+          // Apply downward velocity
+          for (let i = 0; i < system.count; i++) {
+            system.vy[i] = 3 + Math.random() * 2;
+            system.vx[i] = (Math.random() - 0.5) * 0.5;
+          }
+          break;
+      }
+
+      // Update UI
+      document.getElementById('count').value = config.count;
+      document.getElementById('countValue').textContent = config.count;
+      document.getElementById('size').value = config.size;
+      document.getElementById('sizeValue').textContent = config.size;
+      document.getElementById('speed').value = config.speed;
+      document.getElementById('speedValue').textContent = config.speed;
+      document.getElementById('attraction').value = config.attraction;
+      document.getElementById('attractionValue').textContent = config.attraction;
+
+      if (preset !== 'explosion' && preset !== 'rain') {
+        system = new ParticleSystem(config.count);
+      }
+    };
+
+    window.togglePause = function() {
+      isPaused = !isPaused;
+      if (!isPaused) {
+        lastTime = performance.now();
+      }
+    };
+
+    window.resetParticles = function() {
+      system = new ParticleSystem(config.count);
+    };
+
+    // Start animation
+    requestAnimationFrame(animate);
+
+    console.log('Zylix Particle System - Running!');
+    console.log(`Rendering ${config.count} particles`);
+  </script>
+</body>
+</html>

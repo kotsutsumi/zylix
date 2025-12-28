@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Fetch - Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #818cf8;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .demo-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .demo-card h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #a5b4fc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-card h2::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #818cf8;
+      border-radius: 50%;
+    }
+
+    button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    button:hover {
+      background: #4338ca;
+    }
+
+    button:disabled {
+      background: #6b7280;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #374151;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.danger:hover {
+      background: #b91c1c;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #818cf8;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .status.loading {
+      background: #fbbf24;
+      color: #000;
+    }
+
+    .status.success {
+      background: #10b981;
+      color: #000;
+    }
+
+    .status.error {
+      background: #ef4444;
+      color: white;
+    }
+
+    .status.idle {
+      background: #6b7280;
+      color: white;
+    }
+
+    .data-display {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      font-family: monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .user-list {
+      list-style: none;
+    }
+
+    .user-list li {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      margin-bottom: 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-list .user-name {
+      font-weight: 500;
+    }
+
+    .user-list .user-email {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .post-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .post-card h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #c7d2fe;
+    }
+
+    .post-card p {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .metric {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #818cf8;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .log-entry {
+      padding: 8px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .log-entry.info {
+      background: rgba(59, 130, 246, 0.2);
+      border-left: 3px solid #3b82f6;
+    }
+
+    .log-entry.success {
+      background: rgba(16, 185, 129, 0.2);
+      border-left: 3px solid #10b981;
+    }
+
+    .log-entry.error {
+      background: rgba(239, 68, 68, 0.2);
+      border-left: 3px solid #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Zylix Fetch Demo</h1>
+
+    <div class="demo-grid">
+      <!-- Basic Query Demo -->
+      <div class="demo-card">
+        <h2>useQuery - Fetch Users</h2>
+        <div id="users-status" class="status idle">Idle</div>
+        <button id="fetch-users-btn">Fetch Users</button>
+        <button id="refetch-users-btn" class="secondary">Refetch</button>
+        <button id="clear-users-btn" class="danger">Clear</button>
+        <div id="users-list" class="data-display">
+          Click "Fetch Users" to load data...
+        </div>
+      </div>
+
+      <!-- Query with Cache Demo -->
+      <div class="demo-card">
+        <h2>useQuery - Caching</h2>
+        <div id="cache-status" class="status idle">Idle</div>
+        <button id="fetch-cached-btn">Fetch (5s Cache)</button>
+        <button id="invalidate-cache-btn" class="secondary">Invalidate</button>
+        <div class="metrics">
+          <div class="metric">
+            <div id="cache-hits" class="metric-value">0</div>
+            <div class="metric-label">Cache Hits</div>
+          </div>
+          <div class="metric">
+            <div id="cache-misses" class="metric-value">0</div>
+            <div class="metric-label">Cache Misses</div>
+          </div>
+          <div class="metric">
+            <div id="fetch-time" class="metric-value">-</div>
+            <div class="metric-label">Last Fetch (ms)</div>
+          </div>
+        </div>
+        <div id="cache-data" class="data-display">
+          Data will appear here...
+        </div>
+      </div>
+
+      <!-- Mutation Demo -->
+      <div class="demo-card">
+        <h2>useMutation - Create Post</h2>
+        <div id="mutation-status" class="status idle">Idle</div>
+        <input type="text" id="post-title" placeholder="Post title...">
+        <input type="text" id="post-body" placeholder="Post body...">
+        <button id="create-post-btn">Create Post</button>
+        <button id="reset-mutation-btn" class="secondary">Reset</button>
+        <div id="mutation-result" class="data-display">
+          Enter title and body, then click "Create Post"
+        </div>
+      </div>
+
+      <!-- HTTP Client Demo -->
+      <div class="demo-card">
+        <h2>createClient - Direct Requests</h2>
+        <div id="client-status" class="status idle">Idle</div>
+        <button id="get-btn">GET</button>
+        <button id="post-btn">POST</button>
+        <button id="put-btn">PUT</button>
+        <button id="delete-btn" class="danger">DELETE</button>
+        <div id="client-result" class="data-display">
+          Click a button to make a request...
+        </div>
+      </div>
+
+      <!-- Auto Retry Demo -->
+      <div class="demo-card">
+        <h2>Auto Retry</h2>
+        <div id="retry-status" class="status idle">Idle</div>
+        <button id="retry-test-btn">Test Retry (Simulated 500)</button>
+        <div class="metrics">
+          <div class="metric">
+            <div id="retry-attempts" class="metric-value">0</div>
+            <div class="metric-label">Attempts</div>
+          </div>
+          <div class="metric">
+            <div id="retry-max" class="metric-value">3</div>
+            <div class="metric-label">Max Retries</div>
+          </div>
+          <div class="metric">
+            <div id="retry-result" class="metric-value">-</div>
+            <div class="metric-label">Result</div>
+          </div>
+        </div>
+        <div id="retry-log" class="data-display">
+          Retry log will appear here...
+        </div>
+      </div>
+
+      <!-- Infinite Query Demo -->
+      <div class="demo-card">
+        <h2>useInfiniteQuery - Posts</h2>
+        <div id="infinite-status" class="status idle">Idle</div>
+        <button id="load-more-btn">Load More</button>
+        <button id="reset-infinite-btn" class="secondary">Reset</button>
+        <div class="metrics">
+          <div class="metric">
+            <div id="pages-loaded" class="metric-value">0</div>
+            <div class="metric-label">Pages</div>
+          </div>
+          <div class="metric">
+            <div id="items-loaded" class="metric-value">0</div>
+            <div class="metric-label">Items</div>
+          </div>
+          <div class="metric">
+            <div id="has-more" class="metric-value">Yes</div>
+            <div class="metric-label">Has More</div>
+          </div>
+        </div>
+        <div id="infinite-list" class="data-display">
+          Click "Load More" to fetch posts...
+        </div>
+      </div>
+
+      <!-- Request Log -->
+      <div class="demo-card" style="grid-column: 1 / -1;">
+        <h2>Request Log</h2>
+        <button id="clear-log-btn" class="secondary">Clear Log</button>
+        <div id="request-log" class="data-display" style="max-height: 200px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock the imports for demo purposes
+    const hooks = {
+      useState: (initial) => {
+        let state = typeof initial === 'function' ? initial() : initial;
+        const setState = (newState) => {
+          state = typeof newState === 'function' ? newState(state) : newState;
+        };
+        return [state, setState];
+      },
+      useEffect: (fn, deps) => fn(),
+      useRef: (initial) => ({ current: initial }),
+      useCallback: (fn) => fn,
+      useMemo: (fn) => fn(),
+    };
+
+    // Simple HTTP client
+    function createClient(config = {}) {
+      const { baseURL = '', headers: defaultHeaders = {}, interceptors = {} } = config;
+
+      async function request(url, requestConfig = {}) {
+        let fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`;
+        const method = requestConfig.method || 'GET';
+
+        const headers = {
+          'Content-Type': 'application/json',
+          ...defaultHeaders,
+          ...requestConfig.headers,
+        };
+
+        const fetchOptions = { method, headers };
+
+        if (requestConfig.body && method !== 'GET') {
+          fetchOptions.body = JSON.stringify(requestConfig.body);
+        }
+
+        if (interceptors.request) {
+          const modified = interceptors.request({ url: fullUrl, ...fetchOptions });
+          fullUrl = modified.url;
+        }
+
+        const response = await fetch(fullUrl, fetchOptions);
+
+        if (!response.ok) {
+          const error = new Error(`HTTP ${response.status}`);
+          error.status = response.status;
+          if (interceptors.error) {
+            return interceptors.error(error);
+          }
+          throw error;
+        }
+
+        let data = await response.json();
+
+        if (interceptors.response) {
+          data = interceptors.response(response, data);
+        }
+
+        return data;
+      }
+
+      return {
+        request,
+        get: (url, config) => request(url, { ...config, method: 'GET' }),
+        post: (url, data, config) => request(url, { ...config, method: 'POST', body: data }),
+        put: (url, data, config) => request(url, { ...config, method: 'PUT', body: data }),
+        delete: (url, config) => request(url, { ...config, method: 'DELETE' }),
+      };
+    }
+
+    // Query cache
+    const queryCache = new Map();
+
+    // Request log
+    const logs = [];
+    function addLog(type, message) {
+      const time = new Date().toLocaleTimeString();
+      logs.unshift({ type, message, time });
+      if (logs.length > 50) logs.pop();
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const container = document.getElementById('request-log');
+      container.innerHTML = logs.map(log => `
+        <div class="log-entry ${log.type}">
+          <strong>[${log.time}]</strong> ${log.message}
+        </div>
+      `).join('');
+    }
+
+    // Create API client
+    const api = createClient({
+      baseURL: 'https://jsonplaceholder.typicode.com',
+      interceptors: {
+        request: (config) => {
+          addLog('info', `${config.method || 'GET'} ${config.url}`);
+          return config;
+        },
+        response: (response, data) => {
+          addLog('success', `Response: ${response.status} OK`);
+          return data;
+        },
+        error: (error) => {
+          addLog('error', `Error: ${error.message}`);
+          throw error;
+        }
+      }
+    });
+
+    // Users Query
+    let usersData = null;
+    document.getElementById('fetch-users-btn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('users-status');
+      const listEl = document.getElementById('users-list');
+
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Loading...';
+
+      try {
+        const users = await api.get('/users');
+        usersData = users;
+
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Success';
+
+        listEl.innerHTML = `<ul class="user-list">
+          ${users.slice(0, 5).map(user => `
+            <li>
+              <div>
+                <div class="user-name">${user.name}</div>
+                <div class="user-email">${user.email}</div>
+              </div>
+            </li>
+          `).join('')}
+        </ul>`;
+      } catch (error) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+        listEl.textContent = error.message;
+      }
+    });
+
+    document.getElementById('refetch-users-btn').addEventListener('click', () => {
+      document.getElementById('fetch-users-btn').click();
+    });
+
+    document.getElementById('clear-users-btn').addEventListener('click', () => {
+      usersData = null;
+      document.getElementById('users-status').className = 'status idle';
+      document.getElementById('users-status').textContent = 'Idle';
+      document.getElementById('users-list').textContent = 'Click "Fetch Users" to load data...';
+    });
+
+    // Cache Demo
+    let cacheHits = 0;
+    let cacheMisses = 0;
+    const cacheKey = 'todos-cache';
+
+    document.getElementById('fetch-cached-btn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('cache-status');
+      const dataEl = document.getElementById('cache-data');
+      const hitsEl = document.getElementById('cache-hits');
+      const missesEl = document.getElementById('cache-misses');
+      const timeEl = document.getElementById('fetch-time');
+
+      const cached = queryCache.get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < 5000) {
+        cacheHits++;
+        hitsEl.textContent = cacheHits;
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Cache Hit';
+        timeEl.textContent = '0';
+        dataEl.textContent = JSON.stringify(cached.data.slice(0, 3), null, 2);
+        addLog('success', 'Cache hit! Returning cached data');
+        return;
+      }
+
+      cacheMisses++;
+      missesEl.textContent = cacheMisses;
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Fetching...';
+
+      const start = performance.now();
+      try {
+        const todos = await api.get('/todos?_limit=5');
+        const elapsed = Math.round(performance.now() - start);
+
+        queryCache.set(cacheKey, { data: todos, timestamp: Date.now() });
+
+        timeEl.textContent = elapsed;
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Success';
+        dataEl.textContent = JSON.stringify(todos.slice(0, 3), null, 2);
+      } catch (error) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+        dataEl.textContent = error.message;
+      }
+    });
+
+    document.getElementById('invalidate-cache-btn').addEventListener('click', () => {
+      queryCache.delete(cacheKey);
+      addLog('info', 'Cache invalidated');
+      document.getElementById('cache-status').className = 'status idle';
+      document.getElementById('cache-status').textContent = 'Invalidated';
+    });
+
+    // Mutation Demo
+    document.getElementById('create-post-btn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('mutation-status');
+      const resultEl = document.getElementById('mutation-result');
+      const title = document.getElementById('post-title').value;
+      const body = document.getElementById('post-body').value;
+
+      if (!title || !body) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+        resultEl.textContent = 'Please fill in both title and body';
+        return;
+      }
+
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Creating...';
+
+      try {
+        const post = await api.post('/posts', { title, body, userId: 1 });
+
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Created';
+        resultEl.innerHTML = `
+          <div class="post-card">
+            <h3>${post.title}</h3>
+            <p>${post.body}</p>
+            <small>ID: ${post.id}</small>
+          </div>
+        `;
+
+        // Clear inputs
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-body').value = '';
+      } catch (error) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+        resultEl.textContent = error.message;
+      }
+    });
+
+    document.getElementById('reset-mutation-btn').addEventListener('click', () => {
+      document.getElementById('mutation-status').className = 'status idle';
+      document.getElementById('mutation-status').textContent = 'Idle';
+      document.getElementById('mutation-result').textContent = 'Enter title and body, then click "Create Post"';
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-body').value = '';
+    });
+
+    // HTTP Client Demo
+    async function makeRequest(method) {
+      const statusEl = document.getElementById('client-status');
+      const resultEl = document.getElementById('client-result');
+
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Loading...';
+
+      try {
+        let result;
+        switch (method) {
+          case 'GET':
+            result = await api.get('/posts/1');
+            break;
+          case 'POST':
+            result = await api.post('/posts', { title: 'New Post', body: 'Content', userId: 1 });
+            break;
+          case 'PUT':
+            result = await api.put('/posts/1', { title: 'Updated', body: 'New content', userId: 1 });
+            break;
+          case 'DELETE':
+            result = await api.delete('/posts/1');
+            break;
+        }
+
+        statusEl.className = 'status success';
+        statusEl.textContent = `${method} Success`;
+        resultEl.textContent = JSON.stringify(result, null, 2);
+      } catch (error) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+        resultEl.textContent = error.message;
+      }
+    }
+
+    document.getElementById('get-btn').addEventListener('click', () => makeRequest('GET'));
+    document.getElementById('post-btn').addEventListener('click', () => makeRequest('POST'));
+    document.getElementById('put-btn').addEventListener('click', () => makeRequest('PUT'));
+    document.getElementById('delete-btn').addEventListener('click', () => makeRequest('DELETE'));
+
+    // Retry Demo
+    let retryCount = 0;
+    document.getElementById('retry-test-btn').addEventListener('click', async () => {
+      const statusEl = document.getElementById('retry-status');
+      const attemptsEl = document.getElementById('retry-attempts');
+      const resultEl = document.getElementById('retry-result');
+      const logEl = document.getElementById('retry-log');
+
+      retryCount = 0;
+      attemptsEl.textContent = '0';
+      resultEl.textContent = '-';
+      logEl.innerHTML = '';
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Testing...';
+
+      // Simulate a failing request with retries
+      const maxRetries = 3;
+      let success = false;
+
+      for (let i = 0; i <= maxRetries; i++) {
+        retryCount = i + 1;
+        attemptsEl.textContent = retryCount;
+
+        logEl.innerHTML += `<div class="log-entry info">Attempt ${retryCount}/${maxRetries + 1}...</div>`;
+
+        // Simulate network delay
+        await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
+
+        // Fail first 2 attempts, succeed on 3rd
+        if (i < 2) {
+          logEl.innerHTML += `<div class="log-entry error">Failed: Simulated 500 error</div>`;
+          addLog('error', `Retry ${i + 1}: Simulated 500 error`);
+        } else {
+          success = true;
+          logEl.innerHTML += `<div class="log-entry success">Success! Request completed.</div>`;
+          addLog('success', 'Request succeeded after retries');
+          break;
+        }
+
+        if (i < maxRetries) {
+          logEl.innerHTML += `<div class="log-entry info">Waiting ${(i + 1) * 1000}ms before retry...</div>`;
+          await new Promise(r => setTimeout(r, (i + 1) * 1000));
+        }
+      }
+
+      if (success) {
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Success';
+        resultEl.textContent = 'OK';
+      } else {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Failed';
+        resultEl.textContent = 'Fail';
+      }
+    });
+
+    // Infinite Query Demo
+    let currentPage = 0;
+    let allPosts = [];
+    const postsPerPage = 5;
+    const maxPages = 5;
+
+    async function loadMorePosts() {
+      const statusEl = document.getElementById('infinite-status');
+      const listEl = document.getElementById('infinite-list');
+      const pagesEl = document.getElementById('pages-loaded');
+      const itemsEl = document.getElementById('items-loaded');
+      const hasMoreEl = document.getElementById('has-more');
+      const loadBtn = document.getElementById('load-more-btn');
+
+      if (currentPage >= maxPages) {
+        hasMoreEl.textContent = 'No';
+        loadBtn.disabled = true;
+        return;
+      }
+
+      statusEl.className = 'status loading';
+      statusEl.textContent = 'Loading...';
+
+      try {
+        const start = currentPage * postsPerPage + 1;
+        const posts = await api.get(`/posts?_start=${start}&_limit=${postsPerPage}`);
+
+        currentPage++;
+        allPosts = [...allPosts, ...posts];
+
+        pagesEl.textContent = currentPage;
+        itemsEl.textContent = allPosts.length;
+        hasMoreEl.textContent = currentPage < maxPages ? 'Yes' : 'No';
+
+        if (currentPage >= maxPages) {
+          loadBtn.disabled = true;
+        }
+
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Success';
+
+        listEl.innerHTML = allPosts.map(post => `
+          <div class="post-card">
+            <h3>${post.id}. ${post.title.substring(0, 40)}...</h3>
+            <p>${post.body.substring(0, 80)}...</p>
+          </div>
+        `).join('');
+      } catch (error) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Error';
+      }
+    }
+
+    document.getElementById('load-more-btn').addEventListener('click', loadMorePosts);
+
+    document.getElementById('reset-infinite-btn').addEventListener('click', () => {
+      currentPage = 0;
+      allPosts = [];
+      document.getElementById('pages-loaded').textContent = '0';
+      document.getElementById('items-loaded').textContent = '0';
+      document.getElementById('has-more').textContent = 'Yes';
+      document.getElementById('load-more-btn').disabled = false;
+      document.getElementById('infinite-status').className = 'status idle';
+      document.getElementById('infinite-status').textContent = 'Idle';
+      document.getElementById('infinite-list').textContent = 'Click "Load More" to fetch posts...';
+    });
+
+    // Clear Log
+    document.getElementById('clear-log-btn').addEventListener('click', () => {
+      logs.length = 0;
+      renderLogs();
+    });
+
+    // Initial log
+    addLog('info', 'Zylix Fetch Demo initialized');
+  </script>
+</body>
+</html>

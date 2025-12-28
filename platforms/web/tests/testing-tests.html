@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix Testing Library - Tests</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .summary {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 1.2rem;
+    }
+    .summary .passed { color: #10b981; }
+    .summary .failed { color: #ef4444; }
+    .test-group {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .group-header {
+      background: rgba(79, 70, 229, 0.3);
+      padding: 15px 20px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+    .test-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .test-item:last-child { border-bottom: none; }
+    .test-item.pass { background: rgba(16, 185, 129, 0.1); }
+    .test-item.fail { background: rgba(239, 68, 68, 0.1); }
+    .test-item.running { background: rgba(245, 158, 11, 0.1); }
+    .status {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .status.pass { background: #10b981; }
+    .status.fail { background: #ef4444; }
+    .status.running { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .test-name { flex: 1; }
+    .test-time { color: #9ca3af; font-size: 0.85rem; }
+    .error-msg {
+      background: rgba(239, 68, 68, 0.2);
+      padding: 10px 20px 10px 56px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #fca5a5;
+      white-space: pre-wrap;
+    }
+    #test-container { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Zylix Testing Library Tests</h1>
+    <div class="summary">
+      <span class="passed" id="passed">0</span> passed,
+      <span class="failed" id="failed">0</span> failed
+    </div>
+    <div id="results"></div>
+  </div>
+  <div id="test-container"></div>
+
+  <script>
+    // =========================================================================
+    // Zylix Core (Minimal Implementation for Tests)
+    // =========================================================================
+    const Zylix = (() => {
+      let hooks = [], hookIndex = 0, rootComponent = null, rootContainer = null;
+
+      function h(type, props, ...children) {
+        return { type, props: props || {}, children: children.flat() };
+      }
+
+      function createElement(vnode) {
+        if (vnode == null || vnode === false) return document.createTextNode('');
+        if (typeof vnode === 'string' || typeof vnode === 'number') {
+          return document.createTextNode(vnode);
+        }
+        if (Array.isArray(vnode)) {
+          const fragment = document.createDocumentFragment();
+          vnode.forEach(v => fragment.appendChild(createElement(v)));
+          return fragment;
+        }
+        if (typeof vnode.type === 'function') {
+          return createElement(vnode.type({ ...vnode.props, children: vnode.children }));
+        }
+        const element = document.createElement(vnode.type);
+        for (const [key, value] of Object.entries(vnode.props || {})) {
+          if (key.startsWith('on')) {
+            element.addEventListener(key.slice(2).toLowerCase(), value);
+          } else if (key === 'style' && typeof value === 'object') {
+            Object.assign(element.style, value);
+          } else if (key === 'className') {
+            element.className = value;
+          } else if (key === 'checked') {
+            element.checked = value;
+          } else if (key === 'value') {
+            element.value = value;
+          } else if (key === 'disabled') {
+            if (value) element.setAttribute('disabled', '');
+          } else if (value !== false && value != null) {
+            element.setAttribute(key, value);
+          }
+        }
+        (vnode.children || []).forEach(child => {
+          if (child != null) element.appendChild(createElement(child));
+        });
+        return element;
+      }
+
+      function zylixRender(vnode, container) {
+        if (typeof vnode.type === 'function') {
+          rootComponent = vnode.type;
+          rootContainer = container;
+        }
+        container.innerHTML = '';
+        hookIndex = 0;
+        container.appendChild(createElement(vnode));
+      }
+
+      function rerender() {
+        if (rootComponent && rootContainer) {
+          hookIndex = 0;
+          rootContainer.innerHTML = '';
+          rootContainer.appendChild(createElement(h(rootComponent)));
+        }
+      }
+
+      function useState(initial) {
+        const idx = hookIndex++;
+        if (hooks[idx] === undefined) {
+          hooks[idx] = typeof initial === 'function' ? initial() : initial;
+        }
+        const setState = (newState) => {
+          hooks[idx] = typeof newState === 'function' ? newState(hooks[idx]) : newState;
+          rerender();
+        };
+        return [hooks[idx], setState];
+      }
+
+      function useEffect(fn, deps) {
+        const idx = hookIndex++;
+        const prev = hooks[idx];
+        const hasChanged = !prev || !deps || deps.some((d, i) => d !== prev.deps?.[i]);
+        if (hasChanged) {
+          if (prev?.cleanup) prev.cleanup();
+          const cleanup = fn();
+          hooks[idx] = { deps, cleanup };
+        }
+      }
+
+      function resetHooks() {
+        hooks = [];
+        hookIndex = 0;
+        rootComponent = null;
+        rootContainer = null;
+      }
+
+      return { h, render: zylixRender, createElement, useState, useEffect, resetHooks };
+    })();
+
+    const { h, useState, useEffect } = Zylix;
+
+    // =========================================================================
+    // Zylix Testing Library Implementation
+    // =========================================================================
+    const TestingLib = (() => {
+      let testContainer = null;
+      let testContainers = [];
+
+      function getDocument() {
+        return document;
+      }
+
+      function createTestContainer() {
+        const div = document.createElement('div');
+        div.setAttribute('data-testid', 'zylix-testing-root');
+        document.body.appendChild(div);
+        testContainers.push(div);
+        return div;
+      }
+
+      // Render function
+      function render(element, options = {}) {
+        const container = options.container || createTestContainer();
+        testContainer = container;
+
+        // Clear previous content
+        container.innerHTML = '';
+
+        // Render element
+        if (element) {
+          Zylix.render(element, container);
+        }
+
+        return {
+          container,
+          baseElement: options.baseElement || document.body,
+          debug: (el) => console.log((el || container).outerHTML),
+          rerender: (newElement) => {
+            container.innerHTML = '';
+            if (newElement) Zylix.render(newElement, container);
+          },
+          unmount: () => {
+            container.innerHTML = '';
+          },
+          asFragment: () => {
+            const fragment = document.createDocumentFragment();
+            Array.from(container.childNodes).forEach(node => {
+              fragment.appendChild(node.cloneNode(true));
+            });
+            return fragment;
+          }
+        };
+      }
+
+      // Cleanup function
+      function cleanup() {
+        testContainers.forEach(c => {
+          if (c.parentNode) c.parentNode.removeChild(c);
+        });
+        testContainers = [];
+        testContainer = null;
+        Zylix.resetHooks();
+      }
+
+      // Query utilities
+      function normalizeText(text) {
+        return text.replace(/\s+/g, ' ').trim();
+      }
+
+      function matchesText(element, textOrRegex, options = {}) {
+        const text = normalizeText(element.textContent || '');
+        if (textOrRegex instanceof RegExp) {
+          return textOrRegex.test(text);
+        }
+        const target = normalizeText(String(textOrRegex));
+        return options.exact !== false ? text === target : text.includes(target);
+      }
+
+      function getContainer() {
+        return testContainer || document.body;
+      }
+
+      // Query by text
+      function queryByText(text, options = {}) {
+        const container = options.container || getContainer();
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+        let node;
+        while (node = walker.nextNode()) {
+          if (matchesText(node, text, options)) return node;
+        }
+        return null;
+      }
+
+      function getByText(text, options = {}) {
+        const el = queryByText(text, options);
+        if (!el) throw new Error(`Unable to find element with text: ${text}`);
+        return el;
+      }
+
+      function getAllByText(text, options = {}) {
+        const container = options.container || getContainer();
+        const results = [];
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+        let node;
+        while (node = walker.nextNode()) {
+          if (matchesText(node, text, options)) results.push(node);
+        }
+        return results;
+      }
+
+      async function findByText(text, options = {}) {
+        return waitFor(() => getByText(text, options), options);
+      }
+
+      // Query by test id
+      function queryByTestId(testId, options = {}) {
+        const container = options.container || getContainer();
+        return container.querySelector(`[data-testid="${testId}"]`);
+      }
+
+      function getByTestId(testId, options = {}) {
+        const el = queryByTestId(testId, options);
+        if (!el) throw new Error(`Unable to find element with data-testid: ${testId}`);
+        return el;
+      }
+
+      async function findByTestId(testId, options = {}) {
+        return waitFor(() => getByTestId(testId, options), options);
+      }
+
+      // Query by role
+      const ROLE_MAP = {
+        button: ['button', '[role="button"]'],
+        textbox: ['input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"])', 'textarea', '[role="textbox"]'],
+        checkbox: ['input[type="checkbox"]', '[role="checkbox"]'],
+        radio: ['input[type="radio"]', '[role="radio"]'],
+        combobox: ['select', '[role="combobox"]'],
+        link: ['a[href]', '[role="link"]'],
+        heading: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', '[role="heading"]'],
+        list: ['ul', 'ol', '[role="list"]'],
+        listitem: ['li', '[role="listitem"]'],
+        navigation: ['nav', '[role="navigation"]'],
+        main: ['main', '[role="main"]'],
+        article: ['article', '[role="article"]'],
+        form: ['form', '[role="form"]'],
+        alert: ['[role="alert"]'],
+        dialog: ['dialog', '[role="dialog"]'],
+        img: ['img', '[role="img"]'],
+        table: ['table', '[role="table"]'],
+        row: ['tr', '[role="row"]'],
+        cell: ['td', 'th', '[role="cell"]'],
+        menuitem: ['[role="menuitem"]'],
+        menu: ['[role="menu"]']
+      };
+
+      function queryByRole(role, options = {}) {
+        const container = options.container || getContainer();
+        const selectors = ROLE_MAP[role] || [`[role="${role}"]`];
+        const selector = selectors.join(', ');
+
+        const elements = container.querySelectorAll(selector);
+
+        for (const el of elements) {
+          if (options.name) {
+            const name = el.textContent || el.getAttribute('aria-label') || '';
+            const nameMatch = options.name instanceof RegExp
+              ? options.name.test(name)
+              : normalizeText(name).includes(normalizeText(options.name));
+            if (!nameMatch) continue;
+          }
+          return el;
+        }
+        return null;
+      }
+
+      function getByRole(role, options = {}) {
+        const el = queryByRole(role, options);
+        if (!el) throw new Error(`Unable to find element with role: ${role}`);
+        return el;
+      }
+
+      function getAllByRole(role, options = {}) {
+        const container = options.container || getContainer();
+        const selectors = ROLE_MAP[role] || [`[role="${role}"]`];
+        const selector = selectors.join(', ');
+        return Array.from(container.querySelectorAll(selector));
+      }
+
+      // Query by placeholder
+      function queryByPlaceholder(placeholder, options = {}) {
+        const container = options.container || getContainer();
+        return container.querySelector(`[placeholder="${placeholder}"]`);
+      }
+
+      function getByPlaceholder(placeholder, options = {}) {
+        const el = queryByPlaceholder(placeholder, options);
+        if (!el) throw new Error(`Unable to find element with placeholder: ${placeholder}`);
+        return el;
+      }
+
+      // Query by label text
+      function queryByLabelText(labelText, options = {}) {
+        const container = options.container || getContainer();
+        const labels = container.querySelectorAll('label');
+        for (const label of labels) {
+          if (matchesText(label, labelText, options)) {
+            const forId = label.getAttribute('for');
+            if (forId) {
+              return container.querySelector(`#${forId}`);
+            }
+            return label.querySelector('input, select, textarea');
+          }
+        }
+        return null;
+      }
+
+      function getByLabelText(labelText, options = {}) {
+        const el = queryByLabelText(labelText, options);
+        if (!el) throw new Error(`Unable to find element with label text: ${labelText}`);
+        return el;
+      }
+
+      // Screen object with all queries
+      const screen = {
+        queryByText,
+        getByText,
+        getAllByText,
+        findByText,
+        queryByTestId,
+        getByTestId,
+        findByTestId,
+        queryByRole,
+        getByRole,
+        getAllByRole,
+        queryByPlaceholder,
+        getByPlaceholder,
+        queryByLabelText,
+        getByLabelText,
+        debug: () => console.log(getContainer().outerHTML)
+      };
+
+      // Within - scoped queries
+      function within(element) {
+        return {
+          queryByText: (text, opts) => queryByText(text, { ...opts, container: element }),
+          getByText: (text, opts) => getByText(text, { ...opts, container: element }),
+          getAllByText: (text, opts) => getAllByText(text, { ...opts, container: element }),
+          queryByTestId: (id, opts) => queryByTestId(id, { ...opts, container: element }),
+          getByTestId: (id, opts) => getByTestId(id, { ...opts, container: element }),
+          queryByRole: (role, opts) => queryByRole(role, { ...opts, container: element }),
+          getByRole: (role, opts) => getByRole(role, { ...opts, container: element }),
+          getAllByRole: (role, opts) => getAllByRole(role, { ...opts, container: element })
+        };
+      }
+
+      // Fire event utilities
+      const fireEvent = {
+        click: (element, options = {}) => {
+          const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        dblClick: (element, options = {}) => {
+          const event = new MouseEvent('dblclick', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        input: (element, options = {}) => {
+          if (options.target && options.target.value !== undefined) {
+            element.value = options.target.value;
+          }
+          const event = new Event('input', { bubbles: true, cancelable: true });
+          element.dispatchEvent(event);
+        },
+        change: (element, options = {}) => {
+          if (options.target && options.target.value !== undefined) {
+            element.value = options.target.value;
+          }
+          const event = new Event('change', { bubbles: true, cancelable: true });
+          element.dispatchEvent(event);
+        },
+        keyDown: (element, options = {}) => {
+          const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        keyUp: (element, options = {}) => {
+          const event = new KeyboardEvent('keyup', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        keyPress: (element, options = {}) => {
+          const event = new KeyboardEvent('keypress', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        focus: (element) => {
+          element.focus();
+          element.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+        },
+        blur: (element) => {
+          element.blur();
+          element.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+        },
+        submit: (element) => {
+          const event = new Event('submit', { bubbles: true, cancelable: true });
+          element.dispatchEvent(event);
+        },
+        mouseOver: (element, options = {}) => {
+          const event = new MouseEvent('mouseover', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        },
+        mouseOut: (element, options = {}) => {
+          const event = new MouseEvent('mouseout', { bubbles: true, cancelable: true, ...options });
+          element.dispatchEvent(event);
+        }
+      };
+
+      // User event utilities (higher-level)
+      const userEvent = {
+        type: async (element, text) => {
+          element.focus();
+          for (const char of text) {
+            fireEvent.keyDown(element, { key: char });
+            element.value = (element.value || '') + char;
+            fireEvent.input(element, { target: { value: element.value } });
+            fireEvent.keyUp(element, { key: char });
+            await new Promise(r => setTimeout(r, 1));
+          }
+        },
+        clear: async (element) => {
+          element.focus();
+          element.value = '';
+          fireEvent.input(element, { target: { value: '' } });
+        },
+        click: async (element) => {
+          fireEvent.click(element);
+        },
+        dblClick: async (element) => {
+          fireEvent.dblClick(element);
+        },
+        selectOptions: async (element, values) => {
+          for (const option of element.options) {
+            option.selected = values.includes(option.value);
+          }
+          fireEvent.change(element);
+        },
+        tab: async () => {
+          const focused = document.activeElement;
+          const focusables = document.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          const arr = Array.from(focusables);
+          const idx = arr.indexOf(focused);
+          const next = arr[idx + 1] || arr[0];
+          if (next) next.focus();
+        }
+      };
+
+      // Wait utilities
+      async function waitFor(callback, options = {}) {
+        const { timeout = 1000, interval = 50 } = options;
+        const start = Date.now();
+
+        while (Date.now() - start < timeout) {
+          try {
+            return callback();
+          } catch (error) {
+            await new Promise(r => setTimeout(r, interval));
+          }
+        }
+
+        throw new Error(`waitFor timed out after ${timeout}ms`);
+      }
+
+      async function waitForElementToBeRemoved(element, options = {}) {
+        const { timeout = 1000, interval = 50 } = options;
+        const start = Date.now();
+
+        while (Date.now() - start < timeout) {
+          if (!element.isConnected || !document.body.contains(element)) {
+            return;
+          }
+          await new Promise(r => setTimeout(r, interval));
+        }
+
+        throw new Error(`Element was not removed within ${timeout}ms`);
+      }
+
+      // Expect matchers
+      function expect(actual) {
+        const matchers = {
+          toBe: (expected) => {
+            if (actual !== expected) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to be ${JSON.stringify(expected)}`);
+            }
+          },
+          toEqual: (expected) => {
+            const actualStr = JSON.stringify(actual);
+            const expectedStr = JSON.stringify(expected);
+            if (actualStr !== expectedStr) {
+              throw new Error(`Expected ${actualStr} to equal ${expectedStr}`);
+            }
+          },
+          toBeNull: () => {
+            if (actual !== null) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to be null`);
+            }
+          },
+          toBeUndefined: () => {
+            if (actual !== undefined) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to be undefined`);
+            }
+          },
+          toBeTruthy: () => {
+            if (!actual) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to be truthy`);
+            }
+          },
+          toBeFalsy: () => {
+            if (actual) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to be falsy`);
+            }
+          },
+          toContain: (item) => {
+            const contains = Array.isArray(actual)
+              ? actual.includes(item)
+              : String(actual).includes(String(item));
+            if (!contains) {
+              throw new Error(`Expected ${JSON.stringify(actual)} to contain ${JSON.stringify(item)}`);
+            }
+          },
+          toHaveLength: (length) => {
+            if (actual.length !== length) {
+              throw new Error(`Expected length ${actual.length} to be ${length}`);
+            }
+          },
+          toBeGreaterThan: (value) => {
+            if (!(actual > value)) {
+              throw new Error(`Expected ${actual} to be greater than ${value}`);
+            }
+          },
+          toBeLessThan: (value) => {
+            if (!(actual < value)) {
+              throw new Error(`Expected ${actual} to be less than ${value}`);
+            }
+          },
+          toBeInTheDocument: () => {
+            if (!actual || !document.body.contains(actual)) {
+              throw new Error('Expected element to be in the document');
+            }
+          },
+          toHaveTextContent: (text) => {
+            const content = actual.textContent || '';
+            const matches = text instanceof RegExp ? text.test(content) : content.includes(text);
+            if (!matches) {
+              throw new Error(`Expected element to have text content "${text}", got "${content}"`);
+            }
+          },
+          toHaveAttribute: (name, value) => {
+            const attr = actual.getAttribute(name);
+            if (value !== undefined) {
+              if (attr !== value) {
+                throw new Error(`Expected attribute "${name}" to be "${value}", got "${attr}"`);
+              }
+            } else if (!actual.hasAttribute(name)) {
+              throw new Error(`Expected element to have attribute "${name}"`);
+            }
+          },
+          toHaveClass: (className) => {
+            if (!actual.classList.contains(className)) {
+              throw new Error(`Expected element to have class "${className}"`);
+            }
+          },
+          toBeVisible: () => {
+            const style = getComputedStyle(actual);
+            const hidden = style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0';
+            if (hidden) {
+              throw new Error('Expected element to be visible');
+            }
+          },
+          toBeDisabled: () => {
+            if (!actual.disabled && !actual.hasAttribute('disabled')) {
+              throw new Error('Expected element to be disabled');
+            }
+          },
+          toBeEnabled: () => {
+            if (actual.disabled || actual.hasAttribute('disabled')) {
+              throw new Error('Expected element to be enabled');
+            }
+          },
+          toHaveValue: (value) => {
+            if (actual.value !== value) {
+              throw new Error(`Expected value "${actual.value}" to be "${value}"`);
+            }
+          },
+          toThrow: (message) => {
+            let threw = false;
+            let error;
+            try {
+              actual();
+            } catch (e) {
+              threw = true;
+              error = e;
+            }
+            if (!threw) {
+              throw new Error('Expected function to throw');
+            }
+            if (message && !error.message.includes(message)) {
+              throw new Error(`Expected error message to include "${message}"`);
+            }
+          }
+        };
+
+        // Add not modifier
+        matchers.not = {};
+        for (const [name, fn] of Object.entries(matchers)) {
+          if (name === 'not') continue;
+          matchers.not[name] = (...args) => {
+            let threw = false;
+            try {
+              fn(...args);
+            } catch {
+              threw = true;
+            }
+            if (!threw) {
+              throw new Error(`Expected assertion to fail but it passed`);
+            }
+          };
+        }
+
+        return matchers;
+      }
+
+      // Mock store
+      function createMockStore(options = {}) {
+        const { initialState = {}, actions = {}, selectors = {} } = options;
+        let state = { ...initialState };
+        const actionHistory = [];
+        const listeners = new Set();
+
+        const store = {
+          getState: () => state,
+          setState: (newState) => {
+            state = typeof newState === 'function' ? newState(state) : newState;
+            listeners.forEach(fn => fn(state));
+          },
+          subscribe: (fn) => {
+            listeners.add(fn);
+            return () => listeners.delete(fn);
+          },
+          actions: {},
+          selectors: {},
+          getActionHistory: () => [...actionHistory],
+          clearActionHistory: () => actionHistory.length = 0,
+          reset: () => {
+            state = { ...initialState };
+            actionHistory.length = 0;
+          }
+        };
+
+        // Create actions
+        for (const [name, fn] of Object.entries(actions)) {
+          store.actions[name] = (...args) => {
+            actionHistory.push({ type: name, payload: args, timestamp: Date.now() });
+            store.setState(fn(state, ...args));
+          };
+        }
+
+        // Create selectors
+        for (const [name, fn] of Object.entries(selectors)) {
+          Object.defineProperty(store.selectors, name, {
+            get: () => fn(state)
+          });
+        }
+
+        return store;
+      }
+
+      // Mock server
+      function createMockServer() {
+        const routes = new Map();
+        const requestHistory = [];
+        const originalFetch = window.fetch;
+
+        function createHandler(method, path, response, options = {}) {
+          const key = `${method}:${path}`;
+          routes.set(key, { response, options });
+        }
+
+        // Override fetch
+        window.fetch = async (url, init = {}) => {
+          const method = (init.method || 'GET').toUpperCase();
+          const key = `${method}:${url}`;
+          const route = routes.get(key);
+
+          requestHistory.push({
+            url,
+            method,
+            headers: init.headers,
+            body: init.body,
+            timestamp: Date.now()
+          });
+
+          if (!route) {
+            return originalFetch(url, init);
+          }
+
+          const { response, options } = route;
+
+          if (options.delay) {
+            await new Promise(r => setTimeout(r, options.delay));
+          }
+
+          if (options.networkError) {
+            throw new Error('Network error');
+          }
+
+          return {
+            ok: (options.status || 200) < 400,
+            status: options.status || 200,
+            statusText: options.statusText || 'OK',
+            headers: new Headers(options.headers || {}),
+            json: async () => response,
+            text: async () => JSON.stringify(response),
+            blob: async () => new Blob([JSON.stringify(response)])
+          };
+        };
+
+        return {
+          get: (path, response, options) => createHandler('GET', path, response, options),
+          post: (path, response, options) => createHandler('POST', path, response, options),
+          put: (path, response, options) => createHandler('PUT', path, response, options),
+          delete: (path, response, options) => createHandler('DELETE', path, response, options),
+          patch: (path, response, options) => createHandler('PATCH', path, response, options),
+          getRequestHistory: () => [...requestHistory],
+          clearRequestHistory: () => requestHistory.length = 0,
+          restore: () => {
+            window.fetch = originalFetch;
+            routes.clear();
+            requestHistory.length = 0;
+          }
+        };
+      }
+
+      return {
+        render,
+        cleanup,
+        screen,
+        within,
+        fireEvent,
+        userEvent,
+        waitFor,
+        waitForElementToBeRemoved,
+        expect,
+        createMockStore,
+        createMockServer
+      };
+    })();
+
+    const { render, cleanup, screen, within, fireEvent, userEvent, waitFor, waitForElementToBeRemoved, expect, createMockStore, createMockServer } = TestingLib;
+
+    // =========================================================================
+    // Test Runner
+    // =========================================================================
+    const results = document.getElementById('results');
+    const passedEl = document.getElementById('passed');
+    const failedEl = document.getElementById('failed');
+
+    let passed = 0;
+    let failed = 0;
+    let groupElement = null;
+
+    function startGroup(name) {
+      groupElement = document.createElement('div');
+      groupElement.className = 'test-group';
+      groupElement.innerHTML = `
+        <div class="group-header">
+          <span>${name}</span>
+          <span class="group-stats"></span>
+        </div>
+      `;
+      results.appendChild(groupElement);
+    }
+
+    function updateGroupStats() {
+      if (groupElement) {
+        const stats = groupElement.querySelector('.group-stats');
+        const tests = groupElement.querySelectorAll('.test-item');
+        const passCount = groupElement.querySelectorAll('.test-item.pass').length;
+        stats.textContent = `${passCount}/${tests.length}`;
+      }
+    }
+
+    async function test(name, fn) {
+      const item = document.createElement('div');
+      item.className = 'test-item running';
+      item.innerHTML = `
+        <div class="status running">...</div>
+        <span class="test-name">${name}</span>
+        <span class="test-time">running</span>
+      `;
+      groupElement.appendChild(item);
+
+      const start = performance.now();
+      try {
+        cleanup();
+        await fn();
+
+        const time = (performance.now() - start).toFixed(1);
+        item.className = 'test-item pass';
+        item.querySelector('.status').className = 'status pass';
+        item.querySelector('.status').textContent = '✓';
+        item.querySelector('.test-time').textContent = `${time}ms`;
+        passed++;
+        passedEl.textContent = passed;
+      } catch (error) {
+        const time = (performance.now() - start).toFixed(1);
+        item.className = 'test-item fail';
+        item.querySelector('.status').className = 'status fail';
+        item.querySelector('.status').textContent = '✗';
+        item.querySelector('.test-time').textContent = `${time}ms`;
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-msg';
+        errorDiv.textContent = error.message || String(error);
+        item.after(errorDiv);
+
+        failed++;
+        failedEl.textContent = failed;
+        console.error(`Test failed: ${name}`, error);
+      }
+      updateGroupStats();
+    }
+
+    // =========================================================================
+    // Test Components
+    // =========================================================================
+    function Counter() {
+      const [count, setCount] = useState(0);
+      return h('div', {},
+        h('span', { 'data-testid': 'count' }, `Count: ${count}`),
+        h('button', { onClick: () => setCount(c => c + 1) }, 'Increment'),
+        h('button', { onClick: () => setCount(c => c - 1) }, 'Decrement')
+      );
+    }
+
+    function AsyncComponent() {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        setTimeout(() => {
+          setData('Loaded!');
+          setLoading(false);
+        }, 50);
+      }, []);
+
+      if (loading) return h('div', { 'data-testid': 'loading' }, 'Loading...');
+      return h('div', { 'data-testid': 'content' }, data);
+    }
+
+    function FormComponent() {
+      const [value, setValue] = useState('');
+      const [submitted, setSubmitted] = useState(false);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (value.trim()) setSubmitted(true);
+      };
+
+      if (submitted) {
+        return h('div', { 'data-testid': 'success' }, `Submitted: ${value}`);
+      }
+
+      return h('form', { onSubmit: handleSubmit },
+        h('label', { for: 'name' }, 'Name:'),
+        h('input', {
+          id: 'name',
+          type: 'text',
+          placeholder: 'Enter name',
+          value,
+          onInput: (e) => setValue(e.target.value)
+        }),
+        h('button', { type: 'submit' }, 'Submit')
+      );
+    }
+
+    // =========================================================================
+    // Run Tests
+    // =========================================================================
+    async function runTests() {
+      // =====================================================================
+      // render() Tests
+      // =====================================================================
+      startGroup('render()');
+
+      await test('renders a simple element', () => {
+        const { container } = render(h('div', {}, 'Hello'));
+        expect(container.textContent).toBe('Hello');
+      });
+
+      await test('renders nested elements', () => {
+        const { container } = render(h('div', {}, h('span', {}, 'Child 1'), h('span', {}, 'Child 2')));
+        expect(container.querySelectorAll('span').length).toBe(2);
+      });
+
+      await test('renders component', () => {
+        const { container } = render(h(Counter));
+        expect(container.querySelector('[data-testid="count"]').textContent).toBe('Count: 0');
+      });
+
+      await test('returns unmount function', () => {
+        const { container, unmount } = render(h('div', {}, 'Unmount me'));
+        expect(container.textContent).toBe('Unmount me');
+        unmount();
+        expect(container.textContent).toBe('');
+      });
+
+      await test('returns rerender function', () => {
+        const { container, rerender } = render(h('div', {}, 'First'));
+        expect(container.textContent).toBe('First');
+        rerender(h('div', {}, 'Second'));
+        expect(container.textContent).toBe('Second');
+      });
+
+      // =====================================================================
+      // screen Query Tests
+      // =====================================================================
+      startGroup('screen queries');
+
+      await test('getByText finds element by text', () => {
+        render(h('div', {}, 'Hello World'));
+        const el = screen.getByText('Hello World');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('getByText with regex', () => {
+        render(h('div', {}, 'Hello World'));
+        const el = screen.getByText(/hello/i);
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('queryByText returns null when not found', () => {
+        render(h('div', {}, 'Hello'));
+        const el = screen.queryByText('Goodbye');
+        expect(el).toBe(null);
+      });
+
+      await test('getByTestId finds element by data-testid', () => {
+        render(h('div', { 'data-testid': 'my-element' }, 'Content'));
+        const el = screen.getByTestId('my-element');
+        expect(el).toBeInTheDocument();
+        expect(el.textContent).toBe('Content');
+      });
+
+      await test('getByRole finds button', () => {
+        render(h('button', {}, 'Click'));
+        const el = screen.getByRole('button');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('getByRole with name option', () => {
+        render(h('div', {}, h('button', {}, 'Save'), h('button', {}, 'Cancel')));
+        const el = screen.getByRole('button', { name: 'Save' });
+        expect(el.textContent).toBe('Save');
+      });
+
+      await test('getByPlaceholder finds input', () => {
+        render(h('input', { placeholder: 'Enter email' }));
+        const el = screen.getByPlaceholder('Enter email');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('getByLabelText finds input by label', () => {
+        render(h('div', {}, h('label', { for: 'email' }, 'Email'), h('input', { id: 'email', type: 'email' })));
+        const el = screen.getByLabelText('Email');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('getAllByRole returns all matching elements', () => {
+        render(h('div', {}, h('button', {}, 'One'), h('button', {}, 'Two'), h('button', {}, 'Three')));
+        const els = screen.getAllByRole('button');
+        expect(els.length).toBe(3);
+      });
+
+      await test('getByText throws when not found', () => {
+        render(h('div', {}, 'Hello'));
+        let threw = false;
+        try { screen.getByText('Goodbye'); } catch { threw = true; }
+        expect(threw).toBe(true);
+      });
+
+      // =====================================================================
+      // findBy (async) Tests
+      // =====================================================================
+      startGroup('findBy async queries');
+
+      await test('findByText waits for element', async () => {
+        render(h(AsyncComponent));
+        const el = await screen.findByText('Loaded!');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('findByTestId waits for element', async () => {
+        render(h(AsyncComponent));
+        const el = await screen.findByTestId('content');
+        expect(el).toBeInTheDocument();
+      });
+
+      // =====================================================================
+      // fireEvent Tests
+      // =====================================================================
+      startGroup('fireEvent');
+
+      await test('fireEvent.click triggers click handler', () => {
+        let clicked = false;
+        render(h('button', { onClick: () => clicked = true }, 'Click'));
+        fireEvent.click(screen.getByText('Click'));
+        expect(clicked).toBe(true);
+      });
+
+      await test('fireEvent.click updates component state', () => {
+        render(h(Counter));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 0');
+        fireEvent.click(screen.getByText('Increment'));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 1');
+      });
+
+      await test('fireEvent.input triggers input handler', () => {
+        let value = '';
+        render(h('input', { onInput: (e) => value = e.target.value }));
+        const input = screen.getByRole('textbox');
+        fireEvent.input(input, { target: { value: 'test' } });
+        expect(value).toBe('test');
+      });
+
+      await test('fireEvent.change triggers change handler', () => {
+        let value = '';
+        render(h('input', { onChange: (e) => value = e.target.value }));
+        const input = screen.getByRole('textbox');
+        fireEvent.change(input, { target: { value: 'changed' } });
+        expect(value).toBe('changed');
+      });
+
+      await test('fireEvent.keyDown triggers keydown handler', () => {
+        let key = '';
+        render(h('input', { onKeydown: (e) => key = e.key }));
+        const input = screen.getByRole('textbox');
+        fireEvent.keyDown(input, { key: 'Enter' });
+        expect(key).toBe('Enter');
+      });
+
+      await test('fireEvent.focus and blur work', () => {
+        let focused = false;
+        render(h('input', { onFocus: () => focused = true, onBlur: () => focused = false }));
+        const input = screen.getByRole('textbox');
+        fireEvent.focus(input);
+        expect(focused).toBe(true);
+        fireEvent.blur(input);
+        expect(focused).toBe(false);
+      });
+
+      await test('fireEvent.submit triggers form submission', () => {
+        let submitted = false;
+        render(h('form', { onSubmit: (e) => { e.preventDefault(); submitted = true; } }, h('button', { type: 'submit' }, 'Submit')));
+        fireEvent.submit(screen.getByRole('form'));
+        expect(submitted).toBe(true);
+      });
+
+      // =====================================================================
+      // userEvent Tests
+      // =====================================================================
+      startGroup('userEvent');
+
+      await test('userEvent.type types into input', async () => {
+        render(h('input', { type: 'text' }));
+        const input = screen.getByRole('textbox');
+        await userEvent.type(input, 'Hello');
+        expect(input.value).toBe('Hello');
+      });
+
+      await test('userEvent.clear clears input', async () => {
+        render(h('input', { type: 'text', value: 'initial' }));
+        const input = screen.getByRole('textbox');
+        await userEvent.clear(input);
+        expect(input.value).toBe('');
+      });
+
+      await test('userEvent.click clicks element', async () => {
+        let clicked = false;
+        render(h('button', { onClick: () => clicked = true }, 'Click'));
+        await userEvent.click(screen.getByText('Click'));
+        expect(clicked).toBe(true);
+      });
+
+      await test('userEvent.dblClick double-clicks element', async () => {
+        let count = 0;
+        render(h('button', { onDblclick: () => count++ }, 'Double'));
+        await userEvent.dblClick(screen.getByText('Double'));
+        expect(count).toBe(1);
+      });
+
+      await test('userEvent.selectOptions selects option', async () => {
+        render(h('select', {}, h('option', { value: 'a' }, 'Option A'), h('option', { value: 'b' }, 'Option B')));
+        const select = screen.getByRole('combobox');
+        await userEvent.selectOptions(select, ['b']);
+        expect(select.value).toBe('b');
+      });
+
+      // =====================================================================
+      // waitFor Tests
+      // =====================================================================
+      startGroup('waitFor');
+
+      await test('waitFor waits for condition', async () => {
+        let ready = false;
+        setTimeout(() => ready = true, 30);
+        await waitFor(() => { if (!ready) throw new Error('Not ready'); });
+        expect(ready).toBe(true);
+      });
+
+      await test('waitFor returns callback result', async () => {
+        render(h(AsyncComponent));
+        const el = await waitFor(() => {
+          const found = screen.queryByTestId('content');
+          if (!found) throw new Error('Not found');
+          return found;
+        });
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('waitForElementToBeRemoved waits for removal', async () => {
+        render(h(AsyncComponent));
+        const loading = screen.getByTestId('loading');
+        await waitForElementToBeRemoved(loading);
+        expect(screen.queryByTestId('loading')).toBe(null);
+      });
+
+      // =====================================================================
+      // expect() Matchers Tests
+      // =====================================================================
+      startGroup('expect() matchers');
+
+      await test('toBe checks strict equality', () => {
+        expect(1).toBe(1);
+        expect('hello').toBe('hello');
+        expect(true).toBe(true);
+      });
+
+      await test('toEqual checks deep equality', () => {
+        expect({ a: 1 }).toEqual({ a: 1 });
+        expect([1, 2, 3]).toEqual([1, 2, 3]);
+      });
+
+      await test('toBeNull checks for null', () => {
+        expect(null).toBeNull();
+      });
+
+      await test('toBeUndefined checks for undefined', () => {
+        expect(undefined).toBeUndefined();
+      });
+
+      await test('toBeTruthy and toBeFalsy work', () => {
+        expect(true).toBeTruthy();
+        expect(1).toBeTruthy();
+        expect('hello').toBeTruthy();
+        expect(false).toBeFalsy();
+        expect(0).toBeFalsy();
+        expect('').toBeFalsy();
+      });
+
+      await test('toContain checks array/string inclusion', () => {
+        expect([1, 2, 3]).toContain(2);
+        expect('hello world').toContain('world');
+      });
+
+      await test('toHaveLength checks length', () => {
+        expect([1, 2, 3]).toHaveLength(3);
+        expect('hello').toHaveLength(5);
+      });
+
+      await test('toBeGreaterThan and toBeLessThan work', () => {
+        expect(5).toBeGreaterThan(3);
+        expect(3).toBeLessThan(5);
+      });
+
+      await test('toBeInTheDocument checks DOM presence', () => {
+        render(h('div', { 'data-testid': 'test' }, 'Content'));
+        const el = screen.getByTestId('test');
+        expect(el).toBeInTheDocument();
+      });
+
+      await test('toHaveTextContent checks text', () => {
+        render(h('div', { 'data-testid': 'test' }, 'Hello World'));
+        const el = screen.getByTestId('test');
+        expect(el).toHaveTextContent('Hello World');
+        expect(el).toHaveTextContent(/hello/i);
+      });
+
+      await test('toHaveAttribute checks attributes', () => {
+        render(h('input', { type: 'email', disabled: true }));
+        const el = screen.getByRole('textbox');
+        expect(el).toHaveAttribute('type', 'email');
+        expect(el).toHaveAttribute('disabled');
+      });
+
+      await test('toHaveClass checks CSS classes', () => {
+        render(h('div', { className: 'foo bar baz' }, 'Content'));
+        const el = screen.getByText('Content');
+        expect(el).toHaveClass('foo');
+        expect(el).toHaveClass('bar');
+      });
+
+      await test('toBeVisible checks visibility', () => {
+        render(h('div', { 'data-testid': 'visible' }, 'Visible'));
+        const el = screen.getByTestId('visible');
+        expect(el).toBeVisible();
+      });
+
+      await test('toBeDisabled and toBeEnabled work', () => {
+        render(h('div', {}, h('button', { disabled: true }, 'Disabled'), h('button', {}, 'Enabled')));
+        expect(screen.getByText('Disabled')).toBeDisabled();
+        expect(screen.getByText('Enabled')).toBeEnabled();
+      });
+
+      await test('toHaveValue checks input value', () => {
+        render(h('input', { type: 'text', value: 'test value' }));
+        const el = screen.getByRole('textbox');
+        expect(el).toHaveValue('test value');
+      });
+
+      await test('toThrow checks for thrown error', () => {
+        expect(() => { throw new Error('Oops'); }).toThrow();
+        expect(() => { throw new Error('Oops'); }).toThrow('Oops');
+      });
+
+      await test('not negates matchers', () => {
+        expect(1).not.toBe(2);
+        expect(null).not.toBeUndefined();
+        expect([]).not.toContain(1);
+      });
+
+      // =====================================================================
+      // createMockStore Tests
+      // =====================================================================
+      startGroup('createMockStore');
+
+      await test('creates store with initial state', () => {
+        const store = createMockStore({ initialState: { count: 0 } });
+        expect(store.getState()).toEqual({ count: 0 });
+      });
+
+      await test('actions modify state', () => {
+        const store = createMockStore({
+          initialState: { count: 0 },
+          actions: {
+            increment: (state) => ({ ...state, count: state.count + 1 }),
+            add: (state, amount) => ({ ...state, count: state.count + amount })
+          }
+        });
+        store.actions.increment();
+        expect(store.getState().count).toBe(1);
+        store.actions.add(5);
+        expect(store.getState().count).toBe(6);
+      });
+
+      await test('tracks action history', () => {
+        const store = createMockStore({
+          initialState: { value: '' },
+          actions: { setValue: (state, value) => ({ ...state, value }) }
+        });
+        store.actions.setValue('first');
+        store.actions.setValue('second');
+        const history = store.getActionHistory();
+        expect(history).toHaveLength(2);
+        expect(history[0].type).toBe('setValue');
+        expect(history[0].payload).toEqual(['first']);
+      });
+
+      await test('clears action history', () => {
+        const store = createMockStore({
+          initialState: { count: 0 },
+          actions: { increment: (state) => ({ ...state, count: state.count + 1 }) }
+        });
+        store.actions.increment();
+        store.actions.increment();
+        expect(store.getActionHistory()).toHaveLength(2);
+        store.clearActionHistory();
+        expect(store.getActionHistory()).toHaveLength(0);
+      });
+
+      await test('resets state to initial', () => {
+        const store = createMockStore({
+          initialState: { count: 0 },
+          actions: { increment: (state) => ({ ...state, count: state.count + 1 }) }
+        });
+        store.actions.increment();
+        store.actions.increment();
+        expect(store.getState().count).toBe(2);
+        store.reset();
+        expect(store.getState().count).toBe(0);
+      });
+
+      await test('supports selectors', () => {
+        const store = createMockStore({
+          initialState: { items: [1, 2, 3, 4, 5] },
+          selectors: {
+            evenItems: (state) => state.items.filter(i => i % 2 === 0),
+            itemCount: (state) => state.items.length
+          }
+        });
+        expect(store.selectors.evenItems).toEqual([2, 4]);
+        expect(store.selectors.itemCount).toBe(5);
+      });
+
+      await test('notifies subscribers on state change', () => {
+        const store = createMockStore({
+          initialState: { count: 0 },
+          actions: { increment: (state) => ({ ...state, count: state.count + 1 }) }
+        });
+        let notified = false;
+        store.subscribe(() => notified = true);
+        store.actions.increment();
+        expect(notified).toBe(true);
+      });
+
+      // =====================================================================
+      // createMockServer Tests
+      // =====================================================================
+      startGroup('createMockServer');
+
+      await test('creates mock server', () => {
+        const server = createMockServer();
+        expect(server).toBeTruthy();
+        expect(typeof server.get).toBe('function');
+        expect(typeof server.post).toBe('function');
+        server.restore();
+      });
+
+      await test('mocks GET requests', async () => {
+        const server = createMockServer();
+        server.get('/api/users', { users: [{ id: 1, name: 'John' }] });
+        const response = await fetch('/api/users');
+        const data = await response.json();
+        expect(data.users).toHaveLength(1);
+        expect(data.users[0].name).toBe('John');
+        server.restore();
+      });
+
+      await test('mocks POST requests', async () => {
+        const server = createMockServer();
+        server.post('/api/users', { id: 2, name: 'Jane' }, { status: 201 });
+        const response = await fetch('/api/users', { method: 'POST', body: JSON.stringify({ name: 'Jane' }) });
+        const data = await response.json();
+        expect(response.status).toBe(201);
+        expect(data.name).toBe('Jane');
+        server.restore();
+      });
+
+      await test('mocks PUT and DELETE', async () => {
+        const server = createMockServer();
+        server.put('/api/users/1', { id: 1, name: 'Updated' });
+        server.delete('/api/users/1', null, { status: 204 });
+        const putResponse = await fetch('/api/users/1', { method: 'PUT' });
+        expect((await putResponse.json()).name).toBe('Updated');
+        const deleteResponse = await fetch('/api/users/1', { method: 'DELETE' });
+        expect(deleteResponse.status).toBe(204);
+        server.restore();
+      });
+
+      await test('tracks request history', async () => {
+        const server = createMockServer();
+        server.get('/api/data', { value: 1 });
+        await fetch('/api/data');
+        await fetch('/api/data');
+        const history = server.getRequestHistory();
+        expect(history).toHaveLength(2);
+        expect(history[0].url).toBe('/api/data');
+        expect(history[0].method).toBe('GET');
+        server.restore();
+      });
+
+      await test('clears request history', async () => {
+        const server = createMockServer();
+        server.get('/api/data', {});
+        await fetch('/api/data');
+        expect(server.getRequestHistory()).toHaveLength(1);
+        server.clearRequestHistory();
+        expect(server.getRequestHistory()).toHaveLength(0);
+        server.restore();
+      });
+
+      await test('mocks network errors', async () => {
+        const server = createMockServer();
+        server.get('/api/fail', null, { networkError: true });
+        let error = null;
+        try { await fetch('/api/fail'); } catch (e) { error = e; }
+        expect(error).toBeTruthy();
+        server.restore();
+      });
+
+      await test('mocks delayed responses', async () => {
+        const server = createMockServer();
+        server.get('/api/slow', { data: 'slow' }, { delay: 50 });
+        const start = Date.now();
+        await fetch('/api/slow');
+        const duration = Date.now() - start;
+        expect(duration).toBeGreaterThan(40);
+        server.restore();
+      });
+
+      // =====================================================================
+      // cleanup Tests
+      // =====================================================================
+      startGroup('cleanup');
+
+      await test('cleanup removes rendered content', () => {
+        render(h('div', { 'data-testid': 'cleanup-test' }, 'Content'));
+        expect(screen.queryByTestId('cleanup-test')).toBeInTheDocument();
+        cleanup();
+        expect(screen.queryByTestId('cleanup-test')).toBe(null);
+      });
+
+      await test('cleanup is idempotent', () => {
+        render(h('div', {}, 'Content'));
+        cleanup();
+        cleanup();
+        cleanup();
+        expect(true).toBe(true);
+      });
+
+      // =====================================================================
+      // within Tests
+      // =====================================================================
+      startGroup('within');
+
+      await test('within scopes queries to container', () => {
+        render(h('div', {},
+          h('div', { 'data-testid': 'section-a' }, h('button', {}, 'Click A')),
+          h('div', { 'data-testid': 'section-b' }, h('button', {}, 'Click B'))
+        ));
+        const sectionA = screen.getByTestId('section-a');
+        const sectionB = screen.getByTestId('section-b');
+        expect(within(sectionA).getByText('Click A')).toBeInTheDocument();
+        expect(within(sectionB).getByText('Click B')).toBeInTheDocument();
+        expect(within(sectionA).queryByText('Click B')).toBe(null);
+      });
+
+      // =====================================================================
+      // Integration Tests
+      // =====================================================================
+      startGroup('Integration Tests');
+
+      await test('full form interaction flow', async () => {
+        render(h(FormComponent));
+        const input = screen.getByPlaceholder('Enter name');
+        await userEvent.type(input, 'John Doe');
+        expect(input.value).toBe('John Doe');
+        fireEvent.click(screen.getByText('Submit'));
+        await waitFor(() => expect(screen.getByTestId('success')).toBeInTheDocument());
+        expect(screen.getByTestId('success').textContent).toBe('Submitted: John Doe');
+      });
+
+      await test('counter with store integration', () => {
+        render(h(Counter));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 0');
+        fireEvent.click(screen.getByText('Increment'));
+        fireEvent.click(screen.getByText('Increment'));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 2');
+        fireEvent.click(screen.getByText('Decrement'));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 1');
+      });
+
+      await test('async data loading', async () => {
+        render(h(AsyncComponent));
+        expect(screen.getByTestId('loading')).toBeInTheDocument();
+        expect(screen.queryByTestId('content')).toBe(null);
+        await waitFor(() => expect(screen.queryByTestId('content')).toBeInTheDocument());
+        expect(screen.queryByTestId('loading')).toBe(null);
+        expect(screen.getByTestId('content').textContent).toBe('Loaded!');
+      });
+
+      await test('mock store with component', () => {
+        const store = createMockStore({
+          initialState: { todos: [] },
+          actions: { addTodo: (state, text) => ({ ...state, todos: [...state.todos, { id: Date.now(), text }] }) }
+        });
+        store.actions.addTodo('Buy milk');
+        store.actions.addTodo('Walk dog');
+        expect(store.getState().todos).toHaveLength(2);
+        expect(store.getActionHistory()).toHaveLength(2);
+        expect(store.getActionHistory()[0].payload).toEqual(['Buy milk']);
+      });
+
+      await test('mock server with fetch', async () => {
+        const server = createMockServer();
+        server.get('/api/items', { items: [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }] });
+        const response = await fetch('/api/items');
+        const data = await response.json();
+        expect(data.items).toHaveLength(2);
+        expect(data.items[0].name).toBe('Item 1');
+        expect(server.getRequestHistory()).toHaveLength(1);
+        server.restore();
+      });
+
+      // =====================================================================
+      // Edge Cases
+      // =====================================================================
+      startGroup('Edge Cases');
+
+      await test('handles empty renders', () => {
+        const { container } = render(null);
+        expect(container.textContent).toBe('');
+      });
+
+      await test('handles boolean children', () => {
+        const { container } = render(h('div', {}, true && h('span', {}, 'Visible'), false && h('span', {}, 'Hidden')));
+        expect(container.querySelectorAll('span').length).toBe(1);
+        expect(container.textContent).toBe('Visible');
+      });
+
+      await test('handles array children', () => {
+        const items = ['A', 'B', 'C'];
+        const { container } = render(h('ul', {}, ...items.map(item => h('li', {}, item))));
+        expect(container.querySelectorAll('li').length).toBe(3);
+      });
+
+      await test('handles special characters in text', () => {
+        const xssText = '<scr' + 'ipt>alert("xss")<\/scr' + 'ipt>';
+        render(h('div', { 'data-testid': 'special' }, xssText));
+        const el = screen.getByTestId('special');
+        expect(el.textContent).toBe(xssText);
+      });
+
+      await test('handles rapid state updates', () => {
+        render(h(Counter));
+        for (let i = 0; i < 10; i++) fireEvent.click(screen.getByText('Increment'));
+        expect(screen.getByTestId('count').textContent).toBe('Count: 10');
+      });
+
+      await test('handles multiple concurrent waits', async () => {
+        let val1 = false, val2 = false;
+        setTimeout(() => val1 = true, 20);
+        setTimeout(() => val2 = true, 40);
+        await Promise.all([
+          waitFor(() => { if (!val1) throw new Error(); }),
+          waitFor(() => { if (!val2) throw new Error(); })
+        ]);
+        expect(val1).toBe(true);
+        expect(val2).toBe(true);
+      });
+
+      // Final summary
+      console.log(`\n✅ Testing Library Tests Complete: ${passed} passed, ${failed} failed`);
+    }
+
+    runTests().catch(console.error);
+  </script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Todo MVC</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    #app { max-width: 600px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    // =========================================================================
+    // Zylix Todo MVC - CRUD Example
+    // =========================================================================
+
+    // Zylix Core & Store (simplified)
+    const Zylix = (() => {
+      let hooks = [], hookIndex = 0, rootComponent = null, rootContainer = null;
+
+      function h(type, props, ...children) {
+        return { type, props: props || {}, children: children.flat() };
+      }
+
+      function createElement(vnode) {
+        if (vnode == null || vnode === false) return document.createTextNode('');
+        if (typeof vnode === 'string' || typeof vnode === 'number') {
+          return document.createTextNode(vnode);
+        }
+        if (Array.isArray(vnode)) {
+          const fragment = document.createDocumentFragment();
+          vnode.forEach(v => fragment.appendChild(createElement(v)));
+          return fragment;
+        }
+        if (typeof vnode.type === 'function') {
+          return createElement(vnode.type(vnode.props));
+        }
+        const element = document.createElement(vnode.type);
+        for (const [key, value] of Object.entries(vnode.props)) {
+          if (key.startsWith('on')) {
+            element.addEventListener(key.slice(2).toLowerCase(), value);
+          } else if (key === 'style' && typeof value === 'object') {
+            Object.assign(element.style, value);
+          } else if (key === 'className') {
+            element.className = value;
+          } else if (key === 'checked') {
+            element.checked = value;
+          } else if (value !== false && value != null) {
+            element.setAttribute(key, value);
+          }
+        }
+        vnode.children.forEach(child => {
+          if (child != null) element.appendChild(createElement(child));
+        });
+        return element;
+      }
+
+      function render(vnode, container) {
+        if (typeof vnode.type === 'function') {
+          rootComponent = vnode.type;
+          rootContainer = container;
+        }
+        container.innerHTML = '';
+        hookIndex = 0;
+        container.appendChild(createElement(vnode));
+      }
+
+      function rerender() {
+        if (rootComponent && rootContainer) {
+          hookIndex = 0;
+          rootContainer.innerHTML = '';
+          rootContainer.appendChild(createElement(h(rootComponent)));
+        }
+      }
+
+      function useState(initial) {
+        const idx = hookIndex++;
+        if (hooks[idx] === undefined) {
+          hooks[idx] = typeof initial === 'function' ? initial() : initial;
+        }
+        const setState = (newState) => {
+          hooks[idx] = typeof newState === 'function' ? newState(hooks[idx]) : newState;
+          rerender();
+        };
+        return [hooks[idx], setState];
+      }
+
+      function useEffect(fn, deps) {
+        const idx = hookIndex++;
+        const prev = hooks[idx];
+        const hasChanged = !prev || !deps || deps.some((d, i) => d !== prev.deps?.[i]);
+        if (hasChanged) {
+          if (prev?.cleanup) prev.cleanup();
+          const cleanup = fn();
+          hooks[idx] = { deps, cleanup };
+        }
+      }
+
+      function createStore(config) {
+        let state = config.state;
+        const listeners = new Set();
+
+        function getState() { return state; }
+
+        function setState(newState) {
+          state = typeof newState === 'function' ? newState(state) : newState;
+          listeners.forEach(fn => fn(state));
+        }
+
+        function subscribe(fn) {
+          listeners.add(fn);
+          return () => listeners.delete(fn);
+        }
+
+        const actions = {};
+        for (const [name, fn] of Object.entries(config.actions || {})) {
+          actions[name] = (...args) => setState(fn(state, ...args));
+        }
+
+        const selectors = {};
+        for (const [name, fn] of Object.entries(config.selectors || {})) {
+          Object.defineProperty(selectors, name, { get: () => fn(state) });
+        }
+
+        return { getState, setState, subscribe, actions, selectors };
+      }
+
+      function useStore(store, selector = s => s) {
+        const [state, setState] = useState(() => selector(store.getState()));
+        useEffect(() => {
+          return store.subscribe(newState => setState(selector(newState)));
+        }, []);
+        return state;
+      }
+
+      return { h, render, useState, useEffect, createStore, useStore };
+    })();
+
+    const { h, render, useState, useEffect, createStore, useStore } = Zylix;
+
+    // =========================================================================
+    // Todo Store
+    // =========================================================================
+
+    const STORAGE_KEY = 'zylix-todos';
+
+    const todoStore = createStore({
+      state: {
+        todos: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
+        filter: 'all',
+        editingId: null
+      },
+
+      actions: {
+        addTodo(state, text) {
+          const todos = [
+            ...state.todos,
+            { id: Date.now(), text: text.trim(), completed: false, createdAt: Date.now() }
+          ];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos };
+        },
+
+        toggleTodo(state, id) {
+          const todos = state.todos.map(t =>
+            t.id === id ? { ...t, completed: !t.completed } : t
+          );
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos };
+        },
+
+        deleteTodo(state, id) {
+          const todos = state.todos.filter(t => t.id !== id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos };
+        },
+
+        updateTodo(state, id, text) {
+          const todos = state.todos.map(t =>
+            t.id === id ? { ...t, text: text.trim() } : t
+          );
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos, editingId: null };
+        },
+
+        setFilter(state, filter) {
+          return { ...state, filter };
+        },
+
+        setEditing(state, id) {
+          return { ...state, editingId: id };
+        },
+
+        clearCompleted(state) {
+          const todos = state.todos.filter(t => !t.completed);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos };
+        },
+
+        toggleAll(state) {
+          const allCompleted = state.todos.every(t => t.completed);
+          const todos = state.todos.map(t => ({ ...t, completed: !allCompleted }));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+          return { ...state, todos };
+        }
+      },
+
+      selectors: {
+        filteredTodos: (state) => {
+          switch (state.filter) {
+            case 'active': return state.todos.filter(t => !t.completed);
+            case 'completed': return state.todos.filter(t => t.completed);
+            default: return state.todos;
+          }
+        },
+        activeCount: (state) => state.todos.filter(t => !t.completed).length,
+        completedCount: (state) => state.todos.filter(t => t.completed).length,
+        allCompleted: (state) => state.todos.length > 0 && state.todos.every(t => t.completed)
+      }
+    });
+
+    // =========================================================================
+    // Styles
+    // =========================================================================
+
+    const styles = {
+      container: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '16px',
+        overflow: 'hidden'
+      },
+      header: {
+        padding: '30px',
+        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+        textAlign: 'center'
+      },
+      title: {
+        fontSize: '2rem',
+        fontWeight: 'bold',
+        marginBottom: '20px'
+      },
+      inputContainer: {
+        display: 'flex',
+        gap: '10px'
+      },
+      input: {
+        flex: 1,
+        padding: '12px 16px',
+        fontSize: '1rem',
+        border: 'none',
+        borderRadius: '8px',
+        background: 'rgba(255,255,255,0.2)',
+        color: 'white',
+        outline: 'none'
+      },
+      addButton: {
+        padding: '12px 24px',
+        fontSize: '1rem',
+        border: 'none',
+        borderRadius: '8px',
+        background: 'rgba(255,255,255,0.3)',
+        color: 'white',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+      },
+      todoList: {
+        listStyle: 'none'
+      },
+      todoItem: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '15px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        gap: '15px'
+      },
+      checkbox: {
+        width: '24px',
+        height: '24px',
+        cursor: 'pointer',
+        accentColor: '#4f46e5'
+      },
+      todoText: {
+        flex: 1,
+        fontSize: '1rem'
+      },
+      completed: {
+        textDecoration: 'line-through',
+        opacity: 0.5
+      },
+      editInput: {
+        flex: 1,
+        padding: '8px 12px',
+        fontSize: '1rem',
+        border: '2px solid #4f46e5',
+        borderRadius: '6px',
+        background: 'rgba(0,0,0,0.3)',
+        color: 'white',
+        outline: 'none'
+      },
+      deleteButton: {
+        padding: '6px 12px',
+        fontSize: '0.9rem',
+        border: 'none',
+        borderRadius: '6px',
+        background: '#dc2626',
+        color: 'white',
+        cursor: 'pointer',
+        opacity: 0.7
+      },
+      footer: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '15px 20px',
+        background: 'rgba(0,0,0,0.2)',
+        flexWrap: 'wrap',
+        gap: '10px'
+      },
+      count: {
+        fontSize: '0.9rem',
+        color: '#9ca3af'
+      },
+      filters: {
+        display: 'flex',
+        gap: '5px'
+      },
+      filterButton: {
+        padding: '6px 12px',
+        fontSize: '0.85rem',
+        border: '1px solid transparent',
+        borderRadius: '4px',
+        background: 'transparent',
+        color: '#9ca3af',
+        cursor: 'pointer'
+      },
+      filterActive: {
+        borderColor: '#4f46e5',
+        color: '#818cf8'
+      },
+      clearButton: {
+        padding: '6px 12px',
+        fontSize: '0.85rem',
+        border: 'none',
+        borderRadius: '4px',
+        background: 'transparent',
+        color: '#9ca3af',
+        cursor: 'pointer'
+      },
+      empty: {
+        padding: '40px',
+        textAlign: 'center',
+        color: '#6b7280'
+      },
+      toggleAll: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '10px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        cursor: 'pointer'
+      }
+    };
+
+    // =========================================================================
+    // Components
+    // =========================================================================
+
+    function TodoInput() {
+      const [text, setText] = useState('');
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (text.trim()) {
+          todoStore.actions.addTodo(text);
+          setText('');
+        }
+      };
+
+      return h('form', { style: styles.inputContainer, onSubmit: handleSubmit },
+        h('input', {
+          type: 'text',
+          placeholder: 'What needs to be done?',
+          value: text,
+          style: styles.input,
+          onInput: (e) => setText(e.target.value)
+        }),
+        h('button', { type: 'submit', style: styles.addButton }, 'Add')
+      );
+    }
+
+    function TodoItem({ todo }) {
+      const [editText, setEditText] = useState(todo.text);
+      const state = useStore(todoStore);
+      const isEditing = state.editingId === todo.id;
+
+      const handleDoubleClick = () => {
+        todoStore.actions.setEditing(todo.id);
+        setEditText(todo.text);
+      };
+
+      const handleBlur = () => {
+        if (editText.trim()) {
+          todoStore.actions.updateTodo(todo.id, editText);
+        } else {
+          todoStore.actions.setEditing(null);
+        }
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+          handleBlur();
+        } else if (e.key === 'Escape') {
+          setEditText(todo.text);
+          todoStore.actions.setEditing(null);
+        }
+      };
+
+      return h('li', { style: styles.todoItem },
+        h('input', {
+          type: 'checkbox',
+          checked: todo.completed,
+          style: styles.checkbox,
+          onChange: () => todoStore.actions.toggleTodo(todo.id)
+        }),
+
+        isEditing
+          ? h('input', {
+              type: 'text',
+              value: editText,
+              style: styles.editInput,
+              onInput: (e) => setEditText(e.target.value),
+              onBlur: handleBlur,
+              onKeydown: handleKeyDown,
+              autofocus: true
+            })
+          : h('span', {
+              style: {
+                ...styles.todoText,
+                ...(todo.completed ? styles.completed : {})
+              },
+              onDblclick: handleDoubleClick
+            }, todo.text),
+
+        !isEditing && h('button', {
+          style: styles.deleteButton,
+          onClick: () => todoStore.actions.deleteTodo(todo.id)
+        }, 'Delete')
+      );
+    }
+
+    function TodoList() {
+      const state = useStore(todoStore);
+      const todos = todoStore.selectors.filteredTodos;
+
+      if (state.todos.length === 0) {
+        return h('div', { style: styles.empty },
+          h('p', {}, 'No todos yet!'),
+          h('p', { style: { fontSize: '0.9rem', marginTop: '10px' } },
+            'Add one above to get started.'
+          )
+        );
+      }
+
+      return h('div', {},
+        // Toggle All
+        state.todos.length > 0 && h('div', {
+          style: styles.toggleAll,
+          onClick: () => todoStore.actions.toggleAll()
+        },
+          h('input', {
+            type: 'checkbox',
+            checked: todoStore.selectors.allCompleted,
+            style: styles.checkbox,
+            readOnly: true
+          }),
+          h('span', { style: { color: '#9ca3af' } }, 'Mark all as complete')
+        ),
+
+        // Todo List
+        h('ul', { style: styles.todoList },
+          ...todos.map(todo => h(TodoItem, { key: todo.id, todo }))
+        )
+      );
+    }
+
+    function Footer() {
+      const state = useStore(todoStore);
+      const activeCount = todoStore.selectors.activeCount;
+      const completedCount = todoStore.selectors.completedCount;
+
+      if (state.todos.length === 0) return null;
+
+      const filterButton = (filter, label) => h('button', {
+        style: {
+          ...styles.filterButton,
+          ...(state.filter === filter ? styles.filterActive : {})
+        },
+        onClick: () => todoStore.actions.setFilter(filter)
+      }, label);
+
+      return h('div', { style: styles.footer },
+        h('span', { style: styles.count },
+          `${activeCount} item${activeCount !== 1 ? 's' : ''} left`
+        ),
+
+        h('div', { style: styles.filters },
+          filterButton('all', 'All'),
+          filterButton('active', 'Active'),
+          filterButton('completed', 'Completed')
+        ),
+
+        completedCount > 0 && h('button', {
+          style: styles.clearButton,
+          onClick: () => todoStore.actions.clearCompleted()
+        }, 'Clear completed')
+      );
+    }
+
+    function TodoApp() {
+      return h('div', { style: styles.container },
+        h('header', { style: styles.header },
+          h('h1', { style: styles.title }, 'Zylix Todos'),
+          h(TodoInput)
+        ),
+        h(TodoList),
+        h(Footer)
+      );
+    }
+
+    // =========================================================================
+    // Mount Application
+    // =========================================================================
+
+    render(h(TodoApp), document.getElementById('app'));
+
+    console.log('Zylix Todo MVC - Running!');
+  </script>
+</body>
+</html>

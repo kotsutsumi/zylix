@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zylix - Getting Started</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e4e4e7;
+      line-height: 1.6;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 280px;
+      background: rgba(0, 0, 0, 0.3);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+    }
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+    .sidebar-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+    .sidebar-link {
+      display: block;
+      color: #9ca3af;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .sidebar-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e4e4e7;
+    }
+    .sidebar-link.active {
+      background: rgba(129, 140, 248, 0.2);
+      color: #818cf8;
+    }
+    .main {
+      flex: 1;
+      margin-left: 280px;
+      padding: 40px 60px;
+      max-width: 900px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    h2 {
+      font-size: 1.8rem;
+      color: #a5b4fc;
+      margin: 50px 0 20px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2:first-of-type {
+      border-top: none;
+      margin-top: 30px;
+    }
+    h3 {
+      font-size: 1.3rem;
+      color: #c4b5fd;
+      margin: 30px 0 15px;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 15px;
+    }
+    .lead {
+      font-size: 1.2rem;
+      color: #a5b4fc;
+      margin-bottom: 30px;
+    }
+    pre {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    code {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #e4e4e7;
+    }
+    .inline-code {
+      background: rgba(129, 140, 248, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .step {
+      display: flex;
+      gap: 20px;
+      margin: 30px 0;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .step-number {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #e4e4e7;
+    }
+    .step-content p {
+      margin-bottom: 10px;
+    }
+    .step-content pre {
+      margin: 15px 0 0;
+    }
+    .tip {
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 3px solid #10b981;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .tip-title {
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .warning {
+      background: rgba(251, 191, 36, 0.1);
+      border-left: 3px solid #fbbf24;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .warning-title {
+      color: #fbbf24;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .file-tree {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.85rem;
+      margin: 20px 0;
+    }
+    .file-tree-item {
+      padding: 3px 0;
+    }
+    .file-tree-folder {
+      color: #818cf8;
+    }
+    .file-tree-file {
+      color: #9ca3af;
+    }
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: -1px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .tab.active {
+      background: #1e293b;
+      color: #818cf8;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .feature-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+    .next-steps {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 30px;
+    }
+    .next-step-card {
+      display: block;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    .next-step-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+    .next-step-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #818cf8;
+      margin-bottom: 5px;
+    }
+    .next-step-desc {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .feature-grid, .next-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-logo">Zylix Docs</div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <a href="index.html" class="sidebar-link">Introduction</a>
+        <a href="getting-started.html" class="sidebar-link active">Quick Start</a>
+        <a href="installation.html" class="sidebar-link">Installation</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core Concepts</div>
+        <a href="api-reference.html#components" class="sidebar-link">Components</a>
+        <a href="api-reference.html#hooks" class="sidebar-link">Hooks</a>
+        <a href="api-reference.html#store" class="sidebar-link">Store</a>
+        <a href="patterns.html" class="sidebar-link">Patterns</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Advanced</div>
+        <a href="api-reference.html#http" class="sidebar-link">HTTP Client</a>
+        <a href="api-reference.html#router" class="sidebar-link">Router</a>
+        <a href="api-reference.html#testing" class="sidebar-link">Testing</a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Resources</div>
+        <a href="../samples/index.html" class="sidebar-link">Samples</a>
+        <a href="https://github.com/kotsutsumi/zylix" class="sidebar-link">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <h1>Getting Started</h1>
+      <p class="lead">
+        Build your first Zylix application in under 5 minutes. Learn the fundamentals
+        of components, state, and rendering.
+      </p>
+
+      <h2>Quick Start</h2>
+      <p>
+        The fastest way to get started is with a simple HTML file. No build tools required!
+      </p>
+
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Create an HTML file</div>
+          <p>Create a new file called <code class="inline-code">index.html</code>:</p>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;My Zylix App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="app"&gt;&lt;/div&gt;
+  &lt;script type="module" src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Create your app</div>
+          <p>Create <code class="inline-code">app.js</code> with your first component:</p>
+          <pre><code>import { h, render, useState } from './zylix.js';
+
+// A simple counter component
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return h('div', { style: 'text-align: center; padding: 40px;' },
+    h('h1', null, 'Counter'),
+    h('p', { style: 'font-size: 3rem; margin: 20px 0;' }, count),
+    h('button', {
+      onClick: () => setCount(c => c + 1),
+      style: 'padding: 10px 20px; font-size: 1rem; margin: 5px;'
+    }, 'Increment'),
+    h('button', {
+      onClick: () => setCount(c => c - 1),
+      style: 'padding: 10px 20px; font-size: 1rem; margin: 5px;'
+    }, 'Decrement')
+  );
+}
+
+// Render the app
+render(h(Counter), document.getElementById('app'));</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Run your app</div>
+          <p>Serve your files with any static server:</p>
+          <pre><code># Using Python
+python -m http.server 3000
+
+# Using Node.js
+npx serve .
+
+# Using PHP
+php -S localhost:3000</code></pre>
+          <p>Open <a href="http://localhost:3000" style="color: #818cf8;">http://localhost:3000</a> in your browser!</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <div class="tip-title">Tip</div>
+        <p>You can also try our <a href="../samples/hello-world.html" style="color: #10b981;">Hello World sample</a> to see Zylix in action without any setup.</p>
+      </div>
+
+      <h2>Understanding Components</h2>
+      <p>
+        Components are the building blocks of Zylix applications. They are functions
+        that return virtual DOM nodes using the <code class="inline-code">h()</code> function.
+      </p>
+
+      <h3>The h() Function</h3>
+      <p>
+        The <code class="inline-code">h()</code> function creates virtual DOM elements. It takes three arguments:
+      </p>
+
+      <pre><code>h(type, props, ...children)
+
+// Examples:
+h('div', null)                        // &lt;div&gt;&lt;/div&gt;
+h('p', null, 'Hello')                 // &lt;p&gt;Hello&lt;/p&gt;
+h('button', { onClick: fn }, 'Click') // &lt;button onclick="fn"&gt;Click&lt;/button&gt;
+h('ul', null,
+  h('li', null, 'Item 1'),
+  h('li', null, 'Item 2')
+)                                     // Nested elements</code></pre>
+
+      <h3>Functional Components</h3>
+      <p>
+        Components are just functions that return <code class="inline-code">h()</code> calls:
+      </p>
+
+      <pre><code>// Simple component
+function Greeting({ name }) {
+  return h('h1', null, `Hello, ${name}!`);
+}
+
+// Use it
+h(Greeting, { name: 'World' })  // &lt;h1&gt;Hello, World!&lt;/h1&gt;</code></pre>
+
+      <h3>Component Composition</h3>
+      <p>
+        Build complex UIs by composing smaller components:
+      </p>
+
+      <pre><code>function Button({ onClick, children }) {
+  return h('button', {
+    onClick,
+    style: 'padding: 10px 20px; border-radius: 6px;'
+  }, children);
+}
+
+function Card({ title, children }) {
+  return h('div', { className: 'card' },
+    h('h2', null, title),
+    h('div', { className: 'card-body' }, ...children)
+  );
+}
+
+function App() {
+  return h(Card, { title: 'Welcome' },
+    h('p', null, 'This is a card component.'),
+    h(Button, { onClick: () => alert('Clicked!') }, 'Click Me')
+  );
+}</code></pre>
+
+      <h2>State Management</h2>
+      <p>
+        Use the <code class="inline-code">useState</code> hook to add state to your components.
+      </p>
+
+      <h3>Basic State</h3>
+      <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+
+  return h('div', null,
+    h('p', null, `Count: ${count}`),
+    h('button', { onClick: () => setCount(count + 1) }, '+'),
+    h('button', { onClick: () => setCount(count - 1) }, '-')
+  );
+}</code></pre>
+
+      <h3>Functional Updates</h3>
+      <p>
+        When the new state depends on the previous state, use a function:
+      </p>
+
+      <pre><code>// Safer for async updates
+setCount(prevCount => prevCount + 1);</code></pre>
+
+      <h3>Object State</h3>
+      <pre><code>function Form() {
+  const [form, setForm] = useState({ name: '', email: '' });
+
+  const updateField = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  return h('form', null,
+    h('input', {
+      value: form.name,
+      onInput: (e) => updateField('name', e.target.value),
+      placeholder: 'Name'
+    }),
+    h('input', {
+      value: form.email,
+      onInput: (e) => updateField('email', e.target.value),
+      placeholder: 'Email'
+    })
+  );
+}</code></pre>
+
+      <h2>Effects and Side Effects</h2>
+      <p>
+        Use <code class="inline-code">useEffect</code> for side effects like data fetching,
+        subscriptions, or DOM manipulation.
+      </p>
+
+      <pre><code>function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      });
+  }, [userId]); // Re-run when userId changes
+
+  if (loading) {
+    return h('p', null, 'Loading...');
+  }
+
+  return h('div', null,
+    h('h1', null, user.name),
+    h('p', null, user.email)
+  );
+}</code></pre>
+
+      <h3>Cleanup Effects</h3>
+      <p>Return a function from useEffect to clean up:</p>
+
+      <pre><code>useEffect(() => {
+  const timer = setInterval(() => {
+    console.log('Tick');
+  }, 1000);
+
+  // Cleanup function
+  return () => clearInterval(timer);
+}, []);</code></pre>
+
+      <h2>Project Structure</h2>
+      <p>For larger applications, organize your code like this:</p>
+
+      <div class="file-tree">
+        <div class="file-tree-item"><span class="file-tree-folder">my-app/</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;<span class="file-tree-folder">src/</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-folder">components/</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">Button.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">Card.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">Header.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-folder">pages/</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">Home.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">About.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-folder">store/</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">index.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">App.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;&nbsp;&nbsp;<span class="file-tree-file">main.js</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;<span class="file-tree-file">index.html</span></div>
+        <div class="file-tree-item">&nbsp;&nbsp;<span class="file-tree-file">zylix.js</span></div>
+      </div>
+
+      <h2>What You've Learned</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">h()</div>
+          <div class="feature-title">Creating Elements</div>
+          <div class="feature-desc">Use h() to create virtual DOM elements and components</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">fn</div>
+          <div class="feature-title">Components</div>
+          <div class="feature-desc">Build reusable UI with functional components</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">[ ]</div>
+          <div class="feature-title">useState</div>
+          <div class="feature-desc">Add local state to components with the useState hook</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">{}</div>
+          <div class="feature-title">useEffect</div>
+          <div class="feature-desc">Handle side effects and lifecycle events</div>
+        </div>
+      </div>
+
+      <h2>Next Steps</h2>
+      <div class="next-steps">
+        <a href="api-reference.html#store" class="next-step-card">
+          <div class="next-step-title">State Management</div>
+          <div class="next-step-desc">Learn about Zylix Store for global state</div>
+        </a>
+        <a href="api-reference.html#router" class="next-step-card">
+          <div class="next-step-title">Routing</div>
+          <div class="next-step-desc">Add navigation to your app</div>
+        </a>
+        <a href="api-reference.html#testing" class="next-step-card">
+          <div class="next-step-title">Testing</div>
+          <div class="next-step-desc">Write tests for your components</div>
+        </a>
+        <a href="../samples/index.html" class="next-step-card">
+          <div class="next-step-title">Samples</div>
+          <div class="next-step-desc">Explore real-world examples</div>
+        </a>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>
