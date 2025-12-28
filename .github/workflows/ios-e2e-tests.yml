@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-e2e-results-${{ matrix.device }}-${{ matrix.ios }}
           path: |
@@ -206,7 +206,7 @@ jobs:
 
       - name: Upload Screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-screenshots-${{ matrix.device }}-${{ matrix.ios }}
           path: platforms/ios/build/**/Attachments/**/*.png
@@ -320,7 +320,7 @@ jobs:
 
       - name: Upload Performance Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-performance-results
           path: |
