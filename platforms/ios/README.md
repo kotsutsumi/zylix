@@ -144,6 +144,165 @@ zylix.reset()
 let counter = zylix.counter
 ```
 
+## Advanced Features
+
+ZylixSwift provides comprehensive advanced features for building production-ready applications.
+
+### Error Boundaries
+
+Catch and handle errors gracefully in your SwiftUI views:
+
+```swift
+import ZylixSwift
+
+struct MyApp: View {
+    var body: some View {
+        ErrorBoundary {
+            RiskyContent()
+        } fallback: { error, retry in
+            VStack {
+                Text("Something went wrong: \(error.localizedDescription)")
+                Button("Retry", action: retry)
+            }
+        }
+    }
+}
+```
+
+### Context API
+
+Share state across your view hierarchy without prop drilling:
+
+```swift
+// Define your context value
+class ThemeContext: ContextValue {
+    @Published var isDark = false
+}
+
+// Provide context
+ContextProvider(ThemeContext()) {
+    ContentView()
+}
+
+// Consume context
+struct ThemedButton: View {
+    @UseContext var theme: ThemeContext
+
+    var body: some View {
+        Button("Toggle Theme") {
+            theme.isDark.toggle()
+        }
+    }
+}
+```
+
+### Suspense & Async Resources
+
+Handle async data loading with elegant loading states:
+
+```swift
+// Create a resource
+let userResource = createResource {
+    try await api.fetchUser(id: userId)
+}
+
+// Use with Suspense
+Suspense(isLoading: userResource.isLoading) {
+    if let user = userResource.data {
+        UserProfile(user: user)
+    }
+} fallback: {
+    DefaultLoadingView()
+}
+```
+
+### Portal/Modal System
+
+Render content outside the normal view hierarchy:
+
+```swift
+// Simple modal
+@State var showModal = false
+
+MyView()
+    .modal(isPresented: $showModal) {
+        SettingsPanel()
+    }
+
+// Custom portal
+Portal(id: "notification") {
+    NotificationBanner(message: "Success!")
+}
+```
+
+### Animation System
+
+Rich animation support with easing functions, springs, and timelines:
+
+```swift
+// Spring animations
+let spring = useSpring(initial: 0, config: .bouncy)
+spring.set(100)
+
+// Timeline animations
+let timeline = Timeline(duration: 2.0)
+timeline.loopMode = .pingPong
+timeline.play()
+
+// Keyframe animations
+let animation = KeyframeAnimation(keyframes: [
+    Keyframe(time: 0, value: 0),
+    Keyframe(time: 0.5, value: 100, easing: ZylixEasing.easeOutBounce),
+    Keyframe(time: 1, value: 50)
+])
+
+// Built-in easing functions
+ZylixEasing.linear(_:)
+ZylixEasing.easeInQuad(_:)
+ZylixEasing.easeOutCubic(_:)
+ZylixEasing.easeInOutExpo(_:)
+ZylixEasing.spring(_:stiffness:damping:mass:)
+```
+
+### Async Operations
+
+Future-based async operations with HTTP client and task scheduling:
+
+```swift
+// HTTP Client
+let response = ZylixHttpClient.shared.get("https://api.example.com/users")
+response.then { result in
+    let users = try result.decode([User].self)
+}
+
+// Task scheduling with priorities
+ZylixScheduler.shared.schedule(priority: .high) {
+    await processImportantTask()
+}
+
+// Retry with backoff
+let result = try await retry(maxAttempts: 3) {
+    try await api.fetchData()
+}
+```
+
+### Hot Reload (Development)
+
+Enable hot reload for faster development iteration:
+
+```swift
+// Enable in your app
+ZylixHotReloadClient.shared.connect()
+
+// Wrap views for hot reload
+HotReloadable {
+    ContentView()
+}
+
+// Show dev tools
+DevToolsOverlay()
+```
+
 ### Event Type Enum
 
 ```swift
@@ -213,6 +372,14 @@ xcodebuild test -project Zylix.xcodeproj -scheme ZylixTests \
 - Computed properties (counts, allCompleted)
 - TodoItem and FilterMode tests
 
+**ZylixAdvancedTests** (40+ tests):
+- Future/Promise pattern (resolve, reject, cancel, callbacks)
+- HTTP Response parsing
+- Task scheduler and priority
+- Animation easing functions
+- Modal and VirtualList configuration
+- HotReload state management
+
 ## Project Structure
 
 ```
@@ -241,9 +408,15 @@ platforms/ios/
 │   │   │       ├── zylix.h
 │   │   │       └── module.modulemap
 │   │   └── ZylixSwift/      # Swift Wrapper
-│   │       └── ZylixCore.swift
+│   │       ├── ZylixCore.swift      # Core FFI integration
+│   │       ├── ZylixAdvanced.swift  # Error Boundaries, Context, Suspense
+│   │       ├── ZylixAnimation.swift # Easing, Springs, Timelines
+│   │       ├── ZylixAsync.swift     # Futures, HTTP, Scheduler
+│   │       └── ZylixHotReload.swift # HMR development tools
 │   └── Tests/
 │       └── ZylixSwiftTests/
+│           ├── ZylixSwiftTests.swift
+│           └── ZylixAdvancedTests.swift
 └── ZylixTodoDemo/           # Legacy Demo App
     └── ...
 ```
