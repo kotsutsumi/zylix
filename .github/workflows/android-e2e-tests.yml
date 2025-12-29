@@ -72,7 +72,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download Native Libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: android-native-libs
           path: core/zig-out/android/
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download Native Libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: android-native-libs
           path: core/zig-out/android/
@@ -165,7 +165,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download Native Libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: android-native-libs
           path: core/zig-out/android/
