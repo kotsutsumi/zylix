@@ -94,6 +94,98 @@ sealed class ZylixAnimationError : Exception() {
 }
 
 // ============================================================================
+// Animation Configuration Types (for unit testing)
+// ============================================================================
+
+/**
+ * Spring configuration for spring animations.
+ */
+data class SpringConfig(
+    val stiffness: Float = 100f,
+    val damping: Float = 10f,
+    val mass: Float = 1f
+) {
+    companion object {
+        val gentle = SpringConfig(stiffness = 50f, damping = 8f, mass = 1f)
+        val bouncy = SpringConfig(stiffness = 200f, damping = 5f, mass = 1f)
+        val stiff = SpringConfig(stiffness = 300f, damping = 20f, mass = 1f)
+    }
+}
+
+/**
+ * A keyframe in a keyframe animation.
+ */
+data class Keyframe(
+    val time: Float,
+    val value: Float
+)
+
+/**
+ * Keyframe-based animation.
+ */
+class KeyframeAnimation(private val keyframes: List<Keyframe>) {
+
+    fun getValue(progress: Float): Float {
+        if (keyframes.isEmpty()) return 0f
+        if (keyframes.size == 1) return keyframes[0].value
+
+        val sortedKeyframes = keyframes.sortedBy { it.time }
+
+        // Before first keyframe
+        if (progress <= sortedKeyframes.first().time) {
+            return sortedKeyframes.first().value
+        }
+
+        // After last keyframe
+        if (progress >= sortedKeyframes.last().time) {
+            return sortedKeyframes.last().value
+        }
+
+        // Find surrounding keyframes
+        for (i in 0 until sortedKeyframes.size - 1) {
+            val current = sortedKeyframes[i]
+            val next = sortedKeyframes[i + 1]
+
+            if (progress >= current.time && progress <= next.time) {
+                val t = (progress - current.time) / (next.time - current.time)
+                return current.value + t * (next.value - current.value)
+            }
+        }
+
+        return 0f
+    }
+}
+
+/**
+ * Animation state enum.
+ */
+enum class AnimationState {
+    IDLE,
+    RUNNING,
+    PAUSED,
+    FINISHED
+}
+
+/**
+ * Repeat mode for animations.
+ */
+enum class RepeatMode {
+    NONE,
+    LOOP,
+    PING_PONG
+}
+
+/**
+ * Animation configuration.
+ */
+data class AnimationConfig(
+    val duration: Long = 300L,
+    val delay: Long = 0L,
+    val repeatMode: RepeatMode = RepeatMode.NONE,
+    val repeatCount: Int = 0
+)
+
+// ============================================================================
 // Easing Functions
 // ============================================================================
 
