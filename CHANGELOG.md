@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+#### iOS Advanced Features (ZylixSwift)
+- **Error Boundaries**: React-style error isolation with retry support (`ErrorBoundary`, `ErrorHandler`)
+- **Context API**: SwiftUI-native context with `ContextProvider` and `@UseContext` property wrapper
+- **Suspense & Resources**: Async data loading with `Resource<T>` and `Suspense` view wrapper
+- **Portal/Modal System**: `PortalHost`, `Portal`, and `Modal` for overlay rendering
+- **Virtual List**: Efficient scrolling with `VirtualList` and lazy loading support
+- **Animation System**: 12+ easing functions, spring physics with `SpringConfig`, `Timeline`, `KeyframeAnimation`
+- **Async Operations**: `ZylixFuture<T>` with then/catch/finally chains, `ZylixHttpClient`, `ZylixScheduler`
+- **Hot Reload**: `ZylixHotReloadClient` with WebSocket, state preservation, `DevToolsOverlay`
+
+#### iOS/Android Test Coverage
+- **iOS**: `ZylixAdvancedTests.swift` with 40+ unit tests for Future, HTTP, Animation, HotReload
+- **Android**: `ZylixAsyncTests.kt` and `ZylixAnimationTests.kt` with 40+ unit tests
+
+#### Documentation
+- iOS README: Added Advanced Features section with comprehensive code examples
+- Android README: Added Advanced Features section with comprehensive code examples
+- Updated project structure sections to include new source and test files
+
 - Fiber rendering and animation blending for smooth visual transitions
 - SIMD optimization for performance-critical operations
 - Memory pool, LRU cache, and batch patching for improved performance
