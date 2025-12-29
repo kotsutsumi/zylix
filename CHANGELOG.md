@@ -55,6 +55,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory leaks in tests (now hermetic)
 - Cross-platform CI build failures
 
+#### CI/CD Fixes
+- **Android Animation**: Added missing `SpringConfig`, `Keyframe`, `KeyframeAnimation`, `AnimationState`, `RepeatMode`, `AnimationConfig` classes
+- **Android Tests**: Fixed Float/Double type mismatch in animation tests (use `0.0f` literals)
+- **Android Tests**: Removed unused `kotlinx.coroutines.test` import
+- **Android Tests**: Fixed TaskHandle priority comparison test (queue ordering: higher priority first)
+- **Android Tests**: Fixed HttpResponse json parsing test for unit test environment
+- **iOS E2E**: Updated iOS version from 18.1 to 18.4 for Xcode 16.1 compatibility
+- **iOS E2E**: Added `--legacy` flag to `xcresulttool get` commands (Xcode 16.1+ requirement)
+- **iOS E2E**: Fixed simulator UDID extraction with proper awk parsing for iOS version sections
+
 ### Removed
 - E2E tests from Android CI (replaced with stable unit tests)
 - Out-of-scope text editor features
