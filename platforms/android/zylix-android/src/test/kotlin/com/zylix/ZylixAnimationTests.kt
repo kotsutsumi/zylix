@@ -12,91 +12,91 @@ class ZylixAnimationTests {
 
     @Test
     fun `test linear easing`() {
-        assertEquals(0.0, ZylixEasing.linear(0.0), 0.001)
-        assertEquals(0.5, ZylixEasing.linear(0.5), 0.001)
-        assertEquals(1.0, ZylixEasing.linear(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.linear(0.0f), 0.001f)
+        assertEquals(0.5f, ZylixEasing.linear(0.5f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.linear(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInQuad`() {
-        assertEquals(0.0, ZylixEasing.easeInQuad(0.0), 0.001)
-        assertEquals(0.25, ZylixEasing.easeInQuad(0.5), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInQuad(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInQuad(0.0f), 0.001f)
+        assertEquals(0.25f, ZylixEasing.easeInQuad(0.5f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInQuad(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeOutQuad`() {
-        assertEquals(0.0, ZylixEasing.easeOutQuad(0.0), 0.001)
-        assertTrue(ZylixEasing.easeOutQuad(0.5) > 0.5)
-        assertEquals(1.0, ZylixEasing.easeOutQuad(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeOutQuad(0.0f), 0.001f)
+        assertTrue(ZylixEasing.easeOutQuad(0.5f) > 0.5f)
+        assertEquals(1.0f, ZylixEasing.easeOutQuad(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInOutQuad`() {
-        assertEquals(0.0, ZylixEasing.easeInOutQuad(0.0), 0.001)
-        assertEquals(0.5, ZylixEasing.easeInOutQuad(0.5), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInOutQuad(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInOutQuad(0.0f), 0.001f)
+        assertEquals(0.5f, ZylixEasing.easeInOutQuad(0.5f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInOutQuad(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInCubic`() {
-        assertEquals(0.0, ZylixEasing.easeInCubic(0.0), 0.001)
-        assertEquals(0.125, ZylixEasing.easeInCubic(0.5), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInCubic(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInCubic(0.0f), 0.001f)
+        assertEquals(0.125f, ZylixEasing.easeInCubic(0.5f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInCubic(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeOutCubic`() {
-        assertEquals(0.0, ZylixEasing.easeOutCubic(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeOutCubic(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeOutCubic(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeOutCubic(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInSine`() {
-        assertEquals(0.0, ZylixEasing.easeInSine(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInSine(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInSine(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInSine(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeOutSine`() {
-        assertEquals(0.0, ZylixEasing.easeOutSine(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeOutSine(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeOutSine(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeOutSine(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInExpo`() {
-        assertEquals(0.0, ZylixEasing.easeInExpo(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInExpo(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInExpo(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInExpo(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeOutExpo`() {
-        assertEquals(0.0, ZylixEasing.easeOutExpo(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeOutExpo(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeOutExpo(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeOutExpo(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeOutBounce boundary values`() {
-        assertEquals(0.0, ZylixEasing.easeOutBounce(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeOutBounce(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeOutBounce(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeOutBounce(1.0f), 0.001f)
     }
 
     @Test
     fun `test easeInBounce`() {
-        assertEquals(0.0, ZylixEasing.easeInBounce(0.0), 0.001)
-        assertEquals(1.0, ZylixEasing.easeInBounce(1.0), 0.001)
+        assertEquals(0.0f, ZylixEasing.easeInBounce(0.0f), 0.001f)
+        assertEquals(1.0f, ZylixEasing.easeInBounce(1.0f), 0.001f)
     }
 
     @Test
     fun `test spring easing`() {
-        val result = ZylixEasing.spring(1.0)
-        assertTrue(result > 0)
+        val result = ZylixEasing.spring(1.0f)
+        assertTrue(result > 0f)
     }
 
     @Test
     fun `test spring with custom parameters`() {
-        val result = ZylixEasing.spring(0.5, stiffness = 200f, damping = 5f, mass = 1f)
-        assertTrue(result >= 0)
+        val result = ZylixEasing.spring(0.5f, stiffness = 200f, damping = 5f, mass = 1f)
+        assertTrue(result >= 0f)
     }
 
     // MARK: - SpringConfig Tests
