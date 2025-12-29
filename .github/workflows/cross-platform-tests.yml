@@ -266,10 +266,14 @@ jobs:
         working-directory: tests
         run: npm ci || npm install
 
-      - name: Run Web Tests
+      - name: Create Coverage Directory
+        working-directory: tests
+        run: mkdir -p coverage
+
+      - name: Run Web Tests with Coverage
         id: test
         working-directory: tests
-        run: npm test
+        run: npm run test:coverage || npm test
 
       - name: Upload Test Results
         if: always()
@@ -278,6 +282,7 @@ jobs:
           name: web-test-results
           path: tests/coverage/
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================================================
   # Test Report Aggregation

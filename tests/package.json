@@ -4,9 +4,10 @@
   "description": "Unit tests for Zylix",
   "type": "module",
   "scripts": {
-    "test": "node --test **/*.test.js",
-    "test:web": "node --test web/*.test.js",
-    "test:samples": "node --test samples/*.test.js"
+    "test": "node --test --experimental-test-coverage **/*.test.js",
+    "test:web": "node --test --experimental-test-coverage web/*.test.js",
+    "test:samples": "node --test --experimental-test-coverage samples/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info **/*.test.js"
   },
   "devDependencies": {}
 }
