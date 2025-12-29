@@ -120,8 +120,21 @@ jobs:
           # List available simulators
           xcrun simctl list devices available
 
-          # Boot simulator if not already running
-          UDID=$(xcrun simctl list devices available | grep -i "$DEVICE" | grep "$IOS_VERSION" | head -1 | grep -oE '[0-9A-F-]{36}')
+          # Find UDID for specific device in specific iOS version section
+          # The simctl output has format:
+          #   -- iOS 18.4 --
+          #       iPhone 16 (UDID) (Shutdown)
+          UDID=$(xcrun simctl list devices available | awk -v ios="iOS $IOS_VERSION" -v dev="$DEVICE" '
+            $0 ~ "-- " ios " --" { in_section=1; next }
+            /^-- / { in_section=0 }
+            in_section && $0 ~ dev {
+              match($0, /\([A-Fa-f0-9-]{36}\)/);
+              if (RSTART) {
+                print substr($0, RSTART+1, 36);
+                exit
+              }
+            }
+          ')
 
           if [ -n "$UDID" ]; then
             echo "Found simulator: $UDID"
