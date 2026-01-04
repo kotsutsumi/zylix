@@ -54,7 +54,7 @@ jobs:
       android: ${{ steps.filter.outputs.android }}
       web: ${{ steps.filter.outputs.web }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -85,7 +85,7 @@ jobs:
     outputs:
       result: ${{ steps.test.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -133,7 +133,7 @@ jobs:
     outputs:
       result: ${{ steps.test.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -196,7 +196,7 @@ jobs:
     outputs:
       result: ${{ steps.test.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -253,7 +253,7 @@ jobs:
     outputs:
       result: ${{ steps.test.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -293,7 +293,7 @@ jobs:
     needs: [core-tests, ios-tests, android-tests, web-tests]
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v7
