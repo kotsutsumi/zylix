@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -69,7 +69,7 @@ jobs:
     needs: build-core
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download Native Libraries
         uses: actions/download-artifact@v7
@@ -111,7 +111,7 @@ jobs:
     needs: build-core
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download Native Libraries
         uses: actions/download-artifact@v7
@@ -162,7 +162,7 @@ jobs:
     needs: build-core
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download Native Libraries
         uses: actions/download-artifact@v7
